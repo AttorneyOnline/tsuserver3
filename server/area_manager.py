@@ -19,6 +19,8 @@ import random
 
 import yaml
 
+from server.exceptions import AreaError
+
 
 class AreaManager:
     class Area:
@@ -42,7 +44,7 @@ class AreaManager:
         def get_rand_avail_char_id(self):
             avail_set = set(range(len(self.server.char_list))) - set([x.char_id for x in self.clients])
             if len(avail_set) == 0:
-                raise KeyError('No available characters.')
+                raise AreaError('No available characters.')
             return random.choice(tuple(avail_set))
 
         def send_command(self, cmd, *args):
@@ -75,4 +77,4 @@ class AreaManager:
         for area in self.areas:
             if area.name == name:
                 return area
-        raise KeyError('Area not found.')
+        raise AreaError('Area not found.')

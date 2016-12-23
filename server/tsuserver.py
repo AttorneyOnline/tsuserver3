@@ -22,6 +22,7 @@ import yaml
 from server.aoprotocol import AOProtocol
 from server.area_manager import AreaManager
 from server.client_manager import ClientManager
+from server.exceptions import ServerError
 
 
 class TsuServer3:
@@ -111,6 +112,12 @@ class TsuServer3:
     def is_valid_char_id(self, char_id):
         return len(self.char_list) > char_id >= 0
 
+    def get_char_id_by_name(self, name):
+        for i, ch in enumerate(self.char_list):
+            if ch == name:
+                return i
+        raise ServerError('Character not found.')
+
     def get_song_data(self, music):
         for category in self.music_list:
             if category == music:
@@ -118,4 +125,4 @@ class TsuServer3:
             for song in self.music_list[category]:
                 if song['name'] == music:
                     return song['name'], song['length']
-        raise KeyError('Music not found.')
+        raise ServerError('Music not found.')

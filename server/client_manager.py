@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from server import fantacrypt
+from server.exceptions import ClientError, AreaError
 
 
 class ClientManager:
@@ -47,24 +48,20 @@ class ClientManager:
 
         def change_character(self, char_id):
             if not self.server.is_valid_char_id(char_id):
-                self.send_host_message('Invalid Character ID.')
-                return
+                raise ClientError('Invalid Character ID.')
             if not self.area.is_char_available(char_id):
-                self.send_host_message('Character not available.')
-                return
+                raise ClientError('Character not available.')
             self.char_id = char_id
             self.send_command('PV', self.id, 'CID', self.char_id)
 
         def change_area(self, area):
             if self.area == area:
-                self.send_host_message('You are already in this area.')
-                return
+                raise ClientError('You are already in this area.')
             if not area.is_char_available(self.char_id):
                 try:
                     new_char_id = area.get_rand_avail_char_id()
-                except KeyError:
-                    self.send_host_message('No available characters in that area.')
-                    return
+                except AreaError:
+                    raise ClientError('No available characters in that area.')
                 self.area.remove_client(self)
                 self.area = area
                 area.new_client(self)

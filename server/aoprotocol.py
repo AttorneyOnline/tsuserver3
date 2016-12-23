@@ -18,8 +18,8 @@
 import asyncio
 from enum import Enum
 
-import time
-
+from server import commands
+from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
 from server.fantacrypt import fanta_decrypt
 
 
@@ -161,7 +161,18 @@ class AOProtocol(asyncio.Protocol):
             return
         if self.client.name == '':
             self.client.name = args[0]
-        self.client.area.send_command('CT', self.client.name, args[1])
+        if args[1].startswith('/'):
+            spl = args[1].split()
+            cmd = spl[0][1:]
+            args = spl[1:]
+            try:
+                getattr(commands, 'ooc_cmd_{}'.format(cmd))(self.client, args)
+            except AttributeError:
+                self.client.send_host_message('Invalid command.')
+            except (ClientError, AreaError, ArgumentError, ServerError) as ex:
+                self.client.send_host_message(ex)
+        else:
+            self.client.area.send_command('CT', self.client.name, args[1])
 
     def net_cmd_mc(self, args):
         if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT):
@@ -171,12 +182,14 @@ class AOProtocol(asyncio.Protocol):
         try:
             area = self.server.area_manager.get_area_by_name(args[0])
             self.client.change_area(area)
-        except KeyError:
+        except AreaError:
             try:
                 name, length = self.server.get_song_data(args[0])
                 self.client.area.play_music(name, self.client, length)
-            except KeyError:
+            except ServerError:
                 return
+        except ClientError as ex:
+            self.client.send_host_message(ex)
 
     net_cmd_dispatcher = {
         'HI': net_cmd_hi,  # handshake
