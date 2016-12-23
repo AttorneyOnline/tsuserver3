@@ -1,6 +1,7 @@
 local: false
 port: 50000
 playerlimit: 100
+timeout: 250
 
 guardpass: guard
 modpass: mod

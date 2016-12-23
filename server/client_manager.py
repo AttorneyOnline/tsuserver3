@@ -44,7 +44,6 @@ class ClientManager:
 
         def disconnect(self):
             self.transport.close()
-            self.server.remove_client(self)
 
         def change_character(self, char_id):
             if not self.server.is_valid_char_id(char_id):

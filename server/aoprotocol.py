@@ -18,6 +18,8 @@
 import asyncio
 from enum import Enum
 
+import time
+
 from server.fantacrypt import fanta_decrypt
 
 
@@ -31,6 +33,7 @@ class AOProtocol(asyncio.Protocol):
         self.server = server
         self.client = None
         self.buffer = ''
+        self.ping_timeout = None
 
     def data_received(self, data):
         print(data)
@@ -55,7 +58,7 @@ class AOProtocol(asyncio.Protocol):
         self.client.send_command('decryptor', 34)  # just fantacrypt things
 
     def connection_lost(self, exc):
-        self.client.disconnect()
+        self.server.remove_client(self.client)
 
     def get_messages(self):
         while '#%' in self.buffer:
@@ -90,6 +93,12 @@ class AOProtocol(asyncio.Protocol):
         self.client.hdid = args[0]
         self.client.send_command('ID', self.client.id, self.server.version)
         self.client.send_command('PN', self.server.get_player_count() - 1, self.server.config['playerlimit'])
+
+    def net_cmd_ch(self, _):
+        self.client.send_command('CHECK')
+        if self.ping_timeout:
+            self.ping_timeout.cancel()
+        self.ping_timeout = asyncio.get_event_loop().call_later(self.server.config['timeout'], self.client.disconnect)
 
     def net_cmd_askchaa(self, _):
         char_cnt = len(self.server.char_list)
@@ -171,6 +180,7 @@ class AOProtocol(asyncio.Protocol):
 
     net_cmd_dispatcher = {
         'HI': net_cmd_hi,  # handshake
+        'CH': net_cmd_ch,  # keepalive
         'askchaa': net_cmd_askchaa,  # ask for list lengths
         'askchar2': net_cmd_askchar2,  # ask for list of characters
         'AN': net_cmd_an,  # character list
