@@ -51,11 +51,11 @@ class AreaManager:
 
         def play_music(self, name, client, length=-1):
             self.send_command('MC', name, client.char_id)
+            if self.music_looper:
+                self.music_looper.cancel()
             if length > 0:
                 self.music_looper = asyncio.get_event_loop().call_later(length,
                                                                         lambda: self.play_music(name, client, length))
-            elif self.music_looper:
-                self.music_looper.cancel()
 
     def __init__(self, server):
         self.server = server
