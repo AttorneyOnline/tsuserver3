@@ -1,0 +1,5 @@
+local: false
+port: 50000
+
+guardpass: guard
+modpass: mod
