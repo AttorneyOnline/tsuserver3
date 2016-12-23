@@ -14,6 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import asyncio
 import random
 
 import yaml
@@ -27,6 +28,7 @@ class AreaManager:
             self.background = background
             self.bg_lock = bg_lock
             self.server = server
+            self.music_looper = None
 
         def new_client(self, client):
             self.clients.add(client)
@@ -49,7 +51,11 @@ class AreaManager:
 
         def play_music(self, name, client, length=-1):
             self.send_command('MC', name, client.char_id)
-            # todo length looping
+            if length > 0:
+                self.music_looper = asyncio.get_event_loop().call_later(length,
+                                                                        lambda: self.play_music(name, client, length))
+            elif self.music_looper:
+                self.music_looper.cancel()
 
     def __init__(self, server):
         self.server = server
