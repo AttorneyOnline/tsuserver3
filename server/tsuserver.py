@@ -118,6 +118,12 @@ class TsuServer3:
                 return i
         raise ServerError('Character not found.')
 
+    def get_char_name_by_id(self, char_id):
+        try:
+            return self.char_list[char_id]
+        except IndexError:
+            raise ServerError('Invalid character ID.')
+
     def get_song_data(self, music):
         for category in self.music_list:
             if category == music:
@@ -126,3 +132,8 @@ class TsuServer3:
                 if song['name'] == music:
                     return song['name'], song['length']
         raise ServerError('Music not found.')
+
+    def broadcast_global(self, client, msg):
+        for area in self.area_manager.areas:
+            area.send_command('CT', '{}[{}][{}]'.format(self.config['hostname'], client.area.id,
+                                                        self.get_char_name_by_id(client.char_id)), msg)

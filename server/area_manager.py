@@ -24,8 +24,9 @@ from server.exceptions import AreaError
 
 class AreaManager:
     class Area:
-        def __init__(self, server, name, background, bg_lock):
+        def __init__(self, area_id, server, name, background, bg_lock):
             self.clients = set()
+            self.id = area_id
             self.name = name
             self.background = background
             self.bg_lock = bg_lock
@@ -61,6 +62,7 @@ class AreaManager:
 
     def __init__(self, server):
         self.server = server
+        self.cur_id = 0
         self.areas = []
         self.load_areas()
 
@@ -68,7 +70,9 @@ class AreaManager:
         with open('config/areas.yaml', 'r') as chars:
             areas = yaml.load(chars)
         for area in areas:
-            self.areas.append(self.Area(self.server, area, areas[area]['background'], areas[area]['bglock']))
+            self.areas.append(
+                self.Area(self.cur_id, self.server, area, areas[area]['background'], areas[area]['bglock']))
+            self.cur_id += 1
 
     def default_area(self):
         return self.areas[0]

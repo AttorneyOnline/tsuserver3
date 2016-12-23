@@ -30,3 +30,7 @@ def ooc_cmd_switch(client, args):
     except ClientError:
         raise
     client.send_host_message('Character changed.')
+
+
+def ooc_cmd_g(client, args):
+    client.server.broadcast_global(client, ' '.join(args))
