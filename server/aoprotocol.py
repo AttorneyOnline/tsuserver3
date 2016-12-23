@@ -55,6 +55,7 @@ class AOProtocol(asyncio.Protocol):
 
     def connection_made(self, transport):
         self.client = self.server.new_client(transport)
+        self.ping_timeout = asyncio.get_event_loop().call_later(self.server.config['timeout'], self.client.disconnect)
         self.client.send_command('decryptor', 34)  # just fantacrypt things
 
     def connection_lost(self, exc):
@@ -96,8 +97,7 @@ class AOProtocol(asyncio.Protocol):
 
     def net_cmd_ch(self, _):
         self.client.send_command('CHECK')
-        if self.ping_timeout:
-            self.ping_timeout.cancel()
+        self.ping_timeout.cancel()
         self.ping_timeout = asyncio.get_event_loop().call_later(self.server.config['timeout'], self.client.disconnect)
 
     def net_cmd_askchaa(self, _):
