@@ -20,13 +20,13 @@ from server import fantacrypt
 
 class ClientManager:
     class Client:
-        def __init__(self, transport, user_id):
+        def __init__(self, server, transport, user_id):
             self.transport = transport
             self.hdid = ''
             self.id = user_id
             self.char_id = -1
-            self.area = None
-            self.server = None
+            self.area = server.area_manager.default_area()
+            self.server = server
             self.name = ''
 
         def send_raw_message(self, msg):
@@ -39,20 +39,38 @@ class ClientManager:
             else:
                 self.send_raw_message('{}#%'.format(command))
 
+        def send_host_message(self, msg):
+            self.send_command('CT', self.server.config['hostname'], msg)
+
         def disconnect(self):
             self.transport.close()
             self.server.remove_client(self)
 
         def change_character(self, char_id):
             if not self.server.is_valid_char_id(char_id):
+                self.send_host_message('Invalid Character ID.')
                 return
             if not self.area.is_char_available(char_id):
-                return  # todo maybe a message
+                self.send_host_message('Character not available.')
+                return
             self.char_id = char_id
             self.send_command('PV', self.id, 'CID', self.char_id)
 
-        def change_area(self, area_id):
-            raise NotImplementedError
+        def change_area(self, area):
+            if self.area == area:
+                self.send_host_message('You are already in this area.')
+                return
+            if not area.is_char_available(self.char_id):
+                try:
+                    new_char_id = area.get_rand_avail_char_id()
+                except KeyError:
+                    self.send_host_message('No available characters in that area.')
+                    return
+                self.change_character(new_char_id)
+            self.area.remove_client(self)
+            self.area = area
+            area.new_client(self)
+            self.send_host_message('Changed area to {}.'.format(area.name))
 
         def send_done(self):
             avail_char_ids = set(range(len(self.server.char_list))) - set([x.char_id for x in self.area.clients])
@@ -65,12 +83,13 @@ class ClientManager:
             self.send_command('OPPASS', fantacrypt.fanta_encrypt(self.server.config['guardpass']))
             self.send_command('DONE')
 
-    def __init__(self):
+    def __init__(self, server):
         self.clients = set()
         self.cur_id = 0
+        self.server = server
 
     def new_client(self, transport):
-        c = self.Client(transport, self.cur_id)
+        c = self.Client(self.server, transport, self.cur_id)
         self.clients.add(c)
         self.cur_id += 1
         return c

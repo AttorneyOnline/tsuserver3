@@ -26,8 +26,8 @@ from server.client_manager import ClientManager
 
 class TsuServer3:
     def __init__(self):
-        self.client_manager = ClientManager()
-        self.area_manager = AreaManager()
+        self.client_manager = ClientManager(self)
+        self.area_manager = AreaManager(self)
         self.version = 'tsuserver3dev'
         self.char_list = None
         self.char_pages_ao1 = None
@@ -110,3 +110,12 @@ class TsuServer3:
 
     def is_valid_char_id(self, char_id):
         return len(self.char_list) > char_id >= 0
+
+    def get_song_data(self, music):
+        for category in self.music_list:
+            if category == music:
+                return category, -1
+            for song in self.music_list[category]:
+                if song['name'] == music:
+                    return song['name'], song['length']
+        raise KeyError('Music not found.')

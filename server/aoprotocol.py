@@ -69,7 +69,7 @@ class AOProtocol(asyncio.Protocol):
             yield askchar2
 
     def validate_net_cmd(self, args, *types, needs_auth=True):
-        if needs_auth and self.client.char_id < 0:
+        if needs_auth and self.client.char_id == -1:
             return False
         if len(args) != len(types):
             return False
@@ -86,10 +86,10 @@ class AOProtocol(asyncio.Protocol):
     def net_cmd_hi(self, args):
         if not self.validate_net_cmd(args, self.ArgType.STR, needs_auth=False):
             return
-        # todo check bans
+        # todo check bans etc.
         self.client.hdid = args[0]
         self.client.send_command('ID', self.client.id, self.server.version)
-        self.client.send_command('PN', self.server.get_player_count(), 100)
+        self.client.send_command('PN', self.server.get_player_count() - 1, self.server.config['playerlimit'])
 
     def net_cmd_askchaa(self, _):
         char_cnt = len(self.server.char_list)
@@ -136,7 +136,7 @@ class AOProtocol(asyncio.Protocol):
             return
         if anim_type not in (0, 1, 2, 5, 6):
             return
-        if cid1 != cid2 or cid1 != self.client.char_id or not self.server.is_valid_char_id(cid1):
+        if cid1 != cid2 or cid1 != self.client.char_id:
             return
         if sfx_delay < 0:
             return
@@ -154,6 +154,21 @@ class AOProtocol(asyncio.Protocol):
             self.client.name = args[0]
         self.client.area.send_command('CT', self.client.name, args[1])
 
+    def net_cmd_mc(self, args):
+        if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT):
+            return
+        if args[1] != self.client.char_id:
+            return
+        try:
+            area = self.server.area_manager.get_area_by_name(args[0])
+            self.client.change_area(area)
+        except KeyError:
+            try:
+                name, length = self.server.get_song_data(args[0])
+                self.client.area.play_music(name, self.client, length)
+            except KeyError:
+                return
+
     net_cmd_dispatcher = {
         'HI': net_cmd_hi,  # handshake
         'askchaa': net_cmd_askchaa,  # ask for list lengths
@@ -164,4 +179,5 @@ class AOProtocol(asyncio.Protocol):
         'CC': net_cmd_cc,  # select character
         'MS': net_cmd_ms,  # IC message
         'CT': net_cmd_ct,  # OOC message
+        'MC': net_cmd_mc,  # play song
     }

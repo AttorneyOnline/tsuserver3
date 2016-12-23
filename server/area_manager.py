@@ -14,17 +14,19 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import random
 
 import yaml
 
 
 class AreaManager:
     class Area:
-        def __init__(self, name, background, bg_lock):
+        def __init__(self, server, name, background, bg_lock):
             self.clients = set()
             self.name = name
             self.background = background
             self.bg_lock = bg_lock
+            self.server = server
 
         def new_client(self, client):
             self.clients.add(client)
@@ -35,11 +37,22 @@ class AreaManager:
         def is_char_available(self, char_id):
             return char_id not in [x.char_id for x in self.clients]
 
+        def get_rand_avail_char_id(self):
+            avail_list = set(range(len(self.server.char_list))) - set([x.char_id for x in self.clients])
+            if len(avail_list) == 0:
+                raise KeyError('No available characters.')
+            return random.choice(tuple(avail_list))
+
         def send_command(self, cmd, *args):
             for c in self.clients:
                 c.send_command(cmd, *args)
 
-    def __init__(self):
+        def play_music(self, name, client, length=-1):
+            self.send_command('MC', name, client.char_id)
+            # todo length looping
+
+    def __init__(self, server):
+        self.server = server
         self.areas = []
         self.load_areas()
 
@@ -47,7 +60,13 @@ class AreaManager:
         with open('config/areas.yaml', 'r') as chars:
             areas = yaml.load(chars)
         for area in areas:
-            self.areas.append(self.Area(area, areas[area]['background'], areas[area]['bglock']))
+            self.areas.append(self.Area(self.server, area, areas[area]['background'], areas[area]['bglock']))
 
     def default_area(self):
         return self.areas[0]
+
+    def get_area_by_name(self, name):
+        for area in self.areas:
+            if area.name == name:
+                return area
+        raise KeyError('Area not found.')
