@@ -66,10 +66,14 @@ class ClientManager:
                 except KeyError:
                     self.send_host_message('No available characters in that area.')
                     return
+                self.area.remove_client(self)
+                self.area = area
+                area.new_client(self)
                 self.change_character(new_char_id)
-            self.area.remove_client(self)
-            self.area = area
-            area.new_client(self)
+            else:
+                self.area.remove_client(self)
+                self.area = area
+                area.new_client(self)
             self.send_host_message('Changed area to {}.'.format(area.name))
 
         def send_done(self):
