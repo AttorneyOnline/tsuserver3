@@ -51,8 +51,9 @@ class TsuServer3:
         ao_server_crt = loop.create_server(lambda: AOProtocol(self), bound_ip, self.config['port'])
         ao_server = loop.run_until_complete(ao_server_crt)
 
-        self.district_client = DistrictClient(self)
-        loop.run_until_complete(self.district_client.connect())
+        if self.config['use_district']:
+            self.district_client = DistrictClient(self)
+            loop.run_until_complete(self.district_client.connect())
 
         print('Server started.')
 
@@ -142,4 +143,5 @@ class TsuServer3:
         for area in self.area_manager.areas:
             area.send_command('CT', '{}[{}][{}]'.format(self.config['hostname'], client.area.id,
                                                         self.get_char_name_by_id(client.char_id)), msg)
-        self.district_client.send_message('test\n')
+        if self.config['use_district']:
+            self.district_client.send_message('TODO\r\n')
