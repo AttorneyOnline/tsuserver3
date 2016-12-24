@@ -48,9 +48,12 @@ class DistrictClient:
                 return
             cmd, *args = data.decode()[:-2].split('#')
             if cmd == 'GLOBAL':
-                self.server.send_all_cmd_pred('CT',
-                                              '{}[{}:{}][{}]'.format(self.server.config['hostname'], args[0], args[1],
-                                                                     args[2]), args[3])
+                glob_name = '{}[{}:{}][{}]'.format(self.server.config['hostname'], args[0], args[1], args[2])
+                self.server.send_all_cmd_pred('CT', glob_name, args[3])
+            elif cmd == 'NEED':
+                need_msg = '=== Cross Advert ===\r\n{} at {} in {} [{}] needs {}\r\n=================' \
+                    .format(args[1], args[0], args[2], args[3], args[4])
+                self.server.send_all_cmd_pred('CT', '{}'.format(self.server.config['hostname']), need_msg)
 
     async def write_queue(self):
         while self.message_queue:

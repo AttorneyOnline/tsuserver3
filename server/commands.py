@@ -33,4 +33,12 @@ def ooc_cmd_switch(client, args):
 
 
 def ooc_cmd_g(client, args):
+    if len(args) == 0:
+        raise ArgumentError("Can't send an empty message.")
     client.server.broadcast_global(client, ' '.join(args))
+
+
+def ooc_cmd_need(client, args):
+    if len(args) == 0:
+        raise ArgumentError("You must specify what you need.")
+    client.server.broadcast_need(client, ' '.join(args))

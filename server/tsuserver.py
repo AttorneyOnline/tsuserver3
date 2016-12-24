@@ -149,3 +149,13 @@ class TsuServer3:
         self.send_all_cmd_pred('CT', '{}[{}][{}]'.format(self.config['hostname'], client.area.id, charname), msg)
         if self.config['use_district']:
             self.district_client.send_raw_message('GLOBAL#{}#{}#{}'.format(client.area.id, charname, msg))
+
+    def broadcast_need(self, client, msg):
+        charname = self.get_char_name_by_id(client.char_id)
+        areaname = client.area.name
+        areaid = client.area.id
+        self.send_all_cmd_pred('CT', '{}'.format(self.config['hostname']),
+                               '=== Advert ===\r\n{} in {} [{}] needs {}\r\n============='
+                               .format(charname, areaname, areaid, msg))
+        if self.config['use_district']:
+            self.district_client.send_raw_message('NEED#{}#{}#{}#{}'.format(charname, areaname, areaid, msg))
