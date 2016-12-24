@@ -44,6 +44,8 @@ class DistrictClient:
         self.send_raw_message('AUTH {}'.format(self.server.config['district_password']))
         while True:
             data = await self.reader.read(2048)
+            if not data:
+                return
             msg = data.decode()
             print(msg)
 
