@@ -51,7 +51,7 @@ class DistrictClient:
         while self.message_queue:
             msg = self.message_queue.pop(0)
             self.writer.write(msg)
-            self.writer.drain()
+            await self.writer.drain()
 
     def send_raw_message(self, msg):
         if not self.writer:
