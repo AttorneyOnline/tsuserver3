@@ -22,6 +22,7 @@ import yaml
 from server.aoprotocol import AOProtocol
 from server.area_manager import AreaManager
 from server.client_manager import ClientManager
+from server.districtclient import DistrictClient
 from server.exceptions import ServerError
 
 
@@ -38,6 +39,7 @@ class TsuServer3:
         self.load_config()
         self.load_characters()
         self.load_music()
+        self.district_client = None
 
     def start(self):
         loop = asyncio.get_event_loop()
@@ -46,8 +48,11 @@ class TsuServer3:
         if self.config['local']:
             bound_ip = '127.0.0.1'
 
-        crt_server = loop.create_server(lambda: AOProtocol(self), bound_ip, self.config['port'])
-        server = loop.run_until_complete(crt_server)
+        ao_server_crt = loop.create_server(lambda: AOProtocol(self), bound_ip, self.config['port'])
+        ao_server = loop.run_until_complete(ao_server_crt)
+
+        self.district_client = DistrictClient(self)
+        loop.run_until_complete(self.district_client.connect())
 
         print('Server started.')
 
@@ -56,8 +61,8 @@ class TsuServer3:
         except KeyboardInterrupt:
             pass
 
-        server.close()
-        loop.run_until_complete(server.wait_closed())
+        ao_server.close()
+        loop.run_until_complete(ao_server.wait_closed())
         loop.close()
 
     def new_client(self, transport):
@@ -137,3 +142,4 @@ class TsuServer3:
         for area in self.area_manager.areas:
             area.send_command('CT', '{}[{}][{}]'.format(self.config['hostname'], client.area.id,
                                                         self.get_char_name_by_id(client.char_id)), msg)
+        self.district_client.send_message('test\n')
