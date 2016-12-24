@@ -31,7 +31,7 @@ class DistrictClient:
                 self.reader, self.writer = await asyncio.open_connection(self.server.config['district_ip'],
                                                                          self.server.config['district_port'], loop=loop)
                 await self.handle_connection()
-            except ConnectionRefusedError:
+            except (ConnectionRefusedError, TimeoutError):
                 pass
             except ConnectionResetError:
                 self.writer = None
