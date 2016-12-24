@@ -40,6 +40,8 @@ class DistrictClient:
                 await asyncio.sleep(15)
 
     async def handle_connection(self):
+        print('District connected.')
+        self.send_raw_message('AUTH {}'.format(self.server.config['district_password']))
         while True:
             data = await self.reader.read(2048)
             msg = data.decode()
@@ -51,8 +53,8 @@ class DistrictClient:
             self.writer.write(msg)
             self.writer.drain()
 
-    def send_message(self, msg):
+    def send_raw_message(self, msg):
         if not self.writer:
             return
-        self.message_queue.append(msg.encode())
+        self.message_queue.append('{}\r\n'.format(msg).encode())
         asyncio.ensure_future(self.write_queue(), loop=asyncio.get_event_loop())

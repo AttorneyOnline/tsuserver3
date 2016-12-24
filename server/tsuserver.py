@@ -53,7 +53,7 @@ class TsuServer3:
 
         if self.config['use_district']:
             self.district_client = DistrictClient(self)
-            loop.run_until_complete(self.district_client.connect())
+            asyncio.ensure_future(self.district_client.connect(), loop=loop)
 
         print('Server started.')
 
@@ -144,4 +144,4 @@ class TsuServer3:
             area.send_command('CT', '{}[{}][{}]'.format(self.config['hostname'], client.area.id,
                                                         self.get_char_name_by_id(client.char_id)), msg)
         if self.config['use_district']:
-            self.district_client.send_message('TODO\r\n')
+            self.district_client.send_raw_message('TEST')
