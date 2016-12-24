@@ -18,11 +18,11 @@
 from server.exceptions import ClientError, ServerError, ArgumentError
 
 
-def ooc_cmd_switch(client, args):
-    if len(args) == 0:
+def ooc_cmd_switch(client, arg):
+    if len(arg) == 0:
         raise ArgumentError('You must specify a character name.')
     try:
-        cid = client.server.get_char_id_by_name(' '.join(args))
+        cid = client.server.get_char_id_by_name(arg)
     except ServerError:
         raise
     try:
@@ -32,13 +32,13 @@ def ooc_cmd_switch(client, args):
     client.send_host_message('Character changed.')
 
 
-def ooc_cmd_g(client, args):
-    if len(args) == 0:
+def ooc_cmd_g(client, arg):
+    if len(arg) == 0:
         raise ArgumentError("Can't send an empty message.")
-    client.server.broadcast_global(client, ' '.join(args))
+    client.server.broadcast_global(client, arg)
 
 
-def ooc_cmd_need(client, args):
-    if len(args) == 0:
+def ooc_cmd_need(client, arg):
+    if len(arg) == 0:
         raise ArgumentError("You must specify what you need.")
-    client.server.broadcast_need(client, ' '.join(args))
+    client.server.broadcast_need(client, arg)

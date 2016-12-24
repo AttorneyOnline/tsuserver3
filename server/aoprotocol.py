@@ -162,11 +162,13 @@ class AOProtocol(asyncio.Protocol):
         if self.client.name == '':
             self.client.name = args[0]
         if args[1].startswith('/'):
-            spl = args[1].split()
-            cmd = spl[0][1:]
-            args = spl[1:]
+            spl = args[1][1:].split(' ', 1)
+            cmd = spl[0]
+            arg = ''
+            if len(spl) == 2:
+                arg = spl[1][:256]
             try:
-                getattr(commands, 'ooc_cmd_{}'.format(cmd))(self.client, args)
+                getattr(commands, 'ooc_cmd_{}'.format(cmd))(self.client, arg)
             except AttributeError:
                 self.client.send_host_message('Invalid command.')
             except (ClientError, AreaError, ArgumentError, ServerError) as ex:
