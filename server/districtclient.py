@@ -41,19 +41,26 @@ class DistrictClient:
 
     async def handle_connection(self):
         print('District connected.')
-        self.send_raw_message('AUTH {}'.format(self.server.config['district_password']))
+        self.send_raw_message('AUTH#{}'.format(self.server.config['district_password']))
         while True:
-            data = await self.reader.read(2048)
+            data = await self.reader.readuntil(b'\r\n')
             if not data:
                 return
-            msg = data.decode()
-            print(msg)
+            cmd, *args = data.decode()[:-2].split('#')
+            if cmd == 'GLOBAL':
+                self.server.send_all_cmd_pred('CT',
+                                              '{}[{}:{}][{}]'.format(self.server.config['hostname'], args[0], args[1],
+                                                                     args[2]), args[3])
 
     async def write_queue(self):
         while self.message_queue:
             msg = self.message_queue.pop(0)
-            self.writer.write(msg)
-            await self.writer.drain()
+            try:
+                self.writer.write(msg)
+                await self.writer.drain()
+                print(msg)
+            except ConnectionResetError:
+                return
 
     def send_raw_message(self, msg):
         if not self.writer:

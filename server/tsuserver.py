@@ -139,9 +139,13 @@ class TsuServer3:
                     return song['name'], song['length']
         raise ServerError('Music not found.')
 
+    def send_all_cmd_pred(self, cmd, *args, pred=lambda x: True):
+        for client in self.client_manager.clients:
+            if pred(client):
+                client.send_command(cmd, *args)
+
     def broadcast_global(self, client, msg):
-        for area in self.area_manager.areas:
-            area.send_command('CT', '{}[{}][{}]'.format(self.config['hostname'], client.area.id,
-                                                        self.get_char_name_by_id(client.char_id)), msg)
+        charname = self.get_char_name_by_id(client.char_id)
+        self.send_all_cmd_pred('CT', '{}[{}][{}]'.format(self.config['hostname'], client.area.id, charname), msg)
         if self.config['use_district']:
-            self.district_client.send_raw_message('TEST')
+            self.district_client.send_raw_message('GLOBAL#{}#{}#{}'.format(client.area.id, charname, msg))
