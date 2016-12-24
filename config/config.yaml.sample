@@ -7,3 +7,8 @@ guardpass: guard
 modpass: mod
 
 hostname: <dollar>H
+
+use_district: false
+district_ip: 127.0.0.1
+district_port: 1234
+district_password: password
