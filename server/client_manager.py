@@ -72,6 +72,12 @@ class ClientManager:
                 area.new_client(self)
             self.send_host_message('Changed area to {}.'.format(area.name))
 
+        def send_area_list(self):
+            msg = '=== Areas ==='
+            for i, area in enumerate(self.server.area_manager.areas):
+                msg += '\r\nArea {}: {} (users: {})'.format(i, area.name, len(area.clients))
+            self.send_host_message(msg)
+
         def send_done(self):
             avail_char_ids = set(range(len(self.server.char_list))) - set([x.char_id for x in self.area.clients])
             char_list = [-1] * len(self.server.char_list)

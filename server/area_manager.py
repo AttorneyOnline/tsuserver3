@@ -82,3 +82,9 @@ class AreaManager:
             if area.name == name:
                 return area
         raise AreaError('Area not found.')
+
+    def get_area_by_id(self, num):
+        for area in self.areas:
+            if area.id == num:
+                return area
+        raise AreaError('Area not found.')

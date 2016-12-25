@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from server.exceptions import ClientError, ServerError, ArgumentError
+from server.exceptions import ClientError, ServerError, ArgumentError, AreaError
 
 
 def ooc_cmd_switch(client, arg):
@@ -42,3 +42,27 @@ def ooc_cmd_need(client, arg):
     if len(arg) == 0:
         raise ArgumentError("You must specify what you need.")
     client.server.broadcast_need(client, arg)
+
+
+def ooc_cmd_area(client, arg):
+    args = arg.split()
+    if len(args) == 0:
+        client.send_area_list()
+    elif len(args) == 1:
+        try:
+            area = client.server.area_manager.get_area_by_id(int(args[0]))
+            client.change_area(area)
+        except ValueError:
+            raise ArgumentError('Area ID must be a number.')
+        except (AreaError, ClientError):
+            raise
+    else:
+        raise ArgumentError('Too many arguments. Use /area <id>.')
+
+
+def ooc_cmd_pm(client, arg):
+    pass
+
+
+def ooc_cmd_charselect(client, arg):
+    pass
