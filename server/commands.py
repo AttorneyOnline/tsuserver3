@@ -84,7 +84,8 @@ def ooc_cmd_pm(client, arg):
     else:
         client.send_host_message('PM sent to {} user(s). Message: {}'.format(len(target_clients), msg))
         for c in target_clients:
-            c.send_host_message('PM from {} ({}): {}'.format(client.name, client.area.name, msg))
+            c.send_host_message(
+                'PM from {} in {} ({}): {}'.format(client.name, client.area.name, client.get_char_name(), msg))
 
 
 def ooc_cmd_charselect(client, arg):
