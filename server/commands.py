@@ -61,7 +61,30 @@ def ooc_cmd_area(client, arg):
 
 
 def ooc_cmd_pm(client, arg):
-    pass
+    args = arg.split()
+    if len(args) < 2:
+        raise ArgumentError('Not enough arguments. Use /pm <target> <message>.')
+    target_clients = []
+    msg = ' '.join(args[1:])
+    for char_name in client.server.char_list:
+        if arg.lower().startswith(char_name.lower()):
+            char_len = len(char_name.split())
+            to_search = ' '.join(args[:char_len])
+            c = client.area.get_target_by_char_name(to_search)
+            if c:
+                target_clients.append(c)
+                msg = ' '.join(args[char_len:])
+                if not msg:
+                    raise ArgumentError('Not enough arguments. Use /pm <target> <message>.')
+                break
+    if not target_clients:
+        target_clients = client.server.client_manager.get_targets(client, args[0])
+    if not target_clients:
+        client.send_host_message('No targets found.')
+    else:
+        client.send_host_message('PM sent to {} user(s). Message: {}'.format(len(target_clients), msg))
+        for c in target_clients:
+            c.send_host_message('PM from {} ({}): {}'.format(client.name, client.area.name, msg))
 
 
 def ooc_cmd_charselect(client, arg):

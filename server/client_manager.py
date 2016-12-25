@@ -98,6 +98,9 @@ class ClientManager:
             else:
                 raise ClientError('Invalid password.')
 
+        def get_ip(self):
+            return self.transport.get_extra_info('peername')[0]
+
     def __init__(self, server):
         self.clients = set()
         self.cur_id = 0
@@ -111,3 +114,33 @@ class ClientManager:
 
     def remove_client(self, client):
         self.clients.remove(client)
+
+    def get_targets_by_ip(self, ip):
+        clients = []
+        for client in self.clients:
+            if client.get_ip() == ip:
+                clients.append(client)
+        return clients
+
+    def get_targets_by_ooc_name(self, name):
+        clients = []
+        for client in self.clients:
+            if client.name == name:
+                clients.append(client)
+        return clients
+
+    def get_targets(self, client, target):
+        # check if it's IP but only if mod
+        if client.is_mod:
+            clients = self.get_targets_by_ip(target)
+            if clients:
+                return clients
+        # check if it's a character name in the same area
+        c = client.area.get_target_by_char_name(target)
+        if c:
+            return [c]
+        # check if it's an OOC name
+        ooc = self.get_targets_by_ooc_name(target)
+        if ooc:
+            return ooc
+        return None

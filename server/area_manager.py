@@ -60,6 +60,12 @@ class AreaManager:
                 self.music_looper = asyncio.get_event_loop().call_later(length,
                                                                         lambda: self.play_music(name, client, length))
 
+        def get_target_by_char_name(self, char_name):
+            for c in self.clients:
+                if self.server.get_char_name_by_id(c.char_id) == char_name:
+                    return c
+            return None
+
     def __init__(self, server):
         self.server = server
         self.cur_id = 0
