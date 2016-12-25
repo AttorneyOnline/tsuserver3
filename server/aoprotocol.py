@@ -137,7 +137,10 @@ class AOProtocol(asyncio.Protocol):
         if not self.validate_net_cmd(args, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR, needs_auth=False):
             return
         cid = args[1]
-        self.client.change_character(cid)
+        try:
+            self.client.change_character(cid)
+        except ClientError:
+            return
 
     def net_cmd_ms(self, args):
         if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.STR,
