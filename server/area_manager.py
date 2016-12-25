@@ -55,7 +55,7 @@ class AreaManager:
                 c.send_command(cmd, *args)
 
         def set_next_msg_delay(self, msg_length):
-            self.set_next_msg_delay(time.time() + 60 * msg_length)
+            self.next_message_time = round(time.time() * 1000.0 + 60 * msg_length)
 
         def play_music(self, name, client, length=-1):
             self.send_command('MC', name, client.char_id)
@@ -72,7 +72,7 @@ class AreaManager:
             return None
 
         def can_send_message(self):
-            return (time.time() - self.next_message_time) > 0
+            return (time.time() * 1000.0 - self.next_message_time) > 0
 
     def __init__(self, server):
         self.server = server
