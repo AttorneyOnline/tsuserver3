@@ -21,7 +21,7 @@ import yaml
 
 from server.aoprotocol import AOProtocol
 from server.area_manager import AreaManager
-from server.banlist import Banlist
+from server.ban_manager import BanManager
 from server.client_manager import ClientManager
 from server.districtclient import DistrictClient
 from server.exceptions import ServerError
@@ -31,7 +31,7 @@ class TsuServer3:
     def __init__(self):
         self.client_manager = ClientManager(self)
         self.area_manager = AreaManager(self)
-        self.banlist = Banlist()
+        self.ban_manager = BanManager()
         self.version = 'tsuserver3dev'
         self.char_list = None
         self.char_pages_ao1 = None
