@@ -33,7 +33,6 @@ class ClientManager:
             self.is_mod = False
 
         def send_raw_message(self, msg):
-            logger.log_debug('[OUT][RAW]{}'.format(msg), self)
             self.transport.write(msg.encode('utf-8'))
 
         def send_command(self, command, *args):
