@@ -90,6 +90,10 @@ class ClientManager:
             self.send_command('OPPASS', fantacrypt.fanta_encrypt(self.server.config['guardpass']))
             self.send_command('DONE')
 
+        def char_select(self):
+            self.char_id = -1
+            self.send_done()
+
         def auth_mod(self, password):
             if self.is_mod:
                 raise ClientError('Already logged in.')
