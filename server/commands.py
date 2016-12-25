@@ -88,7 +88,19 @@ def ooc_cmd_pm(client, arg):
 
 
 def ooc_cmd_charselect(client, arg):
-    pass
+    if arg:
+        if client.is_mod:
+            targets = client.server.client_manager.get_targets(client, arg)
+            if targets:
+                for c in targets:
+                    c.send_done()
+                client.send_host_message('Forced {} client(s) into character selection.'.format(len(targets)))
+            else:
+                client.send_host_message('No targets found.')
+        else:
+            raise ArgumentError("This command doesn't take any arguments.")
+    else:
+        client.send_done()
 
 
 def ooc_cmd_login(client, arg):
