@@ -62,7 +62,7 @@ class AreaManager:
 
         def get_target_by_char_name(self, char_name):
             for c in self.clients:
-                if self.server.get_char_name_by_id(c.char_id) == char_name:
+                if c.get_char_name() == char_name:
                     return c
             return None
 
