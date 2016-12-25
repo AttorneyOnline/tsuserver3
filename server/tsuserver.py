@@ -25,6 +25,7 @@ from server.ban_manager import BanManager
 from server.client_manager import ClientManager
 from server.districtclient import DistrictClient
 from server.exceptions import ServerError
+from server.masterserverclient import MasterServerClient
 
 
 class TsuServer3:
@@ -42,6 +43,7 @@ class TsuServer3:
         self.load_characters()
         self.load_music()
         self.district_client = None
+        self.ms_client = None
 
     def start(self):
         loop = asyncio.get_event_loop()
@@ -56,6 +58,10 @@ class TsuServer3:
         if self.config['use_district']:
             self.district_client = DistrictClient(self)
             asyncio.ensure_future(self.district_client.connect(), loop=loop)
+
+        if self.config['use_masterserver']:
+            self.ms_client = MasterServerClient(self)
+            asyncio.ensure_future(self.ms_client.connect(), loop=loop)
 
         print('Server started.')
 
