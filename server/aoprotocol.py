@@ -158,6 +158,10 @@ class AOProtocol(asyncio.Protocol):
             return
         if ding not in (0, 1):
             return
+        if color not in (0, 1, 2, 3, 4):
+            return
+        if color == 2 and not self.client.is_mod:
+            color = 0
         msg = text[:256]
         self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid1,
                                       sfx_delay, button, unk, cid2, ding, color)
@@ -202,6 +206,14 @@ class AOProtocol(asyncio.Protocol):
         except ClientError as ex:
             self.client.send_host_message(ex)
 
+    def net_cmd_rt(self, args):
+        if not self.validate_net_cmd(args, self.ArgType.STR):
+            return
+        if args[0] not in ('testimony1', 'testimony2'):
+            return
+        self.client.area.send_command('RT', args[0])
+        logger.log_server("[{}]{} Used WT/CE".format(self.client.area.id, self.client.get_char_name()), self.client)
+
     net_cmd_dispatcher = {
         'HI': net_cmd_hi,  # handshake
         'CH': net_cmd_ch,  # keepalive
@@ -214,4 +226,5 @@ class AOProtocol(asyncio.Protocol):
         'MS': net_cmd_ms,  # IC message
         'CT': net_cmd_ct,  # OOC message
         'MC': net_cmd_mc,  # play song
+        'RT': net_cmd_rt,  # WT/CE buttons
     }
