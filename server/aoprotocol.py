@@ -19,6 +19,7 @@ import asyncio
 from enum import Enum
 
 from server import commands
+from server import logger
 from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
 from server.fantacrypt import fanta_decrypt
 
@@ -36,19 +37,21 @@ class AOProtocol(asyncio.Protocol):
         self.ping_timeout = None
 
     def data_received(self, data):
-        print(data)
         self.buffer += data.decode()
         if len(self.buffer) > 8192:
             self.client.disconnect()
         for msg in self.get_messages():
+            if len(msg) < 2:
+                self.client.disconnect()
+                return
             if msg[0] in ('#', '3', '4'):
                 if msg[0] == '#':
                     msg = msg[1:]
                 spl = msg.split('#', 1)
                 msg = '#'.join([fanta_decrypt(spl[0])] + spl[1:])
+                logger.log_debug('[INC][RAW]{}'.format(msg), self.client)
             try:
                 cmd, *args = msg.split('#')
-                print('{}, {}'.format(cmd, args))
                 self.net_cmd_dispatcher[cmd](self, args)
             except KeyError:
                 return
@@ -155,8 +158,10 @@ class AOProtocol(asyncio.Protocol):
             return
         if ding not in (0, 1):
             return
-        self.client.area.send_command('MS', msg_type, pre, folder, anim, text[:256], pos, sfx, anim_type, cid1,
+        msg = text[:256]
+        self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid1,
                                       sfx_delay, button, unk, cid2, ding, color)
+        logger.log_server('[IC][{}][{}]{}'.format(self.client.area.id, self.client.get_char_name(), msg), self.client)
 
     def net_cmd_ct(self, args):
         if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR):
@@ -177,6 +182,8 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_host_message(ex)
         else:
             self.client.area.send_command('CT', self.client.name, args[1])
+            logger.log_server('[OOC][{}][{}]{}'.format(self.client.area.id, self.client.get_char_name(), args[1]),
+                              self.client)
 
     def net_cmd_mc(self, args):
         if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT):

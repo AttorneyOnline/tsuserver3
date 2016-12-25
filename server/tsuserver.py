@@ -19,6 +19,7 @@ import asyncio
 
 import yaml
 
+from server import logger
 from server.aoprotocol import AOProtocol
 from server.area_manager import AreaManager
 from server.ban_manager import BanManager
@@ -30,6 +31,7 @@ from server.masterserverclient import MasterServerClient
 
 class TsuServer3:
     def __init__(self):
+        logger.setup_logger()
         self.client_manager = ClientManager(self)
         self.area_manager = AreaManager(self)
         self.ban_manager = BanManager()
@@ -63,12 +65,14 @@ class TsuServer3:
             self.ms_client = MasterServerClient(self)
             asyncio.ensure_future(self.ms_client.connect(), loop=loop)
 
-        print('Server started.')
+        logger.log_debug('Server started.')
 
         try:
             loop.run_forever()
         except KeyboardInterrupt:
             pass
+
+        logger.log_debug('Server shutting down.')
 
         ao_server.close()
         loop.run_until_complete(ao_server.wait_closed())
@@ -132,12 +136,6 @@ class TsuServer3:
                 return i
         raise ServerError('Character not found.')
 
-    def get_char_name_by_id(self, char_id):
-        try:
-            return self.char_list[char_id]
-        except IndexError:
-            raise ServerError('Invalid character ID.')
-
     def get_song_data(self, music):
         for category in self.music_list:
             if category == music:
@@ -153,13 +151,13 @@ class TsuServer3:
                 client.send_command(cmd, *args)
 
     def broadcast_global(self, client, msg):
-        char_name = self.get_char_name_by_id(client.char_id)
+        char_name = client.get_char_name()
         self.send_all_cmd_pred('CT', '{}[{}][{}]'.format(self.config['hostname'], client.area.id, char_name), msg)
         if self.config['use_district']:
             self.district_client.send_raw_message('GLOBAL#{}#{}#{}'.format(client.area.id, char_name, msg))
 
     def broadcast_need(self, client, msg):
-        char_name = self.get_char_name_by_id(client.char_id)
+        char_name = client.get_char_name()
         area_name = client.area.name
         area_id = client.area.id
         self.send_all_cmd_pred('CT', '{}'.format(self.config['hostname']),

@@ -16,6 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import asyncio
 
+from server import logger
+
 
 class DistrictClient:
     def __init__(self, server):
@@ -40,7 +42,7 @@ class DistrictClient:
                 await asyncio.sleep(15)
 
     async def handle_connection(self):
-        print('District connected.')
+        logger.log_debug('District connected.')
         self.send_raw_message('AUTH#{}'.format(self.server.config['district_password']))
         while True:
             data = await self.reader.readuntil(b'\r\n')

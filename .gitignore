@@ -1,2 +1,3 @@
 /config/*
-/storage/banlist.json
+/storage/*.json
+/logs/*.log

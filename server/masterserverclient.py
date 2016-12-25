@@ -18,6 +18,8 @@
 
 import asyncio
 
+from server import logger
+
 
 class MasterServerClient:
     def __init__(self, server):
@@ -42,13 +44,12 @@ class MasterServerClient:
                 await asyncio.sleep(15)
 
     async def handle_connection(self):
-        print('Master server connected.')
+        logger.log_debug('Master server connected.')
         await self.send_server_info()
         while True:
             data = await self.reader.readuntil(b'#%')
             if not data:
                 return
-            print(data)
             cmd, *args = data.decode()[:-2].split('#')
             if cmd == 'CHECK':
                 await self.send_raw_message('PING#%')
@@ -63,7 +64,6 @@ class MasterServerClient:
 
     async def send_raw_message(self, msg):
         try:
-            print(msg)
             self.writer.write(msg.encode())
             await self.writer.drain()
         except ConnectionResetError:

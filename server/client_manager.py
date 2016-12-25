@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from server import fantacrypt
+from server import logger
 from server.exceptions import ClientError, AreaError
 
 
@@ -32,7 +33,7 @@ class ClientManager:
             self.is_mod = False
 
         def send_raw_message(self, msg):
-            print(msg)
+            logger.log_debug('[OUT][RAW]{}'.format(msg), self)
             self.transport.write(msg.encode('utf-8'))
 
         def send_command(self, command, *args):
@@ -104,6 +105,9 @@ class ClientManager:
 
         def get_ip(self):
             return self.transport.get_extra_info('peername')[0]
+
+        def get_char_name(self):
+            return self.server.char_list[self.char_id]
 
     def __init__(self, server):
         self.clients = set()
