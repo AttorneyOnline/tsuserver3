@@ -147,17 +147,17 @@ class TsuServer3:
                 client.send_command(cmd, *args)
 
     def broadcast_global(self, client, msg):
-        charname = self.get_char_name_by_id(client.char_id)
-        self.send_all_cmd_pred('CT', '{}[{}][{}]'.format(self.config['hostname'], client.area.id, charname), msg)
+        char_name = self.get_char_name_by_id(client.char_id)
+        self.send_all_cmd_pred('CT', '{}[{}][{}]'.format(self.config['hostname'], client.area.id, char_name), msg)
         if self.config['use_district']:
-            self.district_client.send_raw_message('GLOBAL#{}#{}#{}'.format(client.area.id, charname, msg))
+            self.district_client.send_raw_message('GLOBAL#{}#{}#{}'.format(client.area.id, char_name, msg))
 
     def broadcast_need(self, client, msg):
-        charname = self.get_char_name_by_id(client.char_id)
-        areaname = client.area.name
-        areaid = client.area.id
+        char_name = self.get_char_name_by_id(client.char_id)
+        area_name = client.area.name
+        area_id = client.area.id
         self.send_all_cmd_pred('CT', '{}'.format(self.config['hostname']),
                                '=== Advert ===\r\n{} in {} [{}] needs {}\r\n============='
-                               .format(charname, areaname, areaid, msg))
+                               .format(char_name, area_name, area_id, msg))
         if self.config['use_district']:
-            self.district_client.send_raw_message('NEED#{}#{}#{}#{}'.format(charname, areaname, areaid, msg))
+            self.district_client.send_raw_message('NEED#{}#{}#{}#{}'.format(char_name, area_name, area_id, msg))
