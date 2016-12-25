@@ -143,6 +143,8 @@ class AOProtocol(asyncio.Protocol):
             return
 
     def net_cmd_ms(self, args):
+        if not self.client.area.can_send_message():
+            return
         if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.STR,
                                      self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
                                      self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
@@ -168,6 +170,7 @@ class AOProtocol(asyncio.Protocol):
         msg = text[:256]
         self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid1,
                                       sfx_delay, button, unk, cid2, ding, color)
+        self.client.area.set_next_msg_delay(len(msg))
         logger.log_server('[IC][{}][{}]{}'.format(self.client.area.id, self.client.get_char_name(), msg), self.client)
 
     def net_cmd_ct(self, args):

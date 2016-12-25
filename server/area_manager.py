@@ -17,6 +17,7 @@
 import asyncio
 import random
 
+import time
 import yaml
 
 from server.exceptions import AreaError
@@ -32,6 +33,7 @@ class AreaManager:
             self.bg_lock = bg_lock
             self.server = server
             self.music_looper = None
+            self.next_message_time = 0
 
         def new_client(self, client):
             self.clients.add(client)
@@ -52,6 +54,9 @@ class AreaManager:
             for c in self.clients:
                 c.send_command(cmd, *args)
 
+        def set_next_msg_delay(self, msg_length):
+            self.set_next_msg_delay(time.time() + 60 * msg_length)
+
         def play_music(self, name, client, length=-1):
             self.send_command('MC', name, client.char_id)
             if self.music_looper:
@@ -65,6 +70,9 @@ class AreaManager:
                 if c.get_char_name() == char_name:
                     return c
             return None
+
+        def can_send_message(self):
+            return (time.time() - self.next_message_time) > 0
 
     def __init__(self, server):
         self.server = server
