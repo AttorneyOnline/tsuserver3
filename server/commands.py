@@ -66,3 +66,13 @@ def ooc_cmd_pm(client, arg):
 
 def ooc_cmd_charselect(client, arg):
     pass
+
+
+def ooc_cmd_login(client, arg):
+    if len(arg) == 0:
+        raise ArgumentError('You must specify the password.')
+    try:
+        client.auth_mod(arg)
+    except ClientError:
+        raise
+    client.send_host_message('Logged in as a moderator.')

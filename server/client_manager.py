@@ -29,6 +29,7 @@ class ClientManager:
             self.area = server.area_manager.default_area()
             self.server = server
             self.name = ''
+            self.is_mod = False
 
         def send_raw_message(self, msg):
             print(msg)
@@ -88,6 +89,14 @@ class ClientManager:
             self.send_command('MM', 1)
             self.send_command('OPPASS', fantacrypt.fanta_encrypt(self.server.config['guardpass']))
             self.send_command('DONE')
+
+        def auth_mod(self, password):
+            if self.is_mod:
+                raise ClientError('Already logged in.')
+            if password == self.server.config['modpass']:
+                self.is_mod = True
+            else:
+                raise ClientError('Invalid password.')
 
     def __init__(self, server):
         self.clients = set()
