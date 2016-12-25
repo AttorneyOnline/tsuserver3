@@ -107,6 +107,8 @@ class ClientManager:
             return self.transport.get_extra_info('peername')[0]
 
         def get_char_name(self):
+            if self.char_id == -1:
+                return 'CHAR_SELECT'
             return self.server.char_list[self.char_id]
 
     def __init__(self, server):
