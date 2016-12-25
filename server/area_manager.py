@@ -34,6 +34,8 @@ class AreaManager:
             self.server = server
             self.music_looper = None
             self.next_message_time = 0
+            self.hp_def = 10
+            self.hp_pro = 10
 
         def new_client(self, client):
             self.clients.add(client)
@@ -74,6 +76,17 @@ class AreaManager:
 
         def can_send_message(self):
             return (time.time() * 1000.0 - self.next_message_time) > 0
+
+        def change_hp(self, side, val):
+            if not 0 <= val <= 10:
+                raise AreaError('Invalid penalty value.')
+            if not 1 <= side <= 2:
+                raise AreaError('Invalid penalty side.')
+            if side == 1:
+                self.hp_def = val
+            elif side == 2:
+                self.hp_pro = val
+            self.send_command('HP', side, val)
 
     def __init__(self, server):
         self.server = server

@@ -220,6 +220,16 @@ class AOProtocol(asyncio.Protocol):
         self.client.area.send_command('RT', args[0])
         logger.log_server("[{}]{} Used WT/CE".format(self.client.area.id, self.client.get_char_name()), self.client)
 
+    def net_cmd_hp(self, args):
+        if not self.validate_net_cmd(args, self.ArgType.INT, self.ArgType.INT):
+            return
+        try:
+            self.client.area.change_hp(args[0], args[1])
+            logger.log_server('[{}]{} changed HP ({}) to {}'
+                              .format(self.client.area.id, self.client.get_char_name(), args[0], args[1]), self.client)
+        except AreaError:
+            return
+
     net_cmd_dispatcher = {
         'HI': net_cmd_hi,  # handshake
         'CH': net_cmd_ch,  # keepalive
@@ -233,4 +243,5 @@ class AOProtocol(asyncio.Protocol):
         'CT': net_cmd_ct,  # OOC message
         'MC': net_cmd_mc,  # play song
         'RT': net_cmd_rt,  # WT/CE buttons
+        'HP': net_cmd_hp,  # penalties
     }
