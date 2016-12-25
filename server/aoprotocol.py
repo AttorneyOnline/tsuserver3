@@ -37,7 +37,7 @@ class AOProtocol(asyncio.Protocol):
         self.ping_timeout = None
 
     def data_received(self, data):
-        self.buffer += data.decode()
+        self.buffer += data.decode('utf-8', 'ignore')
         if len(self.buffer) > 8192:
             self.client.disconnect()
         for msg in self.get_messages():
