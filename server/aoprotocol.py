@@ -90,8 +90,10 @@ class AOProtocol(asyncio.Protocol):
     def net_cmd_hi(self, args):
         if not self.validate_net_cmd(args, self.ArgType.STR, needs_auth=False):
             return
-        # todo check bans etc.
         self.client.hdid = args[0]
+        if self.server.ban_manager.is_banned(self.client.get_ip()):
+            self.client.disconnect()
+            return
         self.client.send_command('ID', self.client.id, self.server.version)
         self.client.send_command('PN', self.server.get_player_count() - 1, self.server.config['playerlimit'])
 

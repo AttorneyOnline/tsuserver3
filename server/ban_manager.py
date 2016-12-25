@@ -17,24 +17,31 @@
 
 import json
 
+from server.exceptions import ServerError
+
 
 class BanManager:
     def __init__(self):
-        self.bans = set()
+        self.bans = []
         self.load_banlist()
 
     def load_banlist(self):
         try:
             with open('storage/banlist.json', 'r') as banlist_file:
-                data = json.loads(banlist_file)
+                self.bans = json.load(banlist_file)
         except FileNotFoundError:
             return
-        print(data)  # todo implement
 
     def write_banlist(self):
         with open('storage/banlist.json', 'w') as banlist_file:
             json.dump(self.bans, banlist_file)
 
     def add_ban(self, ip):
-        self.bans.add(ip)
+        if ip not in self.bans:
+            self.bans.append(ip)
+        else:
+            raise ServerError('This IP is already banned.')
         self.write_banlist()
+
+    def is_banned(self, ip):
+        return ip in self.bans

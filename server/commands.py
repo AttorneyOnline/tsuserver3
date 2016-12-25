@@ -111,3 +111,35 @@ def ooc_cmd_login(client, arg):
     except ClientError:
         raise
     client.send_host_message('Logged in as a moderator.')
+
+
+def ooc_cmd_kick(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a target.')
+    targets = client.server.client_manager.get_targets(client, arg)
+    if targets:
+        for c in targets:
+            c.disconnect()
+        client.send_host_message("Kicked {} client(s).".format(len(targets)))
+    else:
+        client.send_host_message("No targets found.")
+
+
+def ooc_cmd_ban(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    ip = arg.strip()
+    if len(ip) < 7:
+        raise ArgumentError('You must specify an IP.')
+    try:
+        client.server.ban_manager.add_ban(ip)
+    except ServerError:
+        raise
+    targets = client.server.client_manager.get_targets_by_ip(ip)
+    if targets:
+        for c in targets:
+            c.disconnect()
+        client.send_host_message('Kicked {} existing client(s).'.format(len(targets)))
+    client.send_host_message('Added {} to the banlist.'.format(ip))
