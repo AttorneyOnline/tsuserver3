@@ -53,7 +53,7 @@ class DistrictClient:
                 glob_name = '{}[{}:{}][{}]'.format(self.server.config['hostname'], args[1], args[2], args[3])
                 if args[0] == '1':
                     glob_name += '[M]'
-                self.server.send_all_cmd_pred('CT', glob_name, args[4])
+                self.server.send_all_cmd_pred('CT', glob_name, args[4], pred=lambda x: not x.muted_global)
             elif cmd == 'NEED':
                 need_msg = '=== Cross Advert ===\r\n{} at {} in {} [{}] needs {}\r\n=================' \
                     .format(args[1], args[0], args[2], args[3], args[4])

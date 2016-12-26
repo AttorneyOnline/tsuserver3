@@ -35,6 +35,8 @@ def ooc_cmd_switch(client, arg):
 
 
 def ooc_cmd_g(client, arg):
+    if client.muted_global:
+        raise ClientError('You have the global chat muted.')
     if len(arg) == 0:
         raise ArgumentError("Can't send an empty message.")
     client.server.broadcast_global(client, arg)
@@ -42,12 +44,24 @@ def ooc_cmd_g(client, arg):
 
 
 def ooc_cmd_gm(client, arg):
+    if client.muted_global:
+        raise ClientError('You have the global chat muted.')
     if len(arg) == 0:
         raise ArgumentError("Can't send an empty message.")
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     client.server.broadcast_global(client, arg, True)
     logger.log_server('[{}][{}][GLOBAL-MOD]{}.'.format(client.area.id, client.get_char_name(), arg), client)
+
+
+def ooc_cmd_toggleglobal(client, arg):
+    if len(arg) != 0:
+        raise ArgumentError("This command doesn't take any arguments")
+    client.muted_global = not client.muted_global
+    glob_stat = 'on'
+    if client.muted_global:
+        glob_stat = 'off'
+    client.send_host_message('Global chat turned {}.'.format(glob_stat))
 
 
 def ooc_cmd_need(client, arg):

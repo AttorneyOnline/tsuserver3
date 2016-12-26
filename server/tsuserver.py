@@ -164,10 +164,10 @@ class TsuServer3:
         ooc_name = '{}[{}][{}]'.format(self.config['hostname'], client.area.id, char_name)
         if as_mod:
             ooc_name += '[M]'
-        self.send_all_cmd_pred('CT', ooc_name, msg)
+        self.send_all_cmd_pred('CT', ooc_name, msg, pred=lambda x: not x.muted_global)
         if self.config['use_district']:
-            self.district_client.send_raw_message('GLOBAL#{}#{}#{}#{}'
-                                                  .format(int(as_mod), client.area.id, char_name, msg))
+            self.district_client.send_raw_message(
+                'GLOBAL#{}#{}#{}#{}'.format(int(as_mod), client.area.id, char_name, msg))
 
     def broadcast_need(self, client, msg):
         char_name = client.get_char_name()
