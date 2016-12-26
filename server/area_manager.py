@@ -38,6 +38,7 @@ class AreaManager:
             self.hp_pro = 10
             self.doc = ''
             self.status = 'IDLE'
+            self.judgelog = []
 
         def new_client(self, client):
             self.clients.add(client)
@@ -106,6 +107,11 @@ class AreaManager:
 
         def change_doc(self, doc=''):
             self.doc = doc
+
+        def add_to_judgelog(self, client, msg):
+            if len(self.judgelog) >= 10:
+                self.judgelog = self.judgelog[1:]
+            self.judgelog.append('{} ({}) {}.'.format(client.get_char_name(), client.get_ip(), msg))
 
     def __init__(self, server):
         self.server = server
