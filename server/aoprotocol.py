@@ -244,6 +244,12 @@ class AOProtocol(asyncio.Protocol):
                                               self.client.area.id), pred=lambda c: c.is_mod)
         logger.log_server('[{}]{} called a moderator.'.format(self.client.area.id, self.client.get_char_name()))
 
+    def net_cmd_opKICK(self, args):
+        self.net_cmd_ct(['opkick', '/kick {}'.format(args[0])])
+
+    def net_cmd_opBAN(self, args):
+        self.net_cmd_ct(['opban', '/ban {}'.format(args[0])])
+
     net_cmd_dispatcher = {
         'HI': net_cmd_hi,  # handshake
         'CH': net_cmd_ch,  # keepalive
@@ -259,4 +265,6 @@ class AOProtocol(asyncio.Protocol):
         'RT': net_cmd_rt,  # WT/CE buttons
         'HP': net_cmd_hp,  # penalties
         'ZZ': net_cmd_zz,  # call mod button
+        'opKICK': net_cmd_opKICK,  # /kick with guard on
+        'opBAN': net_cmd_opBAN,  # /ban with guard on
     }
