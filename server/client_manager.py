@@ -90,6 +90,33 @@ class ClientManager:
                 msg += '\r\nArea {}: {} (users: {})'.format(i, area.name, len(area.clients))
             self.send_host_message(msg)
 
+        def get_area_info(self, area_id):
+            info = ''
+            try:
+                area = self.server.area_manager.get_area_by_id(area_id)
+            except AreaError:
+                raise
+            info += '= Area {}: {} =='.format(area.id, area.name)
+            sorted_clients = sorted(area.clients, key=lambda x: x.get_char_name())
+            for c in sorted_clients:
+                info += '\r\n{}'.format(c.get_char_name())
+                if self.is_mod:
+                    info += ' ({})'.format(c.get_ip())
+            return info
+
+        def send_area_info(self, area_id):
+            try:
+                info = self.get_area_info(area_id)
+            except AreaError:
+                raise
+            self.send_host_message(info)
+
+        def send_all_area_info(self):
+            info = '== Area List =='
+            for i in range(len(self.server.area_manager.areas)):
+                info += '\r\n{}'.format(self.get_area_info(i))
+            self.send_host_message(info)
+
         def send_done(self):
             avail_char_ids = set(range(len(self.server.char_list))) - set([x.char_id for x in self.area.clients])
             char_list = [-1] * len(self.server.char_list)

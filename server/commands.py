@@ -62,6 +62,27 @@ def ooc_cmd_area(client, arg):
         raise ArgumentError('Too many arguments. Use /area <id>.')
 
 
+def ooc_cmd_getarea(client, arg):
+    if len(arg) == 0:
+        try:
+            client.send_area_info(client.area.id)
+        except AreaError:
+            raise
+    else:
+        try:
+            client.send_area_info(int(arg))
+        except AreaError:
+            raise
+        except ValueError:
+            raise ArgumentError('Invalid argument. Use /getarea <id>.')
+
+
+def ooc_cmd_getareas(client, arg):
+    if len(arg) != 0:
+        raise ArgumentError('This command takes no arguments.')
+    client.send_all_area_info()
+
+
 def ooc_cmd_doc(client, arg):
     if len(arg) == 0:
         client.send_host_message('Document: {}'.format(client.area.doc))
