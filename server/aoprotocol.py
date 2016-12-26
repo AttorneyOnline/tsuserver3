@@ -183,6 +183,9 @@ class AOProtocol(asyncio.Protocol):
             return
         if self.client.name == '':
             self.client.name = args[0]
+        if self.client.name.startswith(self.server.config['hostname']):
+            self.client.send_host_message('That name is reserved!')
+            return
         if args[1].startswith('/'):
             spl = args[1][1:].split(' ', 1)
             cmd = spl[0]
