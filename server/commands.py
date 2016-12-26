@@ -14,6 +14,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import random
+
 from server import logger
 from server.exceptions import ClientError, ServerError, ArgumentError, AreaError
 
@@ -183,6 +185,23 @@ def ooc_cmd_bg(client, arg):
         raise
     client.area.send_host_message('{} changed the background to {}.'.format(client.get_char_name(), arg))
     logger.log_server('[{}][{}]Changed background to {}'.format(client.area.id, client.get_char_name(), arg), client)
+
+
+def ooc_cmd_roll(client, arg):
+    roll_max = 11037
+    if len(arg) != 0:
+        try:
+            val = int(arg)
+            if not 1 <= val <= roll_max:
+                raise ArgumentError('Roll value must be between 1 and {}.'.format(roll_max))
+        except ValueError:
+            raise ArgumentError('Argument must be a number')
+    else:
+        val = roll_max
+    roll = random.randint(1, val)
+    client.area.send_host_message('{} rolled {} out of {}.'.format(client.get_char_name(), roll, val))
+    logger.log_server(
+        '[{}][{}]Used /roll and got {} out of {}.'.format(client.area.id, client.get_char_name(), roll, val))
 
 
 def ooc_cmd_login(client, arg):
