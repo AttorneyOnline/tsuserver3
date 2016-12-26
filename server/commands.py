@@ -61,6 +61,17 @@ def ooc_cmd_lm(client, arg):
         raise ArgumentError("Can't send an empty message.")
     client.area.send_command('CT', '{}[MOD][{}]'
                              .format(client.server.config['hostname'], client.get_char_name()), arg)
+    logger.log_server('[{}][{}][LOCAL-MOD]{}.'.format(client.area.id, client.get_char_name(), arg), client)
+
+
+def ooc_cmd_announce(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) == 0:
+        raise ArgumentError("Can't send an empty message.")
+    client.server.send_all_cmd_pred('CT', '{}'.format(client.server.config['hostname']),
+                                    '=== Announcement ===\r\n{}\r\n=================='.format(arg))
+    logger.log_server('[{}][{}][ANNOUNCEMENT]{}.'.format(client.area.id, client.get_char_name(), arg), client)
 
 
 def ooc_cmd_toggleglobal(client, arg):
