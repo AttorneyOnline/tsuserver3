@@ -1,14 +1,20 @@
-local: false
-port: 50000
+hostname: <dollar>H
 playerlimit: 100
-timeout: 250
+port: 50000
+local: false
 
 guardpass: guard
 modpass: mod
 
-hostname: <dollar>H
-
 use_district: false
 district_ip: 127.0.0.1
-district_port: 1234
-district_password: password
+district_port: 11037
+district_password: enter_password
+
+use_masterserver: true
+masterserver_ip: 51.255.160.217
+masterserver_port: 27016
+masterserver_name: My First Server
+masterserver_description: This is my flashy new server
+
+timeout: 250
