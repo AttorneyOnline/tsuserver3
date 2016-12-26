@@ -96,6 +96,8 @@ class ClientManager:
             for x in avail_char_ids:
                 char_list[x] = 0
             self.send_command('CharsCheck', *char_list)
+            self.send_command('HP', 1, self.area.hp_def)
+            self.send_command('HP', 2, self.area.hp_pro)
             self.send_command('BN', self.area.background)
             self.send_command('MM', 1)
             self.send_command('OPPASS', fantacrypt.fanta_encrypt(self.server.config['guardpass']))
