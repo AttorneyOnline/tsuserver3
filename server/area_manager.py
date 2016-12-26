@@ -56,6 +56,9 @@ class AreaManager:
             for c in self.clients:
                 c.send_command(cmd, *args)
 
+        def send_host_message(self, msg):
+            self.send_command('CT', self.server.config['hostname'], msg)
+
         def set_next_msg_delay(self, msg_length):
             delay = min(3000, 100 + 60 * msg_length)
             self.next_message_time = round(time.time() * 1000.0 + delay)
@@ -87,6 +90,11 @@ class AreaManager:
             elif side == 2:
                 self.hp_pro = val
             self.send_command('HP', side, val)
+
+        def change_background(self, bg):
+            if bg not in self.server.backgrounds:
+                raise AreaError('Invalid background name.')
+            self.send_command('BN', bg)
 
     def __init__(self, server):
         self.server = server

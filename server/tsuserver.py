@@ -40,10 +40,12 @@ class TsuServer3:
         self.char_pages_ao1 = None
         self.music_list = None
         self.music_pages_ao1 = None
+        self.backgrounds = None
         self.config = None
         self.load_config()
         self.load_characters()
         self.load_music()
+        self.load_backgrounds()
         self.district_client = None
         self.ms_client = None
 
@@ -105,6 +107,10 @@ class TsuServer3:
         with open('config/music.yaml', 'r') as music:
             self.music_list = yaml.load(music)
         self.build_music_pages_ao1()
+
+    def load_backgrounds(self):
+        with open('config/backgrounds.yaml', 'r') as bgs:
+            self.backgrounds = yaml.load(bgs)
 
     def build_char_pages_ao1(self):
         self.char_pages_ao1 = [self.char_list[x:x + 10] for x in range(0, len(self.char_list), 10)]

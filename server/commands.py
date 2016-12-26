@@ -104,6 +104,16 @@ def ooc_cmd_charselect(client, arg):
         client.char_select()
 
 
+def ooc_cmd_bg(client, arg):
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a name. Use /bg <background>.')
+    try:
+        client.area.change_background(arg)
+    except AreaError:
+        raise
+    client.area.send_host_message('{} changed the background to {}.'.format(client.get_char_name(), arg))
+
+
 def ooc_cmd_login(client, arg):
     if len(arg) == 0:
         raise ArgumentError('You must specify the password.')
