@@ -74,6 +74,24 @@ def ooc_cmd_announce(client, arg):
     logger.log_server('[{}][{}][ANNOUNCEMENT]{}.'.format(client.area.id, client.get_char_name(), arg), client)
 
 
+def ooc_cmd_judgelog(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) == 0:
+        area = client.area
+    else:
+        try:
+            area = client.server.area_manager.get_area_by_id(int(arg))
+        except AreaError:
+            raise
+        except ValueError:
+            raise ArgumentError('Invalid area ID. Use /judgelog <id>.')
+    msg = '=== Judge Log [{}] ==='.format(area.id)
+    for j in area.judgelog:
+        msg += '\r\n{}'.format(j)
+    client.send_host_message(msg)
+
+
 def ooc_cmd_toggleglobal(client, arg):
     if len(arg) != 0:
         raise ArgumentError("This command doesn't take any arguments")

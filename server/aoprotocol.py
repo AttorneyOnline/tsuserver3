@@ -230,6 +230,7 @@ class AOProtocol(asyncio.Protocol):
         if args[0] not in ('testimony1', 'testimony2'):
             return
         self.client.area.send_command('RT', args[0])
+        self.client.area.add_to_judgelog(self.client, 'used WT/CE')
         logger.log_server("[{}]{} Used WT/CE".format(self.client.area.id, self.client.get_char_name()), self.client)
 
     def net_cmd_hp(self, args):
@@ -237,6 +238,7 @@ class AOProtocol(asyncio.Protocol):
             return
         try:
             self.client.area.change_hp(args[0], args[1])
+            self.client.area.add_to_judgelog(self.client, 'changed the penalties')
             logger.log_server('[{}]{} changed HP ({}) to {}'
                               .format(self.client.area.id, self.client.get_char_name(), args[0], args[1]), self.client)
         except AreaError:
