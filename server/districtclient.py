@@ -39,7 +39,8 @@ class DistrictClient:
                 self.writer = None
                 self.reader = None
             finally:
-                await asyncio.sleep(15)
+                logger.log_debug("Couldn't connect to the district, retrying in 30 seconds.")
+                await asyncio.sleep(30)
 
     async def handle_connection(self):
         logger.log_debug('District connected.')
@@ -48,7 +49,9 @@ class DistrictClient:
             data = await self.reader.readuntil(b'\r\n')
             if not data:
                 return
-            cmd, *args = data.decode()[:-2].split('#')
+            raw_msg = data.decode()[:-2]
+            logger.log_debug('[DISTRICT][INC][RAW]{}'.format(raw_msg))
+            cmd, *args = raw_msg.split('#')
             if cmd == 'GLOBAL':
                 glob_name = '{}[{}:{}][{}]'.format(self.server.config['hostname'], args[1], args[2], args[3])
                 if args[0] == '1':
@@ -65,7 +68,6 @@ class DistrictClient:
             try:
                 self.writer.write(msg)
                 await self.writer.drain()
-                print(msg)
             except ConnectionResetError:
                 return
 

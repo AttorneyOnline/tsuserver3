@@ -41,7 +41,8 @@ class MasterServerClient:
                 self.writer = None
                 self.reader = None
             finally:
-                await asyncio.sleep(15)
+                logger.log_debug("Couldn't connect to the master server, retrying in 30 seconds.")
+                await asyncio.sleep(30)
 
     async def handle_connection(self):
         logger.log_debug('Master server connected.')
@@ -50,7 +51,9 @@ class MasterServerClient:
             data = await self.reader.readuntil(b'#%')
             if not data:
                 return
-            cmd, *args = data.decode()[:-2].split('#')
+            raw_msg = data.decode()[:-2]
+            logger.log_debug('[DISTRICT][INC][RAW]{}'.format(raw_msg))
+            cmd, *args = raw_msg.split('#')
             if cmd == 'CHECK':
                 await self.send_raw_message('PING#%')
             elif cmd == 'NOSERV':
