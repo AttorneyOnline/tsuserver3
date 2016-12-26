@@ -148,7 +148,10 @@ class TsuServer3:
                 return category, -1
             for song in self.music_list[category]:
                 if song['name'] == music:
-                    return song['name'], song['length']
+                    try:
+                        return song['name'], song['length']
+                    except KeyError:
+                        return song['name'], -1
         raise ServerError('Music not found.')
 
     def send_all_cmd_pred(self, cmd, *args, pred=lambda x: True):
