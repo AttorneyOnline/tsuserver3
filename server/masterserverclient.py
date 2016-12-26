@@ -52,7 +52,7 @@ class MasterServerClient:
             if not data:
                 return
             raw_msg = data.decode()[:-2]
-            logger.log_debug('[DISTRICT][INC][RAW]{}'.format(raw_msg))
+            logger.log_debug('[MASTERSERVER][INC][RAW]{}'.format(raw_msg))
             cmd, *args = raw_msg.split('#')
             if cmd == 'CHECK':
                 await self.send_raw_message('PING#%')
