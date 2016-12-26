@@ -45,6 +45,9 @@ class ClientManager:
         def send_host_message(self, msg):
             self.send_command('CT', self.server.config['hostname'], msg)
 
+        def send_motd(self):
+            self.send_host_message('=== MOTD ===\r\n{}\r\n============='.format(self.server.config['motd']))
+
         def disconnect(self):
             self.transport.close()
 
