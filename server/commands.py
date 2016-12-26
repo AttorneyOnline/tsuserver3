@@ -121,6 +121,8 @@ def ooc_cmd_pos(client, arg):
 def ooc_cmd_bg(client, arg):
     if len(arg) == 0:
         raise ArgumentError('You must specify a name. Use /bg <background>.')
+    if not client.is_mod and client.area.bg_lock:
+        raise AreaError("This area's background is locked")
     try:
         client.area.change_background(arg)
     except AreaError:
@@ -137,7 +139,7 @@ def ooc_cmd_login(client, arg):
     except ClientError:
         raise
     client.send_host_message('Logged in as a moderator.')
-    logger.log_server('[MOD]Logged in as moderator.', client)
+    logger.log_server('Logged in as moderator.', client)
 
 
 def ooc_cmd_kick(client, arg):
@@ -148,7 +150,7 @@ def ooc_cmd_kick(client, arg):
     targets = client.server.client_manager.get_targets(client, arg)
     if targets:
         for c in targets:
-            logger.log_server('[MOD]Kicked {}.'.format(c.get_ip()), client)
+            logger.log_server('Kicked {}.'.format(c.get_ip()), client)
             c.disconnect()
         client.send_host_message("Kicked {} client(s).".format(len(targets)))
     else:
@@ -171,4 +173,4 @@ def ooc_cmd_ban(client, arg):
             c.disconnect()
         client.send_host_message('Kicked {} existing client(s).'.format(len(targets)))
     client.send_host_message('Added {} to the banlist.'.format(ip))
-    logger.log_server('[MOD]Banned {}.'.format(ip), client)
+    logger.log_server('Banned {}.'.format(ip), client)

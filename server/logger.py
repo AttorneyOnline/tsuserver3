@@ -56,4 +56,6 @@ def parse_client_info(client):
     if client is None:
         return ''
     info = client.get_ip()
+    if client.is_mod:
+        return '[{:<15}][{}][MOD]'.format(info, client.id)
     return '[{:<15}][{}]'.format(info, client.id)
