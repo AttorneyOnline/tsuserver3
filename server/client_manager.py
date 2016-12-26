@@ -53,12 +53,16 @@ class ClientManager:
                 raise ClientError('Invalid Character ID.')
             if not self.area.is_char_available(char_id):
                 raise ClientError('Character not available.')
+            old_char = self.get_char_name()
             self.char_id = char_id
             self.send_command('PV', self.id, 'CID', self.char_id)
+            logger.log_server('[{}]Changed character from {} to {}.'
+                              .format(self.area.id, old_char, self.get_char_name()), self)
 
         def change_area(self, area):
             if self.area == area:
                 raise ClientError('You are already in this area.')
+            old_area = self.area
             if not area.is_char_available(self.char_id):
                 try:
                     new_char_id = area.get_rand_avail_char_id()
@@ -73,6 +77,9 @@ class ClientManager:
                 self.area = area
                 area.new_client(self)
             self.send_host_message('Changed area to {}.'.format(area.name))
+            logger.log_server(
+                '[{}]Changed area from {} ({}) to {} ({}).'.format(self.get_char_name(), old_area.name, old_area.id,
+                                                                   self.area.name, self.area.id), self)
             self.send_command('HP', 1, self.area.hp_def)
             self.send_command('HP', 2, self.area.hp_pro)
             self.send_command('BN', self.area.background)

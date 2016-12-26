@@ -197,8 +197,9 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_host_message(ex)
         else:
             self.client.area.send_command('CT', self.client.name, args[1])
-            logger.log_server('[OOC][{}][{}]{}'.format(self.client.area.id, self.client.get_char_name(), args[1]),
-                              self.client)
+            logger.log_server(
+                '[OOC][{}][{}][{}]{}'.format(self.client.area.id, self.client.get_char_name(), self.client.name,
+                                             args[1]), self.client)
 
     def net_cmd_mc(self, args):
         if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT):
@@ -212,6 +213,8 @@ class AOProtocol(asyncio.Protocol):
             try:
                 name, length = self.server.get_song_data(args[0])
                 self.client.area.play_music(name, self.client, length)
+                logger.log_server('[{}][{}]Changed music to {}.'
+                                  .format(self.client.area.id, self.client.get_char_name(), name), self.client)
             except ServerError:
                 return
         except ClientError as ex:

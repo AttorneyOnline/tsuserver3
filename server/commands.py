@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
+from server import logger
 from server.exceptions import ClientError, ServerError, ArgumentError, AreaError
 
 
@@ -36,12 +36,14 @@ def ooc_cmd_g(client, arg):
     if len(arg) == 0:
         raise ArgumentError("Can't send an empty message.")
     client.server.broadcast_global(client, arg)
+    logger.log_server('[{}][{}][GLOBAL]{}.'.format(client.area.id, client.get_char_name(), arg), client)
 
 
 def ooc_cmd_need(client, arg):
     if len(arg) == 0:
         raise ArgumentError("You must specify what you need.")
     client.server.broadcast_need(client, arg)
+    logger.log_server('[{}][{}][NEED]{}.'.format(client.area.id, client.get_char_name(), arg), client)
 
 
 def ooc_cmd_area(client, arg):
@@ -124,6 +126,7 @@ def ooc_cmd_bg(client, arg):
     except AreaError:
         raise
     client.area.send_host_message('{} changed the background to {}.'.format(client.get_char_name(), arg))
+    logger.log_server('[{}][{}]Changed background to {}'.format(client.area.id, client.get_char_name(), arg), client)
 
 
 def ooc_cmd_login(client, arg):
@@ -134,6 +137,7 @@ def ooc_cmd_login(client, arg):
     except ClientError:
         raise
     client.send_host_message('Logged in as a moderator.')
+    logger.log_server('[MOD]Logged in as moderator.', client)
 
 
 def ooc_cmd_kick(client, arg):
@@ -144,6 +148,7 @@ def ooc_cmd_kick(client, arg):
     targets = client.server.client_manager.get_targets(client, arg)
     if targets:
         for c in targets:
+            logger.log_server('[MOD]Kicked {}.'.format(c.get_ip()), client)
             c.disconnect()
         client.send_host_message("Kicked {} client(s).".format(len(targets)))
     else:
@@ -166,3 +171,4 @@ def ooc_cmd_ban(client, arg):
             c.disconnect()
         client.send_host_message('Kicked {} existing client(s).'.format(len(targets)))
     client.send_host_message('Added {} to the banlist.'.format(ip))
+    logger.log_server('[MOD]Banned {}.'.format(ip), client)
