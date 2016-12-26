@@ -238,6 +238,12 @@ class AOProtocol(asyncio.Protocol):
         except AreaError:
             return
 
+    def net_cmd_zz(self, _):
+        self.server.send_all_cmd_pred('ZZ', '{} ({}) in {} ({})'
+                                      .format(self.client.get_char_name(), self.client.get_ip(), self.client.area.name,
+                                              self.client.area.id), pred=lambda c: c.is_mod)
+        logger.log_server('[{}]{} called a moderator.'.format(self.client.area.id, self.client.get_char_name()))
+
     net_cmd_dispatcher = {
         'HI': net_cmd_hi,  # handshake
         'CH': net_cmd_ch,  # keepalive
@@ -252,4 +258,5 @@ class AOProtocol(asyncio.Protocol):
         'MC': net_cmd_mc,  # play song
         'RT': net_cmd_rt,  # WT/CE buttons
         'HP': net_cmd_hp,  # penalties
+        'ZZ': net_cmd_zz,  # call mod button
     }
