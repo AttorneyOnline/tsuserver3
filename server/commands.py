@@ -104,6 +104,18 @@ def ooc_cmd_charselect(client, arg):
         client.char_select()
 
 
+def ooc_cmd_pos(client, arg):
+    if len(arg) == 0:
+        client.change_position()
+        client.send_host_message('Position reset.')
+    else:
+        try:
+            client.change_position(arg)
+        except ClientError:
+            raise
+        client.send_host_message('Position changed.')
+
+
 def ooc_cmd_bg(client, arg):
     if len(arg) == 0:
         raise ArgumentError('You must specify a name. Use /bg <background>.')

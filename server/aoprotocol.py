@@ -167,6 +167,11 @@ class AOProtocol(asyncio.Protocol):
             return
         if color == 2 and not self.client.is_mod:
             color = 0
+        if self.client.pos:
+            pos = self.client.pos
+        else:
+            if pos not in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
+                return
         msg = text[:256]
         self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid1,
                                       sfx_delay, button, unk, cid2, ding, color)

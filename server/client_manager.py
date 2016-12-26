@@ -31,6 +31,7 @@ class ClientManager:
             self.server = server
             self.name = ''
             self.is_mod = False
+            self.pos = ''
 
         def send_raw_message(self, msg):
             self.transport.write(msg.encode('utf-8'))
@@ -112,6 +113,11 @@ class ClientManager:
             if self.char_id == -1:
                 return 'CHAR_SELECT'
             return self.server.char_list[self.char_id]
+
+        def change_position(self, pos=''):
+            if pos not in ('', 'def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
+                raise ClientError('Invalid position. Possible values: def, pro, hld, hlp, jud, wit.')
+            self.pos = pos
 
     def __init__(self, server):
         self.clients = set()
