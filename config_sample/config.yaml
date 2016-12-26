@@ -6,6 +6,8 @@ local: false
 guardpass: guard
 modpass: mod
 
+motd: Welcome to my server!
+
 use_district: false
 district_ip: 127.0.0.1
 district_port: 11037
