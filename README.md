@@ -1,16 +1,43 @@
 # tsuserver3
 
-todo
+A Python based server for Attorney Online.
 
 
 ## How to use
 
-todo
+Rename `config_sample` to `config` and edit the values to your liking.  
+Run by using `start_server.py`  
+Requires Python 3.5+
 
-## User Commands
+## Commands
 
-* todo
+### User Commands
 
+* g
+* toggleglobal
+* need
+* area
+* getarea
+* getareas
+* doc
+* cleardoc
+* status
+* pm
+* charselect
+* switch
+* pos
+* bg
+* roll
+
+### Mod Commands
+
+* login
+* gm
+* lm
+* judgelog
+* announce
+* kick
+* banip
 
 ## License
 
