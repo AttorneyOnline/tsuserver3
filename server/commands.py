@@ -62,6 +62,17 @@ def ooc_cmd_area(client, arg):
         raise ArgumentError('Too many arguments. Use /area <id>.')
 
 
+def ooc_cmd_doc(client, arg):
+    if len(arg) == 0:
+        client.send_host_message('Document: {}'.format(client.area.doc))
+        logger.log_server(
+            '[{}][{}]Requested document. Link: {}'.format(client.area.id, client.get_char_name(), client.area.doc))
+    else:
+        client.area.doc = arg
+        client.area.send_host_message('{} changed the doc link.'.format(client.get_char_name()))
+        logger.log_server('[{}][{}]Changed document to: {}'.format(client.area.id, client.get_char_name(), arg))
+
+
 def ooc_cmd_pm(client, arg):
     args = arg.split()
     if len(args) < 2:

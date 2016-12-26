@@ -36,6 +36,7 @@ class AreaManager:
             self.next_message_time = 0
             self.hp_def = 10
             self.hp_pro = 10
+            self.doc = ''
 
         def new_client(self, client):
             self.clients.add(client)
