@@ -190,7 +190,7 @@ def ooc_cmd_kick(client, arg):
         client.send_host_message("No targets found.")
 
 
-def ooc_cmd_ban(client, arg):
+def ooc_cmd_banip(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     ip = arg.strip()
