@@ -37,6 +37,7 @@ class AreaManager:
             self.hp_def = 10
             self.hp_pro = 10
             self.doc = ''
+            self.status = 'IDLE'
 
         def new_client(self, client):
             self.clients.add(client)
@@ -96,6 +97,15 @@ class AreaManager:
             if bg not in self.server.backgrounds:
                 raise AreaError('Invalid background name.')
             self.send_command('BN', bg)
+
+        def change_status(self, value):
+            allowed_values = ('idle', 'building-open', 'building-closed', 'casing-open', 'casing-closed', 'recess')
+            if value.lower not in allowed_values:
+                raise AreaError('Invalid status. Possible values: {}'.format(', '.join(allowed_values)))
+            self.status = value.upper()
+
+        def change_doc(self, doc=''):
+            self.doc = doc
 
     def __init__(self, server):
         self.server = server

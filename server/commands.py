@@ -68,9 +68,22 @@ def ooc_cmd_doc(client, arg):
         logger.log_server(
             '[{}][{}]Requested document. Link: {}'.format(client.area.id, client.get_char_name(), client.area.doc))
     else:
-        client.area.doc = arg
+        client.area.change_doc(arg)
         client.area.send_host_message('{} changed the doc link.'.format(client.get_char_name()))
         logger.log_server('[{}][{}]Changed document to: {}'.format(client.area.id, client.get_char_name(), arg))
+
+
+def ooc_cmd_status(client, arg):
+    if len(arg) == 0:
+        client.send_host_message('Current status: {}'.format(client.area.status))
+    else:
+        try:
+            client.area.change_status(arg)
+            client.area.send_host_message('{} changed status to {}.'.format(client.get_char_name(), client.area.status))
+            logger.log_server(
+                '[{}][{}]Changed status to {}'.format(client.area.id, client.get_char_name(), client.area.status))
+        except AreaError:
+            raise
 
 
 def ooc_cmd_pm(client, arg):
