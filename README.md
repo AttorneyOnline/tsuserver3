@@ -18,6 +18,7 @@ Requires Python 3.5+.
 * g
 * toggleglobal
 * need
+* toggleadverts
 * area
 * getarea
 * getareas

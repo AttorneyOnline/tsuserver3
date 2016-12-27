@@ -103,10 +103,22 @@ def ooc_cmd_toggleglobal(client, arg):
 
 
 def ooc_cmd_need(client, arg):
+    if client.muted_adverts:
+        raise ClientError('You have advertisements muted.')
     if len(arg) == 0:
         raise ArgumentError("You must specify what you need.")
     client.server.broadcast_need(client, arg)
     logger.log_server('[{}][{}][NEED]{}.'.format(client.area.id, client.get_char_name(), arg), client)
+
+
+def ooc_cmd_toggleadverts(client, arg):
+    if len(arg) != 0:
+        raise ArgumentError("This command doesn't take any arguments")
+    client.muted_adverts = not client.muted_adverts
+    adv_stat = 'on'
+    if client.muted_adverts:
+        adv_stat = 'off'
+    client.send_host_message('Advertisements turned {}.'.format(adv_stat))
 
 
 def ooc_cmd_area(client, arg):

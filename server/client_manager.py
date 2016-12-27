@@ -33,6 +33,7 @@ class ClientManager:
             self.is_mod = False
             self.pos = ''
             self.muted_global = False
+            self.muted_adverts = False
 
         def send_raw_message(self, msg):
             self.transport.write(msg.encode('utf-8'))
