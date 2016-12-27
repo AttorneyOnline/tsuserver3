@@ -100,7 +100,7 @@ class AreaManager:
             self.send_command('BN', bg)
 
         def change_status(self, value):
-            allowed_values = ('idle', 'building-open', 'building-closed', 'casing-open', 'casing-closed', 'recess')
+            allowed_values = ('idle', 'building-open', 'building-full', 'casing-open', 'casing-full', 'recess')
             if value.lower() not in allowed_values:
                 raise AreaError('Invalid status. Possible values: {}'.format(', '.join(allowed_values)))
             self.status = value.upper()
