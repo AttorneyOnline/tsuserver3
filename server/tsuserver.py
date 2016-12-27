@@ -174,7 +174,7 @@ class TsuServer3:
         area_name = client.area.name
         area_id = client.area.id
         self.send_all_cmd_pred('CT', '{}'.format(self.config['hostname']),
-                               '=== Advert ===\r\n{} in {} [{}] needs {}\r\n============='
+                               '=== Advert ===\r\n{} in {} [{}] needs {}\r\n==============='
                                .format(char_name, area_name, area_id, msg))
         if self.config['use_district']:
             self.district_client.send_raw_message('NEED#{}#{}#{}#{}'.format(char_name, area_name, area_id, msg))
