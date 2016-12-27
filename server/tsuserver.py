@@ -138,7 +138,7 @@ class TsuServer3:
 
     def get_char_id_by_name(self, name):
         for i, ch in enumerate(self.char_list):
-            if ch == name:
+            if ch.lower() == name.lower():
                 return i
         raise ServerError('Character not found.')
 
