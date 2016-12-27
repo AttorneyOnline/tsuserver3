@@ -91,7 +91,10 @@ class ClientManager:
         def send_area_list(self):
             msg = '=== Areas ==='
             for i, area in enumerate(self.server.area_manager.areas):
-                msg += '\r\nArea {}: {} (users: {})\r\n{}'.format(i, area.name, len(area.clients), area.status)
+                msg += '\r\nArea {}: {} (users: {})'.format(i, area.name, len(area.clients))
+                if self.area == area:
+                    msg += ' [*]'
+                msg += '\r\n[{}]'.format(area.status)
             self.send_host_message(msg)
 
         def get_area_info(self, area_id):
