@@ -14,6 +14,7 @@ Requires Python 3.5+.
 
 ### User Commands
 
+* help
 * g
 * toggleglobal
 * need
@@ -26,6 +27,7 @@ Requires Python 3.5+.
 * pm
 * charselect
 * switch
+* randomchar
 * pos
 * bg
 * roll
