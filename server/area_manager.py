@@ -122,9 +122,9 @@ class AreaManager:
     def load_areas(self):
         with open('config/areas.yaml', 'r') as chars:
             areas = yaml.load(chars)
-        for area in areas:
+        for item in areas:
             self.areas.append(
-                self.Area(self.cur_id, self.server, area, areas[area]['background'], areas[area]['bglock']))
+                self.Area(self.cur_id, self.server, item['area'], item['background'], item['bglock']))
             self.cur_id += 1
 
     def default_area(self):

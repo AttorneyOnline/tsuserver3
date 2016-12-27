@@ -1,9 +1,9 @@
-Basement:
+- area: Basement
   background: gs4
   bglock: true
-Courtroom 1:
+- area: Courtroom 1
   background: gs5
   bglock: false
-Courtroom 2:
+- area: Courtroom 2
   background: gs4
   bglock: false

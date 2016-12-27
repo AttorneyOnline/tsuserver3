@@ -125,10 +125,10 @@ class TsuServer3:
             self.music_pages_ao1.append('{}#{}'.format(index, area.name))
             index += 1
         # then add music
-        for category in self.music_list:
-            self.music_pages_ao1.append('{}#{}'.format(index, category))
+        for item in self.music_list:
+            self.music_pages_ao1.append('{}#{}'.format(index, item['category']))
             index += 1
-            for song in self.music_list[category]:
+            for song in item['songs']:
                 self.music_pages_ao1.append('{}#{}'.format(index, song['name']))
                 index += 1
         self.music_pages_ao1 = [self.music_pages_ao1[x:x + 10] for x in range(0, len(self.music_pages_ao1), 10)]
@@ -143,10 +143,10 @@ class TsuServer3:
         raise ServerError('Character not found.')
 
     def get_song_data(self, music):
-        for category in self.music_list:
-            if category == music:
-                return category, -1
-            for song in self.music_list[category]:
+        for item in self.music_list:
+            if item['category'] == music:
+                return item['category'], -1
+            for song in item['songs']:
                 if song['name'] == music:
                     try:
                         return song['name'], song['length']
