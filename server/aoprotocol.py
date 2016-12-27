@@ -25,6 +25,10 @@ from server.fantacrypt import fanta_decrypt
 
 
 class AOProtocol(asyncio.Protocol):
+    """
+    The main class that deals with the AO protocol.
+    """
+
     class ArgType(Enum):
         STR = 1,
         INT = 2
@@ -37,6 +41,14 @@ class AOProtocol(asyncio.Protocol):
         self.ping_timeout = None
 
     def data_received(self, data):
+        """ Handles any data received from the network.
+
+        Receives data, parses them into a command and passes it
+        to the command handler.
+
+        :param data: bytes of data
+        """
+        # try to decode as utf-8, ignore any erroneous characters
         self.buffer += data.decode('utf-8', 'ignore')
         if len(self.buffer) > 8192:
             self.client.disconnect()
@@ -44,6 +56,7 @@ class AOProtocol(asyncio.Protocol):
             if len(msg) < 2:
                 self.client.disconnect()
                 return
+            # general netcode structure is not great
             if msg[0] in ('#', '3', '4'):
                 if msg[0] == '#':
                     msg = msg[1:]
@@ -57,14 +70,26 @@ class AOProtocol(asyncio.Protocol):
                 return
 
     def connection_made(self, transport):
+        """ Called upon a new client connecting
+
+        :param transport: the transport object
+        """
         self.client = self.server.new_client(transport)
         self.ping_timeout = asyncio.get_event_loop().call_later(self.server.config['timeout'], self.client.disconnect)
         self.client.send_command('decryptor', 34)  # just fantacrypt things
 
     def connection_lost(self, exc):
+        """ User disconnected
+
+        :param exc: reason
+        """
         self.server.remove_client(self.client)
 
     def get_messages(self):
+        """ Parses out full messages from the buffer.
+
+        :return: yields messages
+        """
         while '#%' in self.buffer:
             spl = self.buffer.split('#%', 1)
             self.buffer = spl[1]
@@ -76,6 +101,13 @@ class AOProtocol(asyncio.Protocol):
             yield askchar2
 
     def validate_net_cmd(self, args, *types, needs_auth=True):
+        """ Makes sure the net command's arguments match expectations.
+
+        :param args: actual arguments to the net command
+        :param types: what kind of data types are expected
+        :param needs_auth: whether you need to have chosen a character
+        :return: returns True if message was validated
+        """
         if needs_auth and self.client.char_id == -1:
             return False
         if len(args) != len(types):
@@ -91,6 +123,12 @@ class AOProtocol(asyncio.Protocol):
         return True
 
     def net_cmd_hi(self, args):
+        """ Handshake.
+
+        HI#<hdid:string>#%
+
+        :param args: a list containing all the arguments
+        """
         if not self.validate_net_cmd(args, self.ArgType.STR, needs_auth=False):
             return
         self.client.hdid = args[0]
@@ -101,20 +139,40 @@ class AOProtocol(asyncio.Protocol):
         self.client.send_command('PN', self.server.get_player_count() - 1, self.server.config['playerlimit'])
 
     def net_cmd_ch(self, _):
+        """ Periodically checks the connection.
+
+        CHECK#%
+
+        """
         self.client.send_command('CHECK')
         self.ping_timeout.cancel()
         self.ping_timeout = asyncio.get_event_loop().call_later(self.server.config['timeout'], self.client.disconnect)
 
     def net_cmd_askchaa(self, _):
+        """ Ask for the counts of characters/evidence/music
+
+        askchaa#%
+
+        """
         char_cnt = len(self.server.char_list)
         evi_cnt = 0
         music_cnt = sum([len(x) for x in self.server.music_pages_ao1])
         self.client.send_command('SI', char_cnt, evi_cnt, music_cnt)
 
     def net_cmd_askchar2(self, _):
+        """ Asks for the character list.
+
+        askchar2#%
+
+        """
         self.client.send_command('CI', *self.server.char_pages_ao1[0])
 
     def net_cmd_an(self, args):
+        """ Asks for specific pages of the character list.
+
+        AN#<page:int>#%
+
+        """
         if not self.validate_net_cmd(args, self.ArgType.INT, needs_auth=False):
             return
         if len(self.server.char_pages_ao1) > args[0] >= 0:
@@ -123,9 +181,19 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_command('EM', *self.server.music_pages_ao1[0])
 
     def net_cmd_ae(self, _):
+        """ Asks for specific pages of the evidence list.
+
+        AE#<page:int>#%
+
+        """
         pass  # todo evidence maybe later
 
     def net_cmd_am(self, args):
+        """ Asks for specific pages of the music list.
+
+        AM#<page:int>#%
+
+        """
         if not self.validate_net_cmd(args, self.ArgType.INT, needs_auth=False):
             return
         if len(self.server.music_pages_ao1) > args[0] >= 0:
@@ -135,6 +203,11 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_motd()
 
     def net_cmd_cc(self, args):
+        """ Character selection.
+
+        CC#<client_id:int>#<char_id:int>#<hdid:string>#%
+
+        """
         if not self.validate_net_cmd(args, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR, needs_auth=False):
             return
         cid = args[1]
@@ -144,6 +217,11 @@ class AOProtocol(asyncio.Protocol):
             return
 
     def net_cmd_ms(self, args):
+        """ IC message.
+
+        Refer to the implementation for details.
+
+        """
         if not self.client.area.can_send_message():
             return
         if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.STR,
@@ -180,6 +258,11 @@ class AOProtocol(asyncio.Protocol):
         logger.log_server('[IC][{}][{}]{}'.format(self.client.area.id, self.client.get_char_name(), msg), self.client)
 
     def net_cmd_ct(self, args):
+        """ OOC Message
+
+        CT#<name:string>#<message:string>#%
+
+        """
         if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR):
             return
         if self.client.name == '':
@@ -206,6 +289,11 @@ class AOProtocol(asyncio.Protocol):
                                              args[1]), self.client)
 
     def net_cmd_mc(self, args):
+        """ Play music.
+
+        MC#<song_name:int>#<???:int>#%
+
+        """
         if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT):
             return
         if args[1] != self.client.char_id:
@@ -225,6 +313,11 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_host_message(ex)
 
     def net_cmd_rt(self, args):
+        """ Plays the Testimony/CE animation.
+
+        RT#<type:string>#%
+
+        """
         if not self.validate_net_cmd(args, self.ArgType.STR):
             return
         if args[0] not in ('testimony1', 'testimony2'):
@@ -234,6 +327,11 @@ class AOProtocol(asyncio.Protocol):
         logger.log_server("[{}]{} Used WT/CE".format(self.client.area.id, self.client.get_char_name()), self.client)
 
     def net_cmd_hp(self, args):
+        """ Sets the penalty bar.
+
+        HP#<type:int>#<new_value:int>#%
+
+        """
         if not self.validate_net_cmd(args, self.ArgType.INT, self.ArgType.INT):
             return
         try:
@@ -245,6 +343,9 @@ class AOProtocol(asyncio.Protocol):
             return
 
     def net_cmd_zz(self, _):
+        """ Sent on mod call.
+
+        """
         self.server.send_all_cmd_pred('ZZ', '{} ({}) in {} ({})'
                                       .format(self.client.get_char_name(), self.client.get_ip(), self.client.area.name,
                                               self.client.area.id), pred=lambda c: c.is_mod)
