@@ -223,6 +223,27 @@ def ooc_cmd_charselect(client, arg):
         client.char_select()
 
 
+def ooc_cmd_randomchar(client, arg):
+    if len(arg) != 0:
+        raise ArgumentError('This command has no arguments.')
+    try:
+        free_id = client.area.get_rand_avail_char_id()
+    except AreaError:
+        raise
+    try:
+        client.change_character(free_id)
+    except ClientError:
+        raise
+    client.send_host_message('Randomly switched to {}'.format(client.get_char_name()))
+
+
+def ooc_cmd_help(client, arg):
+    if len(arg) != 0:
+        raise ArgumentError('This command has no arguments.')
+    help_msg = 'https://github.com/AttorneyOnlineVidya/tsuserver3'
+    client.send_host_message('Source code and issues can be found here: {}'.format(help_msg))
+
+
 def ooc_cmd_pos(client, arg):
     if len(arg) == 0:
         client.change_position()
