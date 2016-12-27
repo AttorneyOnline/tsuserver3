@@ -53,16 +53,22 @@ class ClientManager:
         def disconnect(self):
             self.transport.close()
 
-        def change_character(self, char_id):
+        def change_character(self, char_id, force=False):
             if not self.server.is_valid_char_id(char_id):
                 raise ClientError('Invalid Character ID.')
-            if not self.area.is_char_available(char_id):
+            if not force and not self.area.is_char_available(char_id):
                 raise ClientError('Character not available.')
             old_char = self.get_char_name()
             self.char_id = char_id
             self.send_command('PV', self.id, 'CID', self.char_id)
             logger.log_server('[{}]Changed character from {} to {}.'
                               .format(self.area.id, old_char, self.get_char_name()), self)
+
+        def reload_character(self):
+            try:
+                self.change_character(self.char_id, True)
+            except ClientError:
+                raise
 
         def change_area(self, area):
             if self.area == area:

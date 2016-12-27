@@ -27,6 +27,7 @@ Requires Python 3.5+.
 * status
 * pm
 * charselect
+* reload
 * switch
 * randomchar
 * pos

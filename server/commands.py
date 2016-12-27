@@ -34,6 +34,16 @@ def ooc_cmd_switch(client, arg):
     client.send_host_message('Character changed.')
 
 
+def ooc_cmd_reload(client, arg):
+    if len(arg) != 0:
+        raise ArgumentError("This command doesn't take any arguments")
+    try:
+        client.reload_character()
+    except ClientError:
+        raise
+    client.send_host_message('Character reloaded.')
+
+
 def ooc_cmd_g(client, arg):
     if client.muted_global:
         raise ClientError('You have the global chat muted.')
