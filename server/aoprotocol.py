@@ -200,6 +200,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_command('EM', *self.server.music_pages_ao1[args[0]])
         else:
             self.client.send_done()
+            self.client.send_area_list()
             self.client.send_motd()
 
     def net_cmd_cc(self, args):
