@@ -268,7 +268,7 @@ class AOProtocol(asyncio.Protocol):
             return
         if self.client.name == '':
             self.client.name = args[0]
-        if self.client.name.startswith(self.server.config['hostname']):
+        if self.client.name.startswith(self.server.config['hostname']) or self.client.name.startswith('<dollar>G'):
             self.client.send_host_message('That name is reserved!')
             return
         if args[1].startswith('/'):
