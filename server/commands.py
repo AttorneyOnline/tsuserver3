@@ -254,7 +254,7 @@ def ooc_cmd_help(client, arg):
         raise ArgumentError('This command has no arguments.')
     help_url = 'https://github.com/AttorneyOnlineVidya/tsuserver3'
     help_msg = 'Available commands, source code and issues can be found here: {}'.format(help_url)
-    client.send_host_message('Source code and issues can be found here: {}'.format(help_msg))
+    client.send_host_message(help_msg)
 
 
 def ooc_cmd_pos(client, arg):
