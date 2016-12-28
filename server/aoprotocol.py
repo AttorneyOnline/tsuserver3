@@ -306,7 +306,7 @@ class AOProtocol(asyncio.Protocol):
         except AreaError:
             try:
                 name, length = self.server.get_song_data(args[0])
-                self.client.area.play_music(name, self.client, length)
+                self.client.area.play_music(name, self.client.char_id, length)
                 logger.log_server('[{}][{}]Changed music to {}.'
                                   .format(self.client.area.id, self.client.get_char_name(), name), self.client)
             except ServerError:

@@ -66,13 +66,13 @@ class AreaManager:
             delay = min(3000, 100 + 60 * msg_length)
             self.next_message_time = round(time.time() * 1000.0 + delay)
 
-        def play_music(self, name, client, length=-1):
-            self.send_command('MC', name, client.char_id)
+        def play_music(self, name, cid, length=-1):
+            self.send_command('MC', name, cid)
             if self.music_looper:
                 self.music_looper.cancel()
             if length > 0:
                 self.music_looper = asyncio.get_event_loop().call_later(length,
-                                                                        lambda: self.play_music(name, client, length))
+                                                                        lambda: self.play_music(name, -1, length))
 
         def get_target_by_char_name(self, char_name):
             for c in self.clients:
