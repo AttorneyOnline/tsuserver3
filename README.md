@@ -33,6 +33,7 @@ Requires Python 3.5+.
 * pos
 * bg
 * roll
+* coinflip
 
 ### Mod Commands
 

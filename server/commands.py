@@ -309,6 +309,19 @@ def ooc_cmd_roll(client, arg):
         '[{}][{}]Used /roll and got {} out of {}.'.format(client.area.id, client.get_char_name(), roll, val))
 
 
+def ooc_cmd_coinflip(client, arg):
+    if len(arg) != 0:
+        raise ArgumentError('This command has no arguments.')
+    flip = random.randint(1, 2)
+    if flip == 1:
+        flip = "heads"
+    else:
+        flip = "tails"
+    client.area.send_host_message('{} flipped a coin and got {}.'.format(client.get_char_name(), flip))
+    logger.log_server(
+        '[{}][{}]Used /coinflip and got {}.'.format(client.area.id, client.get_char_name(), flip))
+
+
 def ooc_cmd_login(client, arg):
     if len(arg) == 0:
         raise ArgumentError('You must specify the password.')
