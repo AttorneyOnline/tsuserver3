@@ -39,6 +39,7 @@ Requires Python 3.5+.
 * login
 * gm
 * lm
+* play
 * judgelog
 * announce
 * kick
