@@ -360,5 +360,4 @@ def ooc_cmd_play(client, arg):
     if len(arg) == 0:
         raise ArgumentError('You must specify a song.')
     client.area.play_music(arg, client, -1)
-    logger.log_server('[{}][{}]Changed music to {}.'
-                      .format(client.area.id, client.get_char_name(), name), client)
+    logger.log_server('[{}][{}]Changed music to {}.'.format(client.area.id, client.get_char_name(), arg), client)
