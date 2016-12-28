@@ -45,6 +45,8 @@ Requires Python 3.5+.
 * announce
 * kick
 * banip
+* mute
+* unmute
 
 ## License
 
