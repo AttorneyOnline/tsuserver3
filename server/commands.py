@@ -223,7 +223,7 @@ def ooc_cmd_pm(client, arg):
     if not target_clients:
         client.send_host_message('No targets found.')
     else:
-        client.send_host_message('PM sent to {} user(s). Message: {}'.format(len(target_clients), msg))
+        client.send_host_message('PM sent to {}, {} user(s). Message: {}'.format(args[0], len(target_clients), msg))
         for c in target_clients:
             c.send_host_message(
                 'PM from {} in {} ({}): {}'.format(client.name, client.area.name, client.get_char_name(), msg))
@@ -302,7 +302,7 @@ def ooc_cmd_roll(client, arg):
         except ValueError:
             raise ArgumentError('Argument must be a number')
     else:
-        val = roll_max
+        val = 6
     roll = random.randint(1, val)
     client.area.send_host_message('{} rolled {} out of {}.'.format(client.get_char_name(), roll, val))
     logger.log_server(
@@ -352,3 +352,12 @@ def ooc_cmd_banip(client, arg):
         client.send_host_message('Kicked {} existing client(s).'.format(len(targets)))
     client.send_host_message('Added {} to the banlist.'.format(ip))
     logger.log_server('Banned {}.'.format(ip), client)
+
+def ooc_cmd_play(client,arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a song.')
+    client.area.play_music(arg, client, -1)
+    logger.log_server('[{}][{}]Changed music to {}.'
+                      .format(client.area.id, client.get_char_name(), name), client)
