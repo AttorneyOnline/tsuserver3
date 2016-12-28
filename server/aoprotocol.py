@@ -31,7 +31,8 @@ class AOProtocol(asyncio.Protocol):
 
     class ArgType(Enum):
         STR = 1,
-        INT = 2
+        STR_OR_EMPTY = 2,
+        INT = 3
 
     def __init__(self, server):
         super().__init__()
@@ -113,7 +114,7 @@ class AOProtocol(asyncio.Protocol):
         if len(args) != len(types):
             return False
         for i, arg in enumerate(args):
-            if len(arg) == 0:
+            if len(arg) == 0 and types[i] != self.ArgType.STR_OR_EMPTY:
                 return False
             if types[i] == self.ArgType.INT:
                 try:
@@ -225,7 +226,7 @@ class AOProtocol(asyncio.Protocol):
         """
         if not self.client.area.can_send_message():
             return
-        if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.STR,
+        if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR, self.ArgType.STR,
                                      self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
                                      self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
                                      self.ArgType.INT, self.ArgType.INT, self.ArgType.INT):
