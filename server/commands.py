@@ -353,7 +353,8 @@ def ooc_cmd_banip(client, arg):
     client.send_host_message('Added {} to the banlist.'.format(ip))
     logger.log_server('Banned {}.'.format(ip), client)
 
-def ooc_cmd_play(client,arg):
+
+def ooc_cmd_play(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
