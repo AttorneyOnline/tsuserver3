@@ -105,7 +105,7 @@ class AreaManager:
                 raise AreaError('Invalid status. Possible values: {}'.format(', '.join(allowed_values)))
             self.status = value.upper()
 
-        def change_doc(self, doc=''):
+        def change_doc(self, doc):
             self.doc = doc
 
         def add_to_judgelog(self, client, msg):
