@@ -309,6 +309,19 @@ def ooc_cmd_roll(client, arg):
         '[{}][{}]Used /roll and got {} out of {}.'.format(client.area.id, client.get_char_name(), roll, val))
 
 
+def ooc_cmd_coinflip(client, arg):
+    if len(arg) != 0:
+        raise ArgumentError('This command has no arguments.')
+    flip = random.randint(1, 2)
+    if flip == 1:
+        flip = "heads"
+    else:
+        flip = "tails"
+    client.area.send_host_message('{} flipped a coin and got {}.'.format(client.get_char_name(), flip))
+    logger.log_server(
+        '[{}][{}]Used /coinflip and got {}.'.format(client.area.id, client.get_char_name(), flip))
+
+
 def ooc_cmd_login(client, arg):
     if len(arg) == 0:
         raise ArgumentError('You must specify the password.')
@@ -361,3 +374,33 @@ def ooc_cmd_play(client, arg):
         raise ArgumentError('You must specify a song.')
     client.area.play_music(arg, client, -1)
     logger.log_server('[{}][{}]Changed music to {}.'.format(client.area.id, client.get_char_name(), arg), client)
+
+
+def ooc_cmd_mute(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a target.')
+    targets = client.server.client_manager.get_targets(client, arg)
+    if targets:
+        for c in targets:
+            logger.log_server('Muted {}.'.format(c.get_ip()), client)
+            c.is_muted = True
+        client.send_host_message('Muted {} existing client(s).'.format(len(targets)))
+    else:
+        client.send_host_message("No targets found.")
+
+
+def ooc_cmd_unmute(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a target.')
+    targets = client.server.client_manager.get_targets(client, arg)
+    if targets:
+        for c in targets:
+            logger.log_server('Unmuted {}.'.format(c.get_ip()), client)
+            c.is_muted = False
+        client.send_host_message('Unmuted {} existing client(s).'.format(len(targets)))
+    else:
+        client.send_host_message("No targets found.")

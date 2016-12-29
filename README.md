@@ -33,6 +33,7 @@ Requires Python 3.5+.
 * pos
 * bg
 * roll
+* coinflip
 
 ### Mod Commands
 
@@ -44,6 +45,8 @@ Requires Python 3.5+.
 * announce
 * kick
 * banip
+* mute
+* unmute
 
 ## License
 
