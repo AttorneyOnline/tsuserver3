@@ -36,7 +36,7 @@ class AreaManager:
             self.next_message_time = 0
             self.hp_def = 10
             self.hp_pro = 10
-            self.doc = ''
+            self.doc = 'No document.'
             self.status = 'IDLE'
             self.judgelog = []
 
@@ -105,7 +105,7 @@ class AreaManager:
                 raise AreaError('Invalid status. Possible values: {}'.format(', '.join(allowed_values)))
             self.status = value.upper()
 
-        def change_doc(self, doc):
+        def change_doc(self, doc='No document.'):
             self.doc = doc
 
         def add_to_judgelog(self, client, msg):
