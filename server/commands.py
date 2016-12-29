@@ -312,11 +312,8 @@ def ooc_cmd_roll(client, arg):
 def ooc_cmd_coinflip(client, arg):
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
-    flip = random.randint(1, 2)
-    if flip == 1:
-        flip = "heads"
-    else:
-        flip = "tails"
+    coin = ['heads', 'tails']
+    flip = random.choice(coin)
     client.area.send_host_message('{} flipped a coin and got {}.'.format(client.get_char_name(), flip))
     logger.log_server(
         '[{}][{}]Used /coinflip and got {}.'.format(client.area.id, client.get_char_name(), flip))
