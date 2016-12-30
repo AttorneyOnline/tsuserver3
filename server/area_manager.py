@@ -39,6 +39,8 @@ class AreaManager:
             self.doc = 'No document.'
             self.status = 'IDLE'
             self.judgelog = []
+            self.current_music = ''
+            self.current_music_player = ''
 
         def new_client(self, client):
             self.clients.add(client)
@@ -112,6 +114,10 @@ class AreaManager:
             if len(self.judgelog) >= 10:
                 self.judgelog = self.judgelog[1:]
             self.judgelog.append('{} ({}) {}.'.format(client.get_char_name(), client.get_ip(), msg))
+
+        def add_music_playing(self, client, name):
+            self.current_music_player = client.get_char_name()
+            self.current_music = name
 
     def __init__(self, server):
         self.server = server

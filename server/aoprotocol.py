@@ -229,7 +229,8 @@ class AOProtocol(asyncio.Protocol):
             return
         if not self.client.area.can_send_message():
             return
-        if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR, self.ArgType.STR,
+        if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
+                                     self.ArgType.STR,
                                      self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
                                      self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
                                      self.ArgType.INT, self.ArgType.INT, self.ArgType.INT):
@@ -310,6 +311,7 @@ class AOProtocol(asyncio.Protocol):
             try:
                 name, length = self.server.get_song_data(args[0])
                 self.client.area.play_music(name, self.client.char_id, length)
+                self.client.area.add_music_playing(self.client, name)
                 logger.log_server('[{}][{}]Changed music to {}.'
                                   .format(self.client.area.id, self.client.get_char_name(), name), self.client)
             except ServerError:

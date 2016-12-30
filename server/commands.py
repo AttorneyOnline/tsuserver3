@@ -319,6 +319,15 @@ def ooc_cmd_coinflip(client, arg):
         '[{}][{}]Used /coinflip and got {}.'.format(client.area.id, client.get_char_name(), flip))
 
 
+def ooc_cmd_currentmusic(client, arg):
+    if len(arg) != 0:
+        raise ArgumentError('This command has no arguments.')
+    if client.area.current_music == '':
+        raise ClientError('There is no music currently playing.')
+    client.send_host_message('The current music is {} and was played by {}.'.format(client.area.current_music,
+                                                                                    client.area.current_music_player))
+
+
 def ooc_cmd_login(client, arg):
     if len(arg) == 0:
         raise ArgumentError('You must specify the password.')
@@ -370,6 +379,7 @@ def ooc_cmd_play(client, arg):
     if len(arg) == 0:
         raise ArgumentError('You must specify a song.')
     client.area.play_music(arg, client, -1)
+    client.area.add_music_playing(client, arg)
     logger.log_server('[{}][{}]Changed music to {}.'.format(client.area.id, client.get_char_name(), arg), client)
 
 

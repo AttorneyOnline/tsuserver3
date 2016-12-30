@@ -34,6 +34,7 @@ Requires Python 3.5+.
 * bg
 * roll
 * coinflip
+* currentmusic
 
 ### Mod Commands
 
