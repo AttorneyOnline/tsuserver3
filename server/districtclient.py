@@ -53,7 +53,7 @@ class DistrictClient:
             logger.log_debug('[DISTRICT][INC][RAW]{}'.format(raw_msg))
             cmd, *args = raw_msg.split('#')
             if cmd == 'GLOBAL':
-                glob_name = '{}[{}:{}][{}]'.format(self.server.config['hostname'], args[1], args[2], args[3])
+                glob_name = '{}[{}:{}][{}]'.format('<dollar>G', args[1], args[2], args[3])
                 if args[0] == '1':
                     glob_name += '[M]'
                 self.server.send_all_cmd_pred('CT', glob_name, args[4], pred=lambda x: not x.muted_global)
