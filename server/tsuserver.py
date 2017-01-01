@@ -31,7 +31,6 @@ from server.masterserverclient import MasterServerClient
 
 class TsuServer3:
     def __init__(self):
-        logger.setup_logger()
         self.client_manager = ClientManager(self)
         self.area_manager = AreaManager(self)
         self.ban_manager = BanManager()
@@ -48,6 +47,7 @@ class TsuServer3:
         self.load_backgrounds()
         self.district_client = None
         self.ms_client = None
+        logger.setup_logger(debug=self.config['debug'])
 
     def start(self):
         loop = asyncio.get_event_loop()

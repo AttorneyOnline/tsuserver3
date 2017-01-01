@@ -20,7 +20,7 @@ import logging
 import time
 
 
-def setup_logger():
+def setup_logger(debug):
     logging.Formatter.converter = time.gmtime
     debug_formatter = logging.Formatter('[%(asctime)s UTC]%(message)s')
     srv_formatter = logging.Formatter('[%(asctime)s UTC]%(message)s')
@@ -32,6 +32,9 @@ def setup_logger():
     debug_handler.setLevel(logging.DEBUG)
     debug_handler.setFormatter(debug_formatter)
     debug_log.addHandler(debug_handler)
+
+    if not debug:
+        debug_log.disabled = True
 
     server_log = logging.getLogger('server')
     server_log.setLevel(logging.INFO)

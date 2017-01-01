@@ -20,3 +20,4 @@ masterserver_name: My First Server
 masterserver_description: This is my flashy new server
 
 timeout: 250
+debug: false
