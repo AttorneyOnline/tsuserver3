@@ -45,7 +45,7 @@ Requires Python 3.5+.
 * judgelog
 * announce
 * kick
-* banip
+* ipban
 * mute
 * unmute
 
