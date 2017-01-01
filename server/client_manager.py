@@ -84,6 +84,7 @@ class ClientManager:
                 self.area = area
                 area.new_client(self)
                 self.change_character(new_char_id)
+                self.send_host_message('Character taken, switched to {}.'.format(self.get_char_name()))
             else:
                 self.area.remove_client(self)
                 self.area = area
