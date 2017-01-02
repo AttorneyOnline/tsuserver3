@@ -292,6 +292,12 @@ def ooc_cmd_bg(client, arg):
     logger.log_server('[{}][{}]Changed background to {}'.format(client.area.id, client.get_char_name(), arg), client)
 
 
+def ooc_cmd_motd(client, arg):
+    if len(arg) != 0:
+        raise ArgumentError("This command doesn't take any arguments")
+    client.send_motd()
+
+
 def ooc_cmd_roll(client, arg):
     roll_max = 11037
     if len(arg) != 0:
