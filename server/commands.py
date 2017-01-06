@@ -183,8 +183,8 @@ def ooc_cmd_cleardoc(client, arg):
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
     client.send_host_message('Document cleared.')
-    logger.log_server(logger.log_server('[{}][{}]Cleared document. Old link: {}'
-                                        .format(client.area.id, client.get_char_name(), client.area.doc)))
+    logger.log_server('[{}][{}]Cleared document. Old link: {}'
+                      .format(client.area.id, client.get_char_name(), client.area.doc))
     client.area.change_doc()
 
 
