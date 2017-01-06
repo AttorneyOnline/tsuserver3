@@ -99,7 +99,8 @@ class AreaManager:
         def change_background(self, bg):
             if bg not in self.server.backgrounds:
                 raise AreaError('Invalid background name.')
-            self.send_command('BN', bg)
+            self.background = bg
+            self.send_command('BN', self.background)
 
         def change_status(self, value):
             allowed_values = ('idle', 'building-open', 'building-full', 'casing-open', 'casing-full', 'recess')
