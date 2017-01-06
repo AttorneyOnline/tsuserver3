@@ -35,7 +35,7 @@ class DistrictClient:
                 await self.handle_connection()
             except (ConnectionRefusedError, TimeoutError):
                 pass
-            except ConnectionResetError:
+            except (ConnectionResetError, asyncio.IncompleteReadError):
                 self.writer = None
                 self.reader = None
             finally:
