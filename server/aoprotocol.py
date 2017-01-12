@@ -75,8 +75,8 @@ class AOProtocol(asyncio.Protocol):
 
         :param transport: the transport object
         """
-        self.client = self.server.new_client(transport)
         self.ping_timeout = asyncio.get_event_loop().call_later(self.server.config['timeout'], self.client.disconnect)
+        self.client = self.server.new_client(transport)
         self.client.send_command('decryptor', 34)  # just fantacrypt things
 
     def connection_lost(self, exc):
@@ -85,6 +85,7 @@ class AOProtocol(asyncio.Protocol):
         :param exc: reason
         """
         self.server.remove_client(self.client)
+        self.ping_timeout.cancel()
 
     def get_messages(self):
         """ Parses out full messages from the buffer.
@@ -224,7 +225,7 @@ class AOProtocol(asyncio.Protocol):
         Refer to the implementation for details.
 
         """
-        if self.client.is_muted: #Checks to see if the client has been muted by a mod
+        if self.client.is_muted:  # Checks to see if the client has been muted by a mod
             self.client.send_host_message("You have been muted by a moderator")
             return
         if not self.client.area.can_send_message():
