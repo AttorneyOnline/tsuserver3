@@ -384,12 +384,12 @@ def ooc_cmd_play(client, arg):
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
         raise ArgumentError('You must specify a song.')
-    client.area.play_music(arg, client, -1)
+    client.area.play_music(arg, client.char_id, -1)
     client.area.add_music_playing(client, arg)
     logger.log_server('[{}][{}]Changed music to {}.'.format(client.area.id, client.get_char_name(), arg), client)
 
 
-def ooc_cmd_mute(client, arg):
+def ooc_cmd_clientmute(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
@@ -404,7 +404,7 @@ def ooc_cmd_mute(client, arg):
         client.send_host_message("No targets found.")
 
 
-def ooc_cmd_unmute(client, arg):
+def ooc_cmd_clientunmute(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
