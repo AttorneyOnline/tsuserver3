@@ -78,7 +78,7 @@ class AreaManager:
 
         def get_target_by_char_name(self, char_name):
             for c in self.clients:
-                if c.get_char_name() == char_name:
+                if c.get_char_name().lower() == char_name.lower():
                     return c
             return None
 
@@ -97,7 +97,7 @@ class AreaManager:
             self.send_command('HP', side, val)
 
         def change_background(self, bg):
-            if bg not in self.server.backgrounds:
+            if bg.lower() not in (name.lower() for name in self.server.backgrounds):
                 raise AreaError('Invalid background name.')
             self.background = bg
             self.send_command('BN', self.background)

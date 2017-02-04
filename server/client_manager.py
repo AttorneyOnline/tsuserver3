@@ -195,7 +195,7 @@ class ClientManager:
     def get_targets_by_ooc_name(self, name):
         clients = []
         for client in self.clients:
-            if client.name == name:
+            if client.name.lower() == name.lower():
                 clients.append(client)
         return clients
 
