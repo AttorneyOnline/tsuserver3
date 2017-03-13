@@ -35,9 +35,14 @@ class TsuServer3:
         self.area_manager = AreaManager(self)
         self.ban_manager = BanManager()
         self.version = 'tsuserver3dev'
+        self.software = 'tsuserver3'
+        self.release = 3
+        self.major_version = 0
+        self.minor_version = 0
         self.char_list = None
         self.char_pages_ao1 = None
         self.music_list = None
+        self.music_list_ao2 = None
         self.music_pages_ao1 = None
         self.backgrounds = None
         self.config = None
@@ -80,6 +85,9 @@ class TsuServer3:
         loop.run_until_complete(ao_server.wait_closed())
         loop.close()
 
+    def get_version_string(self):
+        return str(self.release) + '.' + str(self.major_version) + '.' + str(self.minor_version)
+
     def new_client(self, transport):
         c = self.client_manager.new_client(transport)
         c.server = self
@@ -107,6 +115,8 @@ class TsuServer3:
         with open('config/music.yaml', 'r') as music:
             self.music_list = yaml.load(music)
         self.build_music_pages_ao1()
+        self.build_music_list_ao2()
+        
 
     def load_backgrounds(self):
         with open('config/backgrounds.yaml', 'r') as bgs:
@@ -132,6 +142,13 @@ class TsuServer3:
                 self.music_pages_ao1.append('{}#{}'.format(index, song['name']))
                 index += 1
         self.music_pages_ao1 = [self.music_pages_ao1[x:x + 10] for x in range(0, len(self.music_pages_ao1), 10)]
+
+    def build_music_list_ao2(self):
+        self.music_list_ao2 = []
+        for item in self.music_list:
+            self.music_list_ao2.append(item['category'])
+            for song in item['songs']:
+                self.music_list_ao2.append(song['name'])
 
     def is_valid_char_id(self, char_id):
         return len(self.char_list) > char_id >= 0
