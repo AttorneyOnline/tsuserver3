@@ -205,6 +205,24 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_area_list()
             self.client.send_motd()
 
+    def net_cmd_ac(self, _):
+        """ Asks for the whole character list(AO2)
+
+        AC#%
+
+        """
+
+        self.client.send_command('SC', self.server.ao2_char_list)
+
+    def net_cmd_am(self, _):
+        """ Asks for the whole music list(AO2)
+
+        AM#%
+
+        """
+
+        self.client.send_command('SM', self.server.ao2_music_list)
+
     def net_cmd_cc(self, args):
         """ Character selection.
 
@@ -373,6 +391,8 @@ class AOProtocol(asyncio.Protocol):
         'AN': net_cmd_an,  # character list
         'AE': net_cmd_ae,  # evidence list
         'AM': net_cmd_am,  # music list
+        'SC': net_cmd_sc,  # AO2 character list
+        'SM': net_cmd_sm,  # AO2 music list
         'CC': net_cmd_cc,  # select character
         'MS': net_cmd_ms,  # IC message
         'CT': net_cmd_ct,  # OOC message
