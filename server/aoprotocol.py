@@ -166,10 +166,12 @@ class AOProtocol(asyncio.Protocol):
             return
         if release < 2:
             return
-        if major < 2:
-            return
-        if minor < 5:
-            return
+        elif release == 2:
+            if major < 2:
+                return
+            elif major == 2:
+                if minor < 5:
+                    return
 
         self.client.is_ao2 = True
 
