@@ -148,8 +148,30 @@ class AOProtocol(asyncio.Protocol):
 
         """
 
-        if args[0] == 'AO2':
-            self.client.is_ao2 = True
+        self.client.is_ao2 = False
+
+        if len(args) < 2:
+            return
+
+        version_list = args[1].split('.')
+
+        if len(version_list) < 3:
+            return
+
+        release = int(version_list[0])
+        major = int(version_list[1])
+        minor = int(version_list[2])
+
+        if args[0] != 'AO2':
+            return
+        if release < 2:
+            return
+        if major < 2:
+            return
+        if minor < 5:
+            return
+
+        self.client.is_ao2 = True
 
     def net_cmd_ch(self, _):
         """ Periodically checks the connection.
@@ -288,11 +310,9 @@ class AOProtocol(asyncio.Protocol):
             return
         if button not in (0, 1, 2, 3, 4):
             return
-        if flip not in (0, 1):
-            return
         if ding not in (0, 1):
             return
-        if color not in (0, 1, 2, 3, 4, 5, 6, 7):
+        if color not in (0, 1, 2, 3, 4, 5, 6):
             return
         if color == 2 and not self.client.is_mod:
             color = 0
