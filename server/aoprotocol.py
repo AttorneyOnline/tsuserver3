@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio
+import re
 from enum import Enum
 
 from server import commands
@@ -137,8 +138,43 @@ class AOProtocol(asyncio.Protocol):
         if self.server.ban_manager.is_banned(self.client.get_ip()):
             self.client.disconnect()
             return
-        self.client.send_command('ID', self.client.id, self.server.version)
+
+        self.client.send_command('ID', self.client.id, self.server.software, self.server.get_version_string())
         self.client.send_command('PN', self.server.get_player_count() - 1, self.server.config['playerlimit'])
+
+    def net_cmd_id(self, args):
+        """ Client version and PV
+
+        ID#<pv:int>#<software:string>#<version:string>#%
+
+        """
+
+        self.client.is_ao2 = False
+
+        if len(args) < 2:
+            return
+
+        version_list = args[1].split('.')
+
+        if len(version_list) < 3:
+            return
+
+        release = int(version_list[0])
+        major = int(version_list[1])
+        minor = int(version_list[2])
+
+        if args[0] != 'AO2':
+            return
+        if release < 2:
+            return
+        elif release == 2:
+            if major < 2:
+                return
+            elif major == 2:
+                if minor < 5:
+                    return
+
+        self.client.is_ao2 = True
 
     def net_cmd_ch(self, _):
         """ Periodically checks the connection.
@@ -205,6 +241,36 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_area_list()
             self.client.send_motd()
 
+    def net_cmd_rc(self, _):
+        """ Asks for the whole character list(AO2)
+
+        AC#%
+
+        """
+
+        self.client.send_command('SC', *self.server.char_list)
+
+    def net_cmd_rm(self, _):
+        """ Asks for the whole music list(AO2)
+
+        AM#%
+
+        """
+
+        self.client.send_command('SM', *self.server.music_list_ao2)
+        
+
+    def net_cmd_rd(self, _):
+        """ Asks for server metadata(charscheck, motd etc.) and a DONE#% signal(also best packet)
+
+        RD#%
+
+        """
+
+        self.client.send_done()
+        self.client.send_area_list()
+        self.client.send_motd()
+
     def net_cmd_cc(self, args):
         """ Character selection.
 
@@ -236,31 +302,38 @@ class AOProtocol(asyncio.Protocol):
                                      self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
                                      self.ArgType.INT, self.ArgType.INT, self.ArgType.INT):
             return
-        msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid1, sfx_delay, button, unk, cid2, ding, color = args
+        msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, unk, flip, ding, color = args
         if msg_type != 'chat':
             return
         if anim_type not in (0, 1, 2, 5, 6):
             return
-        if cid1 != cid2 or cid1 != self.client.char_id:
+        if cid != self.client.char_id:
             return
         if sfx_delay < 0:
             return
-        if button not in (0, 1, 2, 3):
+        if button not in (0, 1, 2, 3, 4):
             return
         if ding not in (0, 1):
             return
-        if color not in (0, 1, 2, 3, 4):
+        if color not in (0, 1, 2, 3, 4, 5, 6):
             return
         if color == 2 and not self.client.is_mod:
             color = 0
+        if color == 6:
+            text = re.sub(r'[^\x00-\x7F]+',' ', text) #remove all unicode to prevent redtext abuse
+            if len(text.strip( ' ' )) == 1:
+                color = 0
+            else:
+                if text.strip( ' ' ) in ('<num>', '<percent>', '<dollar>', '<and>'):
+                    color = 0
         if self.client.pos:
             pos = self.client.pos
         else:
             if pos not in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
                 return
         msg = text[:256]
-        self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid1,
-                                      sfx_delay, button, unk, cid2, ding, color)
+        self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
+                                      sfx_delay, button, unk, flip, ding, color)
         self.client.area.set_next_msg_delay(len(msg))
         logger.log_server('[IC][{}][{}]{}'.format(self.client.area.id, self.client.get_char_name(), msg), self.client)
 
@@ -367,12 +440,16 @@ class AOProtocol(asyncio.Protocol):
 
     net_cmd_dispatcher = {
         'HI': net_cmd_hi,  # handshake
+        'ID': net_cmd_id,  # client version
         'CH': net_cmd_ch,  # keepalive
         'askchaa': net_cmd_askchaa,  # ask for list lengths
         'askchar2': net_cmd_askchar2,  # ask for list of characters
         'AN': net_cmd_an,  # character list
         'AE': net_cmd_ae,  # evidence list
         'AM': net_cmd_am,  # music list
+        'RC': net_cmd_rc,  # AO2 character list
+        'RM': net_cmd_rm,  # AO2 music list
+        'RD': net_cmd_rd,  # AO2 done request, charscheck etc.
         'CC': net_cmd_cc,  # select character
         'MS': net_cmd_ms,  # IC message
         'CT': net_cmd_ct,  # OOC message
