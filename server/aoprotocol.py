@@ -374,6 +374,9 @@ class AOProtocol(asyncio.Protocol):
         MC#<song_name:int>#<???:int>#%
 
         """
+        if self.client.is_muted:  # Checks to see if the client has been muted by a mod
+            self.client.send_host_message("You have been muted by a moderator")
+            return
         if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT):
             return
         if args[1] != self.client.char_id:
@@ -399,6 +402,9 @@ class AOProtocol(asyncio.Protocol):
         RT#<type:string>#%
 
         """
+        if self.client.is_muted:  # Checks to see if the client has been muted by a mod
+            self.client.send_host_message("You have been muted by a moderator")
+            return
         if not self.validate_net_cmd(args, self.ArgType.STR):
             return
         if args[0] not in ('testimony1', 'testimony2'):
@@ -413,6 +419,9 @@ class AOProtocol(asyncio.Protocol):
         HP#<type:int>#<new_value:int>#%
 
         """
+        if self.client.is_muted:  # Checks to see if the client has been muted by a mod
+            self.client.send_host_message("You have been muted by a moderator")
+            return
         if not self.validate_net_cmd(args, self.ArgType.INT, self.ArgType.INT):
             return
         try:

@@ -43,5 +43,12 @@ class BanManager:
             raise ServerError('This IP is already banned.')
         self.write_banlist()
 
+    def remove_ban(self, ip):
+        if ip in self.bans:
+            self.bans.remove(ip)
+        else:
+            raise ServerError('This IP is not banned.')
+        self.write_banlist()
+
     def is_banned(self, ip):
         return ip in self.bans
