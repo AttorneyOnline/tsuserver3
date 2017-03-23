@@ -440,3 +440,14 @@ def ooc_cmd_clientunmute(client, arg):
         client.send_host_message('Unmuted {} existing client(s).'.format(len(targets)))
     else:
         client.send_host_message("No targets found.")
+
+def ooc_cmd_rpmode(p_client, arg):
+    if not p_client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) == 0:
+        raise ArgumentError('You must specify either on or off')
+    client.send_host_message('boi')
+    for i_client in p_client.client_manager.clients:
+        i_client.send_host_message('boiiiii')
+
+

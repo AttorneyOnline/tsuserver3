@@ -35,6 +35,7 @@ class ClientManager:
             self.muted_global = False
             self.muted_adverts = False
             self.is_muted = False
+            self.in_rp = False
 
         def send_raw_message(self, msg):
             self.transport.write(msg.encode('utf-8'))
