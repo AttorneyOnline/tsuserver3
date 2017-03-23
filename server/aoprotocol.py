@@ -176,6 +176,8 @@ class AOProtocol(asyncio.Protocol):
 
         self.client.is_ao2 = True
 
+        self.client.send_command('FL', 'yellowtext', 'customobjections', 'flipping', 'fastloading', 'noencryption')
+
     def net_cmd_ch(self, _):
         """ Periodically checks the connection.
 

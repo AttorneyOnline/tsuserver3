@@ -145,13 +145,10 @@ class TsuServer3:
 
     def build_music_list_ao2(self):
         self.music_list_ao2 = []
-<<<<<<< HEAD
-=======
         # add areas first
         for area in self.area_manager.areas:
             self.music_list_ao2.append(area.name)
             # then add music
->>>>>>> 7d63ca97ee2ae3e35fde6606beb799122e8de022
         for item in self.music_list:
             self.music_list_ao2.append(item['category'])
             for song in item['songs']:
