@@ -46,8 +46,9 @@ Requires Python 3.5+.
 * announce
 * kick
 * ipban
-* mute
-* unmute
+* unban
+* clientmute
+* clientunmute
 
 ## License
 

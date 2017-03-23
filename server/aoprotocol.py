@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio
+import re
 from enum import Enum
 
 from server import commands
@@ -318,6 +319,13 @@ class AOProtocol(asyncio.Protocol):
             return
         if color == 2 and not self.client.is_mod:
             color = 0
+        if color == 6:
+            text = re.sub(r'[^\x00-\x7F]+',' ', text) #remove all unicode to prevent redtext abuse
+            if len(text.strip( ' ' )) == 1:
+                color = 0
+            else:
+                if text.strip( ' ' ) in ('<num>', '<percent>', '<dollar>', '<and>'):
+                    color = 0
         if self.client.pos:
             pos = self.client.pos
         else:
@@ -366,6 +374,9 @@ class AOProtocol(asyncio.Protocol):
         MC#<song_name:int>#<???:int>#%
 
         """
+        if self.client.is_muted:  # Checks to see if the client has been muted by a mod
+            self.client.send_host_message("You have been muted by a moderator")
+            return
         if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT):
             return
         if args[1] != self.client.char_id:
@@ -391,6 +402,9 @@ class AOProtocol(asyncio.Protocol):
         RT#<type:string>#%
 
         """
+        if self.client.is_muted:  # Checks to see if the client has been muted by a mod
+            self.client.send_host_message("You have been muted by a moderator")
+            return
         if not self.validate_net_cmd(args, self.ArgType.STR):
             return
         if args[0] not in ('testimony1', 'testimony2'):
@@ -405,6 +419,9 @@ class AOProtocol(asyncio.Protocol):
         HP#<type:int>#<new_value:int>#%
 
         """
+        if self.client.is_muted:  # Checks to see if the client has been muted by a mod
+            self.client.send_host_message("You have been muted by a moderator")
+            return
         if not self.validate_net_cmd(args, self.ArgType.INT, self.ArgType.INT):
             return
         try:
