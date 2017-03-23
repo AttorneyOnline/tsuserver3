@@ -38,7 +38,7 @@ class TsuServer3:
         self.software = 'tsuserver3'
         self.release = 3
         self.major_version = 0
-        self.minor_version = 0
+        self.minor_version = 1
         self.char_list = None
         self.char_pages_ao1 = None
         self.music_list = None
