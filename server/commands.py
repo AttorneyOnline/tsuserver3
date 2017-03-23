@@ -291,6 +291,18 @@ def ooc_cmd_bg(client, arg):
     client.area.send_host_message('{} changed the background to {}.'.format(client.get_char_name(), arg))
     logger.log_server('[{}][{}]Changed background to {}'.format(client.area.id, client.get_char_name(), arg), client)
 
+def ooc_cmd_bglock(client,arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) != 0:
+        raise ArgumentError('This command has no arguments.')
+    if client.area.bg_lock:
+        client.area.bg_lock = "false"
+    else:
+        client.area.bg_lock = "true"
+    client.area.send_host_message('A mod has set the background lock to {}.'.format(client.area.bg_lock))
+    logger.log_server('[{}][{}]Changed bglock to {}'.format(client.area.id, client.get_char_name(), client.area.bg_lock), client)
+
 
 def ooc_cmd_motd(client, arg):
     if len(arg) != 0:
@@ -378,6 +390,17 @@ def ooc_cmd_ipban(client, arg):
     client.send_host_message('Added {} to the banlist.'.format(ip))
     logger.log_server('Banned {}.'.format(ip), client)
 
+def ooc_cmd_unban(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    ip = arg.strip()
+    if len(ip) < 7:
+        raise ArgumentError('You must specify an IP.')
+    try:
+        client.server.ban_manager.remove_ban(ip)
+    except ServerError:
+        raise
+    logger.log_server('Unbanned {}.'.format(ip), client)
 
 def ooc_cmd_play(client, arg):
     if not client.is_mod:
