@@ -107,6 +107,14 @@ class ClientManager:
                 msg += '\r\n[{}]'.format(area.status)
             self.send_host_message(msg)
 
+        def send_limited_area_list(self):
+            msg = '=== Areas ==='
+            for i, area in enumerate(self.server.area_manager.areas):
+                msg += '\r\nArea {}: {}'.format(i, area.name)
+                if self.area == area:
+                    msg += ' [*]'
+            self.send_host_message(msg)
+
         def get_area_info(self, area_id):
             info = ''
             try:

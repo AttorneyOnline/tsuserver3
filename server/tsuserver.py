@@ -52,6 +52,7 @@ class TsuServer3:
         self.load_backgrounds()
         self.district_client = None
         self.ms_client = None
+        self.rp_mode = False
         logger.setup_logger(debug=self.config['debug'])
 
     def start(self):
@@ -90,6 +91,8 @@ class TsuServer3:
 
     def new_client(self, transport):
         c = self.client_manager.new_client(transport)
+        if self.rp_mode:
+            c.in_rp = True
         c.server = self
         c.area = self.area_manager.default_area()
         c.area.new_client(c)
