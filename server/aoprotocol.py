@@ -438,6 +438,10 @@ class AOProtocol(asyncio.Protocol):
         """ Sent on mod call.
 
         """
+        if self.client.is_muted:  # Checks to see if the client has been muted by a mod
+            self.client.send_host_message("You have been muted by a moderator")
+            return
+            
         self.server.send_all_cmd_pred('ZZ', '{} ({}) in {} ({})'
                                       .format(self.client.get_char_name(), self.client.get_ip(), self.client.area.name,
                                               self.client.area.id), pred=lambda c: c.is_mod)
