@@ -19,6 +19,8 @@ from server import fantacrypt
 from server import logger
 from server.exceptions import ClientError, AreaError
 
+import time
+
 
 class ClientManager:
     class Client:
@@ -35,6 +37,7 @@ class ClientManager:
             self.muted_global = False
             self.muted_adverts = False
             self.is_muted = False
+            self.mod_call_time = 0
 
         def send_raw_message(self, msg):
             self.transport.write(msg.encode('utf-8'))
@@ -171,6 +174,12 @@ class ClientManager:
                 raise ClientError('Invalid position. Possible values: def, pro, hld, hlp, jud, wit.')
             self.pos = pos
 
+        def set_mod_call_delay(self):
+            self.mod_call_time = round(time.time() * 1000.0 + 30000)
+
+        def can_call_mod(self):
+            return (time.time() * 1000.0 - self.mod_call_time) > 0
+
     def __init__(self, server):
         self.clients = set()
         self.cur_id = 0
@@ -214,3 +223,10 @@ class ClientManager:
         if ooc:
             return ooc
         return None
+
+    def get_muted_clients(self):
+        clients = []
+        for client in self.clients:
+            if client.is_muted:
+                clients.append(client)
+        return clients
