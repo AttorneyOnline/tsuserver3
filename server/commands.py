@@ -282,7 +282,7 @@ def ooc_cmd_pos(client, arg):
 def ooc_cmd_bg(client, arg):
     if len(arg) == 0:
         raise ArgumentError('You must specify a name. Use /bg <background>.')
-    if not client.is_mod and client.area.bg_lock:
+    if not client.is_mod and client.area.bg_lock == "true":
         raise AreaError("This area's background is locked")
     try:
         client.area.change_background(arg)
@@ -296,7 +296,7 @@ def ooc_cmd_bglock(client,arg):
         raise ClientError('You must be authorized to do that.')
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
-    if client.area.bg_lock:
+    if client.area.bg_lock  == "true":
         client.area.bg_lock = "false"
     else:
         client.area.bg_lock = "true"
