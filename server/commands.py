@@ -421,6 +421,7 @@ def ooc_cmd_clientmute(client, arg):
     if targets:
         for c in targets:
             logger.log_server('Muted {}.'.format(c.get_ip()), client)
+            c.send_command('MU', c.char_id)
             c.is_muted = True
         client.send_host_message('Muted {} existing client(s).'.format(len(targets)))
     else:
@@ -436,6 +437,7 @@ def ooc_cmd_clientunmute(client, arg):
     if targets:
         for c in targets:
             logger.log_server('Unmuted {}.'.format(c.get_ip()), client)
+            c.send_command('UM', c.char_id)
             c.is_muted = False
         client.send_host_message('Unmuted {} existing client(s).'.format(len(targets)))
     else:
