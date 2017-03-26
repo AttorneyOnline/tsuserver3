@@ -38,17 +38,17 @@ Requires Python 3.5+.
 
 ### Mod Commands
 
-* login
-* gm
-* lm
-* play
+* login <Password>
+* gm <Message>
+* lm <Message>
+* play <song.mp3>
 * judgelog
-* announce
-* kick
-* ipban
-* unban
-* clientmute
-* clientunmute
+* announce <Message>
+* kick <Target>
+* ban <IP>
+* unban <IP>
+* mute <Target>
+* unmute <Target>,<all>
 
 ## License
 

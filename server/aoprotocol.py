@@ -441,10 +441,15 @@ class AOProtocol(asyncio.Protocol):
         if self.client.is_muted:  # Checks to see if the client has been muted by a mod
             self.client.send_host_message("You have been muted by a moderator")
             return
-            
+
+        if not self.client.can_call_mod():
+            self.client.send_host_message("You must wait 30 seconds between mod calls.")
+            return
+
         self.server.send_all_cmd_pred('ZZ', '{} ({}) in {} ({})'
                                       .format(self.client.get_char_name(), self.client.get_ip(), self.client.area.name,
                                               self.client.area.id), pred=lambda c: c.is_mod)
+        self.client.set_mod_call_delay()
         logger.log_server('[{}]{} called a moderator.'.format(self.client.area.id, self.client.get_char_name()))
 
     def net_cmd_opKICK(self, args):

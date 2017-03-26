@@ -372,7 +372,7 @@ def ooc_cmd_kick(client, arg):
         client.send_host_message("No targets found.")
 
 
-def ooc_cmd_ipban(client, arg):
+def ooc_cmd_ban(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     ip = arg.strip()
@@ -412,7 +412,7 @@ def ooc_cmd_play(client, arg):
     logger.log_server('[{}][{}]Changed music to {}.'.format(client.area.id, client.get_char_name(), arg), client)
 
 
-def ooc_cmd_clientmute(client, arg):
+def ooc_cmd_mute(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
@@ -428,12 +428,15 @@ def ooc_cmd_clientmute(client, arg):
         client.send_host_message("No targets found.")
 
 
-def ooc_cmd_clientunmute(client, arg):
+def ooc_cmd_unmute(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
         raise ArgumentError('You must specify a target.')
-    targets = client.server.client_manager.get_targets(client, arg)
+    if arg == "all":
+        targets = client.server.client_manager.get_muted_clients()
+    else:
+        targets = client.server.client_manager.get_targets(client, arg)
     if targets:
         for c in targets:
             logger.log_server('Unmuted {}.'.format(c.get_ip()), client)
