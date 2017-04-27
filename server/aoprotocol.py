@@ -23,6 +23,7 @@ from server import commands
 from server import logger
 from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
 from server.fantacrypt import fanta_decrypt
+from server.evidence import Evidence
 
 
 class AOProtocol(asyncio.Protocol):
@@ -176,7 +177,7 @@ class AOProtocol(asyncio.Protocol):
 
         self.client.is_ao2 = True
 
-        self.client.send_command('FL', 'yellowtext', 'customobjections', 'flipping', 'fastloading', 'noencryption', 'deskmod')
+        self.client.send_command('FL', 'yellowtext', 'customobjections', 'flipping', 'fastloading', 'noencryption', 'deskmod', 'evidence')
 
     def net_cmd_ch(self, _):
         """ Periodically checks the connection.
@@ -434,6 +435,21 @@ class AOProtocol(asyncio.Protocol):
         except AreaError:
             return
 
+    def net_cmd_pe(self, args):
+        """ Adds a piece of evidence.
+
+        PE#<name: string>#<description: string>#<image: string>#%
+
+        """
+
+        if args.len < 3:
+            return;
+
+        evi = Evidence(args[0], args[1], args[2])
+
+        self.client.area.add_evidence(evi)
+        self.client.area.broadcast_evidence_list()
+
     def net_cmd_zz(self, _):
         """ Sent on mod call.
 
@@ -476,6 +492,7 @@ class AOProtocol(asyncio.Protocol):
         'MC': net_cmd_mc,  # play song
         'RT': net_cmd_rt,  # WT/CE buttons
         'HP': net_cmd_hp,  # penalties
+        'PE': net_cmd_pe,  # add evidence
         'ZZ': net_cmd_zz,  # call mod button
         'opKICK': net_cmd_opKICK,  # /kick with guard on
         'opBAN': net_cmd_opBAN,  # /ban with guard on

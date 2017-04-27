@@ -99,6 +99,7 @@ class ClientManager:
             self.send_command('HP', 1, self.area.hp_def)
             self.send_command('HP', 2, self.area.hp_pro)
             self.send_command('BN', self.area.background)
+            self.send_command('LE', *self.area.get_evidence_list())
 
         def send_area_list(self):
             msg = '=== Areas ==='
@@ -145,6 +146,7 @@ class ClientManager:
             self.send_command('HP', 1, self.area.hp_def)
             self.send_command('HP', 2, self.area.hp_pro)
             self.send_command('BN', self.area.background)
+            self.send_command('LE', *self.area.get_evidence_list())
             self.send_command('MM', 1)
             self.send_command('OPPASS', fantacrypt.fanta_encrypt(self.server.config['guardpass']))
             self.send_command('DONE')
