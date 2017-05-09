@@ -469,6 +469,21 @@ def ooc_cmd_rpmode(p_client, arg):
             i_client.in_rp = False
     else:
         p_client.send_host_message('Invalid argument! Valid arguments: on, off. Your argument: ' + arg)
+
+def ooc_cmd_lock(client, arg):
+	client.area.is_locked = True
+	client.area.current_locker = client
+	client.area.send_host_message("Area locked!")
+
+def ooc_cmd_unlock(client, arg):
+	if client.area.current_locker is client:
+		client.area.is_locked = False
+		client.send_host_message("Area unlocked!")
+	else:
+		client.send_host_message("You did not lock this area!")
+
+
+
     
 
 
