@@ -1,6 +1,6 @@
-# tsuserver3
+# tsuserver3 RP edition
 
-A Python based server for Attorney Online.
+A tsuserver3-based server for Attorney Online. Additional features added for an exquisite roleplaying experience™
 
 Requires Python 3.5+.
 
