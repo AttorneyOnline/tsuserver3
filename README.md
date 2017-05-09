@@ -35,6 +35,8 @@ Requires Python 3.5+.
 * roll
 * coinflip
 * currentmusic
+* lock
+* unlock
 
 ### Mod Commands
 
@@ -49,6 +51,7 @@ Requires Python 3.5+.
 * unban
 * clientmute
 * clientunmute
+* rpmode
 
 ## License
 
