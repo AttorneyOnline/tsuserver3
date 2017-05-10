@@ -75,7 +75,7 @@ class ClientManager:
         def change_area(self, area):
             if self.area == area:
                 raise ClientError('You are already in this area.')
-            if area.is_locked:
+            if area.is_locked and not self.is_mod:
                 self.send_host_message("That area is locked!")
                 return
             old_area = self.area
