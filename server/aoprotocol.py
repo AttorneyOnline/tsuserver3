@@ -17,6 +17,7 @@
 
 import asyncio
 import re
+from time import localtime, strftime
 from enum import Enum
 
 from server import commands
@@ -462,11 +463,13 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_host_message("You must wait 30 seconds between mod calls.")
             return
 
-        self.server.send_all_cmd_pred('ZZ', '{} ({}) in {} ({})'
-                                      .format(self.client.get_char_name(), self.client.get_ip(), self.client.area.name,
+        current_time = strftime("%H:%M", localtime())
+
+        self.server.send_all_cmd_pred('ZZ', '[{}] {} ({}) in {} ({})'
+                                      .format(current_time, self.client.get_char_name(), self.client.get_ip(), self.client.area.name,
                                               self.client.area.id), pred=lambda c: c.is_mod)
         self.client.set_mod_call_delay()
-        logger.log_server('[{}]{} called a moderator.'.format(self.client.area.id, self.client.get_char_name()))
+        logger.log_server('[{}][{}]{} called a moderator.'.format(self.client.get_ip(), self.client.area.id, self.client.get_char_name()))
 
     def net_cmd_opKICK(self, args):
         self.net_cmd_ct(['opkick', '/kick {}'.format(args[0])])
