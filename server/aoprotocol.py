@@ -443,13 +443,32 @@ class AOProtocol(asyncio.Protocol):
 
         """
 
-        if args.len < 3:
-            return;
+        if len(args) < 3:
+            return
 
         evi = Evidence(args[0], args[1], args[2])
 
         self.client.area.add_evidence(evi)
         self.client.area.broadcast_evidence_list()
+
+    def net_cmd_de(self, args):
+        return
+
+    def net_cmd_ee(self, args):
+        """ Edits a piece of evidence.
+
+        EE#<id: int>#<name: string>#<description: string>#<image: string>#%
+
+        """
+
+        if len(args) < 4:
+            return
+
+        evi = Evidence(args[1], args[2], args[3])
+
+        self.client.area.edit_evidence(int(args[0]), evi)
+        self.client.area.broadcast_evidence_list()
+
 
     def net_cmd_zz(self, _):
         """ Sent on mod call.
@@ -496,6 +515,8 @@ class AOProtocol(asyncio.Protocol):
         'RT': net_cmd_rt,  # WT/CE buttons
         'HP': net_cmd_hp,  # penalties
         'PE': net_cmd_pe,  # add evidence
+        'DE': net_cmd_de,  # delete evidence
+        'EE': net_cmd_ee,  # edit evidence
         'ZZ': net_cmd_zz,  # call mod button
         'opKICK': net_cmd_opKICK,  # /kick with guard on
         'opBAN': net_cmd_opBAN,  # /ban with guard on

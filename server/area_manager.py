@@ -44,6 +44,13 @@ class AreaManager:
             self.current_music_player = ''
             self.evidence_list = []
 
+            """
+            #debug
+            self.evidence_list.append(Evidence("WOW", "desc", "1.png"))
+            self.evidence_list.append(Evidence("wewz", "desc2", "2.png"))
+            self.evidence_list.append(Evidence("weeeeeew", "desc3", "3.png"))
+            """
+
         def new_client(self, client):
             self.clients.add(client)
 
@@ -130,10 +137,13 @@ class AreaManager:
 
         def broadcast_evidence_list(self):
         	for c in self.clients:
-        		c.send_command('LE', self.get_evidence_list())
+        		c.send_command('LE', *self.get_evidence_list())
 
         def add_evidence(self, evidence):
         	self.evidence_list.append(evidence)
+
+        def edit_evidence(self, id, evidence):
+        	self.evidence_list[id] = evidence
 
 
     def __init__(self, server):
