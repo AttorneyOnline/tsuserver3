@@ -291,7 +291,7 @@ def ooc_cmd_pos(client, arg):
 def ooc_cmd_bg(client, arg):
     if len(arg) == 0:
         raise ArgumentError('You must specify a name. Use /bg <background>.')
-    if not client.is_mod and client.area.bg_lock:
+    if not client.is_mod and client.area.bg_lock == "true":
         raise AreaError("This area's background is locked")
     try:
         client.area.change_background(arg)
@@ -305,7 +305,7 @@ def ooc_cmd_bglock(client,arg):
         raise ClientError('You must be authorized to do that.')
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
-    if client.area.bg_lock:
+    if client.area.bg_lock  == "true":
         client.area.bg_lock = "false"
     else:
         client.area.bg_lock = "true"
@@ -382,7 +382,7 @@ def ooc_cmd_kick(client, arg):
         client.send_host_message("No targets found.")
 
 
-def ooc_cmd_ipban(client, arg):
+def ooc_cmd_ban(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     ip = arg.strip()
@@ -422,7 +422,7 @@ def ooc_cmd_play(client, arg):
     logger.log_server('[{}][{}]Changed music to {}.'.format(client.area.id, client.get_char_name(), arg), client)
 
 
-def ooc_cmd_clientmute(client, arg):
+def ooc_cmd_mute(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
@@ -431,21 +431,26 @@ def ooc_cmd_clientmute(client, arg):
     if targets:
         for c in targets:
             logger.log_server('Muted {}.'.format(c.get_ip()), client)
+            c.send_command('MU', c.char_id)
             c.is_muted = True
         client.send_host_message('Muted {} existing client(s).'.format(len(targets)))
     else:
         client.send_host_message("No targets found.")
 
 
-def ooc_cmd_clientunmute(client, arg):
+def ooc_cmd_unmute(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
         raise ArgumentError('You must specify a target.')
-    targets = client.server.client_manager.get_targets(client, arg)
+    if arg == "all":
+        targets = client.server.client_manager.get_muted_clients()
+    else:
+        targets = client.server.client_manager.get_targets(client, arg)
     if targets:
         for c in targets:
             logger.log_server('Unmuted {}.'.format(c.get_ip()), client)
+            c.send_command('UM', c.char_id)
             c.is_muted = False
         client.send_host_message('Unmuted {} existing client(s).'.format(len(targets)))
     else:

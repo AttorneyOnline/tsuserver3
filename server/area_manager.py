@@ -21,6 +21,7 @@ import time
 import yaml
 
 from server.exceptions import AreaError
+from server.evidence import Evidence
 
 
 class AreaManager:
@@ -41,6 +42,15 @@ class AreaManager:
             self.judgelog = []
             self.current_music = ''
             self.current_music_player = ''
+            self.evidence_list = []
+
+            """
+            #debug
+            self.evidence_list.append(Evidence("WOW", "desc", "1.png"))
+            self.evidence_list.append(Evidence("wewz", "desc2", "2.png"))
+            self.evidence_list.append(Evidence("weeeeeew", "desc3", "3.png"))
+            """
+            
             self.is_locked = False
             self.current_locker = None
 
@@ -123,6 +133,23 @@ class AreaManager:
         def add_music_playing(self, client, name):
             self.current_music_player = client.get_char_name()
             self.current_music = name
+
+        def get_evidence_list(self):
+        	evi_list = []
+        	for e in self.evidence_list:
+        		evi_list.append(e.to_string())
+        	return evi_list
+
+        def broadcast_evidence_list(self):
+        	for c in self.clients:
+        		c.send_command('LE', *self.get_evidence_list())
+
+        def add_evidence(self, evidence):
+        	self.evidence_list.append(evidence)
+
+        def edit_evidence(self, id, evidence):
+        	self.evidence_list[id] = evidence
+
 
     def __init__(self, server):
         self.server = server
