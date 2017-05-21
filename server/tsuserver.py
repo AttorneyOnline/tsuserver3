@@ -34,11 +34,10 @@ class TsuServer3:
         self.client_manager = ClientManager(self)
         self.area_manager = AreaManager(self)
         self.ban_manager = BanManager()
-        self.version = 'tsuserver3dev'
-        self.software = 'tsuserver3'
+        self.software = 'tsuserver3rp'
         self.release = 3
         self.major_version = 0
-        self.minor_version = 1
+        self.minor_version = 2
         self.char_list = None
         self.char_pages_ao1 = None
         self.music_list = None
@@ -52,6 +51,7 @@ class TsuServer3:
         self.load_backgrounds()
         self.district_client = None
         self.ms_client = None
+        self.rp_mode = False
         logger.setup_logger(debug=self.config['debug'])
 
     def start(self):
@@ -90,6 +90,8 @@ class TsuServer3:
 
     def new_client(self, transport):
         c = self.client_manager.new_client(transport)
+        if self.rp_mode:
+            c.in_rp = True
         c.server = self
         c.area = self.area_manager.default_area()
         c.area.new_client(c)

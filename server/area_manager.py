@@ -50,12 +50,17 @@ class AreaManager:
             self.evidence_list.append(Evidence("wewz", "desc2", "2.png"))
             self.evidence_list.append(Evidence("weeeeeew", "desc3", "3.png"))
             """
+            
+            self.is_locked = False
+            self.current_locker = None
 
         def new_client(self, client):
             self.clients.add(client)
 
         def remove_client(self, client):
             self.clients.remove(client)
+            if client == self.current_locker:
+                self.is_locked = False
 
         def is_char_available(self, char_id):
             return char_id not in [x.char_id for x in self.clients]

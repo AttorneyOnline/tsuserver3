@@ -38,6 +38,7 @@ class ClientManager:
             self.muted_adverts = False
             self.is_muted = False
             self.mod_call_time = 0
+            self.in_rp = False
 
         def send_raw_message(self, msg):
             self.transport.write(msg.encode('utf-8'))
@@ -77,21 +78,23 @@ class ClientManager:
         def change_area(self, area):
             if self.area == area:
                 raise ClientError('You are already in this area.')
+            if area.is_locked and not self.is_mod:
+                self.send_host_message("That area is locked!")
+                return
             old_area = self.area
             if not area.is_char_available(self.char_id):
                 try:
                     new_char_id = area.get_rand_avail_char_id()
                 except AreaError:
                     raise ClientError('No available characters in that area.')
-                self.area.remove_client(self)
-                self.area = area
-                area.new_client(self)
+
                 self.change_character(new_char_id)
                 self.send_host_message('Character taken, switched to {}.'.format(self.get_char_name()))
-            else:
-                self.area.remove_client(self)
-                self.area = area
-                area.new_client(self)
+
+            self.area.remove_client(self)
+            self.area = area
+            area.new_client(self)
+
             self.send_host_message('Changed area to {}.'.format(area.name))
             logger.log_server(
                 '[{}]Changed area from {} ({}) to {} ({}).'.format(self.get_char_name(), old_area.name, old_area.id,
@@ -108,6 +111,16 @@ class ClientManager:
                 if self.area == area:
                     msg += ' [*]'
                 msg += '\r\n[{}]'.format(area.status)
+                if area.is_locked:
+                    msg += '[LOCKED]'
+            self.send_host_message(msg)
+
+        def send_limited_area_list(self):
+            msg = '=== Areas ==='
+            for i, area in enumerate(self.server.area_manager.areas):
+                msg += '\r\nArea {}: {}'.format(i, area.name)
+                if self.area == area:
+                    msg += ' [*]'
             self.send_host_message(msg)
 
         def get_area_info(self, area_id):

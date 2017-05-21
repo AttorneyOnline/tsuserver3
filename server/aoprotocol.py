@@ -361,8 +361,10 @@ class AOProtocol(asyncio.Protocol):
             if len(spl) == 2:
                 arg = spl[1][:256]
             try:
-                getattr(commands, 'ooc_cmd_{}'.format(cmd))(self.client, arg)
+                called_function = 'ooc_cmd_{}'.format(cmd)
+                getattr(commands, called_function)(self.client, arg)
             except AttributeError:
+                print('Attribute error with ' + called_function)
                 self.client.send_host_message('Invalid command.')
             except (ClientError, AreaError, ArgumentError, ServerError) as ex:
                 self.client.send_host_message(ex)
