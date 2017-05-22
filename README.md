@@ -2,7 +2,7 @@
 
 A Python based server for Attorney Online.
 
-Requires Python 3.5+.
+Requires Python 3.5+ and pyYaml
 
 
 ## How to use
