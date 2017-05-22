@@ -34,10 +34,10 @@ class TsuServer3:
         self.client_manager = ClientManager(self)
         self.area_manager = AreaManager(self)
         self.ban_manager = BanManager()
-        self.software = 'tsuserver3rp'
+        self.software = 'tsuserver3'
         self.release = 3
-        self.major_version = 0
-        self.minor_version = 2
+        self.major_version = 1
+        self.minor_version = 0
         self.char_list = None
         self.char_pages_ao1 = None
         self.music_list = None

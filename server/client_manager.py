@@ -147,7 +147,9 @@ class ClientManager:
         def send_all_area_info(self):
             info = '== Area List =='
             for i in range(len(self.server.area_manager.areas)):
-                info += '\r\n{}'.format(self.get_area_info(i))
+                #print(len(i.clients))
+                if len(self.server.area_manager.areas[i].clients) > 0:
+                    info += '\r\n{}'.format(self.get_area_info(i))
             self.send_host_message(info)
 
         def send_done(self):

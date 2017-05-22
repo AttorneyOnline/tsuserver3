@@ -457,6 +457,9 @@ def ooc_cmd_unmute(client, arg):
         client.send_host_message("No targets found.")
 
 def ooc_cmd_rpmode(p_client, arg):
+    if not p_client.server.config['rp_mode_enabled']:
+        p_client.send_host_message("RP mode is disabled in this server!")
+        return
     if not p_client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
@@ -476,19 +479,22 @@ def ooc_cmd_rpmode(p_client, arg):
         p_client.send_host_message('Invalid argument! Valid arguments: on, off. Your argument: ' + arg)
 
 def ooc_cmd_lock(client, arg):
-	if client.area.id == 0:
-		client.send_host_message("You can't lock area 0!")
-		return
-	client.area.is_locked = True
-	client.area.current_locker = client
-	client.area.send_host_message("Area locked!")
+    if not client.server.config['area_locking_enabled']:
+        client.send_host_message('Area locking is disabled in this server!')
+        return
+    if client.area.id == 0:
+        client.send_host_message('You can\'t lock area 0!')
+        return
+    client.area.is_locked = True
+    client.area.current_locker = client
+    client.area.send_host_message('Area locked!')
 
 def ooc_cmd_unlock(client, arg):
-	if client.area.current_locker is client:
-		client.area.is_locked = False
-		client.send_host_message("Area unlocked!")
-	else:
-		client.send_host_message("You did not lock this area!")
+    if client.area.current_locker is client:
+        client.area.is_locked = False
+        client.send_host_message('Area unlocked!')
+    else:
+        client.send_host_message('You did not lock this area!')
 
 
 
