@@ -145,6 +145,9 @@ class AreaManager:
         def edit_evidence(self, id, evidence):
         	self.evidence_list[id] = evidence
 
+        def delete_evidence(self, id):
+            self.evidence_list.pop(id)
+
 
     def __init__(self, server):
         self.server = server
