@@ -130,20 +130,20 @@ class AreaManager:
             self.current_music = name
 
         def get_evidence_list(self):
-        	evi_list = []
-        	for e in self.evidence_list:
-        		evi_list.append(e.to_string())
-        	return evi_list
+            evi_list = []
+            for e in self.evidence_list:
+                evi_list.append(e.to_string())
+            return evi_list
 
         def broadcast_evidence_list(self):
-        	for c in self.clients:
-        		c.send_command('LE', *self.get_evidence_list())
+            for c in self.clients:
+                c.send_command('LE', *self.get_evidence_list())
 
         def add_evidence(self, evidence):
-        	self.evidence_list.append(evidence)
+            self.evidence_list.append(evidence)
 
         def edit_evidence(self, id, evidence):
-        	self.evidence_list[id] = evidence
+            self.evidence_list[id] = evidence
 
         def delete_evidence(self, id):
             self.evidence_list.pop(id)
