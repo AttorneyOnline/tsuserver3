@@ -454,7 +454,14 @@ class AOProtocol(asyncio.Protocol):
         self.client.area.broadcast_evidence_list()
 
     def net_cmd_de(self, args):
-        return
+        """ Deletes a piece of evidence.
+
+        DE#<id: int>#%
+
+        """
+
+        self.client.area.delete_evidence(int(args[0]))
+        self.client.area.broadcast_evidence_list()
 
     def net_cmd_ee(self, args):
         """ Edits a piece of evidence.
