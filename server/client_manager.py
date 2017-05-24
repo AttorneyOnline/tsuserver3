@@ -95,7 +95,7 @@ class ClientManager:
             self.area = area
             area.new_client(self)
 
-            self.send_host_message('Changed area to {}.'.format(area.name))
+            self.send_host_message('Changed area to {}.[{}]'.format(area.name, self.area.status))
             logger.log_server(
                 '[{}]Changed area from {} ({}) to {} ({}).'.format(self.get_char_name(), old_area.name, old_area.id,
                                                                    self.area.name, self.area.id), self)
