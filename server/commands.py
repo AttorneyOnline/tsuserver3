@@ -312,6 +312,13 @@ def ooc_cmd_bglock(client,arg):
     client.area.send_host_message('A mod has set the background lock to {}.'.format(client.area.bg_lock))
     logger.log_server('[{}][{}]Changed bglock to {}'.format(client.area.id, client.get_char_name(), client.area.bg_lock), client)
 
+def ooc_cmd_bglist(client, arg):
+    bgs = 'Available backgrounds:'
+
+    for bg in client.server.backgrounds:
+        bgs += '\r\n' + bg
+
+    client.send_host_message(bgs)
 
 def ooc_cmd_motd(client, arg):
     if len(arg) != 0:
