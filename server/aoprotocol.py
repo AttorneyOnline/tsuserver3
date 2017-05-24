@@ -339,7 +339,7 @@ class AOProtocol(asyncio.Protocol):
                 return
         msg = text[:256]
         self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
-                                      sfx_delay, button, unk, flip, ding, color)
+                                      sfx_delay, button, evidence, flip, ding, color)
         self.client.area.set_next_msg_delay(len(msg))
         logger.log_server('[IC][{}][{}]{}'.format(self.client.area.id, self.client.get_char_name(), msg), self.client)
 
