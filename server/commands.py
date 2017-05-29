@@ -503,6 +503,37 @@ def ooc_cmd_unlock(client, arg):
     else:
         client.send_host_message('You did not lock this area!')
 
+def ooc_cmd_record(client, arg):
+    if len(arg) == 0:
+        client.send_host_message("This command takes one argument(start/stop/play)")
+        return
+
+    if arg == "start":
+        if (client.area.is_recording):
+            client.send_host_message("This area is already recording!")
+        else:
+            client.area.is_recording = True
+            client.area.recorded_messages = []
+            client.send_host_message("Recording started!")
+    elif arg == "stop":
+        if not (client.area.is_recording):
+            client.send_host_message("This area is not recording.")
+        else:
+            client.area.is_recording = False
+            client.send_host_message("Recording stopped!")
+    elif arg == "play":
+        if client.area.is_recording:
+            client.send_host_message("You can\'t play a recording when recording!")
+
+        elif len(client.area.recorded_messages) <= 0:
+            client.area.send_host_message("Record is empty!")
+        else:
+            client.area.play_recording()
+    else:
+        client.send_host_message("Invalid argument! (start/stop/play)")
+
+    
+
 
 
     

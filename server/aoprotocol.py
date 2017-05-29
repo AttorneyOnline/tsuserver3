@@ -343,6 +343,9 @@ class AOProtocol(asyncio.Protocol):
         self.client.area.set_next_msg_delay(len(msg))
         logger.log_server('[IC][{}][{}]{}'.format(self.client.area.id, self.client.get_char_name(), msg), self.client)
 
+        if (self.client.area.is_recording):
+        	self.client.area.recorded_messages.append(args)
+
     def net_cmd_ct(self, args):
         """ OOC Message
 

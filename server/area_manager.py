@@ -43,6 +43,8 @@ class AreaManager:
             self.current_music = ''
             self.current_music_player = ''
             self.evidence_list = []
+            self.is_recording = False
+            self.recorded_messages = []
 
             """
             #debug
@@ -152,6 +154,11 @@ class AreaManager:
 
         def delete_evidence(self, id):
             self.evidence_list.pop(id)
+
+        def play_recording(self):
+            for m in self.recorded_messages:
+                self.send_command("MS", *m)
+                time.sleep(0.07 * len(m[4]))
 
 
     def __init__(self, server):
