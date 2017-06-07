@@ -510,6 +510,15 @@ class AOProtocol(asyncio.Protocol):
     def net_cmd_opBAN(self, args):
         self.net_cmd_ct(['opban', '/ban {}'.format(args[0])])
 
+    def net_cmd_ad(self, args):
+        raise NotImplementedError
+
+    def net_cmd_adtb(self, args):
+        raise NotImplementedError
+    
+    def net_cmd_addone(self, args):
+        raise NotImplementedError
+
     net_cmd_dispatcher = {
         'HI': net_cmd_hi,  # handshake
         'ID': net_cmd_id,  # client version
@@ -534,4 +543,7 @@ class AOProtocol(asyncio.Protocol):
         'ZZ': net_cmd_zz,  # call mod button
         'opKICK': net_cmd_opKICK,  # /kick with guard on
         'opBAN': net_cmd_opBAN,  # /ban with guard on
+        'AD': net_cmd_ad,  # start asset download protocol
+        'ADTB': net_cmd_adtb,  # direct data transfer
+        'ADDONE': net_cmd_addone # asset download complete
     }
