@@ -4,7 +4,7 @@ from uuid import getnode, uuid5
 AOSERVER_NAMESPACE_UUID = "7d9a2ae2-86e9-4162-a09e-c878e937f084"
 
 def generate_uuid():
-    """ Generate a non-unique UUID.
+    """ Generate a deterministic UUID.
     This is made deterministic in case the server owner
     accidentally deletes the config.
 
