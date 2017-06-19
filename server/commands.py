@@ -532,6 +532,44 @@ def ooc_cmd_record(client, arg):
     else:
         client.send_host_message("Invalid argument! (start/stop/play)")
 
+def ooc_cmd_eviswap(client, arg):
+	args = arg.split()
+	if len(args) != 2:
+		client.send_host_message("This command expects two arguments! (evi id 1, evi id 2)")
+		print("args: " + str(len(args)))
+		return
+
+	print("WAT_")
+
+	evi1 = args[0]
+	evi2 = args[1]
+
+	print("evi1 is " + str(evi1))
+	print("evi2 is " + str(evi2))
+
+	if not evi1.isdigit():
+		client.send_host_message("Argument 1 was not a number!")
+		return
+	if not evi2.isdigit():
+		client.send_host_message("Argument 2 was not a number!")
+		return
+
+	evi1 = int(evi1)
+	evi2 = int(evi2)
+
+	if evi1 < 0 or evi1 >= len(client.area.evidence_list):
+		client.send_host_message("Invalid argument 1!")
+		return
+	if evi2 < 0 or evi2 >= len(client.area.evidence_list):
+		client.send_host_message("Invalid argument 2!")
+		return
+
+	client.area.evidence_list[evi1], client.area.evidence_list[evi2] = client.area.evidence_list[evi2], client.area.evidence_list[evi1]
+
+	client.area.broadcast_evidence_list()
+
+
+
     
 
 
