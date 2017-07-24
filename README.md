@@ -83,6 +83,8 @@ Using /charselect "target" will kick a player back to the character select scree
     - Unbans the specified IP
 * **mute** "Target" 
     - Mutes the target from all IC actions, can be IP or Character name
+* **oocmute** "Target" 
+    - Mutes the target from all OOC actions, can be OOC, IP or Character name
 * **unmute** "Target","all" 
     - Unmutes the target, "all" will unmute all muted clients
 * **bglock** 
