@@ -479,6 +479,24 @@ def ooc_cmd_oocmute(client, arg):
     else:
         client.send_host_message("No targets found.")
 
+def ooc_cmd_oocunmute(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a target.')
+    if arg == "all":
+        targets = client.server.client_manager.get_ooc_muted_clients()
+    else:
+        targets = client.server.client_manager.get_targets(client, arg)
+    if targets:
+        for c in targets:
+            logger.log_server('Unmuted {}.'.format(c.get_ip()), client)
+            c.send_command('UM', c.char_id)
+            c.is_ooc_muted = False
+        client.send_host_message('Unmuted {} existing client(s).'.format(len(targets)))
+    else:
+        client.send_host_message("No targets found.")
+
 def ooc_cmd_rpmode(p_client, arg):
     if not p_client.server.config['rp_mode_enabled']:
         p_client.send_host_message("RP mode is disabled in this server!")
