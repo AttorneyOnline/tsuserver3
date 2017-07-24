@@ -37,6 +37,7 @@ class ClientManager:
             self.muted_global = False
             self.muted_adverts = False
             self.is_muted = False
+            self.is_ooc_muted = False
             self.mod_call_time = 0
             self.in_rp = False
 
@@ -245,5 +246,13 @@ class ClientManager:
         clients = []
         for client in self.clients:
             if client.is_muted:
+                clients.append(client)
+        return clients
+	
+	#Mute OOC
+    def get_ooc_muted_clients(self):
+        clients = []
+        for client in self.clients:
+            if client.is_ooc_muted:
                 clients.append(client)
         return clients

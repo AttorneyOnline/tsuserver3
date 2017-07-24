@@ -191,7 +191,7 @@ def ooc_cmd_doc(client, arg):
 def ooc_cmd_cleardoc(client, arg):
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
-    client.send_host_message('Document cleared.')
+    client.area.send_host_message('{} cleared the doc link.'.format(client.get_char_name()))
     logger.log_server('[{}][{}]Cleared document. Old link: {}'
                       .format(client.area.id, client.get_char_name(), client.area.doc))
     client.area.change_doc()
@@ -459,6 +459,40 @@ def ooc_cmd_unmute(client, arg):
             logger.log_server('Unmuted {}.'.format(c.get_ip()), client)
             c.send_command('UM', c.char_id)
             c.is_muted = False
+        client.send_host_message('Unmuted {} existing client(s).'.format(len(targets)))
+    else:
+        client.send_host_message("No targets found.")
+
+	#OOC muted
+def ooc_cmd_oocmute(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a target.')
+    targets = client.server.client_manager.get_targets(client, arg)
+    if targets:
+        for c in targets:
+            logger.log_server('Muted {}.'.format(c.get_ip()), client)
+            c.send_command('MU', c.name)
+            c.is_ooc_muted = True
+        client.send_host_message('Muted {} existing client(s).'.format(len(targets)))
+    else:
+        client.send_host_message("No targets found.")
+
+def ooc_cmd_oocunmute(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a target.')
+    if arg == "all":
+        targets = client.server.client_manager.get_ooc_muted_clients()
+    else:
+        targets = client.server.client_manager.get_targets(client, arg)
+    if targets:
+        for c in targets:
+            logger.log_server('Unmuted {}.'.format(c.get_ip()), client)
+            c.send_command('UM', c.char_id)
+            c.is_ooc_muted = False
         client.send_host_message('Unmuted {} existing client(s).'.format(len(targets)))
     else:
         client.send_host_message("No targets found.")
