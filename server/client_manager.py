@@ -38,6 +38,7 @@ class ClientManager:
             self.muted_adverts = False
             self.is_muted = False
             self.is_ooc_muted = False
+            self.pm_mute = False
             self.mod_call_time = 0
             self.in_rp = False
 
@@ -219,6 +220,13 @@ class ClientManager:
                 clients.append(client)
         return clients
 
+    def get_targets_by_hdid(self, hdid):
+        clients = []
+        for client in self.clients:
+            if client.get_hdid() == hdid:
+                clients.append(client)
+        return clients
+		
     def get_targets_by_ooc_name(self, name):
         clients = []
         for client in self.clients:
@@ -227,6 +235,11 @@ class ClientManager:
         return clients
 
     def get_targets(self, client, target):
+		# check if it's HDID but only if mod
+        if client.is_mod:
+            clients = self.get_targets_by_hdid(target)
+            if clients:
+                return clients
         # check if it's IP but only if mod
         if client.is_mod:
             clients = self.get_targets_by_ip(target)
@@ -248,8 +261,7 @@ class ClientManager:
             if client.is_muted:
                 clients.append(client)
         return clients
-	
-	#Mute OOC
+
     def get_ooc_muted_clients(self):
         clients = []
         for client in self.clients:

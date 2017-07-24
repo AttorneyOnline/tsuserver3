@@ -232,10 +232,17 @@ def ooc_cmd_pm(client, arg):
     if not target_clients:
         client.send_host_message('No targets found.')
     else:
-        client.send_host_message('PM sent to {}, {} user(s). Message: {}'.format(args[0], len(target_clients), msg))
+        sent_num = 0
         for c in target_clients:
-            c.send_host_message(
-                'PM from {} in {} ({}): {}'.format(client.name, client.area.name, client.get_char_name(), msg))
+            if not c.pm_mute:
+                c.send_host_message(
+                 'PM from {} in {} ({}): {}'.format(client.name, client.area.name, client.get_char_name(), msg))
+                sent_num += 1
+        if sent_num == 0:
+            client.send_host_message('Target not recieving PMss.')
+        else:
+            client.send_host_message('PM sent to {}, {} user(s). Message: {}'.format(args[0], sent_num, msg))
+
 
 
 def ooc_cmd_charselect(client, arg):
@@ -602,14 +609,11 @@ def ooc_cmd_eviswap(client, arg):
 
 	client.area.broadcast_evidence_list()
 
-
-
-    
-
-
-
-    
-
-
-
-
+def ooc_cmd_mutepm(client, arg):
+    if len(arg) != 0:
+        raise ArgumentError("This command doesn't take any arguments")
+    client.pm_mute = not client.pm_mute
+    if client.pm_mute:
+        client.send_host_message('You stopped receiving PMs')
+    else:
+        client.send_host_message('You are now receiving PMs')
