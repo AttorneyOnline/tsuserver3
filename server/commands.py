@@ -426,6 +426,13 @@ def ooc_cmd_unban(client, arg):
         raise
     logger.log_server('Unbanned {}.'.format(ip), client)
 
+def ooc_cmd_gethdid(client, arg):
+	if not client.is_mod:
+		raise ClientError('You must be authorized to do that.')
+	if len(arg) != 0:
+		raise ArgumentError('This command takes no arguments.')
+	client.send_all_area_hdid()
+			
 def ooc_cmd_play(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
@@ -434,7 +441,6 @@ def ooc_cmd_play(client, arg):
     client.area.play_music(arg, client.char_id, -1)
     client.area.add_music_playing(client, arg)
     logger.log_server('[{}][{}]Changed music to {}.'.format(client.area.id, client.get_char_name(), arg), client)
-
 
 def ooc_cmd_mute(client, arg):
     if not client.is_mod:
@@ -450,7 +456,6 @@ def ooc_cmd_mute(client, arg):
         client.send_host_message('Muted {} existing client(s).'.format(len(targets)))
     else:
         client.send_host_message("No targets found.")
-
 
 def ooc_cmd_unmute(client, arg):
     if not client.is_mod:
@@ -470,7 +475,6 @@ def ooc_cmd_unmute(client, arg):
     else:
         client.send_host_message("No targets found.")
 
-	#OOC muted
 def ooc_cmd_oocmute(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
