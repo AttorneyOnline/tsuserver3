@@ -135,8 +135,6 @@ class ClientManager:
             sorted_clients = sorted(area.clients, key=lambda x: x.get_char_name())
             for c in sorted_clients:
                 info += '\r\n{}'.format(c.get_char_name())
-                if self.is_mod:
-                    info += ' ({})'.format(c.get_ip())
             return info
 
         def send_area_info(self, area_id):
@@ -154,13 +152,34 @@ class ClientManager:
                     info += '\r\n{}'.format(self.get_area_info(i))
             self.send_host_message(info)
 
+        def send_area_hdid(self, area_id):
+            try:
+                info = self.get_area_hdid(area_id)
+            except AreaError:
+                raise
+            self.send_host_message(info)				
+
         def send_all_area_hdid(self):
-            info = '== Area List =='
+            info = '== HDID List =='
             for i in range (len(self.server.area_manager.areas)):
                  if len(self.server.area_manager.areas[i].clients) > 0:
                     info += '\r\n{}'.format(self.get_area_hdid(i))
             self.send_host_message(info)
 
+        def send_area_ip(self, area_id):
+            try:
+                info = self.get_area_ip(area_id)
+            except AreaError:
+                raise
+            self.send_host_message(info)				
+
+        def send_all_area_ip(self):
+            info = '== IP List =='
+            for i in range (len(self.server.area_manager.areas)):
+                 if len(self.server.area_manager.areas[i].clients) > 0:
+                    info += '\r\n{}'.format(self.get_area_ip(i))
+            self.send_host_message(info)
+			
         def send_done(self):
             avail_char_ids = set(range(len(self.server.char_list))) - set([x.char_id for x in self.area.clients])
             char_list = [-1] * len(self.server.char_list)
@@ -199,11 +218,10 @@ class ClientManager:
                 area = self.server.area_manager.get_area_by_id(area_id)
             except AreaError:
                 raise
+            info += '= Area {}: {} =='.format(area.id, area.name)
             sorted_clients = sorted(area.clients, key=lambda x: x.get_char_name())
             for c in sorted_clients:
                 info += '\r\n{}'.format(c.get_char_name())
-                if self.is_mod:
-                    info += ' ({})'.format(c.get_ip())
             return info
 
         def get_area_hdid(self, area_id):
@@ -212,11 +230,26 @@ class ClientManager:
                 area = self.server.area_manager.get_area_by_id(area_id)
             except AreaError:
                 raise
+            info += '= Area {}: {} =='.format(area.id, area.name)
             sorted_clients = sorted(area.clients, key=lambda x: x.get_char_name())
             for c in sorted_clients:
                 info += '\r\n{}'.format(c.get_char_name())
                 if self.is_mod:
                     info += ' ({})'.format(c.get_hdid())
+            return info
+		
+        def get_area_ip(self, area_id):
+            info = ''
+            try:
+                area = self.server.area_manager.get_area_by_id(area_id)
+            except AreaError:
+                raise
+            info += '= Area {}: {} =='.format(area.id, area.name)
+            sorted_clients = sorted(area.clients, key=lambda x: x.get_char_name())
+            for c in sorted_clients:
+                info += '\r\n{}'.format(c.get_char_name())
+                if self.is_mod:
+                    info += ' ({})'.format(c.get_ip())
             return info
 		
         def get_char_name(self):
@@ -264,11 +297,6 @@ class ClientManager:
         return clients
 
     def get_targets(self, client, target):
-		# check if it's HDID but only if mod
-        if client.is_mod:
-            clients = self.get_targets_by_hdid(target)
-            if clients:
-                return clients
         # check if it's IP but only if mod
         if client.is_mod:
             clients = self.get_targets_by_ip(target)

@@ -426,7 +426,32 @@ def ooc_cmd_unban(client, arg):
         raise
     logger.log_server('Unbanned {}.'.format(ip), client)
 
+def ooc_cmd_getip(client, arg):
+	if not client.is_mod:
+		raise ClientError ('You must be authorized to do that.')
+	if len(arg) == 0:
+		try:
+			client.send_area_ip(client.area.id)
+		except AreaError:
+			raise
+	
+def ooc_cmd_getips(client, arg):
+	if not client.is_mod:
+		raise ClientError('You must be authorized to do that.')
+	if len(arg) != 0:
+		raise ArgumentError('This command takes no arguments.')
+	client.send_all_area_ip()
+
 def ooc_cmd_gethdid(client, arg):
+	if not client.is_mod:
+		raise ClientError('You must be authorized to do that.')
+	if len(arg) == 0:
+		try:
+			client.send_area_hdid(client.area.id)
+		except AreaError:
+			raise
+			
+def ooc_cmd_gethdids(client, arg):
 	if not client.is_mod:
 		raise ClientError('You must be authorized to do that.')
 	if len(arg) != 0:
@@ -547,35 +572,6 @@ def ooc_cmd_unlock(client, arg):
         client.send_host_message('Area unlocked!')
     else:
         client.send_host_message('You did not lock this area!')
-
-def ooc_cmd_record(client, arg):
-    if len(arg) == 0:
-        client.send_host_message("This command takes one argument(start/stop/play)")
-        return
-
-    if arg == "start":
-        if (client.area.is_recording):
-            client.send_host_message("This area is already recording!")
-        else:
-            client.area.is_recording = True
-            client.area.recorded_messages = []
-            client.send_host_message("Recording started!")
-    elif arg == "stop":
-        if not (client.area.is_recording):
-            client.send_host_message("This area is not recording.")
-        else:
-            client.area.is_recording = False
-            client.send_host_message("Recording stopped!")
-    elif arg == "play":
-        if client.area.is_recording:
-            client.send_host_message("You can\'t play a recording when recording!")
-
-        elif len(client.area.recorded_messages) <= 0:
-            client.area.send_host_message("Record is empty!")
-        else:
-            client.area.play_recording()
-    else:
-        client.send_host_message("Invalid argument! (start/stop/play)")
 
 def ooc_cmd_eviswap(client, arg):
 	args = arg.split()
