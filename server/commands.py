@@ -457,7 +457,31 @@ def ooc_cmd_gethdids(client, arg):
 	if len(arg) != 0:
 		raise ArgumentError('This command takes no arguments.')
 	client.send_all_area_hdid()
-			
+
+def ooc_cmd_hdid(client, arg):
+	if len(arg) == 0 and client.is_mod:
+		raise ArgumentError('')
+	if client.is_mod:
+			args = arg.split()
+			msg = ' '.join(args[1:])
+			for char_name in client.server.char_list:
+				if arg.lower().startswith(char_name.lower()):
+					char_len = len(char_name.split())
+					to_search = ' '.join(args[:char_len])
+					try:
+						c = client.area.get_target_by_char_name(to_search)
+					except AreaError:
+						raise
+			if not c:
+				c = client.server.client_manager.get_targets(client, args[0])
+			if not c:
+				c = client.server.client_manager.get_targets_by_ip(client, args[0])
+			if not c:
+				client.send_host_message('No targets found.')
+			else:
+				info = 'Target HD ID: {}'.format(c.get_hdid())
+				client.send_host_message(info)
+				
 def ooc_cmd_play(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')

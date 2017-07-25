@@ -212,18 +212,6 @@ class ClientManager:
         def get_hdid(self):
             return self.hdid
 
-        def get_area_info(self, area_id):
-            info = ''
-            try:
-                area = self.server.area_manager.get_area_by_id(area_id)
-            except AreaError:
-                raise
-            info += '= Area {}: {} =='.format(area.id, area.name)
-            sorted_clients = sorted(area.clients, key=lambda x: x.get_char_name())
-            for c in sorted_clients:
-                info += '\r\n{}'.format(c.get_char_name())
-            return info
-
         def get_area_hdid(self, area_id):
             info = ''
             try:
