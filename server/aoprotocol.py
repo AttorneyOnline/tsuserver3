@@ -140,7 +140,7 @@ class AOProtocol(asyncio.Protocol):
         if self.server.ban_manager.is_banned(self.client.get_ip()):
             self.client.disconnect()
             return
-
+        logger.log_server('Connected. HDID: {}.'.format(self.client.hdid), self.client)
         self.client.send_command('ID', self.client.id, self.server.software, self.server.get_version_string())
         self.client.send_command('PN', self.server.get_player_count() - 1, self.server.config['playerlimit'])
 
@@ -352,6 +352,9 @@ class AOProtocol(asyncio.Protocol):
         CT#<name:string>#<message:string>#%
 
         """
+        if self.client.is_ooc_muted:  # Checks to see if the client has been muted by a mod
+            self.client.send_host_message("You have been muted by a moderator")
+            return
         if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR):
             return
         if self.client.name == '':
@@ -502,7 +505,7 @@ class AOProtocol(asyncio.Protocol):
                                       .format(current_time, self.client.get_char_name(), self.client.get_ip(), self.client.area.name,
                                               self.client.area.id), pred=lambda c: c.is_mod)
         self.client.set_mod_call_delay()
-        logger.log_server('[{}]{} called a moderator.'.format(self.client.area.id, self.client.get_char_name()), self.client)
+        logger.log_server('[{}][{}]{} called a moderator.'.format(self.client.get_ip(), self.client.area.id, self.client.get_char_name()))
 
     def net_cmd_opKICK(self, args):
         self.net_cmd_ct(['opkick', '/kick {}'.format(args[0])])

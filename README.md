@@ -39,6 +39,8 @@ Requires Python 3.5+ and pyYaml
     - Statuses: 'idle', 'building-open', 'building-full', 'casing-open', 'casing-full', 'recess'
 * **pm** "target" "Message" 
     - PMs the target, can either be character name or OOC name
+* **pmmute**
+    - Disables all incoming PMs
 * **charselect** 
     - Puts you back to char select screen
 * **reload** 
@@ -60,10 +62,6 @@ Requires Python 3.5+ and pyYaml
     - Displays the current music
 
 ### Mod Commands
-
-When logged in as mod, /getarea and /getareas will also display IPs.
-Using /charselect "target" will kick a player back to the character select screen
-
 * **login** "Password"
 * **gm** "Message" 
     - Sends a serverwide message with mod tag
@@ -75,6 +73,12 @@ Using /charselect "target" will kick a player back to the character select scree
     - Displays the last judge actions in the current area
 * **announce** "Message" 
     - Sends a serverwide announcement
+* **getip**
+    - Gets the IPs of everyone in the current area
+* **getips**
+    - Gets the IPs of everyone in every area
+* **charselect** "Target"
+    - Kicks a player back to the character select screen
 * **kick** "Target" 
     - Kicks the target, can be IP or character name
 * **ban** "IP" 
@@ -84,6 +88,10 @@ Using /charselect "target" will kick a player back to the character select scree
 * **mute** "Target" 
     - Mutes the target from all IC actions, can be IP or Character name
 * **unmute** "Target","all" 
+    - Unmutes the target, "all" will unmute all muted clients
+* **oocmute** "Target" 
+    - Mutes the target from all OOC actions, can be OOC, IP or Character name
+* **oocunmute** "Target" 
     - Unmutes the target, "all" will unmute all muted clients
 * **bglock** 
     - Toggles the background lock in the current area
