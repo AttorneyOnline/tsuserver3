@@ -62,8 +62,6 @@ Requires Python 3.5+ and pyYaml
     - Displays the current music
 
 ### Mod Commands
-
-When logged in as mod, /getarea and /getareas will also display IPs.
 Using /charselect "target" will kick a player back to the character select screen
 
 * **login** "Password"
@@ -77,6 +75,10 @@ Using /charselect "target" will kick a player back to the character select scree
     - Displays the last judge actions in the current area
 * **announce** "Message" 
     - Sends a serverwide announcement
+* **getip**
+    - Gets the IPs of everyone in the current area
+* **getips**
+    - Gets the IPs of everyone in every area
 * **kick** "Target" 
     - Kicks the target, can be IP or character name
 * **ban** "IP" 
