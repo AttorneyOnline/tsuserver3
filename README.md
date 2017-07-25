@@ -62,8 +62,6 @@ Requires Python 3.5+ and pyYaml
     - Displays the current music
 
 ### Mod Commands
-Using /charselect "target" will kick a player back to the character select screen
-
 * **login** "Password"
 * **gm** "Message" 
     - Sends a serverwide message with mod tag
@@ -79,6 +77,8 @@ Using /charselect "target" will kick a player back to the character select scree
     - Gets the IPs of everyone in the current area
 * **getips**
     - Gets the IPs of everyone in every area
+* **charselect** "Target"
+    - Kicks a player back to the character select screen
 * **kick** "Target" 
     - Kicks the target, can be IP or character name
 * **ban** "IP" 
