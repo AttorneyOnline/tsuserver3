@@ -39,6 +39,8 @@ Requires Python 3.5+ and pyYaml
     - Statuses: 'idle', 'building-open', 'building-full', 'casing-open', 'casing-full', 'recess'
 * **pm** "target" "Message" 
     - PMs the target, can either be character name or OOC name
+* **pmmute**
+    - Disables all incoming PMs
 * **charselect** 
     - Puts you back to char select screen
 * **reload** 
