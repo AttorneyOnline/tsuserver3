@@ -155,12 +155,6 @@ class AreaManager:
         def delete_evidence(self, id):
             self.evidence_list.pop(id)
 
-        def play_recording(self):
-            for m in self.recorded_messages:
-                self.send_command("MS", *m)
-                time.sleep(0.07 * len(m[4]))
-
-
     def __init__(self, server):
         self.server = server
         self.cur_id = 0
