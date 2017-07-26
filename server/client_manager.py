@@ -276,6 +276,22 @@ class ClientManager:
             if client.get_ip() == ip:
                 clients.append(client)
         return clients
+	
+    def get_targets_by_hdid(self, hdid):
+        clients = []
+        for client in self.clients:
+            if client.get_hdid() == hdid:
+                clients.append(client)
+            return clients
+
+    def get_targets_by_hdidip(self, hdid, ip):
+        clients = []
+        for client in self.clients:
+            if client.get_ip() == ip:
+                clients.append(client)
+            if client.get_hdid() == hdid:
+                clients.append(client)
+        return clients
 		
     def get_targets_by_ooc_name(self, name):
         clients = []

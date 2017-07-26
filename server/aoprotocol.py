@@ -140,6 +140,9 @@ class AOProtocol(asyncio.Protocol):
         if self.server.ban_manager.is_banned(self.client.get_ip()):
             self.client.disconnect()
             return
+        if self.server.ban_manager.is_hdidbanned(self.client.get_hdid()):
+            self.client.disconnect()
+            return
         logger.log_server('Connected. HDID: {}.'.format(self.client.hdid), self.client)
         self.client.send_command('ID', self.client.id, self.server.software, self.server.get_version_string())
         self.client.send_command('PN', self.server.get_player_count() - 1, self.server.config['playerlimit'])

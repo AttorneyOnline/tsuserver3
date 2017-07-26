@@ -43,6 +43,21 @@ class BanManager:
             raise ServerError('This IP is already banned.')
         self.write_banlist()
 
+    def add_hdidban(self, hdid):
+        if hdid not in self.bans:
+            self.bans.append(hdid)
+        else:
+            raise ServerError('This HDID is already banned.')
+        self.write_banlist()
+			
+    def add_hdidipban (self, hdid, ip):
+        if hdid and ip not in self.bans:
+            self.bans.append(hdid)
+            self.bans.append(ip)
+        else:
+            raise ServerError('This IP or HDID is already banned.')
+        self.write_banlist()
+
     def remove_ban(self, ip):
         if ip in self.bans:
             self.bans.remove(ip)
@@ -52,3 +67,6 @@ class BanManager:
 
     def is_banned(self, ip):
         return ip in self.bans
+	
+    def is_hdidbanned(self, hdid):
+        return hdid in self.bans
