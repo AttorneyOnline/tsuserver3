@@ -319,11 +319,13 @@ class ClientManager:
     def get_hdid_by_ip(self, ip):
         clients = []
         for client in self.clients:
-            if client.get_hdid() != None:
+	    hdid = client.get_hdid()
+            if client.get_hdid() != None and client.get_ip() == ip:
                 clients.append(client)
+		return hdid
 		    else
                         return None
-	return clients
+	return None
 
     def get_muted_clients(self):
         clients = []
