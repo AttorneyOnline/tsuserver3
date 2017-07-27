@@ -402,17 +402,20 @@ def ooc_cmd_ban(client, arg):
     ip = arg.strip()
     if len(ip) < 7:
         raise ArgumentError('You must specify an IP.')
+    hdid = arg.strip()
+    if len(hdid) < 8:
+        raise ArgumentError('You must specify a HDID.')
     try:
-        client.server.ban_manager.add_ban(ip)
+        client.server.ban_manager.add_hdidipban(hdid, ip)
     except ServerError:
         raise
-    targets = client.server.client_manager.get_targets_by_ip(ip)
+    targets = client.server.client_manager.get_targets_by_hdidip(ip, hdid)
     if targets:
         for c in targets:
             c.disconnect()
         client.send_host_message('Kicked {} existing client(s).'.format(len(targets)))
-    client.send_host_message('Added {} to the banlist.'.format(ip))
-    logger.log_server('Banned {}.'.format(ip), client)
+    client.send_host_message('Added {} to the banlist.'.format(ip, hdid))
+    logger.log_server('Banned {}.'.format(ip, hdid), client)
 
 def ooc_cmd_unban(client, arg):
     if not client.is_mod:
@@ -425,7 +428,7 @@ def ooc_cmd_unban(client, arg):
     except ServerError:
         raise
     logger.log_server('Unbanned {}.'.format(ip), client)
-
+	
 def ooc_cmd_getip(client, arg):
 	if not client.is_mod:
 		raise ClientError ('You must be authorized to do that.')
@@ -459,8 +462,10 @@ def ooc_cmd_gethdids(client, arg):
 	client.send_all_area_hdid()
 
 def ooc_cmd_hdid(client, arg):
+	if not client.is_mod:
+		raise ClientError('You must be authorized to do that.')
 	if len(arg) == 0 and client.is_mod:
-		raise ArgumentError('')
+		raise ArgumentError('You must specify a HDID.')
 	if client.is_mod:
 			args = arg.split()
 			msg = ' '.join(args[1:])
