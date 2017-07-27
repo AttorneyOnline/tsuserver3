@@ -316,6 +316,15 @@ class ClientManager:
             return ooc
         return None
 
+    def get_hdid_by_ip(self, ip):
+        clients = []
+        for client in self.clients:
+            if client.get_hdid() != None:
+                clients.append(client)
+		    else
+                        return None
+	return clients
+
     def get_muted_clients(self):
         clients = []
         for client in self.clients:
