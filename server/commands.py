@@ -423,7 +423,7 @@ def ooc_cmd_ban(client, arg):
         logger.log_server('Banned {}, {} at IP.'.format(ip, hdid), client)
     else:
         client.send_host_message('Added {} to the banlist.'.format(ip))
-        logger.log_server('Banned {} at IP. Could not locate client HDID.'.format(ip), client)
+        logger.log_server('Banned {} by IP. Could not locate client HDID.'.format(ip), client)
 
 def ooc_cmd_banhdid(client, arg):
     #Set Variables to None for Logging Purposes.
@@ -454,7 +454,7 @@ def ooc_cmd_banhdid(client, arg):
         logger.log_server('Banned {}, {} at HDID.'.format(ip, hdid), client)
     else:
         client.send_host_message('Added {} to the banlist.'.format(hdid))
-        logger.log_server('Banned {} at HDID. Could not locate client ip.'.format(hdid), client)
+        logger.log_server('Banned {} by HDID. Could not locate client ip.'.format(hdid), client)
 
 def ooc_cmd_unban(client, arg):
     if not client.is_mod:
