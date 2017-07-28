@@ -2,8 +2,9 @@
 
 A Python based server for Attorney Online.
 
-Requires Python 3.5+ and pyYaml
-
+Requires Python 3.6.2 and the latest version of PyYAML
+Install PyYAML by doing
+```python -m pip install --user pyyaml```
 
 ## How to use
 
