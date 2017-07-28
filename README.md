@@ -78,6 +78,12 @@ Install PyYAML by doing
     - Gets the IPs of everyone in the current area
 * **getips**
     - Gets the IPs of everyone in every area
+* **gethdid**
+    - Gets the HDIDs of everyone in the current area
+* **gethdids**
+    - Gets the HDIDs of everyone in every area
+* **hdid** "Target"
+    - Gets the HDID of specific characters
 * **charselect** "Target"
     - Kicks a player back to the character select screen
 * **kick** "Target" 
