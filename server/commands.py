@@ -425,6 +425,20 @@ def ooc_cmd_unban(client, arg):
     except ServerError:
         raise
     logger.log_server('Unbanned {}.'.format(ip), client)
+    client.send_host_message('Unbanned {}'.format(ip))
+
+def ooc_cmd_unbanhdid(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    hdid = arg.strip()
+    if len(hdid) < 8:
+        raise ArgumentError('You must specify a valid HDID.')
+    try:
+        client.server.ban_manager.remove_hdidban(hdid)
+    except ServerError:
+        raise
+    logger.log_server('Unbanned {}.'.format(hdid), client)
+    client.send_host_message('Unbanned {}'.format(hdid))
 
 def ooc_cmd_getip(client, arg):
 	if not client.is_mod:

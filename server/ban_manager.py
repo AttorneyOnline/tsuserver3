@@ -63,6 +63,13 @@ class BanManager:
             raise ServerError('This IP is not banned.')
         self.write_banlist()
 
+    def remove_hdidban(self, hdid):
+        if hdid in self.hdidbans:
+            self.hdidbans.remove(hdid)
+        else:
+            raise ServerError('This HDID is not banned.')
+        self.write_hdidbanlist()
+
     def add_hdidban(self, hdid):
         if hdid not in self.hdidbans:
             self.hdidbans.append(hdid)
