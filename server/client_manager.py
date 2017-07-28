@@ -288,7 +288,14 @@ class ClientManager:
             if client.get_ip() == ip:
                 clients.append(client)
         return clients
-		
+
+    def get_targets_by_hdid(self, hdid):
+        clients = []
+        for client in self.clients:
+            if client.get_hdid() == hdid:
+                clients.append(client)
+        return clients
+
     def get_targets_by_ooc_name(self, name):
         clients = []
         for client in self.clients:
@@ -325,3 +332,27 @@ class ClientManager:
             if client.is_ooc_muted:
                 clients.append(client)
         return clients
+
+    def get_hdid_by_ip(self, ip):
+        for client in self.clients:
+            hdid = client.get_hdid()
+            for client in self.clients:
+                if client.get_hdid() is not None and client.get_ip() == ip:
+                    hdid = client.get_hdid()
+                    return hdid
+        if hdid == None:
+            return None
+        else:
+            return hdid
+
+    def get_ip_by_hdid(self, hdid):
+        for client in self.clients:
+            ip = client.get_ip()
+            for client in self.clients:
+                if client.get_ip() is not None and client.get_hdid() == hdid:
+                    ip = client.get_ip()
+                    return ip
+        if ip == None:
+            return None
+        else:
+            return ip
