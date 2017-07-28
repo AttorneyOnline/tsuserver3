@@ -83,8 +83,12 @@ Requires Python 3.5+ and pyYaml
     - Kicks the target, can be IP or character name
 * **ban** "IP" 
     - Bans the IP
+* **banhdid** "HDID"
+    - Bans the HDID
 * **unban** "IP" 
     - Unbans the specified IP
+* **unbanhdid** "HDID"
+    - Unbans the specified HDID
 * **mute** "Target" 
     - Mutes the target from all IC actions, can be IP or Character name
 * **unmute** "Target","all" 
