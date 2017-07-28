@@ -15,10 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import random
+import ipaddress
 
 from server import logger
 from server.exceptions import ClientError, ServerError, ArgumentError, AreaError
-
 
 def ooc_cmd_switch(client, arg):
     if len(arg) == 0:
@@ -401,9 +401,10 @@ def ooc_cmd_ban(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     ip = arg.strip()
-    chk = ip.replace(".", "")
-    if len(ip) < 7 or not chk.isdigit():
-        raise ArgumentError('You must specify a valid IP.')
+    try:
+        ipaddress.ip_address(arg)
+    except ValueError:
+        raise ArgumentError('You must specify an IP.')
     try:
         client.server.ban_manager.add_ban(ip)
     except ServerError:
@@ -459,7 +460,9 @@ def ooc_cmd_unban(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     ip = arg.strip()
-    if len(ip) < 7:
+    try:
+        ipaddress.ip_address(arg)
+    except ValueError:
         raise ArgumentError('You must specify an IP.')
     try:
         client.server.ban_manager.remove_ban(ip)
