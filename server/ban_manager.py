@@ -24,6 +24,8 @@ class BanManager:
     def __init__(self):
         self.bans = []
         self.load_banlist()
+        self.hdidbans = []
+        self.load_hdidbanlist()
 
     def load_banlist(self):
         try:
@@ -32,30 +34,26 @@ class BanManager:
         except FileNotFoundError:
             return
 
+    def load_hdidbanlist(self):
+        try:
+            with open('storage/hdidbanlist.json', 'r') as hdidbanlist_file:
+                self.hdidbans = json.load(hdidbanlist_file)
+        except FileNotFoundError:
+            return
+
     def write_banlist(self):
         with open('storage/banlist.json', 'w') as banlist_file:
             json.dump(self.bans, banlist_file)
+
+    def write_hdidbanlist(self):
+        with open('storage/hdidbanlist.json', 'w') as hdidbanlist_file:
+            json.dump(self.hdidbans, hdidbanlist_file)
 
     def add_ban(self, ip):
         if ip not in self.bans:
             self.bans.append(ip)
         else:
             raise ServerError('This IP is already banned.')
-        self.write_banlist()
-
-    def add_hdidban(self, hdid):
-        if hdid not in self.bans:
-            self.bans.append(hdid)
-        else:
-            raise ServerError('This HDID is already banned.')
-        self.write_banlist()
-			
-    def add_hdidipban (self, hdid, ip):
-        if hdid and ip not in self.bans:
-            self.bans.append(hdid)
-            self.bans.append(ip)
-        else:
-            raise ServerError('This IP or HDID is already banned.')
         self.write_banlist()
 
     def remove_ban(self, ip):
@@ -65,8 +63,22 @@ class BanManager:
             raise ServerError('This IP is not banned.')
         self.write_banlist()
 
+    def remove_hdidban(self, hdid):
+        if hdid in self.hdidbans:
+            self.hdidbans.remove(hdid)
+        else:
+            raise ServerError('This HDID is not banned.')
+        self.write_hdidbanlist()
+
+    def add_hdidban(self, hdid):
+        if hdid not in self.hdidbans:
+            self.hdidbans.append(hdid)
+        else:
+            raise ServerError('This HDID is already banned.')
+        self.write_hdidbanlist()
+
     def is_banned(self, ip):
         return ip in self.bans
-	
+
     def is_hdidbanned(self, hdid):
-        return hdid in self.bans
+        return hdid in self.hdidbans
