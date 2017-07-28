@@ -33,12 +33,16 @@ class BanManager:
                 self.bans = json.load(banlist_file)
         except FileNotFoundError:
             return
+        except ValueError:
+            return
 
     def load_hdidbanlist(self):
         try:
             with open('storage/hdidbanlist.json', 'r') as hdidbanlist_file:
                 self.hdidbans = json.load(hdidbanlist_file)
         except FileNotFoundError:
+            return
+        except ValueError:
             return
 
     def write_banlist(self):
