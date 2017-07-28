@@ -380,7 +380,6 @@ def ooc_cmd_login(client, arg):
     logger.log_server('Logged in as moderator.', client)
     client.in_rp = False
 
-
 def ooc_cmd_kick(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
@@ -395,24 +394,66 @@ def ooc_cmd_kick(client, arg):
     else:
         client.send_host_message("No targets found.")
 
-
 def ooc_cmd_ban(client, arg):
+    #Set Variables to None for Logging Purposes.
+    ip = None
+    hdid = None
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     ip = arg.strip()
-    if len(ip) < 7:
-        raise ArgumentError('You must specify an IP.')
+    chk = ip.replace(".", "")
+    if len(ip) < 7 or not chk.isdigit():
+        raise ArgumentError('You must specify a valid IP.')
     try:
         client.server.ban_manager.add_ban(ip)
     except ServerError:
         raise
+    hdid = client.server.client_manager.get_hdid_by_ip(ip)
+    if hdid == client.get_hdid():
+        client.send_host_message('Unable to locate client HDID for logging.')
+        hdid = None
     targets = client.server.client_manager.get_targets_by_ip(ip)
     if targets:
         for c in targets:
             c.disconnect()
         client.send_host_message('Kicked {} existing client(s).'.format(len(targets)))
-    client.send_host_message('Added {} to the banlist.'.format(ip))
-    logger.log_server('Banned {}.'.format(ip), client)
+    if hdid != None:
+        client.send_host_message('Added {} to the banlist.'.format(ip))
+        logger.log_server('Banned {}, {} at IP.'.format(ip, hdid), client)
+    else:
+        client.send_host_message('Added {} to the banlist.'.format(ip))
+        logger.log_server('Banned {} at IP. Could not locate client HDID.'.format(ip), client)
+
+def ooc_cmd_banhdid(client, arg):
+    #Set Variables to None for Logging Purposes.
+    ip = None
+    hdid = None
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    hdid = arg.strip()
+    if len(hdid) < 8 or not hdid.isalnum():
+        raise ArgumentError('You must specify a valid HDID.')
+    try:
+        client.server.ban_manager.add_hdidban(hdid)
+    except ServerError:
+        raise
+    ip = client.server.client_manager.get_ip_by_hdid(hdid)
+    if ip == client.get_ip():
+        client.send_host_message('Unable to locate client IP for logging.')
+        ip = None
+    else:
+        client.server.ban_manager.add_ban(ip)
+    targets = client.server.client_manager.get_targets_by_hdid(hdid)
+    if targets:
+        for c in targets:
+            c.disconnect()
+        client.send_host_message('Kicked {} existing client(s).'.format(len(targets)))
+    if ip != None:
+        client.send_host_message('Added {} to the banlist.'.format(hdid))
+        logger.log_server('Banned {}, {} at HDID.'.format(ip, hdid), client)
+    else:
+        client.send_host_message('Added {} to the banlist.'.format(hdid))
+        logger.log_server('Banned {} at HDID. Could not locate client ip.'.format(hdid), client)
 
 def ooc_cmd_unban(client, arg):
     if not client.is_mod:
@@ -631,55 +672,3 @@ def ooc_cmd_mutepm(client, arg):
         client.send_host_message('You stopped receiving PMs')
     else:
         client.send_host_message('You are now receiving PMs')
-
-def ooc_cmd_ban(client, arg):
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
-    ip = arg.strip()
-    if len(ip) < 7:
-        raise ArgumentError('You must specify a valid IP.')
-    try:
-        client.server.ban_manager.add_ban(ip)
-    except ServerError:
-        raise
-    hdid = client.server.client_manager.get_hdid_by_ip(ip)
-    if hdid == None:
-        client.send_host_message('Unable to locate client HDID for logging.')
-    targets = client.server.client_manager.get_targets_by_ip(ip)
-    if targets:
-        for c in targets:
-            c.disconnect()
-        client.send_host_message('Kicked {} existing client(s).'.format(len(targets)))
-    if hdid != None:
-        client.send_host_message('Added {} to the banlist.'.format(ip))
-        logger.log_server('Banned {}, {} at IP.'.format(ip, hdid), client)
-    else:
-        client.send_host_message('Added {} to the banlist.'.format(ip))
-        logger.log_server('Banned {} at IP. Could not locate client HDID.'.format(ip, hdid), client)
-
-def ooc_cmd_banhdid(client, arg):
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
-    hdid = arg.strip()
-    if len(hdid) < 8:
-        raise ArgumentError('You must specify a valid HDID.')
-    try:
-        client.server.ban_manager.add_hdidban(hdid)
-    except ServerError:
-        raise
-    ip = client.server.client_manager.get_ip_by_hdid(hdid)
-    if ip == None:
-        client.send_host_message('Unable to locate client IP for logging.')
-    else:
-        client.server.ban_manager.add_ban(ip)
-    targets = client.server.client_manager.get_targets_by_hdid(hdid)
-    if targets:
-        for c in targets:
-            c.disconnect()
-        client.send_host_message('Kicked {} existing client(s).'.format(len(targets)))
-    if hdid != None:
-        client.send_host_message('Added {} to the banlist.'.format(hdid))
-        logger.log_server('Banned {}, {} at HDID.'.format(ip, hdid), client)
-    else:
-        client.send_host_message('Added {} to the banlist.'.format(hdid))
-        logger.log_server('Banned {} at HDID. Could not locate client ip.'.format(ip, hdid), client)
