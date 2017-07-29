@@ -334,25 +334,18 @@ class ClientManager:
         return clients
 
     def get_hdid_by_ip(self, ip):
+        hdid = None
         for client in self.clients:
-            hdid = client.get_hdid()
             for client in self.clients:
-                if client.get_hdid() is not None and client.get_ip() == ip:
-                    hdid = client.get_hdid()
-                    return hdid
+                if client.get_ip() == ip:
+                    return client.get_hdid()
         if hdid == None:
             return None
-        else:
-            return hdid
 
     def get_ip_by_hdid(self, hdid):
+        ip = None
         for client in self.clients:
-            ip = client.get_ip()
-            for client in self.clients:
-                if client.get_ip() is not None and client.get_hdid() == hdid:
-                    ip = client.get_ip()
-                    return ip
+            if client.get_hdid() == hdid:
+                return client.get_ip()
         if ip == None:
             return None
-        else:
-            return ip
