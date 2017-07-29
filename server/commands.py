@@ -278,7 +278,7 @@ def ooc_cmd_randomchar(client, arg):
 def ooc_cmd_help(client, arg):
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
-    help_url = 'https://github.com/AttorneyOnlineVidya/tsuserver3'
+    help_url = 'https://github.com/Attorney-Online-Engineering-Task-Force/tsuserver3'
     help_msg = 'Available commands, source code and issues can be found here: {}'.format(help_url)
     client.send_host_message(help_msg)
 
@@ -686,11 +686,13 @@ def ooc_cmd_vote(client, arg):
         client.send_host_message('Current poll: {}'.format(client.server.current_poll))
     else:
         try:
-            client.vote_poll(arg)
             hdid = client.get_hdid()
             ip = client.server.client_manager.get_ip_by_hdid(hdid)
-            client.area.send_host_message('Thank you for voting.')
+            if client.server.serverpoll_manager.has_voted(hdid, ip):
+                raise ClientError('You have already voted.')
+            client.vote_poll(arg)
+            client.server.serverpoll_manager.add_votelist(hdid, ip)
+            client.send_host_message('Thank you for voting.')
             logger.log_serverpoll('[SERVERPOLL][{}][{}] has voted {}.'.format(ip, hdid, arg), client)
         except ClientError:
             raise
-        
