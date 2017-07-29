@@ -52,6 +52,7 @@ class TsuServer3:
         self.district_client = None
         self.ms_client = None
         self.rp_mode = False
+        self.current_poll = ''
         logger.setup_logger(debug=self.config['debug'])
 
     def start(self):
@@ -181,6 +182,10 @@ class TsuServer3:
         for client in self.client_manager.clients:
             if pred(client):
                 client.send_command(cmd, *args)
+
+    def current_poll(self, poll):
+        Poll = type("Poll", (object,), dict())
+        poll = Poll()
 
     def broadcast_global(self, client, msg, as_mod=False):
         char_name = client.get_char_name()

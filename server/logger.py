@@ -44,6 +44,13 @@ def setup_logger(debug):
     server_handler.setFormatter(srv_formatter)
     server_log.addHandler(server_handler)
 
+def setup_serverpoll():
+    serverpoll_log = logging.getLogger('serverpoll')
+    serverpoll_log.setLevel(logging.INFO)
+    serverpoll_handler = logging.FileHandler('logs/serverpoll.log', encoding='utf-8')
+    serverpoll_handler.setLevel(logging.INFO)
+    serverpoll_handler.setFormatter(srv_formatter)
+    serverpoll_log.addHandler(server_handler)
 
 def log_debug(msg, client=None):
     msg = parse_client_info(client) + msg
@@ -54,6 +61,9 @@ def log_server(msg, client=None):
     msg = parse_client_info(client) + msg
     logging.getLogger('server').info(msg)
 
+def log_serverpoll(msg, client=None):
+    msg = parse_client_info(client) + msg
+    logging.getLogger('server').info(msg)
 
 def parse_client_info(client):
     if client is None:

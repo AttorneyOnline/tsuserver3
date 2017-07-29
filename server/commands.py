@@ -15,10 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import random
-import ipaddress
 
 from server import logger
 from server.exceptions import ClientError, ServerError, ArgumentError, AreaError
+
 
 def ooc_cmd_switch(client, arg):
     if len(arg) == 0:
@@ -236,7 +236,7 @@ def ooc_cmd_pm(client, arg):
         for c in target_clients:
             if not c.pm_mute:
                 c.send_host_message(
-                 'PM from {} in {} ({}): {}'.format(client.name, client.area.name, client.get_char_name(), msg))
+                    'PM from {} in {} ({}): {}'.format(client.name, client.area.name, client.get_char_name(), msg))
                 sent_num += 1
         if sent_num == 0:
             client.send_host_message('Target not recieving PMss.')
@@ -401,10 +401,9 @@ def ooc_cmd_ban(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     ip = arg.strip()
-    try:
-        ipaddress.ip_address(arg)
-    except ValueError:
-        raise ArgumentError('You must specify an IP.')
+    chk = ip.replace(".", "")
+    if len(ip) < 7 or not chk.isdigit():
+        raise ArgumentError('You must specify a valid IP.')
     try:
         client.server.ban_manager.add_ban(ip)
     except ServerError:
@@ -420,7 +419,7 @@ def ooc_cmd_ban(client, arg):
         client.send_host_message('Kicked {} existing client(s).'.format(len(targets)))
     if hdid != None:
         client.send_host_message('Added {} to the banlist.'.format(ip))
-        logger.log_server('Banned {}, {} at IP.'.format(ip, hdid), client)
+        logger.log_server('Banned {}, {} by IP.'.format(ip, hdid), client)
     else:
         client.send_host_message('Added {} to the banlist.'.format(ip))
         logger.log_server('Banned {} by IP. Could not locate client HDID.'.format(ip), client)
@@ -451,18 +450,16 @@ def ooc_cmd_banhdid(client, arg):
         client.send_host_message('Kicked {} existing client(s).'.format(len(targets)))
     if ip != None:
         client.send_host_message('Added {} to the banlist.'.format(hdid))
-        logger.log_server('Banned {}, {} at HDID.'.format(ip, hdid), client)
+        logger.log_server('Banned {}, {} by HDID.'.format(ip, hdid), client)
     else:
         client.send_host_message('Added {} to the banlist.'.format(hdid))
-        logger.log_server('Banned {} by HDID. Could not locate client ip.'.format(hdid), client)
+        logger.log_server('Banned {} at HDID. Could not locate client ip.'.format(hdid), client)
 
 def ooc_cmd_unban(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     ip = arg.strip()
-    try:
-        ipaddress.ip_address(arg)
-    except ValueError:
+    if len(ip) < 7:
         raise ArgumentError('You must specify an IP.')
     try:
         client.server.ban_manager.remove_ban(ip)
@@ -485,37 +482,37 @@ def ooc_cmd_unbanhdid(client, arg):
     client.send_host_message('Unbanned {}'.format(hdid))
 
 def ooc_cmd_getip(client, arg):
-	if not client.is_mod:
-		raise ClientError ('You must be authorized to do that.')
-	if len(arg) == 0:
-		try:
-			client.send_area_ip(client.area.id)
-		except AreaError:
-			raise
-	
+    if not client.is_mod:
+        raise ClientError ('You must be authorized to do that.')
+    if len(arg) == 0:
+        try:
+            client.send_area_ip(client.area.id)
+        except AreaError:
+            raise
+
 def ooc_cmd_getips(client, arg):
-	if not client.is_mod:
-		raise ClientError('You must be authorized to do that.')
-	if len(arg) != 0:
-		raise ArgumentError('This command takes no arguments.')
-	client.send_all_area_ip()
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) != 0:
+        raise ArgumentError('This command takes no arguments.')
+    client.send_all_area_ip()
 
 def ooc_cmd_gethdid(client, arg):
-	if not client.is_mod:
-		raise ClientError('You must be authorized to do that.')
-	if len(arg) == 0:
-		try:
-			client.send_area_hdid(client.area.id)
-		except AreaError:
-			raise
-			
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) == 0:
+        try:
+            client.send_area_hdid(client.area.id)
+        except AreaError:
+            raise
+
 def ooc_cmd_gethdids(client, arg):
-	if not client.is_mod:
-		raise ClientError('You must be authorized to do that.')
-	if len(arg) != 0:
-		raise ArgumentError('This command takes no arguments.')
-	client.send_all_area_hdid()
-			
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) != 0:
+        raise ArgumentError('This command takes no arguments.')
+    client.send_all_area_hdid()
+
 def ooc_cmd_play(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
@@ -632,40 +629,40 @@ def ooc_cmd_unlock(client, arg):
         client.send_host_message('You did not lock this area!')
 
 def ooc_cmd_eviswap(client, arg):
-	args = arg.split()
-	if len(args) != 2:
-		client.send_host_message("This command expects two arguments! (evi id 1, evi id 2)")
-		print("args: " + str(len(args)))
-		return
+    args = arg.split()
+    if len(args) != 2:
+        client.send_host_message("This command expects two arguments! (evi id 1, evi id 2)")
+        print("args: " + str(len(args)))
+        return
 
-	print("WAT_")
+    print("WAT_")
 
-	evi1 = args[0]
-	evi2 = args[1]
+    evi1 = args[0]
+    evi2 = args[1]
 
-	print("evi1 is " + str(evi1))
-	print("evi2 is " + str(evi2))
+    print("evi1 is " + str(evi1))
+    print("evi2 is " + str(evi2))
 
-	if not evi1.isdigit():
-		client.send_host_message("Argument 1 was not a number!")
-		return
-	if not evi2.isdigit():
-		client.send_host_message("Argument 2 was not a number!")
-		return
+    if not evi1.isdigit():
+        client.send_host_message("Argument 1 was not a number!")
+        return
+    if not evi2.isdigit():
+        client.send_host_message("Argument 2 was not a number!")
+        return
 
-	evi1 = int(evi1)
-	evi2 = int(evi2)
+    evi1 = int(evi1)
+    evi2 = int(evi2)
 
-	if evi1 < 0 or evi1 >= len(client.area.evidence_list):
-		client.send_host_message("Invalid argument 1!")
-		return
-	if evi2 < 0 or evi2 >= len(client.area.evidence_list):
-		client.send_host_message("Invalid argument 2!")
-		return
+    if evi1 < 0 or evi1 >= len(client.area.evidence_list):
+        client.send_host_message("Invalid argument 1!")
+        return
+    if evi2 < 0 or evi2 >= len(client.area.evidence_list):
+        client.send_host_message("Invalid argument 2!")
+        return
 
-	client.area.evidence_list[evi1], client.area.evidence_list[evi2] = client.area.evidence_list[evi2], client.area.evidence_list[evi1]
+    client.area.evidence_list[evi1], client.area.evidence_list[evi2] = client.area.evidence_list[evi2], client.area.evidence_list[evi1]
 
-	client.area.broadcast_evidence_list()
+    client.area.broadcast_evidence_list()
 
 def ooc_cmd_mutepm(client, arg):
     if len(arg) != 0:
@@ -675,3 +672,25 @@ def ooc_cmd_mutepm(client, arg):
         client.send_host_message('You stopped receiving PMs')
     else:
         client.send_host_message('You are now receiving PMs')
+
+def ooc_cmd_setpoll(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) != 0:
+        poll = client.server.current_poll
+        setattr(client.server, poll, arg)
+        client.send_host_message('You set the current poll to {}.'.format(poll()))
+
+def ooc_cmd_vote(client, arg):
+    if len(arg) == 0:
+        client.send_host_message('Current poll: {}'.format(client.server.current_poll))
+    else:
+        try:
+            client.vote_poll(arg)
+            hdid = client.get_hdid()
+            ip = client.server.client_manager.get_ip_by_hdid(hdid)
+            client.area.send_host_message('Thank you for voting.')
+            logger.log_serverpoll('[SERVERPOLL][{}][{}] has voted {}.'.format(ip, hdid, arg), client)
+        except ClientError:
+            raise
+        

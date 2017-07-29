@@ -41,6 +41,7 @@ class ClientManager:
             self.pm_mute = False
             self.mod_call_time = 0
             self.in_rp = False
+            self.current_poll = ''
 
         def send_raw_message(self, msg):
             self.transport.write(msg.encode('utf-8'))
@@ -267,6 +268,16 @@ class ClientManager:
 
         def can_call_mod(self):
             return (time.time() * 1000.0 - self.mod_call_time) > 0
+			
+        def current_poll(self, poll):
+            Poll = type("Poll", (object,), dict())
+            poll = Poll()
+    
+        def vote_poll(self, value):
+            allowed_values = ('yes', 'no')
+            if value.lower() not in allowed_values:
+                raise AreaError('You must vote yes or no.')
+            self.current_poll = value.upper()
 
     def __init__(self, server):
         self.clients = set()
