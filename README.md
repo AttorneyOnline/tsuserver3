@@ -2,8 +2,9 @@
 
 A Python based server for Attorney Online.
 
-Requires Python 3.5+ and pyYaml
-
+Requires Python 3.6.2 and the latest version of PyYAML  
+Install PyYAML by doing
+```python -m pip install --user pyyaml```
 
 ## How to use
 
@@ -77,14 +78,24 @@ Requires Python 3.5+ and pyYaml
     - Gets the IPs of everyone in the current area
 * **getips**
     - Gets the IPs of everyone in every area
+* **gethdid**
+    - Gets the HDIDs of everyone in the current area
+* **gethdids**
+    - Gets the HDIDs of everyone in every area
+* **hdid** "Target"
+    - Gets the HDID of specific characters
 * **charselect** "Target"
     - Kicks a player back to the character select screen
 * **kick** "Target" 
     - Kicks the target, can be IP or character name
 * **ban** "IP" 
     - Bans the IP
+* **banhdid** "HDID"
+    - Bans the HDID
 * **unban** "IP" 
     - Unbans the specified IP
+* **unbanhdid** "HDID"
+    - Unbans the specified HDID
 * **mute** "Target" 
     - Mutes the target from all IC actions, can be IP or Character name
 * **unmute** "Target","all" 
