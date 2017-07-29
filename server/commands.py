@@ -617,3 +617,31 @@ def ooc_cmd_mutepm(client, arg):
         client.send_host_message('You stopped receiving PMs')
     else:
         client.send_host_message('You are now receiving PMs')
+
+def ooc_cmd_disemvowel(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    elif len(arg) == 0:
+        raise ArgumentError('You must specify a target.')
+    targets = client.server.client_manager.get_targets(client, arg)
+    if targets:
+        for c in targets:
+            logger.log_server('Disemvowelling {}.'.format(c.get_ip()), client)
+            c.disemvowel = True
+        client.send_host_message('Disemvowelled {} existing client(s).'.format(len(targets)))
+    else:
+        client.send_host_message('No targets found.')
+
+def ooc_cmd_undisemvowel(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    elif len(arg) == 0:
+        raise ArgumentError('You must specify a target.')
+    targets = client.server.client_manager.get_targets(client, arg)
+    if targets:
+        for c in targets:
+            logger.log_server('Undisemvowelling {}.'.format(c.get_ip()), client)
+            c.disemvowel = False
+        client.send_host_message('Undisemvowelled {} existing client(s).'.format(len(targets)))
+    else:
+        client.send_host_message('No targets found.')

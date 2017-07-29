@@ -95,6 +95,10 @@ Requires Python 3.5+ and pyYaml
     - Unmutes the target, "all" will unmute all muted clients
 * **bglock** 
     - Toggles the background lock in the current area
+* **disemvowel** "Target"
+    - Removes the vowels from everything said by the target
+* **undisemvowel** "Target"
+    - Lifts the disemvowel curse from the target
 
 ## License
 

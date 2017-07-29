@@ -20,6 +20,7 @@ from server import logger
 from server.exceptions import ClientError, AreaError
 
 import time
+import re
 
 
 class ClientManager:
@@ -41,6 +42,7 @@ class ClientManager:
             self.pm_mute = False
             self.mod_call_time = 0
             self.in_rp = False
+            self.disemvowel = False
 
         def send_raw_message(self, msg):
             self.transport.write(msg.encode('utf-8'))
@@ -267,6 +269,10 @@ class ClientManager:
 
         def can_call_mod(self):
             return (time.time() * 1000.0 - self.mod_call_time) > 0
+
+        def disemvowel_message(self, message):
+            message = re.sub("[aeiou]", "", message, flags=re.IGNORECASE)
+            return re.sub(r"\s+", " ", message)
 
     def __init__(self, server):
         self.clients = set()
