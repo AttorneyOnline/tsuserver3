@@ -210,17 +210,25 @@ def ooc_cmd_status(client, arg):
             raise
 
 
+
 def ooc_cmd_pm(client, arg):
     args = arg.split()
+    ooc_name = 1;
     if len(args) < 2:
         raise ArgumentError('Not enough arguments. Use /pm <target> <message>.')
     target_clients = []
-    msg = ' '.join(args[1:])
+    for word in args:
+        if word.lower().endswith(':'):
+            break
+        else:
+            ooc_name += 1
+    if ooc_name == args.len():
+        ooc_name = 0
+    namedrop = ' '.join(args[:ooc_name])
+    msg = ' '.join(args[ooc_name:])
     for char_name in client.server.char_list:
-        if arg.lower().startswith(char_name.lower()):
-            char_len = len(char_name.split())
-            to_search = ' '.join(args[:char_len])
-            c = client.area.get_target_by_char_name(to_search)
+        if namedrop.lower() == char_name.lower():
+            c = client.area.get_target_by_char_name(namedrop)
             if c:
                 target_clients.append(c)
                 msg = ' '.join(args[char_len:])
@@ -228,7 +236,7 @@ def ooc_cmd_pm(client, arg):
                     raise ArgumentError('Not enough arguments. Use /pm <target> <message>.')
                 break
     if not target_clients:
-        target_clients = client.server.client_manager.get_targets(client, args[0])
+        target_clients = client.server.client_manager.get_targets(client, namedrop)
     if not target_clients:
         client.send_host_message('No targets found.')
     else:
@@ -236,14 +244,20 @@ def ooc_cmd_pm(client, arg):
         for c in target_clients:
             if not c.pm_mute:
                 c.send_host_message(
-                 'PM from {} in {} ({}): {}'.format(client.name, client.area.name, client.get_char_name(), msg))
+                    'PM from {} in {} ({}): {}'.format(client.name, client.area.name, client.get_char_name(), msg))
                 sent_num += 1
         if sent_num == 0:
             client.send_host_message('Target not recieving PMss.')
         else:
             client.send_host_message('PM sent to {}, {} user(s). Message: {}'.format(args[0], sent_num, msg))
 
-
+def ooc_cmd_kms(client, arg):
+    ip = client.get_ip()
+    targets = client.server.client_manager.get_targets_by_ip(ip)
+    for target in targets:
+        if target != client:
+            target.disconnect()
+    client.send_host_message('Kicked other instances of client.')
 
 def ooc_cmd_charselect(client, arg):
     if arg:
