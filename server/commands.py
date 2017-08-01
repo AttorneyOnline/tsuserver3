@@ -225,6 +225,7 @@ def ooc_cmd_pm(client, arg):
     if ooc_name == args.len():
         ooc_name = 0
     namedrop = ' '.join(args[:ooc_name])
+    namedrop = namedrop.replace(":", "")
     msg = ' '.join(args[ooc_name:])
     for char_name in client.server.char_list:
         if namedrop.lower() == char_name.lower():
