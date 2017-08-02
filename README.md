@@ -61,6 +61,8 @@ Install PyYAML by doing
     - Flips a coin
 * **currentmusic** 
     - Displays the current music
+* **vote** "yes" "no"
+    - Votes for the current poll
 
 ### Mod Commands
 * **login** "Password"

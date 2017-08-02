@@ -24,6 +24,7 @@ from server.aoprotocol import AOProtocol
 from server.area_manager import AreaManager
 from server.ban_manager import BanManager
 from server.client_manager import ClientManager
+from server.serverpoll_manager import ServerpollManager
 from server.districtclient import DistrictClient
 from server.exceptions import ServerError
 from server.masterserverclient import MasterServerClient
@@ -34,6 +35,7 @@ class TsuServer3:
         self.client_manager = ClientManager(self)
         self.area_manager = AreaManager(self)
         self.ban_manager = BanManager()
+        self.serverpoll_manager = ServerpollManager()
         self.software = 'tsuserver3'
         self.release = 3
         self.major_version = 1
@@ -52,6 +54,7 @@ class TsuServer3:
         self.district_client = None
         self.ms_client = None
         self.rp_mode = False
+        self.current_poll = ''
         logger.setup_logger(debug=self.config['debug'])
 
     def start(self):
@@ -181,6 +184,10 @@ class TsuServer3:
         for client in self.client_manager.clients:
             if pred(client):
                 client.send_command(cmd, *args)
+
+    def current_poll(self, poll):
+        Poll = type("Poll", (object,), dict())
+        poll = Poll()
 
     def broadcast_global(self, client, msg, as_mod=False):
         char_name = client.get_char_name()
