@@ -222,6 +222,8 @@ def ooc_cmd_pm(client, arg):
             break
         else:
             ooc_name += 1
+    if ooc_name == len(args) + 1:
+        raise ArgumentError('Invalid syntax. Add \':\' in the end of target.')
     namedrop = ' '.join(args[:ooc_name])
     msg = ' '.join(args[ooc_name:])
     if not msg:
