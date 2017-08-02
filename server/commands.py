@@ -213,29 +213,26 @@ def ooc_cmd_status(client, arg):
 
 def ooc_cmd_pm(client, arg):
     args = arg.split()
-    ooc_name = 1;
+    ooc_name = 1
     if len(args) < 2:
-        raise ArgumentError('Not enough arguments. Use /pm <target> <message>.')
+        raise ArgumentError('Not enough arguments. Use /pm <target>: <message>.')
     target_clients = []
     for word in args:
         if word.lower().endswith(':'):
             break
         else:
             ooc_name += 1
-    if ooc_name == args.len():
-        ooc_name = 0
+    if ooc_name == args.len() + 1:
+        raise ArgumentError('Invalid syntax. Add \':\' in the end of target.')
     namedrop = ' '.join(args[:ooc_name])
-    namedrop = namedrop.replace(":", "")
     msg = ' '.join(args[ooc_name:])
+    if not msg:
+        raise ArgumentError('Not enough arguments. Use /pm <target>: <message>.')
     for char_name in client.server.char_list:
         if namedrop.lower() == char_name.lower():
             c = client.area.get_target_by_char_name(namedrop)
             if c:
                 target_clients.append(c)
-                msg = ' '.join(args[char_len:])
-                if not msg:
-                    raise ArgumentError('Not enough arguments. Use /pm <target> <message>.')
-                break
     if not target_clients:
         target_clients = client.server.client_manager.get_targets(client, namedrop)
     if not target_clients:
