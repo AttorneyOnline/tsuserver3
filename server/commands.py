@@ -395,11 +395,11 @@ def ooc_cmd_kick(client, arg):
         client.send_host_message("No targets found.")
 
 def ooc_cmd_ban(client, arg):
-    #Check if the client is a mod.
+    #Set Variables to None for Logging Purposes.
+    ip = None
+    hdid = None
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
-    
-    #Strip any whitespace on either side of the input.
     ip = arg.strip()
     chk = ip.replace(".", "")
     if len(ip) < 7 or not chk.isdigit():
@@ -408,59 +408,47 @@ def ooc_cmd_ban(client, arg):
         client.server.ban_manager.add_ban(ip)
     except ServerError:
         raise
-    
-    #Attempt to find hdid of specified IP from list of connected users.
     hdid = client.server.client_manager.get_hdid_by_ip(ip)
-    if hdid == None:
+    if hdid == client.get_hdid():
         client.send_host_message('Unable to locate client HDID for logging.')
-    
-    #Get target via ip, and then disconnect them and output to OOC.
+        hdid = None
     targets = client.server.client_manager.get_targets_by_ip(ip)
     if targets:
         for c in targets:
             c.disconnect()
         client.send_host_message('Kicked {} existing client(s).'.format(len(targets)))
-    
-    #Output ban to log and OOC.
-    if hdid == None:
+    if hdid != None:
         client.send_host_message('Added {} to the banlist.'.format(ip))
         logger.log_server('Banned {}, {} by IP.'.format(ip, hdid), client)
+    else:
+        client.send_host_message('Added {} to the banlist.'.format(ip))
         logger.log_server('Banned {} by IP. Could not locate client HDID.'.format(ip), client)
 
 def ooc_cmd_banhdid(client, arg):
-    #Check if the client is a mod.
+    #Set Variables to None for Logging Purposes.
+    ip = None
+    hdid = None
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
-    
-    #Strip any whitespace on either side of the input.
     hdid = arg.strip()
-    
-    #Check if the hdid is valid.
-    if not hdid.isalnum():
+    if len(hdid) < 8 or not hdid.isalnum():
         raise ArgumentError('You must specify a valid HDID.')
-    
-    #Add hdid to the ban list.
     try:
         client.server.ban_manager.add_hdidban(hdid)
     except ServerError:
         raise
-    
-    #Attempt to find connected ips under that HDID.
     ip = client.server.client_manager.get_ip_by_hdid(hdid)
-    if ip == None:
+    if ip == client.get_ip():
         client.send_host_message('Unable to locate client IP for logging.')
+        ip = None
     else:
         client.server.ban_manager.add_ban(ip)
-    
-    #Grab targets to kick/ban, then disconnect said targets.
     targets = client.server.client_manager.get_targets_by_hdid(hdid)
     if targets:
         for c in targets:
             c.disconnect()
         client.send_host_message('Kicked {} existing client(s).'.format(len(targets)))
-    
-    #Output ban to log and OOC.
-    if ip == None:
+    if ip != None:
         client.send_host_message('Added {} to the banlist.'.format(hdid))
         logger.log_server('Banned {}, {} by HDID.'.format(ip, hdid), client)
     else:
@@ -484,7 +472,7 @@ def ooc_cmd_unbanhdid(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     hdid = arg.strip()
-    if not hdid.isalnum():
+    if len(hdid) < 8:
         raise ArgumentError('You must specify a valid HDID.')
     try:
         client.server.ban_manager.remove_hdidban(hdid)
@@ -685,18 +673,8 @@ def ooc_cmd_mutepm(client, arg):
     else:
         client.send_host_message('You are now receiving PMs')
 
-def ooc_cmd_setpoll(client, arg):
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
-    if len(arg) != 0:
-        poll = client.server.current_poll
-        setattr(client.server, poll, arg)
-        client.send_host_message('You set the current poll to {}.'.format(poll()))
-
 def ooc_cmd_vote(client, arg):
-    if len(arg) == 0:
-        client.send_host_message('Current poll: {}'.format(client.server.current_poll))
-    else:
+    if len(arg) > 0:
         try:
             hdid = client.get_hdid()
             ip = client.server.client_manager.get_ip_by_hdid(hdid)
