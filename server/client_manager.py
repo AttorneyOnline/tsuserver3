@@ -238,7 +238,7 @@ class ClientManager:
                 if self.is_mod:
                     info += ' ({})'.format(c.get_hdid())
             return info
-		
+
         def get_area_ip(self, area_id):
             info = ''
             try:
@@ -252,7 +252,7 @@ class ClientManager:
                 if self.is_mod:
                     info += ' ({})'.format(c.get_ip())
             return info
-		
+
         def get_char_name(self):
             if self.char_id == -1:
                 return 'CHAR_SELECT'
@@ -268,10 +268,6 @@ class ClientManager:
 
         def can_call_mod(self):
             return (time.time() * 1000.0 - self.mod_call_time) > 0
-			
-        def current_poll(self, poll):
-            Poll = type("Poll", (object,), dict())
-            poll = Poll()
     
         def vote_poll(self, value):
             allowed_values = ('yes', 'no')

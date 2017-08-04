@@ -24,3 +24,5 @@ debug: false
 
 area_locking_enabled: false
 rp_mode_enabled: false
+
+poll_slots: 10
