@@ -35,7 +35,7 @@ Install PyYAML by doing
     - Gives the doc url if blank, updates the doc url
 * **cleardoc** 
     - Clears the doc url
-  **eviswap** "number" "number"
+* **eviswap** "number" "number"
     - Swaps the positions of two pieces of evidence on the IC Evidence tab.
 * **status** "status" 
     - Shows current areas status if blank, updates the status
