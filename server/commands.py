@@ -224,17 +224,23 @@ def ooc_cmd_pm(client, arg):
             ooc_name += 1
     if ooc_name == len(args) + 1:
         raise ArgumentError('Invalid syntax. Add \':\' in the end of target.')
-    namedrop = ' '.join(args[:ooc_name])
-    msg = ' '.join(args[ooc_name:])
+    namedrop = ''.join(args[:ooc_name])
+    msg = ''.join(args[ooc_name:])
     if not msg:
         raise ArgumentError('Not enough arguments. Use /pm <target>: <message>.')
     for char_name in client.server.char_list:
         if namedrop.lower() == char_name.lower():
-            c = client.area.get_target_by_char_name(namedrop)
+            try:
+                c = client.area.get_target_by_char_name(namedrop)
+            except Exception as n:
+                client.send_host_message('{}'.format(n))
             if c:
                 target_clients.append(c)
     if not target_clients:
-        target_clients = client.server.client_manager.get_targets(client, namedrop)
+        try:
+            target_clients = client.server.client_manager.get_targets(client, namedrop)
+        except Exception as n:
+            client.send_host_message('{}'.format(n))
     if not target_clients:
         client.send_host_message('No targets found.')
     else:
