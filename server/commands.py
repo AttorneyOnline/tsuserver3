@@ -242,7 +242,7 @@ def ooc_cmd_pm(client, arg):
         except Exception as n:
             client.send_host_message('{}'.format(n))
     if not target_clients:
-        client.send_host_message('No targets found.')
+        client.send_host_message('No targets {} found.'.formate(namedrop))
     else:
         sent_num = 0
         for c in target_clients:
