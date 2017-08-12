@@ -722,25 +722,25 @@ def ooc_cmd_vote(client, arg):
             client.send_host_message('Current Available Commands: add, remove, list, info, yes, no. USAGE: /vote [command] [poll]')
     elif arg == "add":
         if not client.is_mod:
-            logger.log_serverpoll('Client \'{}\' attempting to add poll without credentials.'.format(ip))
+            logger.log_serverpoll('\'{}\' on character \'{}\' at ip \'{}\' attempting to add poll without credentials.'.format(client.name, client.get_char_name(), ip))
             raise ClientError('You must be authorized to do that.')
         else:
             if mod1 == None:
                 raise ClientError('You must specify a poll to add.')
             else:
-                logger.log_serverpoll('Client \'{}\' attempting to add poll \'{}\'.'.format(ip, mod1))
+                logger.log_serverpoll('\'{}\' on character \'{}\' at ip \'{}\' attempting to add poll \'{}\'.'.format(client.name, client.get_char_name(), ip, mod1))
                 client.server.serverpoll_manager.add_poll(mod1)
                 client.send_host_message('Poll \'{}\' added successfully.'.format(mod1))
     elif arg == "remove":
         if not client.is_mod:
-            logger.log_serverpoll('Client \'{}\' attempting to remove a poll without credentials.'.format(ip, mod1))
+            logger.log_serverpoll('\'{}\' on character \'{}\' at ip \'{}\' attempting to remove a poll without credentials.'.format(client.name, client.get_char_name(), ip, mod1))
             raise ClientError('You must be authorized to do that.')
         else:
             if mod1 == None:
                 raise ClientError('You must specify a poll to remove.')
             else:
                 try:
-                    logger.log_serverpoll('Client \'{}\' attempting to remove \'{}\'.'.format(ip, mod1))
+                    logger.log_serverpoll('\'{}\' on character \'{}\' at ip \'{}\' attempting to remove \'{}\'.'.format(client.name, client.get_char_name(), ip, mod1))
                     client.server.serverpoll_manager.remove_poll(mod1)
                 except FileNotFoundError:
                     raise ClientError('There is currently no vote list. Someone fucked up.')
@@ -755,13 +755,13 @@ def ooc_cmd_vote(client, arg):
         client.send_host_message("Current list of polls: {}".format(poll))
     elif arg == "info":
         if not client.is_mod:
-            logger.log_serverpoll('Client \'{}\' attempting to check poll information without credentials.'.format(ip))
+            logger.log_serverpoll('\'{}\' on character \'{}\' at ip \'{}\' attempting to check poll information without credentials.'.format(client.name, client.get_char_name(), ip))
             raise ClientError('You must be authorized to do that.')
         elif mod1 == None:
             raise ClientError('You must supply a poll to gather info about.')
         else:
             try:
-                logger.log_serverpoll('Client \'{}\' opened the log for poll \'{}\'.'.format(ip, mod1))
+                logger.log_serverpoll('\'{}\' on character \'{}\' at ip \'{}\' opened the log for poll \'{}\'.'.format(client.name, client.get_char_name(), ip, mod1))
                 info = client.server.serverpoll_manager.get_votelist(mod1)
                 info = "Activity log for poll \'{}\'.\n{}".format(mod1, info)
                 info = info.replace('],', '],\n')
@@ -770,7 +770,7 @@ def ooc_cmd_vote(client, arg):
                 raise
     elif arg == "yes" or arg == "no":
         try:
-            logger.log_serverpoll('Client \'{}\' attempting to vote \'{}\' on poll \'{}\'.'.format(ip, arg, mod1))
+            logger.log_serverpoll('\'{}\' on character \'{}\' at ip \'{}\' attempting to vote \'{}\' on poll \'{}\'.'.format(client.name, client.get_char_name(), ip, arg, mod1))
             client.server.serverpoll_manager.load_votelist(mod1)
             client.server.serverpoll_manager.add_vote(arg, ip, hdid)
         except FileNotFoundError:
