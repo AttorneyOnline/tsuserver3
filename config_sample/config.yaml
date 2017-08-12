@@ -14,13 +14,11 @@ district_ip: 127.0.0.1
 district_port: 11037
 district_password: enter_password
 
-use_masterserver: false
+use_masterserver: true
 masterserver_ip: master.aceattorneyonline.com
 masterserver_port: 27016
-masterserver_name: test shiet
-masterserver_description: idk what to say
+masterserver_name: My First Server
+masterserver_description: This is my flashy new server
 
 timeout: 250
 debug: true
-
-area_locking_enabled: false

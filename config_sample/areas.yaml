@@ -6,17 +6,17 @@
 - area: Courtroom 1
   background: gs5
   bglock: false
-  ebidence-mod: Mods
+  ebidence-mod: CM
   locking-allowed: false
 - area: Courtroom 2
   background: gs4
   bglock: false
-  ebidence-mod: Mods
+  ebidence-mod: CM
   locking-allowed: false
 - area: Courtroom 2
   background: gs4
   bglock: false
-  ebidence-mod: Mods
+  ebidence-mod: CM
   locking-allowed: false
   
   
