@@ -40,15 +40,15 @@ class BanManager:
         if ip not in self.bans:
             self.bans.append(ip)
         else:
-            raise ServerError('This IP is already banned.')
+            raise ServerError('This IPID is already banned.')
         self.write_banlist()
 
     def remove_ban(self, ip):
         if ip in self.bans:
             self.bans.remove(ip)
         else:
-            raise ServerError('This IP is not banned.')
+            raise ServerError('This IPID is not banned.')
         self.write_banlist()
 
-    def is_banned(self, ip):
-        return ip in self.bans
+    def is_banned(self, ipid):
+        return (ipid in self.bans)
