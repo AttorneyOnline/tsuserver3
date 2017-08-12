@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import random
-
 from server import logger
 from server.exceptions import ClientError, ServerError, ArgumentError, AreaError
 
@@ -180,8 +179,7 @@ def ooc_cmd_getareas(client, arg):
 def ooc_cmd_doc(client, arg):
     if len(arg) == 0:
         client.send_host_message('Document: {}'.format(client.area.doc))
-        logger.log_server(
-            '[{}][{}]Requested document. Link: {}'.format(client.area.id, client.get_char_name(), client.area.doc))
+        logger.log_server('[{}][{}]Requested document. Link: {}'.format(client.area.id, client.get_char_name(), client.area.doc))
     else:
         client.area.change_doc(arg)
         client.area.send_host_message('{} changed the doc link.'.format(client.get_char_name()))
@@ -192,10 +190,8 @@ def ooc_cmd_cleardoc(client, arg):
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
     client.area.send_host_message('{} cleared the doc link.'.format(client.get_char_name()))
-    logger.log_server('[{}][{}]Cleared document. Old link: {}'
-                      .format(client.area.id, client.get_char_name(), client.area.doc))
+    logger.log_server('[{}][{}]Cleared document. Old link: {}'.format(client.area.id, client.get_char_name(), client.area.doc))
     client.area.change_doc()
-
 
 def ooc_cmd_status(client, arg):
     if len(arg) == 0:
@@ -204,11 +200,9 @@ def ooc_cmd_status(client, arg):
         try:
             client.area.change_status(arg)
             client.area.send_host_message('{} changed status to {}.'.format(client.get_char_name(), client.area.status))
-            logger.log_server(
-                '[{}][{}]Changed status to {}'.format(client.area.id, client.get_char_name(), client.area.status))
+            logger.log_server('[{}][{}]Changed status to {}'.format(client.area.id, client.get_char_name(), client.area.status))
         except AreaError:
             raise
-
 
 
 def ooc_cmd_pm(client, arg):
@@ -278,7 +272,6 @@ def ooc_cmd_charselect(client, arg):
     else:
         client.char_select()
 
-
 def ooc_cmd_randomchar(client, arg):
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
@@ -292,14 +285,12 @@ def ooc_cmd_randomchar(client, arg):
         raise
     client.send_host_message('Randomly switched to {}'.format(client.get_char_name()))
 
-
 def ooc_cmd_help(client, arg):
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
     help_url = 'https://github.com/Attorney-Online-Engineering-Task-Force/tsuserver3'
     help_msg = 'Available commands, source code and issues can be found here: {}'.format(help_url)
     client.send_host_message(help_msg)
-
 
 def ooc_cmd_pos(client, arg):
     if len(arg) == 0:
@@ -311,7 +302,6 @@ def ooc_cmd_pos(client, arg):
         except ClientError:
             raise
         client.send_host_message('Position changed.')
-
 
 def ooc_cmd_bg(client, arg):
     if len(arg) == 0:
@@ -325,12 +315,12 @@ def ooc_cmd_bg(client, arg):
     client.area.send_host_message('{} changed the background to {}.'.format(client.get_char_name(), arg))
     logger.log_server('[{}][{}]Changed background to {}'.format(client.area.id, client.get_char_name(), arg), client)
 
-def ooc_cmd_bglock(client,arg):
+def ooc_cmd_bglock(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
-    if client.area.bg_lock  == "true":
+    if client.area.bg_lock == "true":
         client.area.bg_lock = "false"
     else:
         client.area.bg_lock = "true"
@@ -344,6 +334,7 @@ def ooc_cmd_bglist(client, arg):
         bgs += '\r\n' + bg
 
     client.send_host_message(bgs)
+
 
 def ooc_cmd_motd(client, arg):
     if len(arg) != 0:
@@ -364,8 +355,7 @@ def ooc_cmd_roll(client, arg):
         val = 6
     roll = random.randint(1, val)
     client.area.send_host_message('{} rolled {} out of {}.'.format(client.get_char_name(), roll, val))
-    logger.log_server(
-        '[{}][{}]Used /roll and got {} out of {}.'.format(client.area.id, client.get_char_name(), roll, val))
+    logger.log_server('[{}][{}]Used /roll and got {} out of {}.'.format(client.area.id, client.get_char_name(), roll, val))
 
 
 def ooc_cmd_coinflip(client, arg):
@@ -383,8 +373,7 @@ def ooc_cmd_currentmusic(client, arg):
         raise ArgumentError('This command has no arguments.')
     if client.area.current_music == '':
         raise ClientError('There is no music currently playing.')
-    client.send_host_message('The current music is {} and was played by {}.'.format(client.area.current_music,
-                                                                                    client.area.current_music_player))
+    client.send_host_message('The current music is {} and was played by {}.'.format(client.area.current_music, client.area.current_music_player))
 
 
 def ooc_cmd_login(client, arg):
@@ -397,6 +386,7 @@ def ooc_cmd_login(client, arg):
     client.send_host_message('Logged in as a moderator.')
     logger.log_server('Logged in as moderator.', client)
     client.in_rp = False
+
 
 def ooc_cmd_kick(client, arg):
     if not client.is_mod:
@@ -412,8 +402,9 @@ def ooc_cmd_kick(client, arg):
     else:
         client.send_host_message("No targets found.")
 
+
 def ooc_cmd_ban(client, arg):
-    #Set Variables to None for Logging Purposes.
+    # Set Variables to None for Logging Purposes.
     ip = None
     hdid = None
     if not client.is_mod:
@@ -442,8 +433,9 @@ def ooc_cmd_ban(client, arg):
         client.send_host_message('Added {} to the banlist.'.format(ip))
         logger.log_server('Banned {} by IP. Could not locate client HDID.'.format(ip), client)
 
+
 def ooc_cmd_banhdid(client, arg):
-    #Set Variables to None for Logging Purposes.
+    # Set Variables to None for Logging Purposes.
     ip = None
     hdid = None
     if not client.is_mod:
@@ -473,6 +465,7 @@ def ooc_cmd_banhdid(client, arg):
         client.send_host_message('Added {} to the banlist.'.format(hdid))
         logger.log_server('Banned {} at HDID. Could not locate client ip.'.format(hdid), client)
 
+
 def ooc_cmd_unban(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
@@ -485,6 +478,7 @@ def ooc_cmd_unban(client, arg):
         raise
     logger.log_server('Unbanned {}.'.format(ip), client)
     client.send_host_message('Unbanned {}'.format(ip))
+
 
 def ooc_cmd_unbanhdid(client, arg):
     if not client.is_mod:
@@ -499,14 +493,16 @@ def ooc_cmd_unbanhdid(client, arg):
     logger.log_server('Unbanned {}.'.format(hdid), client)
     client.send_host_message('Unbanned {}'.format(hdid))
 
+
 def ooc_cmd_getip(client, arg):
     if not client.is_mod:
-        raise ClientError ('You must be authorized to do that.')
+        raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
         try:
             client.send_area_ip(client.area.id)
         except AreaError:
             raise
+
 
 def ooc_cmd_getips(client, arg):
     if not client.is_mod:
@@ -514,6 +510,7 @@ def ooc_cmd_getips(client, arg):
     if len(arg) != 0:
         raise ArgumentError('This command takes no arguments.')
     client.send_all_area_ip()
+
 
 def ooc_cmd_gethdid(client, arg):
     if not client.is_mod:
@@ -524,12 +521,14 @@ def ooc_cmd_gethdid(client, arg):
         except AreaError:
             raise
 
+
 def ooc_cmd_gethdids(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) != 0:
         raise ArgumentError('This command takes no arguments.')
     client.send_all_area_hdid()
+
 
 def ooc_cmd_play(client, arg):
     if not client.is_mod:
@@ -539,6 +538,7 @@ def ooc_cmd_play(client, arg):
     client.area.play_music(arg, client.char_id, -1)
     client.area.add_music_playing(client, arg)
     logger.log_server('[{}][{}]Changed music to {}.'.format(client.area.id, client.get_char_name(), arg), client)
+
 
 def ooc_cmd_mute(client, arg):
     if not client.is_mod:
@@ -554,6 +554,7 @@ def ooc_cmd_mute(client, arg):
         client.send_host_message('Muted {} existing client(s).'.format(len(targets)))
     else:
         client.send_host_message("No targets found.")
+
 
 def ooc_cmd_unmute(client, arg):
     if not client.is_mod:
@@ -573,6 +574,7 @@ def ooc_cmd_unmute(client, arg):
     else:
         client.send_host_message("No targets found.")
 
+
 def ooc_cmd_oocmute(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
@@ -587,6 +589,7 @@ def ooc_cmd_oocmute(client, arg):
         client.send_host_message('Muted {} existing client(s).'.format(len(targets)))
     else:
         client.send_host_message("No targets found.")
+
 
 def ooc_cmd_oocunmute(client, arg):
     if not client.is_mod:
@@ -605,6 +608,7 @@ def ooc_cmd_oocunmute(client, arg):
         client.send_host_message('Unmuted {} existing client(s).'.format(len(targets)))
     else:
         client.send_host_message("No targets found.")
+
 
 def ooc_cmd_rpmode(p_client, arg):
     if not p_client.server.config['rp_mode_enabled']:
@@ -628,6 +632,7 @@ def ooc_cmd_rpmode(p_client, arg):
     else:
         p_client.send_host_message('Invalid argument! Valid arguments: on, off. Your argument: ' + arg)
 
+
 def ooc_cmd_lock(client, arg):
     if not client.server.config['area_locking_enabled']:
         client.send_host_message('Area locking is disabled in this server!')
@@ -639,12 +644,14 @@ def ooc_cmd_lock(client, arg):
     client.area.current_locker = client
     client.area.send_host_message('Area locked!')
 
+
 def ooc_cmd_unlock(client, arg):
     if client.area.current_locker is client:
         client.area.is_locked = False
         client.send_host_message('Area unlocked!')
     else:
         client.send_host_message('You did not lock this area!')
+
 
 def ooc_cmd_eviswap(client, arg):
     args = arg.split()
@@ -678,9 +685,11 @@ def ooc_cmd_eviswap(client, arg):
         client.send_host_message("Invalid argument 2!")
         return
 
-    client.area.evidence_list[evi1], client.area.evidence_list[evi2] = client.area.evidence_list[evi2], client.area.evidence_list[evi1]
+    client.area.evidence_list[evi1], client.area.evidence_list[evi2] = client.area.evidence_list[evi2], \
+                                                                       client.area.evidence_list[evi1]
 
     client.area.broadcast_evidence_list()
+
 
 def ooc_cmd_mutepm(client, arg):
     if len(arg) != 0:
@@ -691,16 +700,88 @@ def ooc_cmd_mutepm(client, arg):
     else:
         client.send_host_message('You are now receiving PMs')
 
+
 def ooc_cmd_vote(client, arg):
-    if len(arg) > 0:
+    # Set up a variable so we can refer to it later.
+    mod1 = None
+    ip = client.get_ip()
+    hdid = client.get_hdid()
+
+    # Split up 'arg' into components we can use.
+    try:
+        args = arg.split()
+    except IndexError:
+        raise
+    # Probably use dict to make this a lot neater and not a mess of fucking if statements.
+    if len(args) == 1:
+        arg = args[0]
+    if len(args) == 2:
+        arg = args[0]
+        mod1 = args[1]
+    if len(args) > 2:
+        raise ClientError('You may only specify a maximum of 2 arguments')
+
+    if len(args) == 0:
+        if not client.is_mod:
+            client.send_host_message('Current Available Commands: list, yes, no. USAGE: /vote [command] [poll]')
+        else:
+            client.send_host_message('Current Available Commands: add, remove, list, info, yes, no. USAGE: /vote [command] [poll]')
+    elif arg == "add":
+        if not client.is_mod:
+            logger.log_serverpoll('\'{}\' on character \'{}\' at ip \'{}\' attempting to add poll without credentials.'.format(client.name, client.get_char_name(), ip))
+            raise ClientError('You must be authorized to do that.')
+        else:
+            if mod1 == None:
+                raise ClientError('You must specify a poll to add.')
+            else:
+                logger.log_serverpoll('\'{}\' on character \'{}\' at ip \'{}\' attempting to add poll \'{}\'.'.format(client.name, client.get_char_name(), ip, mod1))
+                client.server.serverpoll_manager.add_poll(mod1)
+                client.send_host_message('Poll \'{}\' added successfully.'.format(mod1))
+    elif arg == "remove":
+        if not client.is_mod:
+            logger.log_serverpoll('\'{}\' on character \'{}\' at ip \'{}\' attempting to remove a poll without credentials.'.format(client.name, client.get_char_name(), ip, mod1))
+            raise ClientError('You must be authorized to do that.')
+        else:
+            if mod1 == None:
+                raise ClientError('You must specify a poll to remove.')
+            else:
+                try:
+                    logger.log_serverpoll('\'{}\' on character \'{}\' at ip \'{}\' attempting to remove \'{}\'.'.format(client.name, client.get_char_name(), ip, mod1))
+                    client.server.serverpoll_manager.remove_poll(mod1)
+                except FileNotFoundError:
+                    raise ClientError('There is currently no vote list. Someone fucked up.')
+                except TypeError:
+                    raise ClientError('Something about what you input caused a TypeError.')
+                if mod1 == "all":
+                    client.send_host_message('All polls removed successfully.'.format(mod1))
+                else:
+                    client.send_host_message('Poll \'{}\' removed successfully.'.format(mod1))
+    elif arg == "list":
+        poll = client.server.serverpoll_manager.show_poll_list()
+        client.send_host_message("Current list of polls: {}".format(poll))
+    elif arg == "info":
+        if not client.is_mod:
+            logger.log_serverpoll('\'{}\' on character \'{}\' at ip \'{}\' attempting to check poll information without credentials.'.format(client.name, client.get_char_name(), ip))
+            raise ClientError('You must be authorized to do that.')
+        elif mod1 == None:
+            raise ClientError('You must supply a poll to gather info about.')
+        else:
+            try:
+                logger.log_serverpoll('\'{}\' on character \'{}\' at ip \'{}\' opened the log for poll \'{}\'.'.format(client.name, client.get_char_name(), ip, mod1))
+                info = client.server.serverpoll_manager.get_votelist(mod1)
+                info = "Activity log for poll \'{}\'.\n{}".format(mod1, info)
+                info = info.replace('],', '],\n')
+                client.send_host_message(info)
+            except:
+                raise
+    elif arg == "yes" or arg == "no":
         try:
-            hdid = client.get_hdid()
-            ip = client.server.client_manager.get_ip_by_hdid(hdid)
-            if client.server.serverpoll_manager.has_voted(hdid, ip):
-                raise ClientError('You have already voted.')
-            client.vote_poll(arg)
-            client.server.serverpoll_manager.add_votelist(hdid, ip)
-            client.send_host_message('Thank you for voting.')
-            logger.log_serverpoll('[SERVERPOLL][{}][{}] has voted {}.'.format(ip, hdid, arg), client)
-        except ClientError:
+            logger.log_serverpoll('\'{}\' on character \'{}\' at ip \'{}\' attempting to vote \'{}\' on poll \'{}\'.'.format(client.name, client.get_char_name(), ip, arg, mod1))
+            client.server.serverpoll_manager.load_votelist(mod1)
+            client.server.serverpoll_manager.add_vote(arg, ip, hdid)
+        except FileNotFoundError:
+            raise
+        except ValueError:
+            raise
+        except IndexError:
             raise
