@@ -33,7 +33,9 @@ from server.masterserverclient import MasterServerClient
 class TsuServer3:
     def __init__(self):
         self.config = None
+        self.allowed_iniswaps = None
         self.load_config()
+        self.load_iniswaps()
         self.client_manager = ClientManager(self)
         self.area_manager = AreaManager(self)
         self.ban_manager = BanManager()
@@ -112,7 +114,7 @@ class TsuServer3:
     def load_config(self):
         with open('config/config.yaml', 'r', encoding = 'utf-8') as cfg:
             self.config = yaml.load(cfg)
-            self.config['motd'] = self.config['motd'].replace('\\n', '\n') 
+            self.config['motd'] = self.config['motd'].replace('\\n', ' \n') 
 
     def load_characters(self):
         with open('config/characters.yaml', 'r', encoding = 'utf-8') as chars:
@@ -158,6 +160,10 @@ class TsuServer3:
     def load_backgrounds(self):
         with open('config/backgrounds.yaml', 'r', encoding = 'utf-8') as bgs:
             self.backgrounds = yaml.load(bgs)
+            
+    def load_iniswaps(self):
+        with open('config/iniswaps.yaml', 'r', encoding = 'utf-8') as bgs:
+            self.allowed_iniswaps = yaml.load(bgs)
 
     def build_char_pages_ao1(self):
         self.char_pages_ao1 = [self.char_list[x:x + 10] for x in range(0, len(self.char_list), 10)]

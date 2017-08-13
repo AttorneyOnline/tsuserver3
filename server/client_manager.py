@@ -71,7 +71,7 @@ class ClientManager:
                 raise ClientError('Character not available.')
             elif not self.area.is_char_available(char_id):
                 for client in self.area.clients:
-                    if client.cid == char_id:
+                    if client.char_id == char_id:
                         client.char_select()
             old_char = self.get_char_name()
             self.char_id = char_id
@@ -116,14 +116,17 @@ class ClientManager:
 
         def send_area_list(self):
             msg = '=== Areas ==='
-            lock = {True: 'LOCKED', False: 'FREE'}
+            lock = {True: '[LOCKED]', False: ''}
             for i, area in enumerate(self.server.area_manager.areas):
-                msg += '\r\nArea {}: {} (users: {}) [{}][{}]'.format(i, area.name, len(area.clients), area.status, lock[area.is_locked])
+                owner = 'FREE'
+                if area.owned:
+                    for client in area.clients:
+                        if client.is_cm:
+                            owner = 'MASTER: {}'.format(client.get_char_name())
+                            break
+                msg += '\r\nArea {}: {} (users: {}) [{}][{}]{}'.format(i, area.name, len(area.clients), area.status, owner, lock[area.is_locked])
                 if self.area == area:
                     msg += ' [*]'
-                msg += '\r\n[{}]'.format(area.status)
-                if area.is_locked:
-                    msg += '[LOCKED]'
             self.send_host_message(msg)
 
         def get_area_info(self, area_id, mods):

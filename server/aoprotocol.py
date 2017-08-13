@@ -313,6 +313,9 @@ class AOProtocol(asyncio.Protocol):
                                      self.ArgType.INT, self.ArgType.INT, self.ArgType.INT):
             return
         msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color = args
+        if self.client.area.is_iniswap(self.client, pre, anim, folder):
+            self.client.send_host_message("Iniswap is blocked in this area")
+            return
         if msg_type not in ('chat', '0', '1'):
             return
         if anim_type not in (0, 1, 2, 5, 6):
@@ -460,8 +463,6 @@ class AOProtocol(asyncio.Protocol):
 
         """
         if len(args) < 3:
-            return
-        if (not self.client.is_cm) and (not self.client.is_mod):
             return
         #evi = Evidence(args[0], args[1], args[2], self.client.pos)
         self.client.area.evi_list.add_evidence(self.client, args[0], args[1], args[2], 'all')

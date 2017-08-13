@@ -26,7 +26,8 @@ from server.evidence import EvidenceList
 
 class AreaManager:
     class Area:
-        def __init__(self, area_id, server, name, background, bg_lock, evidence_mod = 'FFA', locking_allowed = False):
+        def __init__(self, area_id, server, name, background, bg_lock, evidence_mod = 'FFA', locking_allowed = False, iniswap_allowed = True):
+            self.iniswap_allowed = iniswap_allowed
             self.clients = set()
             self.invite_list = set()
             self.id = area_id
@@ -93,7 +94,17 @@ class AreaManager:
         def set_next_msg_delay(self, msg_length):
             delay = min(3000, 100 + 60 * msg_length)
             self.next_message_time = round(time.time() * 1000.0 + delay)
-
+        
+        def is_iniswap(self, client, anim1, anim2, char):
+            if self.iniswap_allowed:
+                return False
+            if '..' in anim1 or '..' in anim2:
+                return True
+            for char_link in self.server.allowed_iniswaps:
+                if client.get_char_name() in char_link and char in char_link:
+                    return False
+            return True
+        
         def play_music(self, name, cid, length=-1):
             self.send_command('MC', name, cid)
             if self.music_looper:
@@ -167,12 +178,14 @@ class AreaManager:
         with open('config/areas.yaml', 'r') as chars:
             areas = yaml.load(chars)
         for item in areas:
-            if 'ebidence-mod' not in item:
-                item['ebidence-mod'] = 'FFA'
+            if 'ebidence_mod' not in item:
+                item['ebidence_mod'] = 'FFA'
             if 'locking-allowed' not in item:
                 item['locking-allowed'] = False
+            if 'iniswap-allowed' not in item:
+                item['iniswap-allowed'] = True
             self.areas.append(
-                self.Area(self.cur_id, self.server, item['area'], item['background'], item['bglock'], item['ebidence-mod'], item['locking-allowed']))
+                self.Area(self.cur_id, self.server, item['area'], item['background'], item['bglock'], item['ebidence_mod'], item['locking-allowed'], item['iniswap-allowed']))
             self.cur_id += 1
 
     def default_area(self):

@@ -17,6 +17,7 @@
 
 import random
 import hashlib
+import string
 
 from server import logger
 from server.exceptions import ClientError, ServerError, ArgumentError, AreaError
@@ -59,13 +60,37 @@ def ooc_cmd_bglock(client,arg):
     client.area.send_host_message('A mod has set the background lock to {}.'.format(client.area.bg_lock))
     logger.log_server('[{}][{}]Changed bglock to {}'.format(client.area.id, client.get_char_name(), client.area.bg_lock), client)
     
+def ooc_cmd_evidence_mod(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if not arg:
+        client.send_host_message('current evidence mod: {}'.format(client.area.evidence_mod))
+        return
+    if arg in ['FFA', 'Mod', 'CM', 'HiddenCM']:
+        client.area.evidence_mod = arg
+        client.send_host_message('current evidence mod: {}'.format(client.area.evidence_mod))
+        return
+    else:
+        raise ArgumentError('Wrong Argument. Use /evidence_mod <MOD>. Possible values: FFA, CM, Mod(in work), HiddenCM(in work)')
+        return
+        
+def ooc_cmd_allow_iniswap(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    client.area.iniswap_allowed = not client.area.iniswap_allowed
+    answer = {True: 'allowed', False: 'forbidden'}
+    client.send_host_message('iniswap is {}.'.format(answer[client.area.iniswap_allowed]))
+    return
+    
+    
+    
 def ooc_cmd_roll(client, arg):
     roll_max = 11037
     if len(arg) != 0:
         try:
             val = list(map(int, arg.split(' ')))
             if not 1 <= val[0] <= roll_max:
-                raise ArgumentError('Вы должны ввести верхнюю границу броска от 1 до {}.'.format(roll_max))
+                raise ArgumentErrorraise ArgumentError('Roll value must be between 1 and {}.'.format(roll_max))
         except ValueError:
             raise ArgumentError('Wrong argument. Use /roll [<max>] [<num of rolls>]')
     else:
@@ -75,14 +100,14 @@ def ooc_cmd_roll(client, arg):
     if len(val) > 2:
         raise ArgumentError('Too much arguments. Use /roll [<max>] [<num of rolls>]')
     if val[1] > 20 or val[1] < 1:
-        raise ArgumentError('вы должны ввести число от 1 до 20')
+        raise ArgumentError('Num of rolls must be between 1 and 20')
     roll = ''
     for i in range(val[1]):
         roll += str(random.randint(1, val[0])) + ', '
     roll = roll[:-2]
     if val[1] > 1:
         roll = '(' + roll + ')'
-    client.area.send_host_message('{} выбросил {} из {}.'.format(client.get_char_name(), roll, val[0]))
+    client.area.send_host_message('{} rolled {} out of {}.'.format(client.get_char_name(), roll, val[0]))
     logger.log_server(
         '[{}][{}]Used /roll and got {} out of {}.'.format(client.area.id, client.get_char_name(), roll, val[0]))
         
@@ -92,25 +117,25 @@ def ooc_cmd_rollp(client, arg):
         try:
             val = list(map(int, arg.split(' ')))
             if not 1 <= val[0] <= roll_max:
-                raise ArgumentError('Вы должны ввести верхнюю границу броска от 1 до {}.'.format(roll_max))
+                raise ArgumentError('Roll value must be between 1 and {}.'.format(roll_max))
         except ValueError:
-            raise ArgumentError('Аргумент должен быть цифрой')
+            raise ArgumentError('Wrong argument. Use /roll [<max>] [<num of rolls>]')
     else:
         val = [6]
     if len(val) == 1:
         val.append(1)
     if len(val) > 2:
-        raise ArgumentError('вы ввели слишком много чисел')
+        raise ArgumentError('Too much arguments. Use /roll [<max>] [<num of rolls>]')
     if val[1] > 20 or val[1] < 1:
-        raise ArgumentError('вы должны ввести число от 1 до 20')
+        raise ArgumentError('Num of rolls must be between 1 and 20')
     roll = ''
     for i in range(val[1]):
         roll += str(random.randint(1, val[0])) + ', '
     roll = roll[:-2]
     if val[1] > 1:
         roll = '(' + roll + ')'
-    client.send_host_message('{} выбросил {} из {}.'.format(client.get_char_name(), roll, val[0]))
-    client.area.send_host_message('{} выбросил кубик(и).'.format(client.get_char_name(), roll, val[0]))
+    client.send_host_message('{} rolled {} out of {}.'.format(client.get_char_name(), roll, val[0]))
+    client.area.send_host_message('{} rolled.'.format(client.get_char_name(), roll, val[0]))
     SALT = ''.join(random.choices(string.ascii_uppercase + string.digits, k=16))
     logger.log_server(
         '[{}][{}]Used /roll and got {} out of {}.'.format(client.area.id, client.get_char_name(), hashlib.sha1((str(roll) + SALT).encode('utf-8')).hexdigest() + '|' + SALT, val[0]))
@@ -445,7 +470,7 @@ def ooc_cmd_cm(client, arg):
     if client.area.owned == False:
         client.area.owned = True
         client.is_cm = True
-        client.area.send_host_message('{} are CM in this area now.'.format(client.get_char_name()))
+        client.area.send_host_message('{} is CM in this area now.'.format(client.get_char_name()))
     
 def ooc_cmd_unmod(client, arg):
     client.is_mod = False
@@ -483,7 +508,7 @@ def ooc_cmd_invite(client, arg):
         raise ClientError('Only CM can invite to this area')
     try:
         client.area.invite_list[client.server.client_manager.get_targets(client, 'id', int(arg), False)[0].ipid] = None
-        client.send_host_message('{} are invited to your area.'.format(client.server.client_manager.get_targets(client, 'id', int(arg), False)[0].get_char_name()))
+        client.send_host_message('{} is invited to your area.'.format(client.server.client_manager.get_targets(client, 'id', int(arg), False)[0].get_char_name()))
     except:
         raise ClientError('You must specify a target. Use /invite <id>')
         
