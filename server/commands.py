@@ -205,49 +205,51 @@ def ooc_cmd_status(client, arg):
             raise
 
 
-def ooc_cmd_pm(client, arg):
-    args = arg.split()
-    ooc_name = 1
-    if len(args) < 2:
-        raise ArgumentError('Not enough arguments. Use /pm <target>: <message>.')
-    target_clients = []
-    for word in args:
-        if word.lower().endswith(':'):
-            break
+ def ooc_cmd_pm(client, arg):
+        args = arg.split()
+        if len(args) < 2:
+            raise ArgumentError('Not enough arguments. Use /pm <target> <message>.')
+        target_clients = []
+        msg = ' '.join(args[1:])
+        for char_name in client.server.char_list:
+            if arg.lower().startswith(char_name.lower()):
+                char_len = len(char_name.split())
+                to_search = ' '.join(args[:char_len])
+                c = client.area.get_target_by_char_name(to_search)
+                if c:
+                    target_clients.append(c)
+                    msg = ' '.join(args[char_len:])
+                    if not msg:
+                        raise ArgumentError('Not enough arguments. Use /pm <target> <message>.')
+                    break
+        if not target_clients:
+            target_clients = client.server.client_manager.get_targets(client, args[0])
+        if not target_clients:
+            client.send_host_message('No targets found.')
         else:
-            ooc_name += 1
-    if ooc_name == len(args) + 1:
-        raise ArgumentError('Invalid syntax. Add \':\' in the end of target.')
-    namedrop = ''.join(args[:ooc_name])
-    msg = ''.join(args[ooc_name:])
-    if not msg:
-        raise ArgumentError('Not enough arguments. Use /pm <target>: <message>.')
-    for char_name in client.server.char_list:
-        if namedrop.lower() == char_name.lower():
-            try:
-                c = client.area.get_target_by_char_name(namedrop)
-            except Exception as n:
-                client.send_host_message('{}'.format(n))
-            if c:
-                target_clients.append(c)
-    if not target_clients:
-        try:
-            target_clients = client.server.client_manager.get_targets(client, namedrop)
-        except Exception as n:
-            client.send_host_message('{}'.format(n))
-    if not target_clients:
-        client.send_host_message('No targets {} found.'.format(namedrop))
+            sent_num = 0
+            for c in target_clients:
+                if not c.pm_mute:
+                    c.send_host_message(
+                        'PM from {} in {} ({}): {}'.format(client.name, client.area.name, client.get_char_name(), msg))
+                    c.last_reply = client.name
+                    sent_num += 1
+            if sent_num == 0:
+                client.send_host_message('Target not recieving PMss.')
+            else:
+                client.send_host_message('PM sent to {}, {} user(s). Message: {}'.format(args[0], sent_num, msg))
+                
+def occ_cmd_reply(client, arg):
+    msg = arg
+    target_client = client.server.client_manager.get_targets(client, client.last_pm)
+    if not target_client:
+        client.send_host_message('Target no longer exists.')
+    if target_client.pm_mute:
+        client.send_host_message('Target not recieving PMss.')
     else:
-        sent_num = 0
-        for c in target_clients:
-            if not c.pm_mute:
-                c.send_host_message(
-                    'PM from {} in {} ({}): {}'.format(client.name, client.area.name, client.get_char_name(), msg))
-                sent_num += 1
-        if sent_num == 0:
-            client.send_host_message('Target not recieving PMss.')
-        else:
-            client.send_host_message('PM sent to {}, {} user(s). Message: {}'.format(args[0], sent_num, msg))
+        target_client.send_host_message(
+            'PM from {} in {} ({}): {}'.format(client.name, client.area.name, client.get_char_name(), msg))
+        client.send_host_message('PM sent to {}. Message: {}'.format(client.last_pm, msg))
 
 def ooc_cmd_kms(client, arg):
     ip = client.get_ip()
