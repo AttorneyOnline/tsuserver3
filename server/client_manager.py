@@ -42,6 +42,7 @@ class ClientManager:
             self.mod_call_time = 0
             self.in_rp = False
             self.current_poll = ''
+            self.last_pm = ''
 
         def send_raw_message(self, msg):
             self.transport.write(msg.encode('utf-8'))
