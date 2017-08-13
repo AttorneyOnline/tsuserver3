@@ -24,7 +24,7 @@ from server import commands
 from server import logger
 from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
 from server.fantacrypt import fanta_decrypt
-from server.evidence import Evidence
+from server.evidence import EvidenceList
 
 
 class AOProtocol(asyncio.Protocol):
@@ -137,12 +137,24 @@ class AOProtocol(asyncio.Protocol):
         if not self.validate_net_cmd(args, self.ArgType.STR, needs_auth=False):
             return
         self.client.hdid = args[0]
+<<<<<<< HEAD
         if self.server.ban_manager.is_banned(self.client.get_ip()):
             self.client.disconnect()
             return
         if self.server.ban_manager.is_hdidbanned(self.client.get_hdid()):
             self.client.disconnect()
             return
+=======
+        if self.client.hdid not in self.client.server.hdid_list:
+            self.client.server.hdid_list[self.client.hdid] = []
+        if self.client.ipid not in self.client.server.hdid_list[self.client.hdid]:
+            self.client.server.hdid_list[self.client.hdid].append(self.client.ipid)
+            self.client.server.dump_hdids()
+        for ipid in self.client.server.hdid_list[self.client.hdid]:
+            if self.server.ban_manager.is_banned(ipid):
+                self.client.disconnect()
+                return
+>>>>>>> 6662646ec7f05c273cae211d760bab7f5b64e2ad
         logger.log_server('Connected. HDID: {}.'.format(self.client.hdid), self.client)
         self.client.send_command('ID', self.client.id, self.server.software, self.server.get_version_string())
         self.client.send_command('PN', self.server.get_player_count() - 1, self.server.config['playerlimit'])
@@ -310,6 +322,9 @@ class AOProtocol(asyncio.Protocol):
                                      self.ArgType.INT, self.ArgType.INT, self.ArgType.INT):
             return
         msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color = args
+        if self.client.area.is_iniswap(self.client, pre, anim, folder):
+            self.client.send_host_message("Iniswap is blocked in this area")
+            return
         if msg_type not in ('chat', '0', '1'):
             return
         if anim_type not in (0, 1, 2, 5, 6):
@@ -341,8 +356,12 @@ class AOProtocol(asyncio.Protocol):
             if pos not in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
                 return
         msg = text[:256]
+<<<<<<< HEAD
         if self.client.disemvowel:
                 msg = self.client.disemvowel_message(msg)
+=======
+        self.client.pos = pos
+>>>>>>> 6662646ec7f05c273cae211d760bab7f5b64e2ad
         self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
                                       sfx_delay, button, evidence, flip, ding, color)
         self.client.area.set_next_msg_delay(len(msg))
@@ -459,15 +478,12 @@ class AOProtocol(asyncio.Protocol):
         PE#<name: string>#<description: string>#<image: string>#%
 
         """
-
         if len(args) < 3:
             return
-
-        evi = Evidence(args[0], args[1], args[2])
-
-        self.client.area.add_evidence(evi)
+        #evi = Evidence(args[0], args[1], args[2], self.client.pos)
+        self.client.area.evi_list.add_evidence(self.client, args[0], args[1], args[2], 'all')
         self.client.area.broadcast_evidence_list()
-
+    
     def net_cmd_de(self, args):
         """ Deletes a piece of evidence.
 
@@ -475,7 +491,7 @@ class AOProtocol(asyncio.Protocol):
 
         """
 
-        self.client.area.delete_evidence(int(args[0]))
+        self.client.area.evi_list.del_evidence(self.client, self.client.evi_list[int(args[0])])
         self.client.area.broadcast_evidence_list()
 
     def net_cmd_ee(self, args):
@@ -488,9 +504,9 @@ class AOProtocol(asyncio.Protocol):
         if len(args) < 4:
             return
 
-        evi = Evidence(args[1], args[2], args[3])
+        evi = (args[1], args[2], args[3], 'all')
 
-        self.client.area.edit_evidence(int(args[0]), evi)
+        self.client.area.evi_list.edit_evidence(self.client, self.client.evi_list[int(args[0])], evi)
         self.client.area.broadcast_evidence_list()
 
 
