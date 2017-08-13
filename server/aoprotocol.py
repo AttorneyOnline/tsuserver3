@@ -137,14 +137,6 @@ class AOProtocol(asyncio.Protocol):
         if not self.validate_net_cmd(args, self.ArgType.STR, needs_auth=False):
             return
         self.client.hdid = args[0]
-<<<<<<< HEAD
-        if self.server.ban_manager.is_banned(self.client.get_ip()):
-            self.client.disconnect()
-            return
-        if self.server.ban_manager.is_hdidbanned(self.client.get_hdid()):
-            self.client.disconnect()
-            return
-=======
         if self.client.hdid not in self.client.server.hdid_list:
             self.client.server.hdid_list[self.client.hdid] = []
         if self.client.ipid not in self.client.server.hdid_list[self.client.hdid]:
@@ -154,7 +146,6 @@ class AOProtocol(asyncio.Protocol):
             if self.server.ban_manager.is_banned(ipid):
                 self.client.disconnect()
                 return
->>>>>>> 6662646ec7f05c273cae211d760bab7f5b64e2ad
         logger.log_server('Connected. HDID: {}.'.format(self.client.hdid), self.client)
         self.client.send_command('ID', self.client.id, self.server.software, self.server.get_version_string())
         self.client.send_command('PN', self.server.get_player_count() - 1, self.server.config['playerlimit'])
@@ -356,12 +347,9 @@ class AOProtocol(asyncio.Protocol):
             if pos not in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
                 return
         msg = text[:256]
-<<<<<<< HEAD
         if self.client.disemvowel:
-                msg = self.client.disemvowel_message(msg)
-=======
+            msg = self.client.disemvowel_message(msg)
         self.client.pos = pos
->>>>>>> 6662646ec7f05c273cae211d760bab7f5b64e2ad
         self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
                                       sfx_delay, button, evidence, flip, ding, color)
         self.client.area.set_next_msg_delay(len(msg))

@@ -20,7 +20,6 @@ from server import logger
 from server.exceptions import ClientError, AreaError
 
 import time
-import re
 
 
 class ClientManager:
@@ -38,6 +37,7 @@ class ClientManager:
             self.pos = ''
             self.is_cm = False
             self.evi_list = []
+            self.disemvowel = False
             self.muted_global = False
             self.muted_adverts = False
             self.is_muted = False
@@ -45,11 +45,7 @@ class ClientManager:
             self.pm_mute = False
             self.mod_call_time = 0
             self.in_rp = False
-<<<<<<< HEAD
-            self.disemvowel = False
-=======
             self.ipid = ipid
->>>>>>> 6662646ec7f05c273cae211d760bab7f5b64e2ad
 
         def send_raw_message(self, msg):
             self.transport.write(msg.encode('utf-8'))
@@ -262,46 +258,6 @@ class ClientManager:
     def remove_client(self, client):
         self.cur_id[client.id] = False
         self.clients.remove(client)
-<<<<<<< HEAD
-
-    def get_targets_by_ip(self, ip):
-        clients = []
-        for client in self.clients:
-            if client.get_ip() == ip:
-                clients.append(client)
-        return clients
-
-    def get_targets_by_hdid(self, hdid):
-        clients = []
-        for client in self.clients:
-            if client.get_hdid() == hdid:
-                clients.append(client)
-        return clients
-
-    def get_targets_by_ooc_name(self, name):
-        clients = []
-        for client in self.clients:
-            if client.name.lower() == name.lower():
-                clients.append(client)
-        return clients
-
-    def get_targets(self, client, target):
-        # check if it's IP but only if mod
-        if client.is_mod:
-            clients = self.get_targets_by_ip(target)
-            if clients:
-                return clients
-        # check if it's a character name in the same area
-        c = client.area.get_target_by_char_name(target)
-        if c:
-            return [c]
-        # check if it's an OOC name
-        ooc = self.get_targets_by_ooc_name(target)
-        if ooc:
-            return ooc
-        return None
-
-=======
 		
     def get_targets(self, client, key, value, local):
         #possible keys: ip, OOC, id, cname, ipid, hdid
@@ -338,7 +294,6 @@ class ClientManager:
         return targets
             
         
->>>>>>> 6662646ec7f05c273cae211d760bab7f5b64e2ad
     def get_muted_clients(self):
         clients = []
         for client in self.clients:
@@ -352,20 +307,3 @@ class ClientManager:
             if client.is_ooc_muted:
                 clients.append(client)
         return clients
-
-    def get_hdid_by_ip(self, ip):
-        hdid = None
-        for client in self.clients:
-            for client in self.clients:
-                if client.get_ip() == ip:
-                    return client.get_hdid()
-        if hdid == None:
-            return None
-
-    def get_ip_by_hdid(self, hdid):
-        ip = None
-        for client in self.clients:
-            if client.get_hdid() == hdid:
-                return client.get_ip()
-        if ip == None:
-            return None
