@@ -65,7 +65,6 @@ class MasterServerClient:
                         await self.send_raw_message('PING#%')
                     if cmd == 'PONG':
                         fl = False
-                        print('lol')
                     elif cmd == b'NOSERV':
                         await self.send_server_info()
             if time.time() - lastping > 5:
@@ -74,7 +73,6 @@ class MasterServerClient:
                 lastping = time.time()
                 fl = True
                 await self.send_raw_message('PING#%')
-                print('amigo')
             await asyncio.sleep(1)
 
     async def send_server_info(self):

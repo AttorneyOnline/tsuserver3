@@ -112,6 +112,7 @@ class TsuServer3:
     def load_config(self):
         with open('config/config.yaml', 'r', encoding = 'utf-8') as cfg:
             self.config = yaml.load(cfg)
+            self.config['motd'] = self.config['motd'].replace('\\n', '\n') 
 
     def load_characters(self):
         with open('config/characters.yaml', 'r', encoding = 'utf-8') as chars:

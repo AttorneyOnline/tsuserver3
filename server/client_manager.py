@@ -116,8 +116,9 @@ class ClientManager:
 
         def send_area_list(self):
             msg = '=== Areas ==='
+            lock = {True: 'LOCKED', False: 'FREE'}
             for i, area in enumerate(self.server.area_manager.areas):
-                msg += '\r\nArea {}: {} (users: {})'.format(i, area.name, len(area.clients))
+                msg += '\r\nArea {}: {} (users: {}) [{}][{}]'.format(i, area.name, len(area.clients), area.status, lock[area.is_locked])
                 if self.area == area:
                     msg += ' [*]'
                 msg += '\r\n[{}]'.format(area.status)
@@ -173,14 +174,7 @@ class ClientManager:
             for i in range (len(self.server.area_manager.areas)):
                  if len(self.server.area_manager.areas[i].clients) > 0:
                     info += '\r\n{}'.format(self.get_area_hdid(i))
-            self.send_host_message(info)
-
-        def send_area_ip(self, area_id):
-            try:
-                info = self.get_area_ip(area_id)
-            except AreaError:
-                raise
-            self.send_host_message(info)				
+            self.send_host_message(info)			
 
         def send_all_area_ip(self):
             info = '== IP List =='
@@ -216,39 +210,9 @@ class ClientManager:
                 raise ClientError('Invalid password.')
 
         def get_ip(self):
-            return self.transport.get_extra_info('peername')[0]
-
-        def get_hdid(self):
-            return self.hdid
+            return self.ipid
 
 
-        def get_area_hdid(self, area_id):
-            info = ''
-            try:
-                area = self.server.area_manager.get_area_by_id(area_id)
-            except AreaError:
-                raise
-            info += '= Area {}: {} =='.format(area.id, area.name)
-            sorted_clients = sorted(area.clients, key=lambda x: x.get_char_name())
-            for c in sorted_clients:
-                info += '\r\n{}'.format(c.get_char_name())
-                if self.is_mod:
-                    info += ' ({})'.format(c.get_hdid())
-            return info
-		
-        def get_area_ip(self, area_id):
-            info = ''
-            try:
-                area = self.server.area_manager.get_area_by_id(area_id)
-            except AreaError:
-                raise
-            info += '= Area {}: {} =='.format(area.id, area.name)
-            sorted_clients = sorted(area.clients, key=lambda x: x.get_char_name())
-            for c in sorted_clients:
-                info += '\r\n{}'.format(c.get_char_name())
-                if self.is_mod:
-                    info += ' ({})'.format(c.get_ip())
-            return info
 		
         def get_char_name(self):
             if self.char_id == -1:

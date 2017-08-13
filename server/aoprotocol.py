@@ -306,7 +306,6 @@ class AOProtocol(asyncio.Protocol):
             return
         if not self.client.area.can_send_message():
             return
-        print(self.client.id)
         if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
                                      self.ArgType.STR,
                                      self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,

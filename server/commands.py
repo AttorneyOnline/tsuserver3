@@ -67,13 +67,13 @@ def ooc_cmd_roll(client, arg):
             if not 1 <= val[0] <= roll_max:
                 raise ArgumentError('Вы должны ввести верхнюю границу броска от 1 до {}.'.format(roll_max))
         except ValueError:
-            raise ArgumentError('Аргумент должен быть цифрой')
+            raise ArgumentError('Wrong argument. Use /roll [<max>] [<num of rolls>]')
     else:
         val = [6]
     if len(val) == 1:
         val.append(1)
     if len(val) > 2:
-        raise ArgumentError('вы ввели слишком много чисел')
+        raise ArgumentError('Too much arguments. Use /roll [<max>] [<num of rolls>]')
     if val[1] > 20 or val[1] < 1:
         raise ArgumentError('вы должны ввести число от 1 до 20')
     roll = ''
@@ -159,8 +159,8 @@ def ooc_cmd_kick(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
-        raise ArgumentError('You must specify a target. Use /kick <id>.')
-    targets = client.server.client_manager.get_targets(client, 'id', int(arg), False)
+        raise ArgumentError('You must specify a target. Use /kick <ipid>.')
+    targets = client.server.client_manager.get_targets(client, 'ipid', int(arg), False)
     if targets:
         for c in targets:
             logger.log_server('Kicked {}.'.format(c.ipid), client)
@@ -211,7 +211,7 @@ def ooc_cmd_mute(client, arg):
     if len(arg) == 0:
         raise ArgumentError('You must specify a target.')
     try:
-        c = client.server.client_manager.get_targets(client, 'id', int(arg), False)[0]
+        c = client.server.client_manager.get_targets(client, 'ipid', int(arg), False)[0]
         c.is_muted = True
         client.send_host_message('{} existing client(s).'.format(c.get_char_name()))
     except:
@@ -368,14 +368,11 @@ def ooc_cmd_pm(client, arg):
     try:
         if key == 'id':
             msg = ' '.join(args[1:])
-            print(1, msg)
         else:
             if key == 'cname':
                 msg = arg[len(targets[0].get_char_name()) + 1:]
-            print(2, msg)
             if key == 'OOC':
                 msg = arg[len(targets[0].name) + 1:]
-            print(3, msg)
     except:
         raise ArgumentError('Not enough arguments. Use /pm <target> <message>.')
     c = targets[0]
