@@ -205,7 +205,7 @@ def ooc_cmd_status(client, arg):
             raise
 
 
- def ooc_cmd_pm(client, arg):
+def ooc_cmd_pm(client, arg):
         args = arg.split()
         if len(args) < 2:
             raise ArgumentError('Not enough arguments. Use /pm <target> <message>.')
