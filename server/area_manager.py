@@ -29,7 +29,7 @@ class AreaManager:
         def __init__(self, area_id, server, name, background, bg_lock, evidence_mod = 'FFA', locking_allowed = False, iniswap_allowed = True):
             self.iniswap_allowed = iniswap_allowed
             self.clients = set()
-            self.invite_list = set()
+            self.invite_list = {}
             self.id = area_id
             self.name = name
             self.background = background
@@ -73,7 +73,7 @@ class AreaManager:
         
         def unlock(self):
             self.is_locked = False
-            self.invite_list = set()
+            self.invite_list = {}
         
         def is_char_available(self, char_id):
             return char_id not in [x.char_id for x in self.clients]

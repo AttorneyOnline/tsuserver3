@@ -521,7 +521,7 @@ def ooc_cmd_area_kick(client, arg):
         raise ClientError('You must specify a target. Use /invite <id>')
     try:
         c = client.server.client_manager.get_targets(client, 'id', int(arg), False)[0]
-        targets = c.server.client_manager.get_targets(client, 'ipid', c.ipid, True)
+        targets = client.server.client_manager.get_targets(client, 'ipid', c.ipid, True)
         for client in targets:
             client.change_area(0)
         invite_list.pop(c.ipid)
