@@ -20,14 +20,14 @@ from server import logger
 from server.exceptions import ClientError, AreaError
 
 import time
-import re
 
 
 class ClientManager:
     class Client:
-        def __init__(self, server, transport, user_id):
+        def __init__(self, server, transport, user_id, ipid):
             self.transport = transport
             self.hdid = ''
+            self.pm_mute = False
             self.id = user_id
             self.char_id = -1
             self.area = server.area_manager.default_area()
@@ -35,6 +35,9 @@ class ClientManager:
             self.name = ''
             self.is_mod = False
             self.pos = ''
+            self.is_cm = False
+            self.evi_list = []
+            self.disemvowel = False
             self.muted_global = False
             self.muted_adverts = False
             self.is_muted = False
@@ -42,7 +45,7 @@ class ClientManager:
             self.pm_mute = False
             self.mod_call_time = 0
             self.in_rp = False
-            self.disemvowel = False
+            self.ipid = ipid
 
         def send_raw_message(self, msg):
             self.transport.write(msg.encode('utf-8'))
@@ -67,6 +70,10 @@ class ClientManager:
                 raise ClientError('Invalid Character ID.')
             if not force and not self.area.is_char_available(char_id):
                 raise ClientError('Character not available.')
+            elif not self.area.is_char_available(char_id):
+                for client in self.area.clients:
+                    if client.char_id == char_id:
+                        client.char_select()
             old_char = self.get_char_name()
             self.char_id = char_id
             self.send_command('PV', self.id, 'CID', self.char_id)
@@ -82,7 +89,7 @@ class ClientManager:
         def change_area(self, area):
             if self.area == area:
                 raise ClientError('You are already in this area.')
-            if area.is_locked and not self.is_mod:
+            if area.is_locked and not self.is_mod and not self.ipid in self.area.invite_list:
                 self.send_host_message("That area is locked!")
                 return
             old_area = self.area
@@ -106,52 +113,57 @@ class ClientManager:
             self.send_command('HP', 1, self.area.hp_def)
             self.send_command('HP', 2, self.area.hp_pro)
             self.send_command('BN', self.area.background)
-            self.send_command('LE', *self.area.get_evidence_list())
+            self.send_command('LE', *self.area.get_evidence_list(self))
 
         def send_area_list(self):
             msg = '=== Areas ==='
+            lock = {True: '[LOCKED]', False: ''}
             for i, area in enumerate(self.server.area_manager.areas):
-                msg += '\r\nArea {}: {} (users: {})'.format(i, area.name, len(area.clients))
-                if self.area == area:
-                    msg += ' [*]'
-                msg += '\r\n[{}]'.format(area.status)
-                if area.is_locked:
-                    msg += '[LOCKED]'
-            self.send_host_message(msg)
-
-        def send_limited_area_list(self):
-            msg = '=== Areas ==='
-            for i, area in enumerate(self.server.area_manager.areas):
-                msg += '\r\nArea {}: {}'.format(i, area.name)
+                owner = 'FREE'
+                if area.owned:
+                    for client in area.clients:
+                        if client.is_cm:
+                            owner = 'MASTER: {}'.format(client.get_char_name())
+                            break
+                msg += '\r\nArea {}: {} (users: {}) [{}][{}]{}'.format(i, area.name, len(area.clients), area.status, owner, lock[area.is_locked])
                 if self.area == area:
                     msg += ' [*]'
             self.send_host_message(msg)
 
-        def get_area_info(self, area_id):
+        def get_area_info(self, area_id, mods):
             info = ''
             try:
                 area = self.server.area_manager.get_area_by_id(area_id)
             except AreaError:
                 raise
             info += '= Area {}: {} =='.format(area.id, area.name)
-            sorted_clients = sorted(area.clients, key=lambda x: x.get_char_name())
+            sorted_clients = []
+            for client in area.clients:
+                if (not mods) or client.is_mod:
+                    sorted_clients.append(client)
+            sorted_clients = sorted(sorted_clients, key=lambda x: x.get_char_name())
             for c in sorted_clients:
-                info += '\r\n{}'.format(c.get_char_name())
+                info += '\r\n[{}] {}'.format(c.id, c.get_char_name())
+                if self.is_mod:
+                    info += ' ({})'.format(c.ipid)
             return info
 
-        def send_area_info(self, area_id):
-            try:
-                info = self.get_area_info(area_id)
-            except AreaError:
-                raise
-            self.send_host_message(info)
-
-        def send_all_area_info(self):
-            info = '== Area List =='
-            for i in range(len(self.server.area_manager.areas)):
-                #print(len(i.clients))
-                if len(self.server.area_manager.areas[i].clients) > 0:
-                    info += '\r\n{}'.format(self.get_area_info(i))
+        def send_area_info(self, area_id, mods): #if area_id is -1 then return all areas. If mods is True then return only mods
+            info = ''
+            if area_id == -1:
+                # all areas info
+                info = '== Area List =='
+                for i in range(len(self.server.area_manager.areas)):
+                    try:
+                        if len(self.server.area_manager.areas[i].clients) > 0:
+                            info += '\r\n{}'.format(self.get_area_info(i, mods))
+                    except AreaError:
+                        pass
+            else:
+                try:
+                    info = self.get_area_info(area_id, mods)
+                except AreaError:
+                    raise
             self.send_host_message(info)
 
         def send_area_hdid(self, area_id):
@@ -166,14 +178,7 @@ class ClientManager:
             for i in range (len(self.server.area_manager.areas)):
                  if len(self.server.area_manager.areas[i].clients) > 0:
                     info += '\r\n{}'.format(self.get_area_hdid(i))
-            self.send_host_message(info)
-
-        def send_area_ip(self, area_id):
-            try:
-                info = self.get_area_ip(area_id)
-            except AreaError:
-                raise
-            self.send_host_message(info)				
+            self.send_host_message(info)			
 
         def send_all_area_ip(self):
             info = '== IP List =='
@@ -191,7 +196,7 @@ class ClientManager:
             self.send_command('HP', 1, self.area.hp_def)
             self.send_command('HP', 2, self.area.hp_pro)
             self.send_command('BN', self.area.background)
-            self.send_command('LE', *self.area.get_evidence_list())
+            self.send_command('LE', *self.area.get_evidence_list(self))
             self.send_command('MM', 1)
             self.send_command('OPPASS', fantacrypt.fanta_encrypt(self.server.config['guardpass']))
             self.send_command('DONE')
@@ -209,50 +214,9 @@ class ClientManager:
                 raise ClientError('Invalid password.')
 
         def get_ip(self):
-            return self.transport.get_extra_info('peername')[0]
+            return self.ipid
 
-        def get_hdid(self):
-            return self.hdid
 
-        def get_area_info(self, area_id):
-            info = ''
-            try:
-                area = self.server.area_manager.get_area_by_id(area_id)
-            except AreaError:
-                raise
-            info += '= Area {}: {} =='.format(area.id, area.name)
-            sorted_clients = sorted(area.clients, key=lambda x: x.get_char_name())
-            for c in sorted_clients:
-                info += '\r\n{}'.format(c.get_char_name())
-            return info
-
-        def get_area_hdid(self, area_id):
-            info = ''
-            try:
-                area = self.server.area_manager.get_area_by_id(area_id)
-            except AreaError:
-                raise
-            info += '= Area {}: {} =='.format(area.id, area.name)
-            sorted_clients = sorted(area.clients, key=lambda x: x.get_char_name())
-            for c in sorted_clients:
-                info += '\r\n{}'.format(c.get_char_name())
-                if self.is_mod:
-                    info += ' ({})'.format(c.get_hdid())
-            return info
-		
-        def get_area_ip(self, area_id):
-            info = ''
-            try:
-                area = self.server.area_manager.get_area_by_id(area_id)
-            except AreaError:
-                raise
-            info += '= Area {}: {} =='.format(area.id, area.name)
-            sorted_clients = sorted(area.clients, key=lambda x: x.get_char_name())
-            for c in sorted_clients:
-                info += '\r\n{}'.format(c.get_char_name())
-                if self.is_mod:
-                    info += ' ({})'.format(c.get_ip())
-            return info
 		
         def get_char_name(self):
             if self.char_id == -1:
@@ -276,55 +240,60 @@ class ClientManager:
 
     def __init__(self, server):
         self.clients = set()
-        self.cur_id = 0
         self.server = server
+        self.cur_id = [False] * self.server.config['playerlimit']
+        self.clients_list = []
 
     def new_client(self, transport):
-        c = self.Client(self.server, transport, self.cur_id)
+        cur_id = 0
+        for i in range(self.server.config['playerlimit']):
+                if not self.cur_id[i]:
+                    cur_id = i
+                    break
+        c = self.Client(self.server, transport, cur_id, self.server.get_ipid(transport.get_extra_info('peername')[0]))
         self.clients.add(c)
-        self.cur_id += 1
+        self.cur_id[cur_id] = True
         return c
 
     def remove_client(self, client):
+        self.cur_id[client.id] = False
         self.clients.remove(client)
-
-    def get_targets_by_ip(self, ip):
-        clients = []
-        for client in self.clients:
-            if client.get_ip() == ip:
-                clients.append(client)
-        return clients
-
-    def get_targets_by_hdid(self, hdid):
-        clients = []
-        for client in self.clients:
-            if client.get_hdid() == hdid:
-                clients.append(client)
-        return clients
-
-    def get_targets_by_ooc_name(self, name):
-        clients = []
-        for client in self.clients:
-            if client.name.lower() == name.lower():
-                clients.append(client)
-        return clients
-
-    def get_targets(self, client, target):
-        # check if it's IP but only if mod
-        if client.is_mod:
-            clients = self.get_targets_by_ip(target)
-            if clients:
-                return clients
-        # check if it's a character name in the same area
-        c = client.area.get_target_by_char_name(target)
-        if c:
-            return [c]
-        # check if it's an OOC name
-        ooc = self.get_targets_by_ooc_name(target)
-        if ooc:
-            return ooc
-        return None
-
+		
+    def get_targets(self, client, key, value, local):
+        #possible keys: ip, OOC, id, cname, ipid, hdid
+        areas = None
+        if local:
+            areas = [client.area]
+        else:
+            areas = client.server.area_manager.areas
+        targets = []
+        for area in areas:
+            if key == 'ip':
+                for client in area.clients:
+                    if value.lower().startswith(client.get_ip().lower()):
+                        targets.append(client)
+            if key == 'OOC':
+                for client in area.clients:
+                    if value.lower().startswith(client.name.lower()):
+                        targets.append(client)
+            if key == 'cname':
+                for client in area.clients:
+                    if value.lower().startswith(client.get_char_name().lower()):
+                        targets.append(client)
+            if key == 'id':
+                for client in area.clients:
+                    if client.id == value:
+                        targets.append(client)
+            if key == 'ipid':
+                for client in area.clients:
+                    if client.ipid == value:
+                        targets.append(client)
+            if key == 'all':
+                for key in ['ip', 'OOC', 'id', 'cname', 'ipid', 'hdid']:
+                    targets += self.get_targets(client, key, value, local)
+        return targets
+            
+        
     def get_muted_clients(self):
         clients = []
         for client in self.clients:
@@ -338,20 +307,3 @@ class ClientManager:
             if client.is_ooc_muted:
                 clients.append(client)
         return clients
-
-    def get_hdid_by_ip(self, ip):
-        hdid = None
-        for client in self.clients:
-            for client in self.clients:
-                if client.get_ip() == ip:
-                    return client.get_hdid()
-        if hdid == None:
-            return None
-
-    def get_ip_by_hdid(self, hdid):
-        ip = None
-        for client in self.clients:
-            if client.get_hdid() == hdid:
-                return client.get_ip()
-        if ip == None:
-            return None

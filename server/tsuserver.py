@@ -18,6 +18,7 @@
 import asyncio
 
 import yaml
+import json
 
 from server import logger
 from server.aoprotocol import AOProtocol
@@ -31,24 +32,30 @@ from server.masterserverclient import MasterServerClient
 
 class TsuServer3:
     def __init__(self):
+        self.config = None
+        self.allowed_iniswaps = None
+        self.load_config()
+        self.load_iniswaps()
         self.client_manager = ClientManager(self)
         self.area_manager = AreaManager(self)
         self.ban_manager = BanManager()
         self.software = 'tsuserver3'
+        self.version = 'tsuserver3dev'
         self.release = 3
         self.major_version = 1
         self.minor_version = 1
+        self.ipid_list = {}
+        self.hdid_list = {}
         self.char_list = None
         self.char_pages_ao1 = None
         self.music_list = None
         self.music_list_ao2 = None
         self.music_pages_ao1 = None
         self.backgrounds = None
-        self.config = None
-        self.load_config()
         self.load_characters()
         self.load_music()
         self.load_backgrounds()
+        self.load_ids()
         self.district_client = None
         self.ms_client = None
         self.rp_mode = False
@@ -105,24 +112,58 @@ class TsuServer3:
         return len(self.client_manager.clients)
 
     def load_config(self):
-        with open('config/config.yaml', 'r') as cfg:
+        with open('config/config.yaml', 'r', encoding = 'utf-8') as cfg:
             self.config = yaml.load(cfg)
+            self.config['motd'] = self.config['motd'].replace('\\n', ' \n') 
 
     def load_characters(self):
-        with open('config/characters.yaml', 'r') as chars:
+        with open('config/characters.yaml', 'r', encoding = 'utf-8') as chars:
             self.char_list = yaml.load(chars)
         self.build_char_pages_ao1()
 
     def load_music(self):
-        with open('config/music.yaml', 'r') as music:
+        with open('config/music.yaml', 'r', encoding = 'utf-8') as music:
             self.music_list = yaml.load(music)
         self.build_music_pages_ao1()
         self.build_music_list_ao2()
         
-
+    def load_ids(self):
+        self.ipid_list = {}
+        self.hdid_list = {}
+        #load ipids
+        try:
+            with open('storage/ip_ids.json', 'r', encoding = 'utf-8') as whole_list:
+                self.ipid_list = json.loads(whole_list.read())
+        except:
+            pass
+        #load hdids
+        try:
+            with open('storage/hd_ids.json', 'r', encoding = 'utf-8') as whole_list:
+                self.hdid_list = json.loads(whole_list.read())
+        except:
+            pass
+           
+    def dump_ipids(self):
+        with open('storage/ip_ids.json', 'w') as whole_list:
+            json.dump(self.ipid_list, whole_list)
+            
+    def dump_hdids(self):
+        with open('storage/hd_ids.json', 'w') as whole_list:
+            json.dump(self.hdid_list, whole_list)
+         
+    def get_ipid(self, ip):
+        if not (ip in self.ipid_list):
+            self.ipid_list[ip] = len(self.ipid_list)
+            self.dump_ipids()
+        return self.ipid_list[ip]
+         
     def load_backgrounds(self):
-        with open('config/backgrounds.yaml', 'r') as bgs:
+        with open('config/backgrounds.yaml', 'r', encoding = 'utf-8') as bgs:
             self.backgrounds = yaml.load(bgs)
+            
+    def load_iniswaps(self):
+        with open('config/iniswaps.yaml', 'r', encoding = 'utf-8') as bgs:
+            self.allowed_iniswaps = yaml.load(bgs)
 
     def build_char_pages_ao1(self):
         self.char_pages_ao1 = [self.char_list[x:x + 10] for x in range(0, len(self.char_list), 10)]

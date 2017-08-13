@@ -7,6 +7,7 @@ guardpass: guard
 modpass: mod
 
 motd: Welcome to my server!
+help_msg: TODO
 
 use_district: false
 district_ip: 127.0.0.1
@@ -20,7 +21,4 @@ masterserver_name: My First Server
 masterserver_description: This is my flashy new server
 
 timeout: 250
-debug: false
-
-area_locking_enabled: false
-rp_mode_enabled: false
+debug: true
