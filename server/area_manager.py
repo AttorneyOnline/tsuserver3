@@ -178,14 +178,14 @@ class AreaManager:
         with open('config/areas.yaml', 'r') as chars:
             areas = yaml.load(chars)
         for item in areas:
-            if 'ebidence_mod' not in item:
-                item['ebidence_mod'] = 'FFA'
+            if 'evidence_mod' not in item:
+                item['evidence_mod'] = 'FFA'
             if 'locking-allowed' not in item:
                 item['locking-allowed'] = False
             if 'iniswap-allowed' not in item:
                 item['iniswap-allowed'] = True
             self.areas.append(
-                self.Area(self.cur_id, self.server, item['area'], item['background'], item['bglock'], item['ebidence_mod'], item['locking-allowed'], item['iniswap-allowed']))
+                self.Area(self.cur_id, self.server, item['area'], item['background'], item['bglock'], item['evidence_mod'], item['locking-allowed'], item['iniswap-allowed']))
             self.cur_id += 1
 
     def default_area(self):
