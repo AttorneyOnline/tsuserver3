@@ -712,3 +712,17 @@ def ooc_cmd_refresh(client, arg):
             client.send_host_message('You have reloaded the server.')
         except:
             ServerError
+			
+def ooc_cmd_vote(client, arg):
+    if len(arg) > 0:
+        try:
+            hdid = client.get_hdid()
+            ip = client.server.client_manager.get_ip_by_hdid(hdid)
+            if client.server.serverpoll_manager.has_voted(hdid, ip):
+                raise ClientError('You have already voted.')
+            client.vote_poll(arg)
+            client.server.serverpoll_manager.add_votelist(hdid, ip)
+            client.send_host_message('Thank you for voting.')
+            logger.log_serverpoll('[SERVERPOLL][{}][{}] has voted {}.'.format(ip, hdid, arg), client)
+        except ClientError:
+            raise
