@@ -180,12 +180,12 @@ class AreaManager:
         for item in areas:
             if 'evidence_mod' not in item:
                 item['evidence_mod'] = 'FFA'
-            if 'locking-allowed' not in item:
-                item['locking-allowed'] = False
+            if 'locking_allowed' not in item:
+                item['locking_allowed'] = False
             if 'iniswap-allowed' not in item:
                 item['iniswap-allowed'] = True
             self.areas.append(
-                self.Area(self.cur_id, self.server, item['area'], item['background'], item['bglock'], item['evidence_mod'], item['locking-allowed'], item['iniswap-allowed']))
+                self.Area(self.cur_id, self.server, item['area'], item['background'], item['bglock'], item['evidence_mod'], item['locking_allowed'], item['iniswap-allowed']))
             self.cur_id += 1
 
     def default_area(self):
