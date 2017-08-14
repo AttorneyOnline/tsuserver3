@@ -61,7 +61,19 @@ Install PyYAML by doing
     - Flips a coin
 * **currentmusic** 
     - Displays the current music
-
+* **evi_swap** <id1> <id2>
+    - Swaps <id1> and <id2> evidences.
+* **cm**
+    - Makes you a CM of this area.
+### CM Commands
+* **area_lock**
+    - Locks your area.
+* **area_unlock**
+    - Unlocks your area.
+* **invite** "ID"
+    - Adds target in invite list of your area.
+* **area_kick** "ID"
+    - Kicks target and all his(same for all genders) multi-accs from your area and remove him from invite-list.
 ### Mod Commands
 * **login** "Password"
 * **gm** "Message" 
@@ -74,42 +86,37 @@ Install PyYAML by doing
     - Displays the last judge actions in the current area
 * **announce** "Message" 
     - Sends a serverwide announcement
-* **getip**
-    - Gets the IPs of everyone in the current area
-* **getips**
-    - Gets the IPs of everyone in every area
-* **gethdid**
-    - Gets the HDIDs of everyone in the current area
-* **gethdids**
-    - Gets the HDIDs of everyone in every area
-* **hdid** "Target"
-    - Gets the HDID of specific characters
-* **charselect** "Target"
-    - Kicks a player back to the character select screen
-* **kick** "Target" 
-    - Kicks the target, can be IP or character name
-* **ban** "IP" 
-    - Bans the IP
-* **banhdid** "HDID"
-    - Bans the HDID
-* **unban** "IP" 
-    - Unbans the specified IP
-* **unbanhdid** "HDID"
-    - Unbans the specified HDID
+* **charselect** "ID"
+    - Kicks a player back to the character select screen. If no ID was entered then target yourself.
+* **kick** "IPID" 
+    - Kicks the targets with this IPID.
+* **ban** "IPID" 
+    - Bans the IPID (hdid is linked to ipid so all bans happens in a same time).
+* **unban** "IPID" 
+    - Unbans the specified IPID .
 * **mute** "Target" 
     - Mutes the target from all IC actions, can be IP or Character name
 * **unmute** "Target","all" 
     - Unmutes the target, "all" will unmute all muted clients
 * **oocmute** "Target" 
-    - Mutes the target from all OOC actions, can be OOC, IP or Character name
+    - Mutes the target from all OOC actions via OOC-name.
 * **oocunmute** "Target" 
-    - Unmutes the target, "all" will unmute all muted clients
+    - Unmutes the target.
 * **bglock** 
     - Toggles the background lock in the current area
 * **disemvowel** "Target"
     - Removes the vowels from everything said by the target
 * **undisemvowel** "Target"
     - Lifts the disemvowel curse from the target
+* **undj** "target"
+    - Mutes the target from changing music. 
+* **unundj** "target"
+    - Undo previous command.
+* **evidence_mod** <MOD>
+    - Changes evidence_mod in this area. Possible values: FFA, CM. In work: HiddenCM, Mod
+* **allow_iniswap**
+    - Toggle allow_iniswap var in this area. 
+    - Either if iniswap at all is forbidden you can configure all-time allowed iniswaps in iniswaps.yaml 
 
 ## License
 

@@ -2,21 +2,21 @@
   background: gs4
   bglock: true
   evidence_mod: FFA
-  locking-allowed: false
+  locking_allowed: false
 - area: Courtroom 1
   background: gs5
   bglock: false
   evidence_mod: CM
-  locking-allowed: false
+  locking_allowed: false
 - area: Courtroom 2
   background: gs4
   bglock: false
   evidence_mod: CM
-  locking-allowed: false
+  locking_allowed: false
 - area: Courtroom 2
   background: gs4
   bglock: false
   evidence_mod: CM
-  locking-allowed: false
+  locking_allowed: false
   
   
