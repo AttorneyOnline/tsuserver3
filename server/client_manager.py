@@ -34,6 +34,7 @@ class ClientManager:
             self.server = server
             self.name = ''
             self.is_mod = False
+            self.is_dj = True
             self.pos = ''
             self.is_cm = False
             self.evi_list = []
@@ -46,6 +47,11 @@ class ClientManager:
             self.mod_call_time = 0
             self.in_rp = False
             self.ipid = ipid
+            
+            #music flood-guard stuff
+            self.mus_counter = 0
+            self.mute_time = 0
+            self.mus_change_time = [x * self.server.config['music_change_floodguard']['interval_length'] for x in range(self.server.config['music_change_floodguard']['times_per_interval'])]
 
         def send_raw_message(self, msg):
             self.transport.write(msg.encode('utf-8'))
@@ -79,6 +85,25 @@ class ClientManager:
             self.send_command('PV', self.id, 'CID', self.char_id)
             logger.log_server('[{}]Changed character from {} to {}.'
                               .format(self.area.id, old_char, self.get_char_name()), self)
+
+        def change_music_cd(self):
+            if self.is_mod or self.is_cm:
+                return 0
+            if self.mute_time:
+                if time.time() - self.mute_time < self.server.config['music_change_floodguard']['mute_length']:
+                    return self.server.config['music_change_floodguard']['mute_length'] - (time.time() - self.mute_time)
+                else:
+                    self.mute_time = 0
+            times_per_interval = self.server.config['music_change_floodguard']['times_per_interval']
+            interval_length = self.server.config['music_change_floodguard']['interval_length']
+            if time.time() - self.mus_change_time[(self.mus_counter - times_per_interval + 1) % times_per_interval] < interval_length:
+                self.mute_time = time.time()
+                return self.server.config['music_change_floodguard']['mute_length']
+            self.mus_counter = (self.mus_counter + 1) % times_per_interval
+            self.mus_change_time[self.mus_counter] = time.time()
+            return 0
+                
+                
 
         def reload_character(self):
             try:
@@ -121,10 +146,9 @@ class ClientManager:
             for i, area in enumerate(self.server.area_manager.areas):
                 owner = 'FREE'
                 if area.owned:
-                    for client in area.clients:
-                        if client.is_cm:
-                            owner = 'MASTER: {}'.format(client.get_char_name())
-                            break
+                    for client in [x for x in area.clients if x.is_cm]:
+                        owner = 'MASTER: {}'.format(client.get_char_name())
+                        break
                 msg += '\r\nArea {}: {} (users: {}) [{}][{}]{}'.format(i, area.name, len(area.clients), area.status, owner, lock[area.is_locked])
                 if self.area == area:
                     msg += ' [*]'
@@ -148,17 +172,15 @@ class ClientManager:
                     info += ' ({})'.format(c.ipid)
             return info
 
-        def send_area_info(self, area_id, mods): #if area_id is -1 then return all areas. If mods is True then return only mods
+        def send_area_info(self, area_id, mods): 
+            #if area_id is -1 then return all areas. If mods is True then return only mods
             info = ''
             if area_id == -1:
                 # all areas info
                 info = '== Area List =='
                 for i in range(len(self.server.area_manager.areas)):
-                    try:
-                        if len(self.server.area_manager.areas[i].clients) > 0:
-                            info += '\r\n{}'.format(self.get_area_info(i, mods))
-                    except AreaError:
-                        pass
+                    if len(self.server.area_manager.areas[i].clients) > 0:
+                        info += '\r\n{}'.format(self.get_area_info(i, mods))
             else:
                 try:
                     info = self.get_area_info(area_id, mods)
@@ -259,7 +281,7 @@ class ClientManager:
         self.cur_id[client.id] = False
         self.clients.remove(client)
 		
-    def get_targets(self, client, key, value, local):
+    def get_targets(self, client, key, value, local = False):
         #possible keys: ip, OOC, id, cname, ipid, hdid
         areas = None
         if local:

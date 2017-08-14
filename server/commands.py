@@ -47,33 +47,6 @@ def ooc_cmd_bg(client, arg):
         raise
     client.area.send_host_message('{} changed the background to {}.'.format(client.get_char_name(), arg))
     logger.log_server('[{}][{}]Changed background to {}'.format(client.area.id, client.get_char_name(), arg), client)
-    
-def ooc_cmd_ooc_mute(client, arg)
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
-    if len(arg) == 0:
-        raise ArgumentError('You must specify a target. Use /ooc_mute <OOC-name>.')
-    try:
-        targets = client.server.client_manager.get_targets(client, 'OOC', arg, False)
-    if not targets:
-        raise ArgumentError('Targets not found. Use /ooc_mute <OOC-name>.')
-    for target in targets:
-        target.is_ooc_muted = True
-    client.send_host_message('Muted {} existing client(s).'.format(len(targets)))
-
-def ooc_cmd_ooc_unmute(client, arg)
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
-    if len(arg) == 0:
-        raise ArgumentError('You must specify a target. Use /ooc_mute <OOC-name>.')
-    try:
-        targets = client.server.client_manager.get_targets(client, 'id', arg, False)
-    if not targets:
-        raise ArgumentError('Target not found. Use /ooc_mute <OOC-name>.')
-    for target in targets:
-        target.is_ooc_muted = False
-    client.send_host_message('Unmuted {} existing client(s).'.format(len(targets)))
-
 
 def ooc_cmd_bglock(client,arg):
     if not client.is_mod:
@@ -248,39 +221,6 @@ def ooc_cmd_unban(client, arg):
     logger.log_server('Unbanned {}.'.format(arg), client)
     client.send_host_message('Unbanned {}'.format(arg))
 
-def ooc_cmd_disemvowel(client, arg):
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
-    elif len(arg) == 0:
-        raise ArgumentError('You must specify a target.')
-    try:
-        targets = client.server.client_manager.get_targets(client, 'id', int(arg))
-    except:
-        raise ArgumentError('You must specify a target. Use /disemvowel <id>.')
-    if targets:
-        for c in targets:
-            logger.log_server('Disemvowelling {}.'.format(c.get_ip()), client)
-            c.disemvowel = True
-        client.send_host_message('Disemvowelled {} existing client(s).'.format(len(targets)))
-    else:
-        client.send_host_message('No targets found.')
-
-def ooc_cmd_undisemvowel(client, arg):
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
-    elif len(arg) == 0:
-        raise ArgumentError('You must specify a target.')
-    try:
-        targets = client.server.client_manager.get_targets(client, 'id', int(arg))
-    except:
-        raise ArgumentError('You must specify a target. Use /disemvowel <id>.')
-    if targets:
-        for c in targets:
-            logger.log_server('Undisemvowelling {}.'.format(c.get_ip()), client)
-            c.disemvowel = False
-        client.send_host_message('Undisemvowelled {} existing client(s).'.format(len(targets)))
-    else:
-        client.send_host_message('No targets found.')
 
 def ooc_cmd_play(client, arg):
     if not client.is_mod:
@@ -492,7 +432,7 @@ def ooc_cmd_reload(client, arg):
     except ClientError:
         raise
     client.send_host_message('Character reloaded.') 
-               
+    
 def ooc_cmd_randomchar(client, arg):
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
@@ -588,3 +528,93 @@ def ooc_cmd_area_kick(client, arg):
         invite_list.pop(c.ipid)
     except:
         raise ClientError('You must specify a target. Use /area_kick <id>')
+
+    
+def ooc_cmd_ooc_mute(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a target. Use /ooc_mute <OOC-name>.')
+    targets = client.server.client_manager.get_targets(client, 'OOC', arg, False)
+    if not targets:
+        raise ArgumentError('Targets not found. Use /ooc_mute <OOC-name>.')
+    for target in targets:
+        target.is_ooc_muted = True
+    client.send_host_message('Muted {} existing client(s).'.format(len(targets)))
+
+def ooc_cmd_ooc_unmute(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a target. Use /ooc_mute <OOC-name>.')
+    targets = client.server.client_manager.get_targets(client, 'id', arg, False)
+    if not targets:
+        raise ArgumentError('Target not found. Use /ooc_mute <OOC-name>.')
+    for target in targets:
+        target.is_ooc_muted = False
+    client.send_host_message('Unmuted {} existing client(s).'.format(len(targets)))
+
+def ooc_cmd_disemvowel(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    elif len(arg) == 0:
+        raise ArgumentError('You must specify a target.')
+    try:
+        targets = client.server.client_manager.get_targets(client, 'id', int(arg), False)
+    except:
+        raise ArgumentError('You must specify a target. Use /disemvowel <id>.')
+    if targets:
+        for c in targets:
+            logger.log_server('Disemvowelling {}.'.format(c.get_ip()), client)
+            c.disemvowel = True
+        client.send_host_message('Disemvowelled {} existing client(s).'.format(len(targets)))
+    else:
+        client.send_host_message('No targets found.')
+
+def ooc_cmd_undisemvowel(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    elif len(arg) == 0:
+        raise ArgumentError('You must specify a target.')
+    try:
+        targets = client.server.client_manager.get_targets(client, 'id', int(arg), False)
+    except:
+        raise ArgumentError('You must specify a target. Use /disemvowel <id>.')
+    if targets:
+        for c in targets:
+            logger.log_server('Undisemvowelling {}.'.format(c.get_ip()), client)
+            c.disemvowel = False
+        client.send_host_message('Undisemvowelled {} existing client(s).'.format(len(targets)))
+    else:
+        client.send_host_message('No targets found.')
+
+def ooc_cmd_undj(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a target. Use /undj <id>.')
+    try:
+        targets = client.server.client_manager.get_targets(client, 'id', int(arg), False)
+    except:
+         raise ArgumentError('You must enter a number. Use /undj <id>.')
+    if not targets:
+        raise ArgumentError('Target not found. Use /undj <id>.')
+    for target in targets:
+        target.is_dj = False
+    client.send_host_message('Undj\'d {}.'.format(targets[0].get_char_name()))
+
+def ooc_cmd_unundj(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a target. Use /unundj <id>.')
+    try:
+        targets = client.server.client_manager.get_targets(client, 'id', int(arg), False)
+    except:
+         raise ArgumentError('You must enter a number. Use /unundj <id>.')
+    if not targets:
+        raise ArgumentError('Target not found. Use /undj <id>.')
+    for target in targets:
+        target.is_dj = True
+    client.send_host_message('Unundj\'d {}.'.format(targets[0].get_char_name()))
+    

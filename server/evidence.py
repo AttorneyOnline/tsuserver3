@@ -28,7 +28,7 @@ class EvidenceList:
         if client.area.evidence_mod == 'FFA':
             pass
         if client.area.evidence_mod == 'Mods':
-            #TODO ebidences only for mods
+            #TODO evidences only for mods
             return
         if client.area.evidence_mod == 'CM':
             if not client.is_cm and not client.is_mod:
@@ -42,7 +42,7 @@ class EvidenceList:
         if client.area.evidence_mod == 'FFA':
             pass
         if client.area.evidence_mod == 'Mods':
-            #TODO ebidences only for mods
+            #TODO evidences only for mods
             return
         if client.area.evidence_mod == 'CM':
             if not client.is_cm and not client.is_mod:
@@ -63,7 +63,7 @@ class EvidenceList:
         if client.area.evidence_mod == 'FFA':
             pass
         if client.area.evidence_mod == 'Mods':
-            #TODO ebidences only for mods
+            #TODO evidences only for mods
             return
         if client.area.evidence_mod == 'CM':
             if not client.is_cm and not client.is_mod:
@@ -77,7 +77,7 @@ class EvidenceList:
         if client.area.evidence_mod == 'FFA':
             pass
         if client.area.evidence_mod == 'Mods':
-            #TODO ebidences only for mods
+            #TODO evidences only for mods
             return
         if client.area.evidence_mod == 'CM':
             if not client.is_cm and not client.is_mod:

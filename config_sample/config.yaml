@@ -22,3 +22,8 @@ masterserver_description: This is my flashy new server
 
 timeout: 250
 debug: true
+
+music_change_floodguard:
+  times_per_interval: 3
+  interval_length: 20
+  mute_length: 180
