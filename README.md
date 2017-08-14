@@ -116,7 +116,7 @@ Install PyYAML by doing
     - Changes evidence_mod in this area. Possible values: FFA, CM. In work: HiddenCM, Mod
 * **allow_iniswap**
     - Toggle allow_iniswap var in this area. 
-    - Either if iniswap at all is forbidden you can configure all-time allowed iniswaps in iniswaps.yaml 
+    - Even if iniswap at all is forbidden you can configure all-time allowed iniswaps in *iniswaps.yaml*
 
 ## License
 
