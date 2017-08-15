@@ -714,15 +714,42 @@ def ooc_cmd_refresh(client, arg):
             ServerError
 			
 def ooc_cmd_vote(client, arg):
+    if len(arg) == 0:
+        message = 'Current polls:'
+        polls = client.server.serverpoll_manager.show_poll_list()
+        for x, poll in enumerate(polls):
+            message += '\n{}. {}'.format(x + 1, poll)
+        message += '\nEnter the number of the poll in which you would like to vote in. Enter 0 to cancel.'
+        client.send_host_message(message)
+        client.voting += 1
+    else:
+        client.send_host_message('This command doesn\'t take arguments')
+
+def ooc_cmd_votelist(client, arg):
     if len(arg) > 0:
-        try:
-            hdid = client.get_hdid()
-            ip = client.server.client_manager.get_ip_by_hdid(hdid)
-            if client.server.serverpoll_manager.has_voted(hdid, ip):
-                raise ClientError('You have already voted.')
-            client.vote_poll(arg)
-            client.server.serverpoll_manager.add_votelist(hdid, ip)
-            client.send_host_message('Thank you for voting.')
-            logger.log_serverpoll('[SERVERPOLL][{}][{}] has voted {}.'.format(ip, hdid, arg), client)
-        except ClientError:
-            raise
+        client.send_host_message('This command doesn\'t take arguments')
+    else:
+        polls = client.server.serverpoll_manager.show_poll_list()
+        if not polls:
+            client.send_host_message('There are currently no polls.')
+        else:
+            message = 'Current polls:'
+            for x, poll in enumerate(polls):
+                message += '\n{}. {}'.format(x+1, poll)
+            client.send_host_message(message)
+
+def ooc_cmd_pollset(client, arg):
+    if client.is_mod:
+        print(arg)
+        client.server.serverpoll_manager.add_poll(arg)
+        client.send_host_message('Added {} as a poll.'.format(arg))
+    else:
+        return
+
+def ooc_cmd_pollremove(client, arg):
+    if client.is_mod:
+        print(arg)
+        client.server.serverpoll_manager.remove_poll(arg)
+        client.send_host_message('Removed {} as a poll.'.format(arg))
+    else:
+        return
