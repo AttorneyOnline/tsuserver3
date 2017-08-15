@@ -270,7 +270,8 @@ def ooc_cmd_login(client, arg):
         client.auth_mod(arg)
     except ClientError:
         raise
-    client.area.broadcast_evidence_list()
+    if client.area.evidence_mod == 'HiddenCM':
+        client.area.broadcast_evidence_list()
     client.send_host_message('Logged in as a moderator.')
     logger.log_server('Logged in as moderator.', client)
     
@@ -480,11 +481,14 @@ def ooc_cmd_cm(client, arg):
     if client.area.owned == False:
         client.area.owned = True
         client.is_cm = True
-        client.area.broadcast_evidence_list()
+        if client.area.evidence_mod == 'HiddenCM':
+            client.area.broadcast_evidence_list()
         client.area.send_host_message('{} is CM in this area now.'.format(client.get_char_name()))
     
 def ooc_cmd_unmod(client, arg):
     client.is_mod = False
+    if client.area.evidence_mod == 'HiddenCM':
+        client.area.broadcast_evidence_list()
     client.send_host_message('you\'re not a mod now')
     
 def ooc_cmd_area_lock(client, arg):

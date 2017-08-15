@@ -63,7 +63,6 @@ class ClientManager:
             if args:
                 if command == 'MS':
                     for evi_num in range(len(self.evi_list)):
-                        print(args, 'HUI')
                         if self.evi_list[evi_num] == args[11]:
                             lst = list(args)
                             lst[11] = evi_num

@@ -43,7 +43,6 @@ class EvidenceList:
             return True
         else:
             #correct format: <owner = pos>\ndesc
-            print(desc[9:12])
             if desc[:9] == '<owner = ' and desc[9:12] in self.poses and desc[12:14] == '>\n':
                 return True
             return False
