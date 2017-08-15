@@ -27,13 +27,14 @@ from server.client_manager import ClientManager
 from server.districtclient import DistrictClient
 from server.exceptions import ServerError
 from server.masterserverclient import MasterServerClient
-
+from server.serverpoll_manager import ServerpollManager
 
 class TsuServer3:
     def __init__(self):
         self.client_manager = ClientManager(self)
         self.area_manager = AreaManager(self)
         self.ban_manager = BanManager()
+        self.serverpoll_manager = ServerpollManager(self)
         self.software = 'tsuserver3'
         self.release = 3
         self.major_version = 1
