@@ -22,67 +22,66 @@ class EvidenceList:
             
     def __init__(self):
         self.evidences = []
-        self.poses = {'def':['def', 'hld'], 'pro':['pro', 'hlp'], 'wit':['wit'], 'hlp':['hlp', 'pro'], 'hld':['hld', 'def'], 'jud':['jud'], 'all':['hlp', 'hld', 'wit', 'jud', 'pro', 'def', '']}
+        self.poses = {'def':['def', 'hld'], 'pro':['pro', 'hlp'], 'wit':['wit'], 'hlp':['hlp', 'pro'], 'hld':['hld', 'def'], 'jud':['jud'], 'all':['hlp', 'hld', 'wit', 'jud', 'pro', 'def', ''], 'pos':[]}
+        
+    def login(self, client):
+        if client.area.evidence_mod == 'FFA':
+            pass
+        if client.area.evidence_mod == 'Mods':
+            if not client.is_cm:
+                return False
+        if client.area.evidence_mod == 'CM':
+            if not client.is_cm and not client.is_mod:
+                return False
+        if client.area.evidence_mod == 'HiddenCM':
+            if not client.is_cm and not client.is_mod:
+                return False
+        return True
+
+    def correct_format(self, client, desc):
+        if client.area.evidence_mod != 'HiddenCM':
+            return True
+        else:
+            #correct format: <owner = pos>\ndesc
+            print(desc[9:12])
+            if desc[:9] == '<owner = ' and desc[9:12] in self.poses and desc[12:14] == '>\n':
+                return True
+            return False
+            
         
     def add_evidence(self, client, name, description, image, pos = 'all'):
-        if client.area.evidence_mod == 'FFA':
-            pass
-        if client.area.evidence_mod == 'Mods':
-            #TODO evidences only for mods
-            return
-        if client.area.evidence_mod == 'CM':
-            if not client.is_cm and not client.is_mod:
-                return
-        if client.area.evidence_mod == 'HiddenCM':
-            #TODO evidences visible only after presenting
-            return
-        self.evidences.append(self.Evidence(name, description, image, pos))
+        if self.login(client):
+            if client.area.evidence_mod == 'HiddenCM':
+                pos = 'pos'
+            self.evidences.append(self.Evidence(name, description, image, pos))
         
     def evidence_swap(self, client, id1, id2):
-        if client.area.evidence_mod == 'FFA':
-            pass
-        if client.area.evidence_mod == 'Mods':
-            #TODO evidences only for mods
-            return
-        if client.area.evidence_mod == 'CM':
-            if not client.is_cm and not client.is_mod:
-                return
-        if client.area.evidence_mod == 'HiddenCM':
-            #TODO evidences visible only after presenting
-            return
-        self.evidences[id1], self.evidences[id2] = self.evidences[id2], self.evidences[id1]
+        if self.login(client):
+            self.evidences[id1], self.evidences[id2] = self.evidences[id2], self.evidences[id1]
             
     def create_evi_list(self, client):
         evi_list = []
+        nums_list = [0]
         for i in range(len(self.evidences)):
-            if client.pos in self.poses[self.evidences[i].pos]:
-                evi_list.append(i)
-        return evi_list
+            if client.area.evidence_mod == 'HiddenCM' and self.login(client):
+                nums_list.append(i + 1)
+                evi = self.evidences[i]
+                evi_list.append(self.Evidence(evi.name, '<owner = {}>\n{}'.format(evi.pos, evi.desc), evi.image, evi.pos).to_string())
+            elif client.pos in self.poses[self.evidences[i].pos]:
+                nums_list.append(i + 1)
+                evi_list.append(self.evidences[i].to_string())
+        return nums_list, evi_list
     
     def del_evidence(self, client, id):
-        if client.area.evidence_mod == 'FFA':
-            pass
-        if client.area.evidence_mod == 'Mods':
-            #TODO evidences only for mods
-            return
-        if client.area.evidence_mod == 'CM':
-            if not client.is_cm and not client.is_mod:
-                return
-        if client.area.evidence_mod == 'HiddenCM':
-            #TODO evidences visible only after presenting
-            return
-        self.evidences.pop(id)
+        if self.login(client):
+            self.evidences.pop(id)
         
     def edit_evidence(self, client, id, arg):
-        if client.area.evidence_mod == 'FFA':
-            pass
-        if client.area.evidence_mod == 'Mods':
-            #TODO evidences only for mods
-            return
-        if client.area.evidence_mod == 'CM':
-            if not client.is_cm and not client.is_mod:
+        if self.login(client):
+            if client.area.evidence_mod == 'HiddenCM' and self.correct_format(client, arg[1]):
+                self.evidences[id] = self.Evidence(arg[0], arg[1][14:], arg[2], arg[1][9:12])
                 return
-        if client.area.evidence_mod == 'HiddenCM':
-            #TODO evidences visible only after presenting
-            return
-        self.evidences[id] = self.Evidence(arg[0], arg[1], arg[2], arg[3])
+            if client.area.evidence_mod == 'HiddenCM':
+                client.send_host_message('You entered a wrong pos.')
+                return
+            self.evidences[id] = self.Evidence(arg[0], arg[1], arg[2], arg[3])

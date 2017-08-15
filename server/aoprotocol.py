@@ -350,8 +350,12 @@ class AOProtocol(asyncio.Protocol):
         if self.client.disemvowel:
             msg = self.client.disemvowel_message(msg)
         self.client.pos = pos
+        if evidence:
+            if self.client.area.evi_list.evidences[self.client.evi_list[evidence] - 1].pos != 'all':
+                self.client.area.evi_list.evidences[self.client.evi_list[evidence] - 1].pos = 'all'
+                self.client.area.broadcast_evidence_list()
         self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
-                                      sfx_delay, button, evidence, flip, ding, color)
+                                      sfx_delay, button, self.client.evi_list[evidence], flip, ding, color)
         self.client.area.set_next_msg_delay(len(msg))
         logger.log_server('[IC][{}][{}]{}'.format(self.client.area.id, self.client.get_char_name(), msg), self.client)
 

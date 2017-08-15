@@ -171,6 +171,7 @@ def ooc_cmd_pos(client, arg):
             client.change_position(arg)
         except ClientError:
             raise
+        client.area.broadcast_evidence_list()
         client.send_host_message('Position changed.')   
 
 def ooc_cmd_help(client, arg):
@@ -262,6 +263,7 @@ def ooc_cmd_login(client, arg):
         client.auth_mod(arg)
     except ClientError:
         raise
+    client.area.broadcast_evidence_list()
     client.send_host_message('Logged in as a moderator.')
     logger.log_server('Logged in as moderator.', client)
     
@@ -471,6 +473,7 @@ def ooc_cmd_cm(client, arg):
     if client.area.owned == False:
         client.area.owned = True
         client.is_cm = True
+        client.area.broadcast_evidence_list()
         client.area.send_host_message('{} is CM in this area now.'.format(client.get_char_name()))
     
 def ooc_cmd_unmod(client, arg):

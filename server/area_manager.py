@@ -74,6 +74,7 @@ class AreaManager:
         def unlock(self):
             self.is_locked = False
             self.invite_list = {}
+            self.send_host_message('This area is open now.')
         
         def is_char_available(self, char_id):
             return char_id not in [x.char_id for x in self.clients]
@@ -153,10 +154,7 @@ class AreaManager:
             self.current_music = name
 
         def get_evidence_list(self, client):
-            client.evi_list = self.evi_list.create_evi_list(client)
-            evi_list = []
-            for i in client.evi_list:
-                evi_list.append(self.evi_list.evidences[i].to_string())
+            client.evi_list, evi_list = self.evi_list.create_evi_list(client)
             return evi_list
 
         def broadcast_evidence_list(self):

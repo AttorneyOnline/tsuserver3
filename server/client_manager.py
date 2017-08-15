@@ -58,6 +58,14 @@ class ClientManager:
 
         def send_command(self, command, *args):
             if args:
+                if command == 'MS':
+                    for evi_num in range(len(self.evi_list)):
+                        print(args, 'HUI')
+                        if self.evi_list[evi_num] == args[11]:
+                            lst = list(args)
+                            lst[11] = evi_num
+                            args = tuple(lst)
+                            break
                 self.send_raw_message('{}#{}#%'.format(command, '#'.join([str(x) for x in args])))
             else:
                 self.send_raw_message('{}#%'.format(command))
@@ -290,29 +298,25 @@ class ClientManager:
             areas = client.server.area_manager.areas
         targets = []
         for area in areas:
-            if key == 'ip':
-                for client in area.clients:
-                    if value.lower().startswith(client.get_ip().lower()):
-                        targets.append(client)
-            if key == 'OOC':
-                for client in area.clients:
-                    if value.lower().startswith(client.name.lower()):
-                        targets.append(client)
-            if key == 'cname':
-                for client in area.clients:
-                    if value.lower().startswith(client.get_char_name().lower()):
-                        targets.append(client)
-            if key == 'id':
-                for client in area.clients:
-                    if client.id == value:
-                        targets.append(client)
-            if key == 'ipid':
-                for client in area.clients:
-                    if client.ipid == value:
-                        targets.append(client)
             if key == 'all':
                 for key in ['ip', 'OOC', 'id', 'cname', 'ipid', 'hdid']:
                     targets += self.get_targets(client, key, value, local)
+            for client in area.clients:
+                if key == 'ip':
+                    if value.lower().startswith(client.get_ip().lower()):
+                        targets.append(client)
+                if key == 'OOC':
+                    if value.lower().startswith(client.name.lower()):
+                        targets.append(client)
+                if key == 'cname':
+                    if value.lower().startswith(client.get_char_name().lower()):
+                        targets.append(client)
+                if key == 'id':
+                    if client.id == value:
+                        targets.append(client)
+                if key == 'ipid':
+                    if client.ipid == value:
+                        targets.append(client)
         return targets
             
         
