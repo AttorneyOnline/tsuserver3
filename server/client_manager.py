@@ -18,11 +18,22 @@
 from server import fantacrypt
 from server import logger
 from server.exceptions import ClientError, AreaError
+from enum import Enum
 
 import time
 
 
+
 class ClientManager:
+    class TargetType(Enum):
+        #possible keys: ip, OOC, id, cname, ipid, hdid
+        IP: 0
+        OOC_NAME: 1
+        ID: 2
+        CHAR_NAME: 3
+        IPID: 4
+        HDID: 5
+        ALL: 6
     class Client:
         def __init__(self, server, transport, user_id, ipid):
             self.transport = transport
@@ -297,24 +308,24 @@ class ClientManager:
         else:
             areas = client.server.area_manager.areas
         targets = []
-        if key == 'all':
-            for key in ['ip', 'OOC', 'id', 'cname', 'ipid', 'hdid']:
-                targets += self.get_targets(client, key, value, local)
+        if key == self.TargetType.ALL:
+            for nkey in range(6):
+                targets += self.get_targets(client, nkey, value, local)
         for area in areas:
             for client in area.clients:
-                if key == 'ip':
+                if key == self.TargetType.IP:
                     if value.lower().startswith(client.get_ip().lower()):
                         targets.append(client)
-                if key == 'OOC':
+                elif key == self.TargetType.OOC_NAME:
                     if value.lower().startswith(client.name.lower()):
                         targets.append(client)
-                if key == 'cname':
+                elif key == self.TargetType.CHAR_NAME:
                     if value.lower().startswith(client.get_char_name().lower()):
                         targets.append(client)
-                if key == 'id':
+                elif key == self.TargetType.ID:
                     if client.id == value:
                         targets.append(client)
-                if key == 'ipid':
+                elif key == self.TargetType.IPID:
                     if client.ipid == value:
                         targets.append(client)
         return targets
