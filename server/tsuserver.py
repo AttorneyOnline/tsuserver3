@@ -29,7 +29,6 @@ from server.districtclient import DistrictClient
 from server.exceptions import ServerError
 from server.masterserverclient import MasterServerClient
 
-
 class TsuServer3:
     def __init__(self):
         self.config = None
