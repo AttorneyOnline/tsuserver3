@@ -67,6 +67,12 @@ def ooc_cmd_evidence_mod(client, arg):
         client.send_host_message('current evidence mod: {}'.format(client.area.evidence_mod))
         return
     if arg in ['FFA', 'Mod', 'CM', 'HiddenCM']:
+        if arg == client.area.evidence_mod:
+            client.send_host_message('current evidence mod: {}'.format(client.area.evidence_mod))
+            return
+        if client.area.evidence_mod == 'HiddenCM':
+            for i in range(len(client.area.evi_list.evidences)):
+                client.area.evi_list.evidences[i].pos = 'all'
         client.area.evidence_mod = arg
         client.send_host_message('current evidence mod: {}'.format(client.area.evidence_mod))
         return

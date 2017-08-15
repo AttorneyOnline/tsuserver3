@@ -297,10 +297,10 @@ class ClientManager:
         else:
             areas = client.server.area_manager.areas
         targets = []
+        if key == 'all':
+            for key in ['ip', 'OOC', 'id', 'cname', 'ipid', 'hdid']:
+                targets += self.get_targets(client, key, value, local)
         for area in areas:
-            if key == 'all':
-                for key in ['ip', 'OOC', 'id', 'cname', 'ipid', 'hdid']:
-                    targets += self.get_targets(client, key, value, local)
             for client in area.clients:
                 if key == 'ip':
                     if value.lower().startswith(client.get_ip().lower()):
