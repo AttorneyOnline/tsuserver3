@@ -41,8 +41,8 @@ class ClientManager:
             self.pm_mute = False
             self.mod_call_time = 0
             self.in_rp = False
-            self.current_poll = ''
-            self.last_pm = ''
+            self.voting = 0
+            self.voting_at = 0
 
         def send_raw_message(self, msg):
             self.transport.write(msg.encode('utf-8'))
@@ -64,6 +64,7 @@ class ClientManager:
 
         def change_character(self, char_id, force=False):
             if not self.server.is_valid_char_id(char_id):
+                raise ClientError('Invalid Character ID.')
                 raise ClientError('Invalid Character ID.')
             if not force and not self.area.is_char_available(char_id):
                 raise ClientError('Character not available.')
@@ -269,12 +270,6 @@ class ClientManager:
 
         def can_call_mod(self):
             return (time.time() * 1000.0 - self.mod_call_time) > 0
-    
-        def vote_poll(self, value):
-            allowed_values = ('yes', 'no')
-            if value.lower() not in allowed_values:
-                raise AreaError('You must vote yes or no.')
-            self.current_poll = value.upper()
 
     def __init__(self, server):
         self.clients = set()
