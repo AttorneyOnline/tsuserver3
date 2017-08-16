@@ -153,7 +153,7 @@ class ServerpollManager:
                     self.vote['log'] += ([tmp, client.get_ip(), client.get_hdid()],)
                 self.write_votelist(poll_voting)
                 logger.log_serverpoll(
-                    'Vote \'{}\' added succesfully by {} ({}) in {}, with IP {} and HDID {}, at {}. Reason: Already voted.'.format(
+                    'Vote \'{}\' added succesfully by {} ({}) in {}, with IP {} and HDID {}, at {}.'.format(
                         vote, client.name, client.get_char_name(), client.area.name, client.get_ip(), client.get_hdid(),
                         tmp))
                 client.send_host_message('You have successfully voted! Congratulations.')
