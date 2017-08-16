@@ -114,6 +114,8 @@ class TsuServer3:
         with open('config/config.yaml', 'r', encoding = 'utf-8') as cfg:
             self.config = yaml.load(cfg)
             self.config['motd'] = self.config['motd'].replace('\\n', ' \n') 
+        if 'music_change_floodguard' not in self.config:
+            self.config['music_change_floodguard'] = {'times_per_interval': 1,  'interval_length': 0, 'mute_length': 0}
 
     def load_characters(self):
         with open('config/characters.yaml', 'r', encoding = 'utf-8') as chars:
