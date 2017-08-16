@@ -67,7 +67,7 @@ def ooc_cmd_evidence_mod(client, arg):
     if not arg:
         client.send_host_message('current evidence mod: {}'.format(client.area.evidence_mod))
         return
-    if arg in ['FFA', 'Mod', 'CM', 'HiddenCM']:
+    if arg in ['FFA', 'Mods', 'CM', 'HiddenCM']:
         if arg == client.area.evidence_mod:
             client.send_host_message('current evidence mod: {}'.format(client.area.evidence_mod))
             return
@@ -78,7 +78,7 @@ def ooc_cmd_evidence_mod(client, arg):
         client.send_host_message('current evidence mod: {}'.format(client.area.evidence_mod))
         return
     else:
-        raise ArgumentError('Wrong Argument. Use /evidence_mod <MOD>. Possible values: FFA, CM, Mod(in work), HiddenCM(in work)')
+        raise ArgumentError('Wrong Argument. Use /evidence_mod <MOD>. Possible values: FFA, CM, Mods, HiddenCM')
         return
         
 def ooc_cmd_allow_iniswap(client, arg):
