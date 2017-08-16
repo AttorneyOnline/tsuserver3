@@ -61,11 +61,11 @@ class MasterServerClient:
                     cmd, *args = raw_msg.split('#')
                     if cmd != 'CHECK' and cmd != 'PONG':
                         logger.log_debug('[MASTERSERVER][INC][RAW]{}'.format(raw_msg))
-                    if cmd == 'CHECK':
+                    elif cmd == 'CHECK':
                         await self.send_raw_message('PING#%')
-                    if cmd == 'PONG':
+                    elif cmd == 'PONG':
                         fl = False
-                    elif cmd == b'NOSERV':
+                    elif cmd == 'NOSERV':
                         await self.send_server_info()
             if time.time() - lastping > 5:
                 if fl:

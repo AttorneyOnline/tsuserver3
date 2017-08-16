@@ -84,12 +84,13 @@ class ClientManager:
         def change_character(self, char_id, force=False):
             if not self.server.is_valid_char_id(char_id):
                 raise ClientError('Invalid Character ID.')
-            if not force and not self.area.is_char_available(char_id):
-                raise ClientError('Character not available.')
-            elif not self.area.is_char_available(char_id):
-                for client in self.area.clients:
-                    if client.char_id == char_id:
-                        client.char_select()
+            if not self.area.is_char_available(char_id):
+                if force:
+                    for client in self.area.clients:
+                        if client.char_id == char_id:
+                            client.char_select()
+                else:
+                    raise ClientError('Character not available.')
             old_char = self.get_char_name()
             self.char_id = char_id
             self.pos = ''

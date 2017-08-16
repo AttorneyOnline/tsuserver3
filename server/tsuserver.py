@@ -161,8 +161,12 @@ class TsuServer3:
             self.backgrounds = yaml.load(bgs)
             
     def load_iniswaps(self):
-        with open('config/iniswaps.yaml', 'r', encoding = 'utf-8') as bgs:
-            self.allowed_iniswaps = yaml.load(bgs)
+        try:
+            with open('config/iniswaps.yaml', 'r', encoding = 'utf-8') as iniswaps:
+                self.allowed_iniswaps = yaml.load(iniswaps)
+        except:
+            logger.log_debug('cannot find iniswaps.yaml')
+            
 
     def build_char_pages_ao1(self):
         self.char_pages_ao1 = [self.char_list[x:x + 10] for x in range(0, len(self.char_list), 10)]
