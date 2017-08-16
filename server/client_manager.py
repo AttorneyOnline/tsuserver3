@@ -92,6 +92,7 @@ class ClientManager:
                         client.char_select()
             old_char = self.get_char_name()
             self.char_id = char_id
+            self.pos = ''
             self.send_command('PV', self.id, 'CID', self.char_id)
             logger.log_server('[{}]Changed character from {} to {}.'
                               .format(self.area.id, old_char, self.get_char_name()), self)
