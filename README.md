@@ -11,6 +11,8 @@ Install PyYAML by doing
 * Rename `config_sample` to `config` and edit the values to your liking.  
 * Run by using `start_server.py`. It's recommended that you use a separate virtual environment.
 
+## 
+
 ## Commands
 
 ### User Commands
@@ -62,7 +64,7 @@ Install PyYAML by doing
 * **currentmusic** 
     - Displays the current music
 * **evi_swap** <id1> <id2>
-    - Swaps <id1> and <id2> evidences.
+    - Swaps <id1> and <id2> evidence.
 * **cm**
     - Makes you a CM of this area.
 ### CM Commands
@@ -108,12 +110,20 @@ Install PyYAML by doing
     - Removes the vowels from everything said by the target
 * **undisemvowel** "Target"
     - Lifts the disemvowel curse from the target
-* **undj** "target"
+* **blockdj** "target"
     - Mutes the target from changing music. 
-* **unundj** "target"
+* **unblockdj** "target"
     - Undo previous command.
 * **evidence_mod** <MOD>
-    - Changes evidence_mod in this area. Possible values: FFA, CM. In work: HiddenCM, Mod
+    - Changes evidence_mod in this area. Possible values: FFA, CM, HiddenCM, Mods
+        * **FFA**
+            - Everyone can add, edit and remove evidence.
+        * **Mods**
+            - Only moderators can add, edit or remove evidence.
+        * **CM**
+            - Only CM (case-maker, look at /cm for more info) or moderators can add, edit or remove evidence.
+        * **HiddenCM**
+            - Same as CM, but every evidence have his "owner's position" that can be changed by CM or moderator, what means that only one side can see it (except for 'all'). After presenting evidence once his position changing to 'all'. Possible positions: 'def', 'pro', 'wit', 'jud', 'pos' (means that no one can see this evidence), 'all' (means that everyone can see this evidence).
 * **allow_iniswap**
     - Toggle allow_iniswap var in this area. 
     - Even if iniswap at all is forbidden you can configure all-time allowed iniswaps in *iniswaps.yaml*

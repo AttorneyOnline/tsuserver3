@@ -602,33 +602,35 @@ def ooc_cmd_undisemvowel(client, arg):
     else:
         client.send_host_message('No targets found.')
 
-def ooc_cmd_undj(client, arg):
+def ooc_cmd_blockdj(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
-        raise ArgumentError('You must specify a target. Use /undj <id>.')
+        raise ArgumentError('You must specify a target. Use /blockdj <id>.')
     try:
         targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), False)
     except:
-         raise ArgumentError('You must enter a number. Use /undj <id>.')
+         raise ArgumentError('You must enter a number. Use /blockdj <id>.')
     if not targets:
-        raise ArgumentError('Target not found. Use /undj <id>.')
+        raise ArgumentError('Target not found. Use /blockdj <id>.')
     for target in targets:
         target.is_dj = False
-    client.send_host_message('Undj\'d {}.'.format(targets[0].get_char_name()))
+        target.send_host_message('You have been muted of changing music by moderator.')
+    client.send_host_message('blockdj\'d {}.'.format(targets[0].get_char_name()))
 
-def ooc_cmd_unundj(client, arg):
+def ooc_cmd_unblockdj(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
-        raise ArgumentError('You must specify a target. Use /unundj <id>.')
+        raise ArgumentError('You must specify a target. Use /unblockdj <id>.')
     try:
         targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), False)
     except:
-         raise ArgumentError('You must enter a number. Use /unundj <id>.')
+         raise ArgumentError('You must enter a number. Use /unblockdj <id>.')
     if not targets:
-        raise ArgumentError('Target not found. Use /undj <id>.')
+        raise ArgumentError('Target not found. Use /blockdj <id>.')
     for target in targets:
         target.is_dj = True
-    client.send_host_message('Unundj\'d {}.'.format(targets[0].get_char_name()))
+        target.send_host_message('Now you can change music.')
+    client.send_host_message('Unblockdj\'d {}.'.format(targets[0].get_char_name()))
     

@@ -414,7 +414,7 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_host_message("You have been muted by a moderator")
                 return
             if not self.client.is_dj:
-                self.client.send_host_message('You are was undj\'d by a moderator.')
+                self.client.send_host_message('You are was blockdj\'d by a moderator.')
                 return
             if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT):
                 return
