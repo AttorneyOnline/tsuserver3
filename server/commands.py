@@ -740,7 +740,6 @@ def ooc_cmd_votelist(client, arg):
 
 def ooc_cmd_pollset(client, arg):
     if client.is_mod:
-        print(arg)
         client.server.serverpoll_manager.add_poll(arg)
         client.send_host_message('Added {} as a poll.'.format(arg))
     else:
@@ -748,7 +747,6 @@ def ooc_cmd_pollset(client, arg):
 
 def ooc_cmd_pollremove(client, arg):
     if client.is_mod:
-        print(arg)
         client.server.serverpoll_manager.remove_poll(arg)
         client.send_host_message('Removed {} as a poll.'.format(arg))
     else:
