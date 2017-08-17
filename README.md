@@ -123,7 +123,7 @@ Install PyYAML by doing
         * **CM**
             - Only CM (case-maker, look at /cm for more info) or moderators can add, edit or remove evidence.
         * **HiddenCM**
-            - Same as CM, but every evidence have his "owner's position" that can be changed by CM or moderator, what means that only one side can see it (except for 'all'). After presenting evidence once his position changing to 'all'. Possible positions: 'def', 'pro', 'wit', 'jud', 'pos' (means that no one can see this evidence), 'all' (means that everyone can see this evidence).
+            - Same as CM, but every evidence has a preset "owner's position" which can be set by a CM or moderator, such that only one side/position of the court may see the evidence. After presenting the evidence, the position of the evidence changes to "all." Possible positions include def (defense), pro (prosecutor), wit (witness), jud (judge), pos (hidden from everyone), and all (everyone can see the evidence).
 * **allow_iniswap**
     - Toggle allow_iniswap var in this area. 
     - Even if iniswap at all is forbidden you can configure all-time allowed iniswaps in *iniswaps.yaml*
