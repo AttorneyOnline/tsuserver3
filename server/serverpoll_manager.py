@@ -33,11 +33,13 @@ class ServerpollManager:
         self.vote = []
         self.slots = []
 
-    def load_poll_list(self):
+     def load_poll_list(self):
         try:
             with open('storage/poll/polllist.json', 'r') as poll_list_file:
                 self.poll_list = json.load(poll_list_file)
         except FileNotFoundError:
+            if not os.path.exists('storage/poll/'):
+                os.makedirs('storage/poll/')
             with open('storage/poll/polllist.json', 'w') as poll_list_file:
                 json.dump([], poll_list_file)
             return
