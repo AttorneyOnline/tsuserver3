@@ -1,9 +1,26 @@
 - area: Basement
   background: gs4
   bglock: true
+  evidence_mod: FFA
+  locking_allowed: false
+  iniswap_allowed: true
 - area: Courtroom 1
   background: gs5
   bglock: false
+  evidence_mod: CM
+  locking_allowed: true
+  iniswap_allowed: true
 - area: Courtroom 2
   background: gs4
   bglock: false
+  evidence_mod: Mods
+  locking_allowed: false
+  iniswap_allowed: true
+- area: Courtroom 2
+  background: gs4
+  bglock: false
+  evidence_mod: HiddenCM
+  locking_allowed: true
+  iniswap_allowed: true
+  
+  

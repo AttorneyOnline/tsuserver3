@@ -24,7 +24,7 @@ from server import commands
 from server import logger
 from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
 from server.fantacrypt import fanta_decrypt
-from server.evidence import Evidence
+from server.evidence import EvidenceList
 
 
 class AOProtocol(asyncio.Protocol):
@@ -137,12 +137,15 @@ class AOProtocol(asyncio.Protocol):
         if not self.validate_net_cmd(args, self.ArgType.STR, needs_auth=False):
             return
         self.client.hdid = args[0]
-        if self.server.ban_manager.is_banned(self.client.get_ip()):
-            self.client.disconnect()
-            return
-        if self.server.ban_manager.is_hdidbanned(self.client.get_hdid()):
-            self.client.disconnect()
-            return
+        if self.client.hdid not in self.client.server.hdid_list:
+            self.client.server.hdid_list[self.client.hdid] = []
+        if self.client.ipid not in self.client.server.hdid_list[self.client.hdid]:
+            self.client.server.hdid_list[self.client.hdid].append(self.client.ipid)
+            self.client.server.dump_hdids()
+        for ipid in self.client.server.hdid_list[self.client.hdid]:
+            if self.server.ban_manager.is_banned(ipid):
+                self.client.disconnect()
+                return
         logger.log_server('Connected. HDID: {}.'.format(self.client.hdid), self.client)
         self.client.send_command('ID', self.client.id, self.server.software, self.server.get_version_string())
         self.client.send_command('PN', self.server.get_player_count() - 1, self.server.config['playerlimit'])
@@ -310,6 +313,9 @@ class AOProtocol(asyncio.Protocol):
                                      self.ArgType.INT, self.ArgType.INT, self.ArgType.INT):
             return
         msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color = args
+        if self.client.area.is_iniswap(self.client, pre, anim, folder) and folder != self.client.get_char_name():
+            self.client.send_host_message("Iniswap is blocked in this area")
+            return
         if msg_type not in ('chat', '0', '1'):
             return
         if anim_type not in (0, 1, 2, 5, 6):
@@ -342,9 +348,14 @@ class AOProtocol(asyncio.Protocol):
                 return
         msg = text[:256]
         if self.client.disemvowel:
-                msg = self.client.disemvowel_message(msg)
+            msg = self.client.disemvowel_message(msg)
+        self.client.pos = pos
+        if evidence:
+            if self.client.area.evi_list.evidences[self.client.evi_list[evidence] - 1].pos != 'all':
+                self.client.area.evi_list.evidences[self.client.evi_list[evidence] - 1].pos = 'all'
+                self.client.area.broadcast_evidence_list()
         self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
-                                      sfx_delay, button, evidence, flip, ding, color)
+                                      sfx_delay, button, self.client.evi_list[evidence], flip, ding, color)
         self.client.area.set_next_msg_delay(len(msg))
         logger.log_server('[IC][{}][{}]{}'.format(self.client.area.id, self.client.get_char_name(), msg), self.client)
 
@@ -395,17 +406,23 @@ class AOProtocol(asyncio.Protocol):
         MC#<song_name:int>#<???:int>#%
 
         """
-        if self.client.is_muted:  # Checks to see if the client has been muted by a mod
-            self.client.send_host_message("You have been muted by a moderator")
-            return
-        if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT):
-            return
-        if args[1] != self.client.char_id:
-            return
         try:
             area = self.server.area_manager.get_area_by_name(args[0])
             self.client.change_area(area)
         except AreaError:
+            if self.client.is_muted:  # Checks to see if the client has been muted by a mod
+                self.client.send_host_message("You have been muted by a moderator")
+                return
+            if not self.client.is_dj:
+                self.client.send_host_message('You were blockdj\'d by a moderator.')
+                return
+            if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT):
+                return
+            if args[1] != self.client.char_id:
+                return
+            if self.client.change_music_cd():
+                self.client.send_host_message('You changed song too much times. Please try again after {} seconds.'.format(int(self.client.change_music_cd())))
+                return
             try:
                 name, length = self.server.get_song_data(args[0])
                 self.client.area.play_music(name, self.client.char_id, length)
@@ -459,15 +476,12 @@ class AOProtocol(asyncio.Protocol):
         PE#<name: string>#<description: string>#<image: string>#%
 
         """
-
         if len(args) < 3:
             return
-
-        evi = Evidence(args[0], args[1], args[2])
-
-        self.client.area.add_evidence(evi)
+        #evi = Evidence(args[0], args[1], args[2], self.client.pos)
+        self.client.area.evi_list.add_evidence(self.client, args[0], args[1], args[2], 'all')
         self.client.area.broadcast_evidence_list()
-
+    
     def net_cmd_de(self, args):
         """ Deletes a piece of evidence.
 
@@ -475,7 +489,7 @@ class AOProtocol(asyncio.Protocol):
 
         """
 
-        self.client.area.delete_evidence(int(args[0]))
+        self.client.area.evi_list.del_evidence(self.client, self.client.evi_list[int(args[0])])
         self.client.area.broadcast_evidence_list()
 
     def net_cmd_ee(self, args):
@@ -488,9 +502,9 @@ class AOProtocol(asyncio.Protocol):
         if len(args) < 4:
             return
 
-        evi = Evidence(args[1], args[2], args[3])
+        evi = (args[1], args[2], args[3], 'all')
 
-        self.client.area.edit_evidence(int(args[0]), evi)
+        self.client.area.evi_list.edit_evidence(self.client, self.client.evi_list[int(args[0])], evi)
         self.client.area.broadcast_evidence_list()
 
 
