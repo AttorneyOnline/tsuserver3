@@ -36,6 +36,7 @@ class ClientManager:
             self.area = server.area_manager.default_area()
             self.server = server
             self.name = ''
+            self.fake_name = ''
             self.is_mod = False
             self.is_dj = True
             self.pos = ''
@@ -78,6 +79,16 @@ class ClientManager:
         def send_motd(self):
             self.send_host_message('=== MOTD ===\r\n{}\r\n============='.format(self.server.config['motd']))
 
+        def is_valid_name(self, name):
+            name_ws = name.replace(' ', '')
+            if not name_ws or name_ws.isdigit():
+                return False
+            for client in self.server.client_manager.clients:
+                print(client.name == name)
+                if client.name == name:
+                    return False
+            return True
+            
         def disconnect(self):
             self.transport.close()
 
@@ -289,6 +300,7 @@ class ClientManager:
         self.cur_id[cur_id] = True
         return c
 
+            
     def remove_client(self, client):
         self.cur_id[client.id] = False
         self.clients.remove(client)
@@ -310,7 +322,7 @@ class ClientManager:
                     if value.lower().startswith(client.get_ip().lower()):
                         targets.append(client)
                 elif key == TargetType.OOC_NAME:
-                    if value.lower().startswith(client.name.lower()):
+                    if value.lower().startswith(client.name.lower()) and client.name:
                         targets.append(client)
                 elif key == TargetType.CHAR_NAME:
                     if value.lower().startswith(client.get_char_name().lower()):
