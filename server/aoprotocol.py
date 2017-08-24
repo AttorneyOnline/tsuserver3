@@ -373,8 +373,15 @@ class AOProtocol(asyncio.Protocol):
             return
         if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR):
             return
+        if self.client.name != args[0] and self.client.fake_name != args[0]:
+            if self.client.is_valid_name(args[0]):
+                self.client.name = args[0]
+                self.client.fake_name = args[0]
+            else:
+                self.client.fake_name = args[0]
         if self.client.name == '':
-            self.client.name = args[0]
+            self.client.send_host_message('You must insert a name with at least one letter')
+            return
         if self.client.name.startswith(self.server.config['hostname']) or self.client.name.startswith('<dollar>G'):
             self.client.send_host_message('That name is reserved!')
             return
