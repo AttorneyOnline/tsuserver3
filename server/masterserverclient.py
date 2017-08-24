@@ -17,7 +17,7 @@
 
 
 import asyncio
-
+import time
 from server import logger
 
 
@@ -42,23 +42,38 @@ class MasterServerClient:
                 self.reader = None
             finally:
                 logger.log_debug("Couldn't connect to the master server, retrying in 30 seconds.")
+                print("Couldn't connect to the master server, retrying in 30 seconds.")
                 await asyncio.sleep(30)
 
     async def handle_connection(self):
         logger.log_debug('Master server connected.')
         await self.send_server_info()
+        fl = False
+        lastping = time.time() - 20
         while True:
-            data = await self.reader.readuntil(b'#%')
-            if not data:
-                return
-            raw_msg = data.decode()[:-2]
-            cmd, *args = raw_msg.split('#')
-            if cmd != 'CHECK' and cmd != 'PONG':
-                logger.log_debug('[MASTERSERVER][INC][RAW]{}'.format(raw_msg))
-            if cmd == 'CHECK':
+            self.reader.feed_data(b'END')
+            full_data = await self.reader.readuntil(b'END')
+            full_data = full_data[:-3]
+            if len(full_data) > 0:
+                data_list = list(full_data.split(b'#%'))[:-1]
+                for data in data_list:
+                    raw_msg = data.decode()
+                    cmd, *args = raw_msg.split('#')
+                    if cmd != 'CHECK' and cmd != 'PONG':
+                        logger.log_debug('[MASTERSERVER][INC][RAW]{}'.format(raw_msg))
+                    elif cmd == 'CHECK':
+                        await self.send_raw_message('PING#%')
+                    elif cmd == 'PONG':
+                        fl = False
+                    elif cmd == 'NOSERV':
+                        await self.send_server_info()
+            if time.time() - lastping > 5:
+                if fl:
+                    return
+                lastping = time.time()
+                fl = True
                 await self.send_raw_message('PING#%')
-            elif cmd == 'NOSERV':
-                await self.send_server_info()
+            await asyncio.sleep(1)
 
     async def send_server_info(self):
         cfg = self.server.config
