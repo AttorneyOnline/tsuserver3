@@ -1,14 +1,28 @@
 # tsuserver3
 
-A Python based server for Attorney Online.
+A Python-based server for Attorney Online.
 
-Requires Python 3.5+ and pyYaml
-
+Requires Python 3.5+ and PyYAML.
 
 ## How to use
 
-* Rename `config_sample` to `config` and edit the values to your liking.  
-* Run by using `start_server.py`. It's recommended that you use a separate virtual environment.
+* Install the latest version of Python. **Python 2 will not work**, as tsuserver3 depends on async/await, which can only be found on Python 3.5 and newer.
+  - If your system supports it, it is recommended that you use a separate virtual environment, such as [Anaconda](https://www.continuum.io/downloads) for Windows, or [virtualenv](https://virtualenv.pypa.io/en/stable/) for everyone else (it runs itself using Python).
+* Open Command Prompt or your terminal, and change to the directory where you downloaded tsuserver3 to. You can do this in two ways:
+  - Go up one folder above the tsuserver3 folder, Shift + right click the tsuserver3 folder, and click `Open command window here`. This is the easiest method.
+  - Copy the path of the tsuserver3 folder, open the terminal, and type in `cd "[paste here]"`, excluding the brackes, but including the quotation marks if the path contains spaces.
+* To install PyYAML and dependencies, type in the following:
+  ```bash
+  python -m pip --user install -r requirements.txt
+  ```
+  If you are using Windows and have both Python 2 and 3 installed, you may do the following:
+  ```batch
+  py -3 -m pip --user install -r requirements.txt
+  ```
+  This operation should not require administrator privileges, unless you decide to remove the `--user` option.
+* Rename `config_sample` to `config` and edit the values to your liking. Be sure to check your YAML file for syntax errors. *Use spaces only; do not use tabs.*
+* Run by either double-clicking `start_server.py` or typing in `python start_server.py`, or `py -3 start_server.py` if you use both Python 2 and 3. It is normal to not see any output once you start the server.
+  - To stop the server, press Ctrl+C multiple times.
 
 ## Commands
 
@@ -90,5 +104,6 @@ Using /charselect "target" will kick a player back to the character select scree
 
 ## License
 
-This server is licensed under the GPLv3 license. See the
-[LICENSE](LICENSE.md) file for more information.
+This server is licensed under the AGPLv3 license. In short, if you use a modified version of tsuserver3, you *must* distribute its source licensed under the AGPLv3 as well, and notify your users where the modified source may be found. The main difference between the AGPL and the GPL is that for the AGPL, network use counts as distribution. If you do not accept these terms, you should use [serverD](https://github.com/Attorney-Online-Engineering-Task-Force/serverD), which uses GPL rather than AGPL.
+
+See the [LICENSE](LICENSE.md) file for more information.
