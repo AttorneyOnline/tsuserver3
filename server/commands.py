@@ -209,7 +209,7 @@ def ooc_cmd_pm(client, arg):
     args = arg.split()
     ooc_name = 1
     if len(args) < 2:
-        raise ArgumentError('Not enough arguments. Use /pm <target>: <message>.')
+        raise ArgumentError('Not enough arguments.\n Use /pm <target>: <message>.')
     target_clients = []
     for word in args:
         if word.lower().endswith(':'):
@@ -217,12 +217,12 @@ def ooc_cmd_pm(client, arg):
         else:
             ooc_name += 1
     if ooc_name == len(args) + 1:
-        raise ArgumentError('Invalid syntax. Add \':\' in the end of target.')
+        raise ArgumentError('Invalid syntax. Add \':\' in the end of target name/character folder. \n \'/pm <target>: <message>\'')
     namedrop = ' '.join(args[:ooc_name])
     namedrop = namedrop[:len(namedrop)-1]
     msg = ' '.join(args[ooc_name:])
     if not msg:
-        raise ArgumentError('Not enough arguments. Use /pm <target>: <message>.')
+        raise ArgumentError('Invalid syntax. Expected message after \':\'. \n \'/pm <target>: <message>\'')
     for char_name in client.server.char_list:
         if namedrop.lower() == char_name.lower():
             try:
@@ -344,19 +344,39 @@ def ooc_cmd_motd(client, arg):
 
 
 def ooc_cmd_roll(client, arg):
-    roll_max = 11037
+    roll_max = 11038
+    dice_max = 21
+    results = []
+    rolls = []
     if len(arg) != 0:
+        rolls = arg.split("d")
         try:
-            val = int(arg)
-            if not 1 <= val <= roll_max:
-                raise ArgumentError('Roll value must be between 1 and {}.'.format(roll_max))
+            for v, roll in enumerate(rolls):
+                rolls[v]= int(roll)
+            if len(rolls) == 1:
+                if not 1 <= rolls[0] <=  roll_max:
+                    raise ArgumentError('Roll value must be between 1 and {}.'.format(roll_max - 1))
+                roll = random.randint(1, rolls[0])
+            else:
+                if 1 <= rolls[0] >= dice_max:
+                    raise ArgumentError('Dice value must be between 1 and {}!'.format(dice_max - 1))
+                elif 1 <= rolls[1] >= roll_max:
+                    raise ArgumentError('Roll value must be between 1 and {}.'.format(roll_max - 1))
+                for i in range(rolls[0]):
+                    results.append( random.randint(1, rolls[1]))
         except ValueError:
             raise ArgumentError('Argument must be a number')
     else:
-        val = 6
-    roll = random.randint(1, val)
-    client.area.send_host_message('{} rolled {} out of {}.'.format(client.get_char_name(), roll, val))
-    logger.log_server('[{}][{}]Used /roll and got {} out of {}.'.format(client.area.id, client.get_char_name(), roll, val))
+        rolls.append(0)
+        rolls[0] = 6
+        roll = random.randint(1, 6)
+    if results:
+        msg = '{} rolled {}d{}: {} = {}'.format(client.get_char_name(), rolls[0], rolls[1], results, sum(results))
+        client.area.send_host_message( msg )
+    else:
+        msg = '{} rolled {} out of {}'.format(client.get_char_name(), roll, rolls[0] )
+        client.area.send_host_message(msg)
+    logger.log_server(msg + ' in area {} using /roll'.format(client.area.id))
 
 
 def ooc_cmd_coinflip(client, arg):
@@ -739,15 +759,49 @@ def ooc_cmd_votelist(client, arg):
             client.send_host_message(message)
 
 def ooc_cmd_pollset(client, arg):
-    if client.is_mod:
-        client.server.serverpoll_manager.add_poll(arg)
-        client.send_host_message('Added {} as a poll.'.format(arg))
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
     else:
-        return
+        if len(arg) == 0:
+            client.send_host_message('Command must have an argument!')
+        else:
+            client.server.serverpoll_manager.add_poll(arg)
+            client.send_host_message('Added {} as a poll.'.format(arg))
 
 def ooc_cmd_pollremove(client, arg):
     if client.is_mod:
-        client.server.serverpoll_manager.remove_poll(arg)
-        client.send_host_message('Removed {} as a poll.'.format(arg))
+        if len(arg) == 0:
+            client.send_host_message('Command must have an argument!')
+        else:
+            client.server.serverpoll_manager.remove_poll(arg)
+            client.send_host_message('Removed {} as a poll.'.format(arg))
+    else:
+        return
+
+def ooc_cmd_addpolldetail(client, arg):
+    if client.is_mod:
+        if len(arg) == 0:
+            client.send_host_message('Command must have an argument!')
+        else:
+            args = arg.split()
+            poll = 1
+            for word in args:
+                if word.lower().endswith(':'):
+                    break
+                else:
+                    poll += 1
+            if poll == len(args) + 1:
+                raise ArgumentError(
+                    'Invalid syntax. Add \':\' in the end of pollname. \n \'/addpolldetail <poll name>: <detail>\'')
+            poll_name = ' '.join(args[:poll])
+            poll_name = poll_name[:len(poll_name) - 1]
+            detail = ' '.join(args[poll:])
+            if not detail:
+                raise ArgumentError('Invalid syntax. Expected message after \':\'. \n \'/addpolldetail <poll name>: <detail>\'')
+            x = client.server.serverpoll_manager.polldetail(poll_name, detail)
+            if x == 1:
+                client.send_host_message('Added "{}" as details in poll "{}"'.format(detail, poll_name))
+            else:
+                client.send_host_message('Poll does not exist!'.format(arg))
     else:
         return
