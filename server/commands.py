@@ -526,22 +526,39 @@ def ooc_cmd_invite(client, arg):
         client.send_host_message('{} is invited to your area.'.format(client.server.client_manager.get_targets(client, TargetType.ID, int(arg), False)[0].get_char_name()))
     except:
         raise ClientError('You must specify a target. Use /invite <id>')
-        
+
 def ooc_cmd_area_kick(client, arg):
-    if not client.area.is_locked:
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if not client.area.is_locked and not client.is_mod:
         raise ClientError('Area isn\'t locked.')
-    if not client.is_cm:
-        raise ClientError('Only CM can kick from this area')
     if not arg:
-        raise ClientError('You must specify a target. Use /invite <id>')
-    try:
-        c = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), False)[0]
-        targets = client.server.client_manager.get_targets(client, TargetType.IPID, c.ipid, True)
-        for client in targets:
-            client.change_area(0)
-        invite_list.pop(c.ipid)
-    except:
         raise ClientError('You must specify a target. Use /area_kick <id>')
+    arg = arg.split(' ')
+    targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg[0]), False)
+    if targets:
+        try:
+            for c in targets:
+                if len(arg) == 1:
+                    area = client.server.area_manager.get_area_by_id(int(0))
+                    output = 0
+                else:
+                    try:
+                        area = client.server.area_manager.get_area_by_id(int(arg[1]))
+                        output = arg[1]
+                    except AreaError:
+                        raise
+                client.send_host_message("Attempting to kick {} to area {}.".format(c.get_char_name(), output))
+                c.change_area(area)
+                c.send_host_message("You were kicked from the area to area {}.".format(output))
+                if client.area.is_locked:
+                    client.area.invite_list.pop(c.ipid)
+        except AreaError:
+            raise
+        except ClientError:
+            raise
+    else:
+        client.send_host_message("No targets found.")
 
     
 def ooc_cmd_ooc_mute(client, arg):
@@ -633,4 +650,3 @@ def ooc_cmd_unblockdj(client, arg):
         target.is_dj = True
         target.send_host_message('Now you can change music.')
     client.send_host_message('Unblockdj\'d {}.'.format(targets[0].get_char_name()))
-    
