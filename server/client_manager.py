@@ -22,6 +22,7 @@ from enum import Enum
 from server.constants import TargetType
 
 import time
+import re
 
 
 
@@ -136,10 +137,9 @@ class ClientManager:
 
         def change_area(self, area):
             if self.area == area:
-                raise ClientError('You are already in this area.')
+                raise ClientError('User already in specified area.')
             if area.is_locked and not self.is_mod and not self.ipid in self.area.invite_list:
-                self.send_host_message("That area is locked!")
-                return
+                raise ClientError("That area is locked!")
             old_area = self.area
             if not area.is_char_available(self.char_id):
                 try:
