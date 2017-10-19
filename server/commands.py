@@ -533,7 +533,7 @@ def ooc_cmd_area_kick(client, arg):
     if not client.area.is_locked and not client.is_mod:
         raise ClientError('Area isn\'t locked.')
     if not arg:
-        raise ClientError('You must specify a target. Use /area_kick <id>')
+        raise ClientError('You must specify a target. Use /area_kick <id> [destination #]')
     arg = arg.split(' ')
     targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg[0]), False)
     if targets:
