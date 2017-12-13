@@ -52,6 +52,7 @@ class ClientManager:
             self.mod_call_time = 0
             self.in_rp = False
             self.ipid = ipid
+            self.websocket = None
             
             #music flood-guard stuff
             self.mus_counter = 0
@@ -59,7 +60,10 @@ class ClientManager:
             self.mus_change_time = [x * self.server.config['music_change_floodguard']['interval_length'] for x in range(self.server.config['music_change_floodguard']['times_per_interval'])]
 
         def send_raw_message(self, msg):
-            self.transport.write(msg.encode('utf-8'))
+            if self.websocket:
+                self.websocket.send_text(msg.encode('utf-8'))
+            else:
+                self.transport.write(msg.encode('utf-8'))
 
         def send_command(self, command, *args):
             if args:

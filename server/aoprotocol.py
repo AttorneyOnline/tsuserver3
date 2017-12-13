@@ -20,11 +20,12 @@ import re
 from time import localtime, strftime
 from enum import Enum
 
-from server import commands
-from server import logger
-from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
-from server.fantacrypt import fanta_decrypt
-from server.evidence import EvidenceList
+from . import commands
+from . import logger
+from .exceptions import ClientError, AreaError, ArgumentError, ServerError
+from .fantacrypt import fanta_decrypt
+from .evidence import EvidenceList
+from .websocket import WebSocket
 
 
 class AOProtocol(asyncio.Protocol):
@@ -43,6 +44,7 @@ class AOProtocol(asyncio.Protocol):
         self.client = None
         self.buffer = ''
         self.ping_timeout = None
+        self.websocket = None
 
     def data_received(self, data):
         """ Handles any data received from the network.
@@ -52,8 +54,26 @@ class AOProtocol(asyncio.Protocol):
 
         :param data: bytes of data
         """
-        # try to decode as utf-8, ignore any erroneous characters
-        self.buffer += data.decode('utf-8', 'ignore')
+        if self.websocket is None:
+            self.websocket = WebSocket(self.client, self)
+            if not self.websocket.handshake(data):
+                self.websocket = False
+            else:
+                self.client.websocket = self.websocket
+
+        buf = data
+        if self.websocket:
+            buf = self.websocket.handle(data)
+
+        if buf is None:
+            buf = b''
+
+        if not isinstance(buf, str):
+            # try to decode as utf-8, ignore any erroneous characters
+            self.buffer += buf.decode('utf-8', 'ignore')
+        else:
+            self.buffer = buf
+
         if len(self.buffer) > 8192:
             self.client.disconnect()
         for msg in self.get_messages():
@@ -80,7 +100,7 @@ class AOProtocol(asyncio.Protocol):
         """
         self.client = self.server.new_client(transport)
         self.ping_timeout = asyncio.get_event_loop().call_later(self.server.config['timeout'], self.client.disconnect)
-        self.client.send_command('decryptor', 34)  # just fantacrypt things
+        asyncio.get_event_loop().call_later(0.25, self.client.send_command, 'decryptor', 34) # just fantacrypt things)
 
     def connection_lost(self, exc):
         """ User disconnected
