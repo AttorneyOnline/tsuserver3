@@ -1,6 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <interface>
   <object class="ttk.Frame" id="Frame_1">
+    <property name="height">200</property>
     <layout>
       <property name="column">0</property>
       <property name="propagate">True</property>
@@ -128,9 +129,9 @@
                     <property name="text" translatable="yes">Basic</property>
                     <child>
                       <object class="ttk.Frame" id="Frame_8">
-                        <property name="height">200</property>
+                        <property name="height">0</property>
                         <property name="padding">15</property>
-                        <property name="width">200</property>
+                        <property name="width">0</property>
                         <layout>
                           <property name="column">0</property>
                           <property name="propagate">True</property>
@@ -172,10 +173,10 @@
                         </child>
                         <child>
                           <object class="ttk.Labelframe" id="Labelframe_3">
-                            <property name="height">200</property>
+                            <property name="height">0</property>
                             <property name="padding">5</property>
                             <property name="text" translatable="yes">Credentials</property>
-                            <property name="width">200</property>
+                            <property name="width">0</property>
                             <layout>
                               <property name="column">0</property>
                               <property name="columnspan">2</property>
@@ -320,15 +321,15 @@
                         </child>
                         <child>
                           <object class="ttk.Labelframe" id="Labelframe_4">
-                            <property name="height">200</property>
+                            <property name="height">0</property>
                             <property name="text" translatable="yes">MOTD (only shown to users after join)</property>
-                            <property name="width">200</property>
+                            <property name="width">0</property>
                             <layout>
                               <property name="column">0</property>
                               <property name="columnspan">2</property>
                               <property name="propagate">True</property>
                               <property name="row">7</property>
-                              <property name="sticky">ew</property>
+                              <property name="sticky">sew</property>
                               <rows>
                                 <row id="0">
                                   <property name="weight">0</property>
@@ -366,7 +367,9 @@
                     <property name="text" translatable="yes">Master</property>
                     <child>
                       <object class="ttk.Frame" id="Frame_13">
+                        <property name="height">0</property>
                         <property name="padding">15</property>
+                        <property name="width">0</property>
                         <layout>
                           <property name="column">0</property>
                           <property name="propagate">True</property>
@@ -449,7 +452,9 @@
                         </child>
                         <child>
                           <object class="ttk.Labelframe" id="Labelframe_5">
+                            <property name="height">0</property>
                             <property name="text" translatable="yes">Description</property>
+                            <property name="width">0</property>
                             <layout>
                               <property name="column">0</property>
                               <property name="columnspan">2</property>
@@ -464,7 +469,7 @@
                             </layout>
                             <child>
                               <object class="tk.Text" id="Text_6">
-                                <property name="height">6</property>
+                                <property name="height">15</property>
                                 <property name="text" translatable="yes">Description goes here.</property>
                                 <property name="undo">true</property>
                                 <property name="width">50</property>
@@ -525,7 +530,9 @@
                     <property name="text" translatable="yes">Districts</property>
                     <child>
                       <object class="ttk.Frame" id="Frame_14">
+                        <property name="height">0</property>
                         <property name="padding">15</property>
+                        <property name="width">0</property>
                         <layout>
                           <property name="column">0</property>
                           <property name="propagate">True</property>
@@ -635,9 +642,9 @@
                     <property name="text" translatable="yes">Areas</property>
                     <child>
                       <object class="ttk.Panedwindow" id="Panedwindow_4">
-                        <property name="height">185</property>
+                        <property name="height">0</property>
                         <property name="orient">vertical</property>
-                        <property name="width">185</property>
+                        <property name="width">0</property>
                         <layout>
                           <property name="column">0</property>
                           <property name="propagate">True</property>
@@ -645,7 +652,7 @@
                         </layout>
                         <child>
                           <object class="ttk.Panedwindow.Pane" id="Pane_1">
-                            <property name="weight">1</property>
+                            <property name="weight">0</property>
                             <child>
                               <object class="ttk.Treeview" id="Treeview_1">
                                 <property name="selectmode">extended</property>
@@ -653,6 +660,7 @@
                                   <property name="column">0</property>
                                   <property name="propagate">True</property>
                                   <property name="row">0</property>
+                                  <property name="sticky">nsew</property>
                                 </layout>
                               </object>
                             </child>
@@ -663,10 +671,10 @@
                             <property name="weight">0</property>
                             <child>
                               <object class="ttk.Labelframe" id="Labelframe_6">
-                                <property name="height">200</property>
+                                <property name="height">0</property>
                                 <property name="padding">15</property>
                                 <property name="text" translatable="yes">Properties</property>
-                                <property name="width">200</property>
+                                <property name="width">0</property>
                                 <layout>
                                   <property name="column">0</property>
                                   <property name="propagate">True</property>
@@ -813,9 +821,9 @@
                     <property name="text" translatable="yes">Music</property>
                     <child>
                       <object class="ttk.Panedwindow" id="Panedwindow_5">
-                        <property name="height">200</property>
+                        <property name="height">0</property>
                         <property name="orient">vertical</property>
-                        <property name="width">200</property>
+                        <property name="width">0</property>
                         <layout>
                           <property name="column">0</property>
                           <property name="propagate">True</property>
@@ -823,7 +831,7 @@
                         </layout>
                         <child>
                           <object class="ttk.Panedwindow.Pane" id="Pane_3">
-                            <property name="weight">1</property>
+                            <property name="weight">0</property>
                             <child>
                               <object class="ttk.Treeview" id="Treeview_2">
                                 <property name="selectmode">extended</property>
@@ -831,6 +839,7 @@
                                   <property name="column">0</property>
                                   <property name="propagate">True</property>
                                   <property name="row">0</property>
+                                  <property name="sticky">nsew</property>
                                 </layout>
                               </object>
                             </child>
@@ -841,10 +850,10 @@
                             <property name="weight">0</property>
                             <child>
                               <object class="ttk.Labelframe" id="Labelframe_7">
-                                <property name="height">200</property>
+                                <property name="height">0</property>
                                 <property name="padding">15</property>
                                 <property name="text" translatable="yes">Properties</property>
-                                <property name="width">200</property>
+                                <property name="width">0</property>
                                 <layout>
                                   <property name="column">0</property>
                                   <property name="propagate">True</property>
@@ -925,8 +934,8 @@
                                 </child>
                                 <child>
                                   <object class="ttk.Frame" id="Frame_16">
-                                    <property name="height">200</property>
-                                    <property name="width">200</property>
+                                    <property name="height">0</property>
+                                    <property name="width">0</property>
                                     <layout>
                                       <property name="column">0</property>
                                       <property name="columnspan">2</property>
@@ -996,9 +1005,9 @@
                     <property name="text" translatable="yes">Other</property>
                     <child>
                       <object class="ttk.Frame" id="Frame_18">
-                        <property name="height">200</property>
+                        <property name="height">0</property>
                         <property name="padding">15</property>
-                        <property name="width">200</property>
+                        <property name="width">0</property>
                         <layout>
                           <property name="column">0</property>
                           <property name="propagate">True</property>
