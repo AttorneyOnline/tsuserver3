@@ -19,6 +19,14 @@
 
 from server.tsuserver import TsuServer3
 
+# Idiotproof setup
+def check_pyyaml():
+    try:
+        import yaml
+    except ImportError:
+        print("Couldn't import PyYAML. Installing it for you...")
+        import pip
+        pip.main(["install", "--user", "pyyaml"])
 
 def main():
     server = TsuServer3()
@@ -26,4 +34,5 @@ def main():
 
 
 if __name__ == '__main__':
+    check_pyyaml()
     main()
