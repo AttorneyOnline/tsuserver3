@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from server.tsuserver import TsuServer3
 
 # Idiotproof setup
 def check_pyyaml():
@@ -25,10 +24,14 @@ def check_pyyaml():
         import yaml
     except ModuleNotFoundError:
         print("Couldn't import PyYAML. Installing it for you...")
-        import pip
-        pip.main(["install", "--user", "pyyaml"])
+        try:
+            import pip
+            pip.main(["install", "--user", "pyyaml"])
+        except ModuleNotFoundError:
+            print("Couldn't install it for you, because you don't have pip.")
 
 def main():
+    from server.tsuserver import TsuServer3
     server = TsuServer3()
     server.start()
 
