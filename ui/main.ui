@@ -1,24 +1,9 @@
 <?xml version='1.0' encoding='utf-8'?>
 <interface>
-  <object class="ttk.Frame" id="Frame_1">
+  <object class="tk.Toplevel" id="tsuserver_config_toplevel">
     <property name="height">200</property>
+    <property name="resizable">none</property>
     <property name="width">200</property>
-    <layout>
-      <property name="column">0</property>
-      <property name="propagate">True</property>
-      <property name="row">0</property>
-      <property name="sticky">nsew</property>
-      <rows>
-        <row id="0">
-          <property name="weight">1</property>
-        </row>
-      </rows>
-      <columns>
-        <column id="0">
-          <property name="weight">1</property>
-        </column>
-      </columns>
-    </layout>
     <child>
       <object class="ttk.Notebook" id="notebook">
         <property name="height">0</property>
@@ -33,7 +18,7 @@
           <object class="ttk.Notebook.Tab" id="tab_about">
             <property name="text" translatable="yes">About</property>
             <child>
-              <object class="ttk.Frame" id="Frame_19">
+              <object class="ttk.Frame" id="about_frame">
                 <property name="height">200</property>
                 <property name="padding">15</property>
                 <property name="width">200</property>
@@ -59,7 +44,7 @@
                   </columns>
                 </layout>
                 <child>
-                  <object class="ttk.Label" id="Label_18">
+                  <object class="ttk.Label" id="title">
                     <property name="font">{Helvetica} 14 {bold}</property>
                     <property name="text" translatable="yes">tsuserver3</property>
                     <layout>
@@ -70,7 +55,7 @@
                   </object>
                 </child>
                 <child>
-                  <object class="ttk.Label" id="Label_19">
+                  <object class="ttk.Label" id="slogan">
                     <property name="font">{Helvetica} 10 {}</property>
                     <property name="text" translatable="yes">The server software you can fix™</property>
                     <layout>
@@ -81,7 +66,7 @@
                   </object>
                 </child>
                 <child>
-                  <object class="ttk.Button" id="Button_10">
+                  <object class="ttk.Button" id="reload_config">
                     <property name="text" translatable="yes">Reload configuration</property>
                     <layout>
                       <property name="column">0</property>
@@ -129,7 +114,7 @@
                   <object class="ttk.Notebook.Tab" id="tab_basic">
                     <property name="text" translatable="yes">Basic</property>
                     <child>
-                      <object class="ttk.Frame" id="Frame_8">
+                      <object class="ttk.Frame" id="basic_frame">
                         <property name="height">0</property>
                         <property name="padding">15</property>
                         <property name="width">0</property>
@@ -160,7 +145,7 @@
                           </columns>
                         </layout>
                         <child>
-                          <object class="ttk.Checkbutton" id="Checkbutton_1">
+                          <object class="ttk.Checkbutton" id="cb_local">
                             <property name="text" translatable="yes">Listen only on this computer</property>
                             <property name="variable">int:listen</property>
                             <layout>
@@ -173,7 +158,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="ttk.Spinbox" id="Spinbox_1">
+                          <object class="ttk.Spinbox" id="sb_port">
                             <property name="cursor">arrow</property>
                             <property name="exportselection">false</property>
                             <property name="font">TkDefaultFont</property>
@@ -197,7 +182,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="ttk.Label" id="Label_2">
+                          <object class="ttk.Label" id="lbl_playerlimit">
                             <property name="anchor">w</property>
                             <property name="takefocus">false</property>
                             <property name="text" translatable="yes">Player limit:</property>
@@ -213,7 +198,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="ttk.Spinbox" id="Spinbox_2">
+                          <object class="ttk.Spinbox" id="sb_playerlimit">
                             <property name="cursor">arrow</property>
                             <property name="exportselection">false</property>
                             <property name="font">TkDefaultFont</property>
@@ -237,7 +222,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="ttk.Labelframe" id="Labelframe_3">
+                          <object class="ttk.Labelframe" id="credentials_frame">
                             <property name="height">0</property>
                             <property name="padding">5</property>
                             <property name="text" translatable="yes">Credentials</property>
@@ -255,7 +240,7 @@
                               </columns>
                             </layout>
                             <child>
-                              <object class="ttk.Label" id="Label_4">
+                              <object class="ttk.Label" id="lbl_guard_pass">
                                 <property name="text" translatable="yes">Guard password:</property>
                                 <layout>
                                   <property name="column">0</property>
@@ -267,7 +252,7 @@
                               </object>
                             </child>
                             <child>
-                              <object class="ttk.Entry" id="Entry_2">
+                              <object class="ttk.Entry" id="tb_guard_pass">
                                 <property name="show">•</property>
                                 <property name="text" translatable="yes">password</property>
                                 <layout>
@@ -279,7 +264,7 @@
                               </object>
                             </child>
                             <child>
-                              <object class="ttk.Label" id="Label_5">
+                              <object class="ttk.Label" id="lbl_admin_pass">
                                 <property name="text" translatable="yes">Admin password:</property>
                                 <layout>
                                   <property name="column">0</property>
@@ -291,7 +276,7 @@
                               </object>
                             </child>
                             <child>
-                              <object class="ttk.Entry" id="Entry_1">
+                              <object class="ttk.Entry" id="tb_admin_pass">
                                 <property name="show">•</property>
                                 <property name="text" translatable="yes">password</property>
                                 <layout>
@@ -305,7 +290,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="ttk.Label" id="Label_1">
+                          <object class="ttk.Label" id="lbl_port">
                             <property name="anchor">w</property>
                             <property name="takefocus">false</property>
                             <property name="text" translatable="yes">Port:</property>
@@ -314,14 +299,14 @@
                               <property name="columnspan">1</property>
                               <property name="ipadx">5</property>
                               <property name="propagate">True</property>
-                              <property name="row">2</property>
+                              <property name="row">5</property>
                               <property name="rowspan">1</property>
                               <property name="sticky">w</property>
                             </layout>
                           </object>
                         </child>
                         <child>
-                          <object class="ttk.Labelframe" id="Labelframe_4">
+                          <object class="ttk.Labelframe" id="motd_frame">
                             <property name="height">0</property>
                             <property name="text" translatable="yes">MOTD (only shown to users after join)</property>
                             <property name="width">0</property>
@@ -343,7 +328,7 @@
                               </columns>
                             </layout>
                             <child>
-                              <object class="tk.Text" id="Text_5">
+                              <object class="tk.Text" id="motd">
                                 <property name="height">6</property>
                                 <property name="text" translatable="yes">MOTD goes here.</property>
                                 <property name="undo">true</property>
@@ -367,7 +352,7 @@
                   <object class="ttk.Notebook.Tab" id="tab_master">
                     <property name="text" translatable="yes">Master</property>
                     <child>
-                      <object class="ttk.Frame" id="Frame_13">
+                      <object class="ttk.Frame" id="master_frame">
                         <property name="height">0</property>
                         <property name="padding">15</property>
                         <property name="width">0</property>
@@ -387,7 +372,7 @@
                           </columns>
                         </layout>
                         <child>
-                          <object class="ttk.Checkbutton" id="Checkbutton_9">
+                          <object class="ttk.Checkbutton" id="cb_public">
                             <property name="text" translatable="yes">Public</property>
                             <property name="variable">int:use_masterserver</property>
                             <layout>
@@ -399,7 +384,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="ttk.Label" id="Label_6">
+                          <object class="ttk.Label" id="lbl_ms_hostname">
                             <property name="text" translatable="yes">Master server hostname:</property>
                             <layout>
                               <property name="column">0</property>
@@ -411,7 +396,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="ttk.Entry" id="Entry_3">
+                          <object class="ttk.Entry" id="tb_ms_hostname">
                             <property name="text" translatable="yes">master.aceattorneyonline.com</property>
                             <property name="width">35</property>
                             <layout>
@@ -424,7 +409,23 @@
                           </object>
                         </child>
                         <child>
-                          <object class="ttk.Spinbox" id="Spinbox_3">
+                          <object class="ttk.Label" id="lbl_ms_port">
+                            <property name="anchor">w</property>
+                            <property name="takefocus">false</property>
+                            <property name="text" translatable="yes">Master server port:</property>
+                            <layout>
+                              <property name="column">0</property>
+                              <property name="columnspan">1</property>
+                              <property name="ipadx">5</property>
+                              <property name="propagate">True</property>
+                              <property name="row">2</property>
+                              <property name="rowspan">1</property>
+                              <property name="sticky">w</property>
+                            </layout>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="ttk.Spinbox" id="sb_ms_port">
                             <property name="cursor">arrow</property>
                             <property name="exportselection">false</property>
                             <property name="font">TkDefaultFont</property>
@@ -448,23 +449,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="ttk.Label" id="Label_7">
-                            <property name="anchor">w</property>
-                            <property name="takefocus">false</property>
-                            <property name="text" translatable="yes">Master server port:</property>
-                            <layout>
-                              <property name="column">0</property>
-                              <property name="columnspan">1</property>
-                              <property name="ipadx">5</property>
-                              <property name="propagate">True</property>
-                              <property name="row">2</property>
-                              <property name="rowspan">1</property>
-                              <property name="sticky">w</property>
-                            </layout>
-                          </object>
-                        </child>
-                        <child>
-                          <object class="ttk.Label" id="Label_8">
+                          <object class="ttk.Label" id="lbl_name">
                             <property name="text" translatable="yes">Server name:</property>
                             <layout>
                               <property name="column">0</property>
@@ -476,7 +461,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="ttk.Entry" id="Entry_4">
+                          <object class="ttk.Entry" id="tb_name">
                             <property name="text" translatable="yes">Cool McCool Server</property>
                             <property name="width">35</property>
                             <layout>
@@ -489,7 +474,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="ttk.Labelframe" id="Labelframe_5">
+                          <object class="ttk.Labelframe" id="description_frame">
                             <property name="height">0</property>
                             <property name="text" translatable="yes">Description</property>
                             <property name="width">0</property>
@@ -506,7 +491,7 @@
                               </columns>
                             </layout>
                             <child>
-                              <object class="tk.Text" id="Text_6">
+                              <object class="tk.Text" id="description">
                                 <property name="height">15</property>
                                 <property name="text" translatable="yes">Description goes here.</property>
                                 <property name="undo">true</property>
@@ -530,7 +515,7 @@
                   <object class="ttk.Notebook.Tab" id="tab_districts">
                     <property name="text" translatable="yes">Districts</property>
                     <child>
-                      <object class="ttk.Frame" id="Frame_14">
+                      <object class="ttk.Frame" id="districts_frame">
                         <property name="height">0</property>
                         <property name="padding">15</property>
                         <property name="width">0</property>
@@ -548,7 +533,7 @@
                           </columns>
                         </layout>
                         <child>
-                          <object class="ttk.Label" id="Label_9">
+                          <object class="ttk.Label" id="lbl_district_disclaimer">
                             <property name="text" translatable="yes">This feature requires a district server.
 </property>
                             <layout>
@@ -556,25 +541,13 @@
                               <property name="columnspan">2</property>
                               <property name="propagate">True</property>
                               <property name="row">0</property>
-                              <property name="rowspan">2</property>
+                              <property name="rowspan">1</property>
                               <property name="sticky">w</property>
                             </layout>
                           </object>
                         </child>
                         <child>
-                          <object class="ttk.Label" id="Label_10">
-                            <property name="text" translatable="yes">Hostname:</property>
-                            <layout>
-                              <property name="column">0</property>
-                              <property name="columnspan">1</property>
-                              <property name="propagate">True</property>
-                              <property name="row">3</property>
-                              <property name="sticky">w</property>
-                            </layout>
-                          </object>
-                        </child>
-                        <child>
-                          <object class="ttk.Checkbutton" id="Checkbutton_3">
+                          <object class="ttk.Checkbutton" id="cb_district_enabled">
                             <property name="text" translatable="yes">Enabled</property>
                             <property name="variable">int:listen</property>
                             <layout>
@@ -587,7 +560,19 @@
                           </object>
                         </child>
                         <child>
-                          <object class="ttk.Entry" id="Entry_5">
+                          <object class="ttk.Label" id="lbl_district_hostname">
+                            <property name="text" translatable="yes">Hostname:</property>
+                            <layout>
+                              <property name="column">0</property>
+                              <property name="columnspan">1</property>
+                              <property name="propagate">True</property>
+                              <property name="row">3</property>
+                              <property name="sticky">w</property>
+                            </layout>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="ttk.Entry" id="tb_district_hostname">
                             <property name="text" translatable="yes">district9.aceattorneyonline.com</property>
                             <property name="width">35</property>
                             <layout>
@@ -600,7 +585,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="ttk.Label" id="Label_12">
+                          <object class="ttk.Label" id="lbl_district_port">
                             <property name="text" translatable="yes">Port:</property>
                             <layout>
                               <property name="column">0</property>
@@ -611,7 +596,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="ttk.Spinbox" id="Spinbox_4">
+                          <object class="ttk.Spinbox" id="sb_district_port">
                             <property name="cursor">arrow</property>
                             <property name="exportselection">false</property>
                             <property name="font">TkDefaultFont</property>
@@ -642,7 +627,7 @@
                   <object class="ttk.Notebook.Tab" id="tab_areas">
                     <property name="text" translatable="yes">Areas</property>
                     <child>
-                      <object class="ttk.Panedwindow" id="Panedwindow_4">
+                      <object class="ttk.Panedwindow" id="areas_window">
                         <property name="height">0</property>
                         <property name="orient">vertical</property>
                         <property name="width">0</property>
@@ -652,9 +637,9 @@
                           <property name="row">0</property>
                         </layout>
                         <child>
-                          <object class="ttk.Panedwindow.Pane" id="Pane_1">
+                          <object class="ttk.Panedwindow.Pane" id="areas_pane">
                             <child>
-                              <object class="ttk.Treeview" id="Treeview_1">
+                              <object class="ttk.Treeview" id="treeview_areas">
                                 <property name="selectmode">extended</property>
                                 <layout>
                                   <property name="column">0</property>
@@ -667,9 +652,9 @@
                           </object>
                         </child>
                         <child>
-                          <object class="ttk.Panedwindow.Pane" id="Pane_2">
+                          <object class="ttk.Panedwindow.Pane" id="area_properties_pane">
                             <child>
-                              <object class="ttk.Labelframe" id="Labelframe_6">
+                              <object class="ttk.Labelframe" id="area_properties_frame">
                                 <property name="height">0</property>
                                 <property name="padding">15</property>
                                 <property name="text" translatable="yes">Properties</property>
@@ -691,7 +676,7 @@
                                   </columns>
                                 </layout>
                                 <child>
-                                  <object class="ttk.Label" id="Label_13">
+                                  <object class="ttk.Label" id="lbl_area_name">
                                     <property name="text" translatable="yes">Name:</property>
                                     <layout>
                                       <property name="column">0</property>
@@ -703,7 +688,7 @@
                                   </object>
                                 </child>
                                 <child>
-                                  <object class="ttk.Entry" id="Entry_7">
+                                  <object class="ttk.Entry" id="tb_area_name">
                                     <property name="text" translatable="yes">Basement</property>
                                     <property name="width">15</property>
                                     <layout>
@@ -716,7 +701,7 @@
                                   </object>
                                 </child>
                                 <child>
-                                  <object class="ttk.Label" id="Label_14">
+                                  <object class="ttk.Label" id="lbl_area_bg">
                                     <property name="text" translatable="yes">Background:</property>
                                     <layout>
                                       <property name="column">0</property>
@@ -728,7 +713,7 @@
                                   </object>
                                 </child>
                                 <child>
-                                  <object class="ttk.Combobox" id="Combobox_1">
+                                  <object class="ttk.Combobox" id="combo_area_bg">
                                     <layout>
                                       <property name="column">1</property>
                                       <property name="columnspan">1</property>
@@ -739,7 +724,7 @@
                                   </object>
                                 </child>
                                 <child>
-                                  <object class="ttk.Checkbutton" id="Checkbutton_4">
+                                  <object class="ttk.Checkbutton" id="cb_area_bglock">
                                     <property name="text" translatable="yes">Background locked</property>
                                     <property name="variable">int:bglock</property>
                                     <layout>
@@ -751,7 +736,7 @@
                                   </object>
                                 </child>
                                 <child>
-                                  <object class="ttk.Button" id="Button_4">
+                                  <object class="ttk.Button" id="btn_area_delete">
                                     <property name="text" translatable="yes">Delete</property>
                                     <layout>
                                       <property name="column">0</property>
@@ -763,7 +748,7 @@
                                   </object>
                                 </child>
                                 <child>
-                                  <object class="ttk.Frame" id="Frame_17">
+                                  <object class="ttk.Frame" id="area_move_frame">
                                     <property name="height">200</property>
                                     <property name="width">200</property>
                                     <layout>
@@ -782,7 +767,7 @@
                                       </columns>
                                     </layout>
                                     <child>
-                                      <object class="ttk.Button" id="Button_8">
+                                      <object class="ttk.Button" id="btn_area_move_up">
                                         <property name="text" translatable="yes">Move up</property>
                                         <layout>
                                           <property name="column">0</property>
@@ -794,7 +779,7 @@
                                       </object>
                                     </child>
                                     <child>
-                                      <object class="ttk.Button" id="Button_9">
+                                      <object class="ttk.Button" id="btn_area_move_down">
                                         <property name="text" translatable="yes">Move down</property>
                                         <layout>
                                           <property name="column">1</property>
@@ -819,7 +804,7 @@
                   <object class="ttk.Notebook.Tab" id="tab_music">
                     <property name="text" translatable="yes">Music</property>
                     <child>
-                      <object class="ttk.Panedwindow" id="Panedwindow_5">
+                      <object class="ttk.Panedwindow" id="music_window">
                         <property name="height">0</property>
                         <property name="orient">vertical</property>
                         <property name="width">0</property>
@@ -829,10 +814,10 @@
                           <property name="row">0</property>
                         </layout>
                         <child>
-                          <object class="ttk.Panedwindow.Pane" id="Pane_3">
+                          <object class="ttk.Panedwindow.Pane" id="music_list_pane">
                             <property name="weight">0</property>
                             <child>
-                              <object class="ttk.Treeview" id="Treeview_2">
+                              <object class="ttk.Treeview" id="treeview_music">
                                 <property name="selectmode">extended</property>
                                 <layout>
                                   <property name="column">0</property>
@@ -848,7 +833,7 @@
                           <object class="ttk.Panedwindow.Pane" id="Pane_4">
                             <property name="weight">0</property>
                             <child>
-                              <object class="ttk.Labelframe" id="Labelframe_7">
+                              <object class="ttk.Labelframe" id="music_properties_frame">
                                 <property name="height">0</property>
                                 <property name="padding">15</property>
                                 <property name="text" translatable="yes">Properties</property>
@@ -870,7 +855,7 @@
                                   </columns>
                                 </layout>
                                 <child>
-                                  <object class="ttk.Label" id="Label_15">
+                                  <object class="ttk.Label" id="lbl_music_filename">
                                     <property name="text" translatable="yes">File name:</property>
                                     <layout>
                                       <property name="column">0</property>
@@ -882,7 +867,7 @@
                                   </object>
                                 </child>
                                 <child>
-                                  <object class="ttk.Entry" id="Entry_8">
+                                  <object class="ttk.Entry" id="tb_music_filename">
                                     <property name="justify">left</property>
                                     <property name="text" translatable="yes">Basement</property>
                                     <property name="width">25</property>
@@ -896,7 +881,7 @@
                                   </object>
                                 </child>
                                 <child>
-                                  <object class="ttk.Label" id="Label_16">
+                                  <object class="ttk.Label" id="lbl_music_length">
                                     <property name="text" translatable="yes">Length (if known):</property>
                                     <layout>
                                       <property name="column">0</property>
@@ -908,19 +893,7 @@
                                   </object>
                                 </child>
                                 <child>
-                                  <object class="ttk.Button" id="Button_7">
-                                    <property name="text" translatable="yes">Delete</property>
-                                    <layout>
-                                      <property name="column">0</property>
-                                      <property name="columnspan">2</property>
-                                      <property name="propagate">True</property>
-                                      <property name="row">4</property>
-                                      <property name="sticky">sew</property>
-                                    </layout>
-                                  </object>
-                                </child>
-                                <child>
-                                  <object class="ttk.Spinbox" id="Spinbox_5">
+                                  <object class="ttk.Spinbox" id="sb_music_length">
                                     <property name="from_">0</property>
                                     <property name="width">7</property>
                                     <layout>
@@ -932,7 +905,19 @@
                                   </object>
                                 </child>
                                 <child>
-                                  <object class="ttk.Frame" id="Frame_16">
+                                  <object class="ttk.Button" id="lbl_music_delete">
+                                    <property name="text" translatable="yes">Delete</property>
+                                    <layout>
+                                      <property name="column">0</property>
+                                      <property name="columnspan">2</property>
+                                      <property name="propagate">True</property>
+                                      <property name="row">4</property>
+                                      <property name="sticky">sew</property>
+                                    </layout>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="ttk.Frame" id="music_move_frame">
                                     <property name="height">0</property>
                                     <property name="width">0</property>
                                     <layout>
@@ -951,7 +936,7 @@
                                       </columns>
                                     </layout>
                                     <child>
-                                      <object class="ttk.Button" id="Button_5">
+                                      <object class="ttk.Button" id="btn_music_move_up">
                                         <property name="text" translatable="yes">Move up</property>
                                         <layout>
                                           <property name="column">0</property>
@@ -963,7 +948,7 @@
                                       </object>
                                     </child>
                                     <child>
-                                      <object class="ttk.Button" id="Button_6">
+                                      <object class="ttk.Button" id="btn_music_move_down">
                                         <property name="text" translatable="yes">Move down</property>
                                         <layout>
                                           <property name="column">1</property>
@@ -988,7 +973,7 @@
                   <object class="ttk.Notebook.Tab" id="tab_chars">
                     <property name="text" translatable="yes">Characters</property>
                     <child>
-                      <object class="ttk.Treeview" id="Treeview_3">
+                      <object class="ttk.Treeview" id="chars_list">
                         <property name="selectmode">extended</property>
                         <layout>
                           <property name="column">0</property>
@@ -1003,7 +988,7 @@
                   <object class="ttk.Notebook.Tab" id="tab_other">
                     <property name="text" translatable="yes">Other</property>
                     <child>
-                      <object class="ttk.Frame" id="Frame_18">
+                      <object class="ttk.Frame" id="other_frame">
                         <property name="height">0</property>
                         <property name="padding">15</property>
                         <property name="width">0</property>
@@ -1023,7 +1008,7 @@
                           </columns>
                         </layout>
                         <child>
-                          <object class="ttk.Label" id="Label_17">
+                          <object class="ttk.Label" id="lbl_timeout">
                             <property name="text" translatable="yes">Timeout:</property>
                             <layout>
                               <property name="column">0</property>
@@ -1034,7 +1019,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="ttk.Spinbox" id="Spinbox_6">
+                          <object class="ttk.Spinbox" id="sb_timeout">
                             <property name="from_">0</property>
                             <property name="text" translatable="yes">250</property>
                             <layout>
@@ -1046,7 +1031,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="ttk.Checkbutton" id="Checkbutton_6">
+                          <object class="ttk.Checkbutton" id="cb_debug">
                             <property name="text" translatable="yes">Enable debug logging</property>
                             <property name="variable">string:debug_log</property>
                             <layout>
@@ -1058,7 +1043,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="ttk.Checkbutton" id="Checkbutton_7">
+                          <object class="ttk.Checkbutton" id="cb_area_lock">
                             <property name="text" translatable="yes">Enable area locking</property>
                             <property name="variable">string:area_locking_enabled</property>
                             <layout>
@@ -1070,7 +1055,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="ttk.Checkbutton" id="Checkbutton_8">
+                          <object class="ttk.Checkbutton" id="cb_rp_mode">
                             <property name="text" translatable="yes">RP mode (not used)</property>
                             <property name="variable">string:rp_mode_enabled</property>
                             <layout>
