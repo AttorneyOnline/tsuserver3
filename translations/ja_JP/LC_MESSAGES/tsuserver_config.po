@@ -1,0 +1,183 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-12-15 00:16-0600\n"
+"PO-Revision-Date: 2017-12-15 01:04-0600\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.0.4\n"
+"Last-Translator: oldmud0 <oldmud0@users.noreply.github.com>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"Language: ja_JP\n"
+
+#: ui/main.ui:19
+msgid "About"
+msgstr "約"
+
+#: ui/main.ui:49
+msgid "tsuserver3"
+msgstr "tsuserver3"
+
+#: ui/main.ui:60
+msgid "The server software you can fix™"
+msgstr "修理できるサーバソフト™"
+
+#: ui/main.ui:71
+msgid "Reload configuration"
+msgstr "コンフィグを際読み込む"
+
+#: ui/main.ui:85
+msgid "Log"
+msgstr "ログ"
+
+#: ui/main.ui:103
+msgid "Options"
+msgstr "オプション"
+
+#: ui/main.ui:115
+msgid "Basic"
+msgstr "全般"
+
+#: ui/main.ui:149
+msgid "Listen only on this computer"
+msgstr "このコンピューターのみでリッスン"
+
+#: ui/main.ui:187
+msgid "Player limit:"
+msgstr "最大接続者数:"
+
+#: ui/main.ui:226
+msgid "Credentials"
+msgstr "パスワード"
+
+#: ui/main.ui:242
+msgid "Guard password:"
+msgstr "ガードのパス:"
+
+#: ui/main.ui:265
+msgid "Admin password:"
+msgstr "アドミンのパス:"
+
+#: ui/main.ui:292 ui/main.ui:579
+msgid "Port:"
+msgstr "ポート:"
+
+#: ui/main.ui:307
+msgid "MOTD (only shown to users after join)"
+msgstr "MOTD (メンバーが入室時メッセジーを見せる)"
+
+#: ui/main.ui:348
+msgid "Master"
+msgstr "マスター"
+
+#: ui/main.ui:371
+msgid "Public"
+msgstr "公立 (マスターを利用)"
+
+#: ui/main.ui:383
+msgid "Master server hostname:"
+msgstr "ホスト名:"
+
+#: ui/main.ui:409
+msgid "Master server port:"
+msgstr "ポート:"
+
+#: ui/main.ui:446
+msgid "Server name:"
+msgstr "サーバ名:"
+
+#: ui/main.ui:471
+msgid "Description"
+msgstr "記載"
+
+#: ui/main.ui:507
+msgid "Districts"
+msgstr "地方"
+
+#: ui/main.ui:528
+msgid "This feature requires a district server.\n"
+msgstr "地方サーバが必要です。\n"
+
+#: ui/main.ui:542
+msgid "Enabled"
+msgstr "利用"
+
+#: ui/main.ui:555
+msgid "Hostname:"
+msgstr "ホスト名:"
+
+#: ui/main.ui:617
+msgid "Areas"
+msgstr "エーリア"
+
+#: ui/main.ui:649 ui/main.ui:827
+msgid "Properties"
+msgstr "プロパティ"
+
+#: ui/main.ui:669
+msgid "Name:"
+msgstr "名:"
+
+#: ui/main.ui:693
+msgid "Background:"
+msgstr "拝啓:"
+
+#: ui/main.ui:716
+msgid "Background locked"
+msgstr "拝啓ロック"
+
+#: ui/main.ui:728 ui/main.ui:896
+msgid "Delete"
+msgstr "削除"
+
+#: ui/main.ui:759 ui/main.ui:927
+msgid "Move up"
+msgstr "上へ"
+
+#: ui/main.ui:771 ui/main.ui:939
+msgid "Move down"
+msgstr "下へ"
+
+#: ui/main.ui:793
+msgid "Music"
+msgstr "音楽"
+
+#: ui/main.ui:847
+msgid "File name:"
+msgstr "ファイル名:"
+
+#: ui/main.ui:872
+msgid "Length (if known):"
+msgstr "長さ (秒) (任意)"
+
+#: ui/main.ui:961
+msgid "Characters"
+msgstr "キャラクター"
+
+#: ui/main.ui:976
+msgid "Other"
+msgstr "その他"
+
+#: ui/main.ui:999
+msgid "Timeout (seconds):"
+msgstr "タイムアウト (秒)"
+
+#: ui/main.ui:1021
+msgid "Enable debug logging"
+msgstr "ディボッグ利用"
+
+#: ui/main.ui:1033
+msgid "Enable area locking"
+msgstr "エーリアロック"
+
+#: ui/main.ui:1045
+msgid "RP mode (not used)"
+msgstr "RPモード"
