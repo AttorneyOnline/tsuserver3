@@ -24,7 +24,7 @@ Requires Python 3.6+ and PyYAML.
 * Run by either double-clicking `start_server.py` or typing in `python start_server.py`, or `py -3 start_server.py` if you use both Python 2 and 3. It is normal to not see any output once you start the server.
   - To stop the server, press Ctrl+C multiple times.
 
-## 
+####
 
 ## Commands
 
@@ -146,3 +146,10 @@ Requires Python 3.6+ and PyYAML.
 This server is licensed under the AGPLv3 license. In short, if you use a modified version of tsuserver3, you *must* distribute its source licensed under the AGPLv3 as well, and notify your users where the modified source may be found. The main difference between the AGPL and the GPL is that for the AGPL, network use counts as distribution. If you do not accept these terms, you should use [serverD](https://github.com/Attorney-Online-Engineering-Task-Force/serverD), which uses GPL rather than AGPL.
 
 See the [LICENSE](LICENSE.md) file for more information.
+
+## Translations
+
+If you modified any string in the UI, use `translations/generate.sh` to generate a new `.pot` file. You generally do not need to do this if you moved widgets around, but if you added a button with text, you will need to create a new `.pot` so that the new strings can be translated.
+
+Use [Poedit](https://poedit.net/) to edit the `.pot` file and compile a translation. Submit it as a pull request at your convenience.
+

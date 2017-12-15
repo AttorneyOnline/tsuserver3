@@ -87,7 +87,6 @@
               <object class="tk.Text" id="log">
                 <property name="height">16</property>
                 <property name="state">disabled</property>
-                <property name="text" translatable="yes">tsuserver log</property>
                 <property name="width">50</property>
                 <layout>
                   <property name="column">0</property>
@@ -168,7 +167,6 @@
                             <property name="justify">left</property>
                             <property name="state">normal</property>
                             <property name="takefocus">true</property>
-                            <property name="text" translatable="yes">27015</property>
                             <property name="to">65535</property>
                             <property name="validate">all</property>
                             <property name="width">7</property>
@@ -208,7 +206,6 @@
                             <property name="justify">left</property>
                             <property name="state">normal</property>
                             <property name="takefocus">true</property>
-                            <property name="text" translatable="yes">8</property>
                             <property name="to">65535</property>
                             <property name="validate">all</property>
                             <property name="width">7</property>
@@ -255,7 +252,6 @@
                             <child>
                               <object class="ttk.Entry" id="tb_guard_pass">
                                 <property name="show">•</property>
-                                <property name="text" translatable="yes">password</property>
                                 <layout>
                                   <property name="column">1</property>
                                   <property name="propagate">True</property>
@@ -279,7 +275,6 @@
                             <child>
                               <object class="ttk.Entry" id="tb_admin_pass">
                                 <property name="show">•</property>
-                                <property name="text" translatable="yes">password</property>
                                 <layout>
                                   <property name="column">1</property>
                                   <property name="propagate">True</property>
@@ -331,7 +326,6 @@
                             <child>
                               <object class="tk.Text" id="motd">
                                 <property name="height">6</property>
-                                <property name="text" translatable="yes">MOTD goes here.</property>
                                 <property name="undo">true</property>
                                 <property name="width">50</property>
                                 <property name="wrap">word</property>
@@ -398,7 +392,6 @@
                         </child>
                         <child>
                           <object class="ttk.Entry" id="tb_ms_hostname">
-                            <property name="text" translatable="yes">master.aceattorneyonline.com</property>
                             <property name="width">35</property>
                             <layout>
                               <property name="column">1</property>
@@ -435,7 +428,6 @@
                             <property name="justify">left</property>
                             <property name="state">normal</property>
                             <property name="takefocus">true</property>
-                            <property name="text" translatable="yes">27015</property>
                             <property name="to">65535</property>
                             <property name="validate">all</property>
                             <property name="width">7</property>
@@ -463,7 +455,6 @@
                         </child>
                         <child>
                           <object class="ttk.Entry" id="tb_name">
-                            <property name="text" translatable="yes">Cool McCool Server</property>
                             <property name="width">35</property>
                             <layout>
                               <property name="column">1</property>
@@ -494,7 +485,6 @@
                             <child>
                               <object class="tk.Text" id="description">
                                 <property name="height">15</property>
-                                <property name="text" translatable="yes">Description goes here.</property>
                                 <property name="undo">true</property>
                                 <property name="width">50</property>
                                 <property name="wrap">word</property>
@@ -574,7 +564,6 @@
                         </child>
                         <child>
                           <object class="ttk.Entry" id="tb_district_hostname">
-                            <property name="text" translatable="yes">district9.aceattorneyonline.com</property>
                             <property name="width">35</property>
                             <layout>
                               <property name="column">1</property>
@@ -606,7 +595,6 @@
                             <property name="justify">left</property>
                             <property name="state">normal</property>
                             <property name="takefocus">true</property>
-                            <property name="text" translatable="yes">27015</property>
                             <property name="to">65535</property>
                             <property name="validate">all</property>
                             <property name="width">7</property>
@@ -690,7 +678,6 @@
                                 </child>
                                 <child>
                                   <object class="ttk.Entry" id="tb_area_name">
-                                    <property name="text" translatable="yes">Basement</property>
                                     <property name="width">15</property>
                                     <layout>
                                       <property name="column">1</property>
@@ -870,7 +857,6 @@
                                 <child>
                                   <object class="ttk.Entry" id="tb_music_filename">
                                     <property name="justify">left</property>
-                                    <property name="text" translatable="yes">Basement</property>
                                     <property name="width">25</property>
                                     <layout>
                                       <property name="column">1</property>
@@ -1022,7 +1008,6 @@
                         <child>
                           <object class="ttk.Spinbox" id="sb_timeout">
                             <property name="from_">0</property>
-                            <property name="text" translatable="yes">250</property>
                             <layout>
                               <property name="column">1</property>
                               <property name="propagate">True</property>
