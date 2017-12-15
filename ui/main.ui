@@ -67,6 +67,7 @@
                 </child>
                 <child>
                   <object class="ttk.Button" id="reload_config">
+                    <property name="command">_reload_config</property>
                     <property name="text" translatable="yes">Reload configuration</property>
                     <layout>
                       <property name="column">0</property>
@@ -1009,7 +1010,7 @@
                         </layout>
                         <child>
                           <object class="ttk.Label" id="lbl_timeout">
-                            <property name="text" translatable="yes">Timeout:</property>
+                            <property name="text" translatable="yes">Timeout (seconds):</property>
                             <layout>
                               <property name="column">0</property>
                               <property name="propagate">True</property>
