@@ -23,7 +23,7 @@ from server.tsuserver import TsuServer3
 def check_pyyaml():
     try:
         import yaml
-    except ImportError:
+    except ModuleNotFoundError:
         print("Couldn't import PyYAML. Installing it for you...")
         import pip
         pip.main(["install", "--user", "pyyaml"])
