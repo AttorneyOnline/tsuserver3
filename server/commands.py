@@ -654,7 +654,7 @@ def ooc_cmd_unblockdj(client, arg):
 def ooc_cmd_notecard(client, arg):
     if len(arg) == 0:
         raise ArgumentError('You must specify the contents of the note card.')
-    client.area.cards[client.get_char_name()] = str(arg[1:])
+    client.area.cards[client.get_char_name()] = arg
     client.area.send_host_message('{} wrote a note card.'.format(client.get_char_name()))
 
 def ooc_cmd_notecard_clear(client, arg):
