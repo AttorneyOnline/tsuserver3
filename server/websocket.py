@@ -169,7 +169,10 @@ class WebSocket:
         self.transport.write(header + payload)
 
     def handshake(self, data):
-        message = data[0:1024].decode().strip()
+        try:
+            message = data[0:1024].decode().strip()
+        except UnicodeDecodeError:
+            return False
 
         upgrade = re.search('\nupgrade[\s]*:[\s]*websocket', message.lower())
         if not upgrade:
