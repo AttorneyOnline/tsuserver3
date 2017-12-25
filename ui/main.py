@@ -1,12 +1,12 @@
 import pygubu
 import gettext
-t = gettext.translation("default", "locales")
+t = gettext.translation("tsuserver_config", "translations")
 _ = t.gettext
 
 class TsuserverConfig:
     def __init__(self):
         self.builder = builder = pygubu.Builder(_)
-        builder.add_from_file("main.ui")
+        builder.add_from_file("ui/main.ui")
         self.main_window = builder.get_object("tsuserver_config_toplevel")
 
     def run(self):

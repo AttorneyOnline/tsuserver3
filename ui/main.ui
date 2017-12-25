@@ -36,6 +36,12 @@
                     <row id="2">
                       <property name="weight">1</property>
                     </row>
+                    <row id="3">
+                      <property name="weight">1</property>
+                    </row>
+                    <row id="6">
+                      <property name="weight">0</property>
+                    </row>
                   </rows>
                   <columns>
                     <column id="0">
@@ -72,8 +78,76 @@
                     <layout>
                       <property name="column">0</property>
                       <property name="propagate">True</property>
-                      <property name="row">5</property>
+                      <property name="row">3</property>
+                      <property name="sticky">s</property>
                     </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="ttk.Labelframe" id="status_frame">
+                    <property name="height">200</property>
+                    <property name="padding">15</property>
+                    <property name="text" translatable="yes">Status</property>
+                    <property name="width">200</property>
+                    <layout>
+                      <property name="column">0</property>
+                      <property name="propagate">True</property>
+                      <property name="row">2</property>
+                      <property name="sticky">ew</property>
+                      <columns>
+                        <column id="0">
+                          <property name="pad">0</property>
+                        </column>
+                        <column id="1">
+                          <property name="pad">0</property>
+                        </column>
+                      </columns>
+                    </layout>
+                    <child>
+                      <object class="ttk.Label" id="icon_server_status">
+                        <property name="image">circle_green_16.png</property>
+                        <layout>
+                          <property name="column">0</property>
+                          <property name="propagate">True</property>
+                          <property name="row">1</property>
+                          <property name="sticky">w</property>
+                        </layout>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="ttk.Label" id="lbl_server_status">
+                        <property name="text" translatable="yes">Server is listening at 127.0.0.1</property>
+                        <layout>
+                          <property name="column">1</property>
+                          <property name="propagate">True</property>
+                          <property name="row">1</property>
+                          <property name="sticky">w</property>
+                        </layout>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="ttk.Label" id="icon_ms_status">
+                        <property name="image">circle_red_16.png</property>
+                        <layout>
+                          <property name="column">0</property>
+                          <property name="propagate">True</property>
+                          <property name="row">2</property>
+                          <property name="sticky">w</property>
+                        </layout>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="ttk.Label" id="lbl_ms_status">
+                        <property name="justify">left</property>
+                        <property name="text" translatable="yes">Not advertising on master server</property>
+                        <layout>
+                          <property name="column">1</property>
+                          <property name="propagate">True</property>
+                          <property name="row">2</property>
+                          <property name="sticky">w</property>
+                        </layout>
+                      </object>
+                    </child>
                   </object>
                 </child>
               </object>
