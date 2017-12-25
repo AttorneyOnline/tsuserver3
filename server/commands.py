@@ -650,3 +650,27 @@ def ooc_cmd_unblockdj(client, arg):
         target.is_dj = True
         target.send_host_message('Now you can change music.')
     client.send_host_message('Unblockdj\'d {}.'.format(targets[0].get_char_name()))
+
+def ooc_cmd_notecard(client, arg):
+    if len(arg) == 0:
+        raise ArgumentError('You must specify the contents of the note card.')
+    client.area.cards[client.get_char_name()] = str(arg[1:])
+    client.area.send_host_message('{} wrote a note card.'.format(client.get_char_name()))
+
+def ooc_cmd_notecard_clear(client, arg):
+    try:
+        del client.area.cards[client.get_char_name()]
+        client.area.send_host_message('{} erased their note card.'.format(client.get_char_name()))
+    except KeyError:
+        raise ClientError('You do not have a note card.')
+
+def ooc_cmd_notecard_reveal(client, arg):
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('You must be a CM or moderator to reveal cards.')
+    if len(client.area.cards) == 0:
+        raise ClientError('There are no cards to reveal in this area.')
+    msg = 'Note cards have been revealed.\n'
+    for card_owner, card_msg in client.area.cards.items():
+        msg += '{}: {}\n'.format(card_owner, card_msg)
+    client.area.cards.clear()
+    client.area.send_host_message(msg)

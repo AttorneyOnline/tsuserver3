@@ -50,6 +50,7 @@ class AreaManager:
             self.evidence_mod = evidence_mod
             self.locking_allowed = locking_allowed
             self.owned = False
+            self.cards = dict()
 
             """
             #debug
