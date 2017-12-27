@@ -674,3 +674,41 @@ def ooc_cmd_notecard_reveal(client, arg):
         msg += '{}: {}\n'.format(card_owner, card_msg)
     client.area.cards.clear()
     client.area.send_host_message(msg)
+
+def ooc_cmd_rolla_reload(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be a moderator to load the ability dice configuration.')
+    rolla_reload(client.area)
+    client.send_host_message('Reloaded ability dice configuration.')
+
+def rolla_reload(area):
+    try:
+        import yaml
+        with open('config/dice.yaml', 'r') as dice:
+            area.ability_dice = yaml.load(dice)
+    except:
+        raise ServerError('There was an error parsing the ability dice configuration. Check your syntax.')
+
+def ooc_cmd_rolla_set(client, arg):
+    if not hasattr(client.area, 'ability_dice'):
+        rolla_reload(client.area)
+    available_sets = client.area.ability_dice.keys()
+    if len(arg) == 0:
+        raise ArgumentError('You must specify the ability set name.\nAvailable sets: {}'.format(available_sets))
+    if arg in client.area.ability_dice:
+        client.ability_dice_set = arg
+        client.send_host_message("Set ability set to {}.".format(arg))
+    else:
+        raise ArgumentError('Invalid ability set \'{}\'.\nAvailable sets: {}'.format(arg, available_sets))
+
+def ooc_cmd_rolla(client, arg):
+    if not hasattr(client.area, 'ability_dice'):
+        rolla_reload(client.area)
+    if not hasattr(client, 'ability_dice_set'):
+        raise ClientError('You must set your ability set using /rolla_set <name>.')
+    ability_dice = client.area.ability_dice[client.ability_dice_set]
+    max_roll = ability_dice['max'] if 'max' in ability_dice else 6
+    roll = random.randint(1, max_roll)
+    ability = ability_dice[roll] if roll in ability_dice else "Nothing happens"
+    client.area.send_host_message(
+        '{} rolled a {} (out of {}): {}.'.format(client.get_char_name(), roll, max_roll, ability))
