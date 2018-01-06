@@ -371,9 +371,7 @@ def ooc_cmd_status(client, arg):
             raise
 
 
-def ooc_cmd_online(client, arg):
-    if len(arg) != 0:
-        raise ArgumentError("This command doesn't take any arguments")
+def ooc_cmd_online(client, _):
     client.send_player_count()
 
 
