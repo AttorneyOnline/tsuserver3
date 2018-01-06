@@ -84,6 +84,11 @@ class ClientManager:
         def send_motd(self):
             self.send_host_message('=== MOTD ===\r\n{}\r\n============='.format(self.server.config['motd']))
 
+        def send_player_count(self):
+            self.send_host_message('{}/{} players online.'.format(
+                self.server.get_player_count(),
+                self.server.config['playerlimit']))
+
         def is_valid_name(self, name):
             name_ws = name.replace(' ', '')
             if not name_ws or name_ws.isdigit():

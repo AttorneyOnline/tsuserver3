@@ -369,7 +369,14 @@ def ooc_cmd_status(client, arg):
                 '[{}][{}]Changed status to {}'.format(client.area.id, client.get_char_name(), client.area.status))
         except AreaError:
             raise
-    
+
+
+def ooc_cmd_online(client, arg):
+    if len(arg) != 0:
+        raise ArgumentError("This command doesn't take any arguments")
+    client.send_player_count()
+
+
 def ooc_cmd_area(client, arg):
     args = arg.split()
     if len(args) == 0:
