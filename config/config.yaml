@@ -1,27 +1,27 @@
-hostname: <dollar>H
+hostname: Attorney Online MCC
 playerlimit: 100
-port: 27014
+port: 27017
 local: false
 
-guardpass: guard
-modpass: mod
+guardpass: lildidheknowthepasswordwasthis
+modpass: amrealmodwannagoskateboards
 
-motd: Welcome to my server!
-help_msg: TODO
+motd: Attorney Online Meme Community Casings. Case about anything. Meme about anything. If you need help (or the client), join the discord. https://discord.gg/4Wcmkr4
+help_msg: If you need help (or the client), join the discord. https://discord.gg/4Wcmkr4
 
 use_district: false
 district_ip: 127.0.0.1
-district_port: 11037
-district_password: enter_password
+district_port: 27017
+district_password: 
 
 use_masterserver: true
 masterserver_ip: master.aceattorneyonline.com
 masterserver_port: 27016
-masterserver_name: dont join please kthnx
-masterserver_description: This is my flashy new server
+masterserver_name: Attorney Online MCC
+masterserver_description: Attorney Online Meme Community Casings. Case about anything. Meme about anything. If you need help (or the client), join the discord. https://discord.gg/4Wcmkr4.
 
 timeout: 250
-debug: false
+debug: true
 
 music_change_floodguard:
   times_per_interval: 3
