@@ -20,6 +20,7 @@ from server import logger
 from server.exceptions import ClientError, AreaError
 from enum import Enum
 from server.constants import TargetType
+from heapq import heappop, heappush
 
 import time
 import re
@@ -290,23 +291,17 @@ class ClientManager:
     def __init__(self, server):
         self.clients = set()
         self.server = server
-        self.cur_id = [False] * self.server.config['playerlimit']
+        self.cur_id = [i for i in range(self.server.config['playerlimit'])]
         self.clients_list = []
 
     def new_client(self, transport):
-        cur_id = 0
-        for i in range(self.server.config['playerlimit']):
-                if not self.cur_id[i]:
-                    cur_id = i
-                    break
-        c = self.Client(self.server, transport, cur_id, self.server.get_ipid(transport.get_extra_info('peername')[0]))
+        c = self.Client(self.server, transport, heappop(self.cur_id), self.server.get_ipid(transport.get_extra_info('peername')[0]))
         self.clients.add(c)
-        self.cur_id[cur_id] = True
         return c
 
             
     def remove_client(self, client):
-        self.cur_id[client.id] = False
+        heappush(self.cur_id, client.id)
         self.clients.remove(client)
 		
     def get_targets(self, client, key, value, local = False):
