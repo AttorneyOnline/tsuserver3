@@ -20,6 +20,7 @@ from server import logger
 from server.exceptions import ClientError, AreaError
 from enum import Enum
 from server.constants import TargetType
+from heapq import heappop, heappush
 
 import time
 import re
@@ -204,13 +205,16 @@ class ClientManager:
             info = ''
             if area_id == -1:
                 # all areas info
-                info = '== Area List =='
+                cnt = 0
+                info = '\n== Area List =='
                 for i in range(len(self.server.area_manager.areas)):
                     if len(self.server.area_manager.areas[i].clients) > 0:
+                        cnt += len(self.server.area_manager.areas[i].clients)
                         info += '\r\n{}'.format(self.get_area_info(i, mods))
+                info = 'Current online: {}'.format(cnt) + info
             else:
                 try:
-                    info = self.get_area_info(area_id, mods)
+                    info = 'People in this area: {}\n'.format(len(self.server.area_manager.areas[area_id].clients)) + self.get_area_info(area_id, mods)
                 except AreaError:
                     raise
             self.send_host_message(info)
@@ -247,7 +251,6 @@ class ClientManager:
             self.send_command('BN', self.area.background)
             self.send_command('LE', *self.area.get_evidence_list(self))
             self.send_command('MM', 1)
-            self.send_command('OPPASS', fantacrypt.fanta_encrypt(self.server.config['guardpass']))
             self.send_command('DONE')
 
         def char_select(self):
@@ -290,23 +293,17 @@ class ClientManager:
     def __init__(self, server):
         self.clients = set()
         self.server = server
-        self.cur_id = [False] * self.server.config['playerlimit']
+        self.cur_id = [i for i in range(self.server.config['playerlimit'])]
         self.clients_list = []
 
     def new_client(self, transport):
-        cur_id = 0
-        for i in range(self.server.config['playerlimit']):
-                if not self.cur_id[i]:
-                    cur_id = i
-                    break
-        c = self.Client(self.server, transport, cur_id, self.server.get_ipid(transport.get_extra_info('peername')[0]))
+        c = self.Client(self.server, transport, heappop(self.cur_id), self.server.get_ipid(transport.get_extra_info('peername')[0]))
         self.clients.add(c)
-        self.cur_id[cur_id] = True
         return c
 
             
     def remove_client(self, client):
-        self.cur_id[client.id] = False
+        heappush(self.cur_id, client.id)
         self.clients.remove(client)
 		
     def get_targets(self, client, key, value, local = False):
