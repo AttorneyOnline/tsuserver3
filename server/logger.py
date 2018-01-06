@@ -53,6 +53,7 @@ def log_debug(msg, client=None):
 def log_server(msg, client=None):
     msg = parse_client_info(client) + msg
     logging.getLogger('server').info(msg)
+    print(msg)
 
 
 def parse_client_info(client):
