@@ -205,13 +205,16 @@ class ClientManager:
             info = ''
             if area_id == -1:
                 # all areas info
-                info = '== Area List =='
+                cnt = 0
+                info = '\n== Area List =='.format(len(self.server.area_manager.areas))
                 for i in range(len(self.server.area_manager.areas)):
                     if len(self.server.area_manager.areas[i].clients) > 0:
+                        cnt += len(self.server.area_manager.areas[i].clients)
                         info += '\r\n{}'.format(self.get_area_info(i, mods))
+                info = 'Current online: {}'.format(cnt) + info
             else:
                 try:
-                    info = self.get_area_info(area_id, mods)
+                    info = 'People in this area: {}\n'.format(len(self.server.area_manager.areas[area_id].clients)) + self.get_area_info(area_id, mods)
                 except AreaError:
                     raise
             self.send_host_message(info)
