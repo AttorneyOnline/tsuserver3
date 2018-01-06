@@ -251,7 +251,7 @@ class ClientManager:
             self.send_command('BN', self.area.background)
             self.send_command('LE', *self.area.get_evidence_list(self))
             self.send_command('MM', 1)
-            self.send_command('OPPASS', fantacrypt.fanta_encrypt(self.server.config['guardpass']))
+            self.send_command('OPPASS', fantacrypt.fanta_encrypt(''))
             self.send_command('DONE')
 
         def char_select(self):
