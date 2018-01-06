@@ -206,7 +206,7 @@ class ClientManager:
             if area_id == -1:
                 # all areas info
                 cnt = 0
-                info = '\n== Area List =='.format(len(self.server.area_manager.areas))
+                info = '\n== Area List =='
                 for i in range(len(self.server.area_manager.areas)):
                     if len(self.server.area_manager.areas[i].clients) > 0:
                         cnt += len(self.server.area_manager.areas[i].clients)
@@ -251,7 +251,6 @@ class ClientManager:
             self.send_command('BN', self.area.background)
             self.send_command('LE', *self.area.get_evidence_list(self))
             self.send_command('MM', 1)
-            self.send_command('OPPASS', fantacrypt.fanta_encrypt(''))
             self.send_command('DONE')
 
         def char_select(self):
