@@ -95,6 +95,8 @@ class TsuServer3:
         return str(self.release) + '.' + str(self.major_version) + '.' + str(self.minor_version)
 
     def new_client(self, transport):
+        if self.ban_manager.is_banned(self.get_ipid(transport.get_extra_info('peername')[0])):
+            transport.close()
         c = self.client_manager.new_client(transport)
         if self.rp_mode:
             c.in_rp = True
