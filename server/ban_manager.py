@@ -38,10 +38,15 @@ class BanManager:
 
     def add_ban(self, ip):
         if ip not in self.bans:
+            print(11)
+            print(ip)
             self.bans.append(ip)
+            print(12)
         else:
             raise ServerError('This IPID is already banned.')
+        print(13)
         self.write_banlist()
+        print(14)
 
     def remove_ban(self, ip):
         if ip in self.bans:
