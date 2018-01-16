@@ -30,6 +30,7 @@ import re
 class ClientManager:
     class Client:
         def __init__(self, server, transport, user_id, ipid):
+            self.is_checked = False
             self.transport = transport
             self.hdid = ''
             self.pm_mute = False

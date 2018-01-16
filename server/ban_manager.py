@@ -42,7 +42,7 @@ class BanManager:
         else:
             raise ServerError('This IPID is already banned.')
         self.write_banlist()
-
+        
     def remove_ban(self, ip):
         if ip in self.bans:
             self.bans.remove(ip)

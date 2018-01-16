@@ -203,9 +203,12 @@ def ooc_cmd_kick(client, arg):
         client.send_host_message("No targets found.")
         
 def ooc_cmd_ban(client, arg):
-    ipid = int(arg.strip())
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
+    try:
+        ipid = int(arg.strip())
+    except:
+        raise ClientError('You must specify ipid')
     try:
         client.server.ban_manager.add_ban(ipid)
     except ServerError:

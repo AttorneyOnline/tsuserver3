@@ -54,6 +54,8 @@ class AOProtocol(asyncio.Protocol):
 
         :param data: bytes of data
         """
+                
+        
         if self.websocket is None:
             self.websocket = WebSocket(self.client, self)
             if not self.websocket.handshake(data):
@@ -62,6 +64,12 @@ class AOProtocol(asyncio.Protocol):
                 self.client.websocket = self.websocket
 
         buf = data
+        
+        if not self.client.is_checked and self.server.ban_manager.is_banned(self.client.ipid):
+            self.client.transport.close()
+        else:
+            self.client.is_checked = True
+        
         if self.websocket:
             buf = self.websocket.handle(data)
 
