@@ -40,7 +40,7 @@ class ClientManager:
             self.server = server
             self.name = ''
             self.fake_name = ''
-            self.is_mod = True
+            self.is_mod = False
             self.is_dj = True
             self.pos = ''
             self.is_cm = False
