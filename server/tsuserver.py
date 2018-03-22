@@ -247,3 +247,13 @@ class TsuServer3:
                                .format(char_name, area_name, area_id, msg), pred=lambda x: not x.muted_adverts)
         if self.config['use_district']:
             self.district_client.send_raw_message('NEED#{}#{}#{}#{}'.format(char_name, area_name, area_id, msg))
+
+    def refresh(self):
+        with open('config/characters.yaml', 'r') as chars:
+            self.char_list = yaml.load(chars)
+        with open('config/music.yaml', 'r') as music:
+            self.music_list = yaml.load(music)
+        self.build_music_pages_ao1()
+        self.build_music_list_ao2()
+        with open('config/backgrounds.yaml', 'r') as bgs:
+            self.backgrounds = yaml.load(bgs)
