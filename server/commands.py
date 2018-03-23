@@ -720,3 +720,15 @@ def ooc_cmd_rolla(client, arg):
     ability = ability_dice[roll] if roll in ability_dice else "Nothing happens"
     client.area.send_host_message(
         '{} rolled a {} (out of {}): {}.'.format(client.get_char_name(), roll, max_roll, ability))
+		
+def ooc_cmd_refresh(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if len (arg) > 0:
+        raise ClientError('This command does not take in any arguments!')
+    else:
+        try:
+            client.server.refresh()
+            client.send_host_message('You have reloaded the server.')
+        except ServerError:
+            raise
