@@ -249,6 +249,8 @@ class TsuServer3:
             self.district_client.send_raw_message('NEED#{}#{}#{}#{}'.format(char_name, area_name, area_id, msg))
 
     def refresh(self):
+        with open('config/config.yaml', 'r') as cfg:
+            self.config['motd'] = yaml.load(cfg)['motd'].replace('\\n', ' \n')
         with open('config/characters.yaml', 'r') as chars:
             self.char_list = yaml.load(chars)
         with open('config/music.yaml', 'r') as music:
