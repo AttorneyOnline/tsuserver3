@@ -150,7 +150,8 @@ class ClientManager:
             if self.area == area:
                 raise ClientError('User already in specified area.')
             if area.is_locked and not self.is_mod and not self.ipid in self.area.invite_list:
-                raise ClientError("That area is locked!")
+                self.send_host_message('This area is locked - you will be unable to send messages ICly.')
+                # raise ClientError("That area is locked!")
             old_area = self.area
             if not area.is_char_available(self.char_id):
                 try:

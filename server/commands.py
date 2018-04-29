@@ -181,6 +181,49 @@ def ooc_cmd_pos(client, arg):
         client.area.broadcast_evidence_list()
         client.send_host_message('Position changed.')   
 
+def ooc_cmd_forcepos(client, arg):
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+
+    args = arg.split()
+
+    if len(args) < 1:
+        raise ArgumentError(
+            'Not enough arguments. Use /forcepos <pos> <target>. Target should be ID, OOC-name or char-name. Use /getarea for getting info like "[ID] char-name".')
+
+    targets = []
+
+    pos = args[0]
+    if len(args) > 1:
+        targets = client.server.client_manager.get_targets(
+            client, TargetType.CHAR_NAME, " ".join(args[1:]), True)
+        if len(targets) == 0 and args[1].isdigit():
+            targets = client.server.client_manager.get_targets(
+                client, TargetType.ID, int(arg[1]), True)
+        if len(targets) == 0:
+            targets = client.server.client_manager.get_targets(
+                client, TargetType.OOC_NAME, " ".join(args[1:]), True)
+        if len(targets) == 0:
+            raise ArgumentError('No targets found.')
+    else:
+        for c in client.area.clients:
+            targets.append(c)
+
+
+
+    for t in targets:
+        try:
+            t.change_position(pos)
+            t.area.broadcast_evidence_list()
+            t.send_host_message('Forced into /pos {}.'.format(pos))
+        except ClientError:
+            raise
+
+    client.area.send_host_message(
+        '{} forced {} client(s) into /pos {}.'.format(client.get_char_name(), len(targets), pos))
+    logger.log_server(
+        '[{}][{}]Used /forcepos {} for {} client(s).'.format(client.area.id, client.get_char_name(), pos, len(targets)))
+
 def ooc_cmd_help(client, arg):
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
@@ -501,10 +544,10 @@ def ooc_cmd_unmod(client, arg):
     
 def ooc_cmd_area_lock(client, arg):
     if not client.area.locking_allowed:
-        client.send_host_message('Area locking is disabled in this area')
+        client.send_host_message('Area locking is disabled in this area.')
         return
     if client.area.is_locked:
-        client.send_host_message('Area is locked by someone other')
+        client.send_host_message('Area is already locked.')
     if client.is_cm:
         client.area.is_locked = True
         client.area.send_host_message('Area is locked.')
@@ -512,11 +555,11 @@ def ooc_cmd_area_lock(client, arg):
             client.area.invite_list[i.ipid] = None
         return
     else:
-        raise ClientError('Only CM can lock area')
+        raise ClientError('Only CM can lock the area.')
         
 def ooc_cmd_area_unlock(client, arg):
     if not client.area.is_locked:
-        raise ClientError('Area already is open.')
+        raise ClientError('Area is already unlocked.')
     if not client.is_cm:
         raise ClientError('Only CM can unlock area.')
     client.area.unlock()
