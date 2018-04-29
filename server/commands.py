@@ -105,7 +105,7 @@ def ooc_cmd_roll(client, arg):
     if len(val) == 1:
         val.append(1)
     if len(val) > 2:
-        raise ArgumentError('Too much arguments. Use /roll [<max>] [<num of rolls>]')
+        raise ArgumentError('Too many arguments. Use /roll [<max>] [<num of rolls>]')
     if val[1] > 20 or val[1] < 1:
         raise ArgumentError('Num of rolls must be between 1 and 20')
     roll = ''
@@ -132,7 +132,7 @@ def ooc_cmd_rollp(client, arg):
     if len(val) == 1:
         val.append(1)
     if len(val) > 2:
-        raise ArgumentError('Too much arguments. Use /roll [<max>] [<num of rolls>]')
+        raise ArgumentError('Too many arguments. Use /roll [<max>] [<num of rolls>]')
     if val[1] > 20 or val[1] < 1:
         raise ArgumentError('Num of rolls must be between 1 and 20')
     roll = ''
@@ -504,7 +504,7 @@ def ooc_cmd_area_lock(client, arg):
         client.send_host_message('Area locking is disabled in this area')
         return
     if client.area.is_locked:
-        client.send_host_message('Area is locked by someone other')
+        client.send_host_message('Area is already locked')
     if client.is_cm:
         client.area.is_locked = True
         client.area.send_host_message('Area is locked.')
@@ -516,7 +516,7 @@ def ooc_cmd_area_lock(client, arg):
         
 def ooc_cmd_area_unlock(client, arg):
     if not client.area.is_locked:
-        raise ClientError('Area already is open.')
+        raise ClientError('Area is already unlocked.')
     if not client.is_cm:
         raise ClientError('Only CM can unlock area.')
     client.area.unlock()
@@ -640,7 +640,7 @@ def ooc_cmd_blockdj(client, arg):
         raise ArgumentError('Target not found. Use /blockdj <id>.')
     for target in targets:
         target.is_dj = False
-        target.send_host_message('You have been muted of changing music by moderator.')
+        target.send_host_message('A moderator muted you from changing the music.')
     client.send_host_message('blockdj\'d {}.'.format(targets[0].get_char_name()))
 
 def ooc_cmd_unblockdj(client, arg):
@@ -656,7 +656,7 @@ def ooc_cmd_unblockdj(client, arg):
         raise ArgumentError('Target not found. Use /blockdj <id>.')
     for target in targets:
         target.is_dj = True
-        target.send_host_message('Now you can change music.')
+        target.send_host_message('A moderator unmuted you from changing the music.')
     client.send_host_message('Unblockdj\'d {}.'.format(targets[0].get_char_name()))
 
 def ooc_cmd_notecard(client, arg):

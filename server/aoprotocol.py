@@ -456,7 +456,7 @@ class AOProtocol(asyncio.Protocol):
             if args[1] != self.client.char_id:
                 return
             if self.client.change_music_cd():
-                self.client.send_host_message('You changed song too much times. Please try again after {} seconds.'.format(int(self.client.change_music_cd())))
+                self.client.send_host_message('You changed song too many times. Please try again after {} seconds.'.format(int(self.client.change_music_cd())))
                 return
             try:
                 name, length = self.server.get_song_data(args[0])
