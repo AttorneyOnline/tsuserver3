@@ -25,3 +25,8 @@ music_change_floodguard:
   times_per_interval: 3
   interval_length: 20
   mute_length: 180
+
+wtce_floodguard:
+  times_per_interval: 5
+  interval_length: 10
+  mute_length: 1000
