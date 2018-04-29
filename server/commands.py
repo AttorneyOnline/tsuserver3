@@ -570,16 +570,41 @@ def ooc_cmd_invite(client, arg):
         raise ClientError('You must specify a target. Use /invite <id>')
     if not client.area.is_locked:
         raise ClientError('Area isn\'t locked.')
-    if not client.is_cm:
-        raise ClientError('Only CM can invite to this area')
+    if not client.is_cm or client.is_mod:
+        raise ClientError('You must be authorized to do that.')
     try:
-        client.area.invite_list[client.server.client_manager.get_targets(client, TargetType.ID, int(arg), False)[0].ipid] = None
-        client.send_host_message('{} is invited to your area.'.format(client.server.client_manager.get_targets(client, TargetType.ID, int(arg), False)[0].get_char_name()))
+        c = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), False)[0]
+        client.area.invite_list[c.ipid] = None
+        client.send_host_message('{} is invited to your area.'.format(c.get_char_name()))
+        c.send_host_message('You were invited and given access to area {}.'.format(client.area.id))
     except:
         raise ClientError('You must specify a target. Use /invite <id>')
 
+def ooc_cmd_uninvite(client, arg):
+    if not client.is_cm or client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if not client.area.is_locked and not client.is_mod:
+        raise ClientError('Area isn\'t locked.')
+    if not arg:
+        raise ClientError('You must specify a target. Use /uninvite <id>')
+    arg = arg.split(' ')
+    targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg[0]), True)
+    if targets:
+        try:
+            for c in targets:
+                client.send_host_message("You remove {} from the whitelist.".format(c.get_char_name()))
+                c.send_host_message("You were removed from the area whitelist.")
+                if client.area.is_locked:
+                    client.area.invite_list.pop(c.ipid)
+        except AreaError:
+            raise
+        except ClientError:
+            raise
+    else:
+        client.send_host_message("No targets found.")
+
 def ooc_cmd_area_kick(client, arg):
-    if not client.is_cm and not client.is_mod:
+    if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if not client.area.is_locked and not client.is_mod:
         raise ClientError('Area isn\'t locked.')
