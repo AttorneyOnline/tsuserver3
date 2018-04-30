@@ -732,3 +732,17 @@ def ooc_cmd_refresh(client, arg):
             client.send_host_message('You have reloaded the server.')
         except ServerError:
             raise
+
+def ooc_cmd_judgelog(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) != 0:
+        raise ArgumentError('This command does not take any arguments.')
+    jlog = client.area.judgelog
+    if len(jlog) > 0:
+        jlog_msg = '== Judge Log =='
+        for x in jlog:
+            jlog_msg += '\r\n{}'.format(x)
+        client.send_host_message(jlog_msg)
+    else:
+        raise ServerError('There have been no judge actions in this area since start of session.')

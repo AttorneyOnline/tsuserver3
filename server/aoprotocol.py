@@ -480,13 +480,17 @@ class AOProtocol(asyncio.Protocol):
             return
         if not self.validate_net_cmd(args, self.ArgType.STR):
             return
-        if args[0] not in ('testimony1', 'testimony2'):
+        if args[0] == 'testimony1':
+            sign = 'WT'
+        elif args[0] == 'testimony2':
+            sign = 'CE'
+        else:
             return
         if self.client.wtce_mute():
             self.client.send_host_message('You used witness testimony/cross examination signs too many times. Please try again after {} seconds.'.format(int(self.client.wtce_mute())))
             return
         self.client.area.send_command('RT', args[0])
-        self.client.area.add_to_judgelog(self.client, 'used WT/CE')
+        self.client.area.add_to_judgelog(self.client, 'used {}'.format(sign))
         logger.log_server("[{}]{} Used WT/CE".format(self.client.area.id, self.client.get_char_name()), self.client)
 
     def net_cmd_hp(self, args):
