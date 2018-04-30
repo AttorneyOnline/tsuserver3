@@ -659,6 +659,38 @@ def ooc_cmd_unblockdj(client, arg):
         target.send_host_message('A moderator unmuted you from changing the music.')
     client.send_host_message('Unblockdj\'d {}.'.format(targets[0].get_char_name()))
 
+def ooc_cmd_blockwtce(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a target. Use /blockwtce <id>.')
+    try:
+        targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), False)
+    except:
+        raise ArgumentError('You must enter a number. Use /blockwtce <id>.')
+    if not targets:
+        raise ArgumentError('Target not found. Use /blockwtce <id>.')
+    for target in targets:
+        target.can_wtce = False
+        target.send_host_message('A moderator blocked you from using judge signs.')
+    client.send_host_message('blockwtce\'d {}.'.format(targets[0].get_char_name()))
+
+def ooc_cmd_unblockwtce(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a target. Use /unblockwtce <id>.')
+    try:
+        targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), False)
+    except:
+        raise ArgumentError('You must enter a number. Use /unblockwtce <id>.')
+    if not targets:
+        raise ArgumentError('Target not found. Use /unblockwtce <id>.')
+    for target in targets:
+        target.can_wtce = True
+        target.send_host_message('A moderator unblocked you from using judge signs.')
+    client.send_host_message('unblockwtce\'d {}.'.format(targets[0].get_char_name()))
+
 def ooc_cmd_notecard(client, arg):
     if len(arg) == 0:
         raise ArgumentError('You must specify the contents of the note card.')

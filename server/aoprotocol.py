@@ -478,6 +478,9 @@ class AOProtocol(asyncio.Protocol):
         if self.client.is_muted:  # Checks to see if the client has been muted by a mod
             self.client.send_host_message("You have been muted by a moderator")
             return
+        if not self.client.can_wtce:
+            self.client.send_host_message('You were blocked from using judge signs by a moderator.')
+            return
         if not self.validate_net_cmd(args, self.ArgType.STR):
             return
         if args[0] == 'testimony1':

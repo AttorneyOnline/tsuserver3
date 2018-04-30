@@ -42,6 +42,7 @@ class ClientManager:
             self.fake_name = ''
             self.is_mod = False
             self.is_dj = True
+            self.can_wtce = True
             self.pos = ''
             self.is_cm = False
             self.evi_list = []

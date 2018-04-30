@@ -127,6 +127,10 @@ Requires Python 3.6+ and PyYAML.
     - Mutes the target from changing music. 
 * **unblockdj** "target"
     - Undo previous command.
+* **blockwtce** "target"
+    - Blocks the target from using Witness Testimony/Cross Examination signs.
+* **unblockwtce** "target"
+    - Undo previous command.
 * **evidence_mod** <MOD>
     - Changes evidence_mod in this area. Possible values: FFA, CM, HiddenCM, Mods
         * **FFA**
