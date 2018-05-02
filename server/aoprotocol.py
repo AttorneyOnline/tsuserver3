@@ -375,6 +375,9 @@ class AOProtocol(asyncio.Protocol):
             if pos not in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
                 return
         msg = text[:256]
+        if msg.startswith('/'):
+            self.net_cmd_ct([self.client.name, msg])
+            return
         if self.client.disemvowel:
             msg = self.client.disemvowel_message(msg)
         self.client.pos = pos

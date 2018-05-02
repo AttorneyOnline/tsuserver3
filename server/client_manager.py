@@ -53,6 +53,7 @@ class ClientManager:
             self.is_ooc_muted = False
             self.pm_mute = False
             self.mod_call_time = 0
+            self.command_time = 0
             self.in_rp = False
             self.ipid = ipid
             self.websocket = None

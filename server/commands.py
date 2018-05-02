@@ -18,6 +18,7 @@
 import random
 import hashlib
 import string
+import time
 from server.constants import TargetType
 
 from server import logger
@@ -846,3 +847,22 @@ def ooc_cmd_judgelog(client, arg):
         client.send_host_message(jlog_msg)
     else:
         raise ServerError('There have been no judge actions in this area since start of session.')
+
+def ooc_cmd_sfx(client, arg):
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('You must be a CM or moderator to use this command.')
+    if len(arg) == 0:
+        raise ArgumentError('Not enough arguments. Use /sfx <name>.')
+
+    if (time.time() * 1000.0 - client.command_time) <= 0:
+        return
+        #raise ArgumentError('Please don\'t spam.')
+    client.command_time = round(time.time() * 1000.0 + 200)
+    client.send_host_message('Playing sound: {}.'.format(arg))
+
+    client.area.send_command('MS', '1', '-', ' ', '../../background/blackout/defensedesk',
+                             '((/sfx {}))'.format(arg), client.pos, '0', 1, client.char_id, 0, 0, 0, 0, 0, 0)
+    client.area.send_command('MS', '1', '-', ' ', '../../background/blackout/defensedesk',
+                             ' ', client.pos, arg, 1, 0, 0, 0, 0, 0, 0, 0)
+
+    logger.log_server('[{}][{}]Played  sfx {}.'.format(client.area.id, client.get_char_name(), arg), client)
