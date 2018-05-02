@@ -592,7 +592,7 @@ def ooc_cmd_uninvite(client, arg):
     if targets:
         try:
             for c in targets:
-                client.send_host_message("You remove {} from the whitelist.".format(c.get_char_name()))
+                client.send_host_message("You have removed {} from the whitelist.".format(c.get_char_name()))
                 c.send_host_message("You were removed from the area whitelist.")
                 if client.area.is_locked:
                     client.area.invite_list.pop(c.ipid)
