@@ -116,7 +116,10 @@ class AreaManager:
                                                                         lambda: self.play_music(name, -1, length))
 
 
-        def can_send_message(self):
+        def can_send_message(self, client):
+            if self.is_locked and not client.is_mod and not client.ipid in self.invite_list:
+                client.send_host_message('This is a locked area - ask the CM to speak.')
+                return False
             return (time.time() * 1000.0 - self.next_message_time) > 0
 
         def change_hp(self, side, val):
