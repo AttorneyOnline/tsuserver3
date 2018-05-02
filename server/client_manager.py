@@ -42,6 +42,7 @@ class ClientManager:
             self.fake_name = ''
             self.is_mod = False
             self.is_dj = True
+            self.can_wtce = True
             self.pos = ''
             self.is_cm = False
             self.evi_list = []
@@ -56,10 +57,13 @@ class ClientManager:
             self.ipid = ipid
             self.websocket = None
             
-            #music flood-guard stuff
+            #flood-guard stuff
             self.mus_counter = 0
-            self.mute_time = 0
+            self.mus_mute_time = 0
             self.mus_change_time = [x * self.server.config['music_change_floodguard']['interval_length'] for x in range(self.server.config['music_change_floodguard']['times_per_interval'])]
+            self.wtce_counter = 0
+            self.wtce_mute_time = 0
+            self.wtce_time = [x * self.server.config['wtce_floodguard']['interval_length'] for x in range(self.server.config['wtce_floodguard']['times_per_interval'])]
 
         def send_raw_message(self, msg):
             if self.websocket:
@@ -124,21 +128,36 @@ class ClientManager:
         def change_music_cd(self):
             if self.is_mod or self.is_cm:
                 return 0
-            if self.mute_time:
-                if time.time() - self.mute_time < self.server.config['music_change_floodguard']['mute_length']:
-                    return self.server.config['music_change_floodguard']['mute_length'] - (time.time() - self.mute_time)
+            if self.mus_mute_time:
+                if time.time() - self.mus_mute_time < self.server.config['music_change_floodguard']['mute_length']:
+                    return self.server.config['music_change_floodguard']['mute_length'] - (time.time() - self.mus_mute_time)
                 else:
-                    self.mute_time = 0
+                    self.mus_mute_time = 0
             times_per_interval = self.server.config['music_change_floodguard']['times_per_interval']
             interval_length = self.server.config['music_change_floodguard']['interval_length']
             if time.time() - self.mus_change_time[(self.mus_counter - times_per_interval + 1) % times_per_interval] < interval_length:
-                self.mute_time = time.time()
+                self.mus_mute_time = time.time()
                 return self.server.config['music_change_floodguard']['mute_length']
             self.mus_counter = (self.mus_counter + 1) % times_per_interval
             self.mus_change_time[self.mus_counter] = time.time()
             return 0
-                
-                
+
+        def wtce_mute(self):
+            if self.is_mod or self.is_cm:
+                return 0
+            if self.wtce_mute_time:
+                if time.time() - self.wtce_mute_time < self.server.config['wtce_floodguard']['mute_length']:
+                    return self.server.config['wtce_floodguard']['mute_length'] - (time.time() - self.wtce_mute_time)
+                else:
+                    self.wtce_mute_time = 0
+            times_per_interval = self.server.config['wtce_floodguard']['times_per_interval']
+            interval_length = self.server.config['wtce_floodguard']['interval_length']
+            if time.time() - self.wtce_time[(self.wtce_counter - times_per_interval + 1) % times_per_interval] < interval_length:
+                self.wtce_mute_time = time.time()
+                return self.server.config['music_change_floodguard']['mute_length']
+            self.wtce_counter = (self.wtce_counter + 1) % times_per_interval
+            self.wtce_time[self.wtce_counter] = time.time()
+            return 0
 
         def reload_character(self):
             try:

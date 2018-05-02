@@ -105,7 +105,7 @@ def ooc_cmd_roll(client, arg):
     if len(val) == 1:
         val.append(1)
     if len(val) > 2:
-        raise ArgumentError('Too much arguments. Use /roll [<max>] [<num of rolls>]')
+        raise ArgumentError('Too many arguments. Use /roll [<max>] [<num of rolls>]')
     if val[1] > 20 or val[1] < 1:
         raise ArgumentError('Num of rolls must be between 1 and 20')
     roll = ''
@@ -132,7 +132,7 @@ def ooc_cmd_rollp(client, arg):
     if len(val) == 1:
         val.append(1)
     if len(val) > 2:
-        raise ArgumentError('Too much arguments. Use /roll [<max>] [<num of rolls>]')
+        raise ArgumentError('Too many arguments. Use /roll [<max>] [<num of rolls>]')
     if val[1] > 20 or val[1] < 1:
         raise ArgumentError('Num of rolls must be between 1 and 20')
     roll = ''
@@ -708,7 +708,7 @@ def ooc_cmd_blockdj(client, arg):
         raise ArgumentError('Target not found. Use /blockdj <id>.')
     for target in targets:
         target.is_dj = False
-        target.send_host_message('You have been muted of changing music by moderator.')
+        target.send_host_message('A moderator muted you from changing the music.')
     client.send_host_message('blockdj\'d {}.'.format(targets[0].get_char_name()))
 
 def ooc_cmd_unblockdj(client, arg):
@@ -724,8 +724,40 @@ def ooc_cmd_unblockdj(client, arg):
         raise ArgumentError('Target not found. Use /blockdj <id>.')
     for target in targets:
         target.is_dj = True
-        target.send_host_message('Now you can change music.')
+        target.send_host_message('A moderator unmuted you from changing the music.')
     client.send_host_message('Unblockdj\'d {}.'.format(targets[0].get_char_name()))
+
+def ooc_cmd_blockwtce(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a target. Use /blockwtce <id>.')
+    try:
+        targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), False)
+    except:
+        raise ArgumentError('You must enter a number. Use /blockwtce <id>.')
+    if not targets:
+        raise ArgumentError('Target not found. Use /blockwtce <id>.')
+    for target in targets:
+        target.can_wtce = False
+        target.send_host_message('A moderator blocked you from using judge signs.')
+    client.send_host_message('blockwtce\'d {}.'.format(targets[0].get_char_name()))
+
+def ooc_cmd_unblockwtce(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a target. Use /unblockwtce <id>.')
+    try:
+        targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), False)
+    except:
+        raise ArgumentError('You must enter a number. Use /unblockwtce <id>.')
+    if not targets:
+        raise ArgumentError('Target not found. Use /unblockwtce <id>.')
+    for target in targets:
+        target.can_wtce = True
+        target.send_host_message('A moderator unblocked you from using judge signs.')
+    client.send_host_message('unblockwtce\'d {}.'.format(targets[0].get_char_name()))
 
 def ooc_cmd_notecard(client, arg):
     if len(arg) == 0:
@@ -800,3 +832,17 @@ def ooc_cmd_refresh(client, arg):
             client.send_host_message('You have reloaded the server.')
         except ServerError:
             raise
+
+def ooc_cmd_judgelog(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) != 0:
+        raise ArgumentError('This command does not take any arguments.')
+    jlog = client.area.judgelog
+    if len(jlog) > 0:
+        jlog_msg = '== Judge Log =='
+        for x in jlog:
+            jlog_msg += '\r\n{}'.format(x)
+        client.send_host_message(jlog_msg)
+    else:
+        raise ServerError('There have been no judge actions in this area since start of session.')
