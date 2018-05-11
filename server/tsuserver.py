@@ -116,6 +116,8 @@ class TsuServer3:
             self.config['motd'] = self.config['motd'].replace('\\n', ' \n') 
         if 'music_change_floodguard' not in self.config:
             self.config['music_change_floodguard'] = {'times_per_interval': 1,  'interval_length': 0, 'mute_length': 0}
+        if 'wtce_floodguard' not in self.config:
+            self.config['wtce_floodguard'] = {'times_per_interval': 1, 'interval_length': 0, 'mute_length': 0}
 
     def load_characters(self):
         with open('config/characters.yaml', 'r', encoding = 'utf-8') as chars:
