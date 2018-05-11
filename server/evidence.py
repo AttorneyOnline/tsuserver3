@@ -1,4 +1,6 @@
 class EvidenceList:
+    limit = 35
+
     class Evidence:
         def __init__(self, name, desc, image, pos):
             self.name = name
@@ -52,7 +54,10 @@ class EvidenceList:
         if self.login(client):
             if client.area.evidence_mod == 'HiddenCM':
                 pos = 'pos'
-            self.evidences.append(self.Evidence(name, description, image, pos))
+            if len(self.evidences) >= self.limit:
+                client.send_host_message('You can\'t have more than {} evidence items at a time.'.format(self.limit))
+            else:
+                self.evidences.append(self.Evidence(name, description, image, pos))
         
     def evidence_swap(self, client, id1, id2):
         if self.login(client):
