@@ -176,7 +176,6 @@ class AOProtocol(asyncio.Protocol):
         logger.log_server('Connected. HDID: {}.'.format(self.client.hdid), self.client)
         self.client.send_command('ID', self.client.id, self.server.software, self.server.get_version_string())
         self.client.send_command('PN', self.server.get_player_count() - 1, self.server.config['playerlimit'])
-        self.ping_timeout.cancel()
 
     def net_cmd_id(self, args):
         """ Client version and PV
@@ -221,8 +220,8 @@ class AOProtocol(asyncio.Protocol):
 
         """
         self.client.send_command('CHECK')
-        # self.ping_timeout.cancel()
-        # self.ping_timeout = asyncio.get_event_loop().call_later(self.server.config['timeout'], self.client.disconnect)
+        self.ping_timeout.cancel()
+        self.ping_timeout = asyncio.get_event_loop().call_later(self.server.config['timeout'], self.client.disconnect)
 
     def net_cmd_askchaa(self, _):
         """ Ask for the counts of characters/evidence/music
