@@ -86,8 +86,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.disconnect()
         for msg in self.get_messages():
             if len(msg) < 2:
-                self.client.disconnect()
-                return
+                continue
             # general netcode structure is not great
             if msg[0] in ('#', '3', '4'):
                 if msg[0] == '#':
@@ -99,7 +98,7 @@ class AOProtocol(asyncio.Protocol):
                 cmd, *args = msg.split('#')
                 self.net_cmd_dispatcher[cmd](self, args)
             except KeyError:
-                return
+                logger.log_debug('[INC][UNK]{}'.format(msg), self.client)
 
     def connection_made(self, transport):
         """ Called upon a new client connecting
@@ -177,6 +176,7 @@ class AOProtocol(asyncio.Protocol):
         logger.log_server('Connected. HDID: {}.'.format(self.client.hdid), self.client)
         self.client.send_command('ID', self.client.id, self.server.software, self.server.get_version_string())
         self.client.send_command('PN', self.server.get_player_count() - 1, self.server.config['playerlimit'])
+        self.ping_timeout.cancel()
 
     def net_cmd_id(self, args):
         """ Client version and PV
@@ -221,8 +221,8 @@ class AOProtocol(asyncio.Protocol):
 
         """
         self.client.send_command('CHECK')
-        self.ping_timeout.cancel()
-        self.ping_timeout = asyncio.get_event_loop().call_later(self.server.config['timeout'], self.client.disconnect)
+        # self.ping_timeout.cancel()
+        # self.ping_timeout = asyncio.get_event_loop().call_later(self.server.config['timeout'], self.client.disconnect)
 
     def net_cmd_askchaa(self, _):
         """ Ask for the counts of characters/evidence/music
