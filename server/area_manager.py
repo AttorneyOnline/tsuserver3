@@ -51,6 +51,9 @@ class AreaManager:
             self.locking_allowed = locking_allowed
             self.owned = False
             self.cards = dict()
+            self.is_ooc_muted = False
+            self.master_area = None
+            self.is_subarea = False
 
             """
             #debug
@@ -74,6 +77,7 @@ class AreaManager:
         
         def unlock(self):
             self.is_locked = False
+            self.is_ooc_muted = False
             self.invite_list = {}
             self.send_host_message('This area is open now.')
         
