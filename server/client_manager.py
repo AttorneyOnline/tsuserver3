@@ -175,6 +175,10 @@ class ClientManager:
             self.area = area
             area.new_client(self)
 
+            if old_area.hub != self.area.hub:
+                old_area.hub.remove_client(self)
+                self.area.hub.new_client(self)
+
             self.send_host_message('Changed area to {}. [HUB: {}]'.format(area.name, area.hub.name))
             logger.log_server(
                 '[{}]Changed area from {} ({} {}) to {} ({} {}).'.format(self.get_char_name(), old_area.name, old_area.id, old_area.hub.name,
@@ -188,12 +192,7 @@ class ClientManager:
             msg = '=== Hub [{}]: {} ==='.format(self.hub.id, self.hub.name)
             lock = {True: '[LOCKED]', False: ''}
             for i, area in enumerate(self.hub.areas):
-                owner = 'FREE'
-                # if area.owned:
-                #     for client in [x for x in area.clients if x.is_cm]:
-                #         owner = 'MASTER: {}'.format(client.get_char_name())
-                #         break
-                msg += '\r\nArea {}: {} (users: {}) [{}]{}'.format(i, area.name, len(area.clients), owner, lock[area.is_locked])
+                msg += '\r\nArea {}: {} (users: {}) {}'.format(i, area.name, len(area.clients), lock[area.is_locked])
                 if self.area == area:
                     msg += ' [*]'
             self.send_host_message(msg)
@@ -202,10 +201,8 @@ class ClientManager:
             msg = '=== Hubs ==='.format(self.hub.name)
             for i, hub in enumerate(self.server.hub_manager.hubs):
                 owner = 'FREE'
-                # if area.owned:
-                #     for client in [x for x in area.clients if x.is_cm]:
-                #         owner = 'MASTER: {}'.format(client.get_char_name())
-                #         break
+                if hub.master:
+                    owner = 'MASTER: {}'.format(hub.master.get_char_name())
                 msg += '\r\nHub {}: {} (users: {}) [{}][{}]'.format(
                     i, hub.name, len(hub.clients()), hub.status, owner)
                 if self.hub == hub:

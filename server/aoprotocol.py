@@ -456,6 +456,9 @@ class AOProtocol(asyncio.Protocol):
             if not self.client.is_dj:
                 self.client.send_host_message('You were blockdj\'d by a moderator.')
                 return
+            if self.client.area.is_locked and not self.client.is_mod and not self.client.ipid in self.client.area.invite_list:
+                self.client.send_host_message('This is a locked area.')
+                return
             if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT):
                 return
             if args[1] != self.client.char_id:

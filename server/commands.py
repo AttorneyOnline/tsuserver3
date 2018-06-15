@@ -542,14 +542,40 @@ def ooc_cmd_evi_swap(client, arg):
         raise ClientError("you must specify 2 numbers")
      
 def ooc_cmd_cm(client, arg):
-    if 'CM' not in client.area.evidence_mod:
-        raise ClientError('You can\'t become a CM in this area')
-    # if client.area.owned == False:
-    #     client.area.owned = True
-    #     client.is_cm = True
-    #     if client.area.evidence_mod == 'HiddenCM':
-    #         client.area.broadcast_evidence_list()
-    #     client.area.send_host_message('{} is CM in this area now.'.format(client.get_char_name()))
+    if not client.hub.allow_cm:
+        raise ClientError('You can\'t become a CM in this hub')
+    if not hub.master:
+        client.hub.master = client
+        client.is_cm = True
+        if client.area.evidence_mod == 'HiddenCM':
+            client.area.broadcast_evidence_list()
+        client.hub.send_host_message('{} is CM in this hub now.'.format(client.get_char_name()))
+        return
+    # if not client.is_cm or client.hub.CMs[0] != client:
+    #     return
+    # if not arg:
+    #     raise ClientError('You must specify a target. Use /cm <id>')
+    # try:
+    #     c = client.server.client_manager.get_targets(
+    #         client, TargetType.ID, int(arg), False)[0]
+    #     if c == client:
+    #         raise
+    #     if (c.is_cm):
+    #         c.hub.CMs.remove(client)
+    #         c.is_cm = False
+    #         client.hub.send_host_message(
+    #             '{} is no longer a co-CM.'.format(c.get_char_name()))
+    #         c.send_host_message(
+    #             'You are no longer a co-CM of hub {}.'.format(client.hub.name))
+    #     else:
+    #         c.hub.CMs.append(client)
+    #         c.is_cm = True
+    #         client.hub.send_host_message(
+    #             '{} has been made a co-CM.'.format(c.get_char_name()))
+    #         c.send_host_message(
+    #             'You have been made a co-CM of hub {} by {}.'.format(client.hub.name, client.get_char_name()))
+    # except:
+    #     raise ClientError('You must specify a target. Use /cm <id>')
     
 def ooc_cmd_unmod(client, arg):
     client.is_mod = False
@@ -559,15 +585,14 @@ def ooc_cmd_unmod(client, arg):
     
 def ooc_cmd_area_lock(client, arg):
     if not client.area.locking_allowed:
-        client.send_host_message('Area locking is disabled in this area.')
-        return
+        raise ClientError('Area locking is disabled in this area.')
     if client.area.is_locked:
         client.send_host_message('Area is already locked.')
     if client.is_cm:
         client.area.is_locked = True
         client.area.send_host_message('Area is locked.')
-        for i in client.area.clients:
-            client.area.invite_list[i.ipid] = None
+        for c in client.area.clients:
+            client.area.invite_list.pop(c.ipid)
         return
     else:
         raise ClientError('Only CM can lock the area.')
@@ -619,29 +644,36 @@ def ooc_cmd_uninvite(client, arg):
         client.send_host_message("No targets found.")
 
 def ooc_cmd_area_kick(client, arg):
-    if not client.is_mod:
+    if not client.is_mod and not client.is_cm:
         raise ClientError('You must be authorized to do that.')
-    # if not client.area.is_locked and not client.is_mod:
-    #     raise ClientError('Area isn\'t locked.')
     if not arg:
-        raise ClientError('You must specify a target. Use /area_kick <id> [destination #]')
+        raise ClientError('You must specify a target. Use /area_kick <id> [destination #] [hub #]')
     arg = arg.split(' ')
     targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg[0]), False)
+    output = []
     if targets:
         try:
             for c in targets:
                 if len(arg) == 1:
-                    area = client.hub.get_area_by_id(int(0))
-                    output = 0
+                    area = client.server.hub_manager.default_hub().get_area_by_id(int(0))
+                    output[0] = 0
+                    output[1] = 0
                 else:
                     try:
-                        area = client.hub.get_area_by_id(int(arg[1]))
-                        output = arg[1]
+                        if len(arg) > 2:
+                            hub = client.server.hub_manager.get_hub_by_id(int(arg[2]))
+                            output[1] = arg[2]
+                        else:
+                            hub = client.hub
+                            output[1] = client.hub.id
+                        area = hub.get_area_by_id(int(arg[1]))
+                        output[0] = arg[1]
                     except AreaError:
                         raise
-                client.send_host_message("Attempting to kick {} to area {}.".format(c.get_char_name(), output))
+                client.send_host_message("Attempting to kick {} to area {} [Hub {}].".format(
+                    c.get_char_name(), output[0], output[1]))
                 c.change_area(area)
-                c.send_host_message("You were kicked from the area to area {}.".format(output))
+                c.send_host_message("You were kicked from the area to area {} [Hub {}].".format(output[0], output[1]))
                 if client.area.is_locked:
                     client.area.invite_list.pop(c.ipid)
         except AreaError:
@@ -650,7 +682,6 @@ def ooc_cmd_area_kick(client, arg):
             raise
     else:
         client.send_host_message("No targets found.")
-
     
 def ooc_cmd_ooc_mute(client, arg):
     if not client.is_mod:

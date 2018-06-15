@@ -66,15 +66,9 @@ class HubManager:
 
 			def remove_client(self, client):
 				self.clients.remove(client)
-				if client.is_cm:
-					client.is_cm = False
-					# self.owned = False
-					if self.is_locked:
-						self.unlock()
 			
 			def unlock(self):
 				self.is_locked = False
-				self.is_ooc_muted = False
 				self.invite_list = {}
 				self.send_host_message('This area is open now.')
 			
@@ -171,8 +165,17 @@ class HubManager:
 			self.name = name
 			self.allow_cm = allow_cm
 			self.areas = []
+			self.master = None
 			self.is_ooc_muted = False
 			self.status = 'IDLE'
+
+		def new_client(self, client):
+			return
+
+		def remove_client(self, client):
+			if client.is_cm:
+				client.is_cm = False
+				self.master = None
 
 		def default_area(self):
 			return self.areas[0]
@@ -199,7 +202,7 @@ class HubManager:
 
 		def send_host_message(self, msg):
 			for area in self.areas:
-				area.send_host_message(self, msg)
+				area.send_host_message(msg)
 
 		def send_command(self, cmd, *args):
 			for area in self.areas:
@@ -226,6 +229,7 @@ class HubManager:
 			_hub = self.Hub(self.cur_id, self.server,
 							hub['hub'], hub['allow_cm'])
 			self.hubs.append(_hub)
+			self.cur_id += 1
 			for area in hub['areas']:
 				if 'evidence_mod' not in area:
 					area['evidence_mod'] = 'FFA'

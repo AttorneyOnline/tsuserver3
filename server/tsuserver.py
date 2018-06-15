@@ -106,6 +106,7 @@ class TsuServer3:
 
     def remove_client(self, client):
         client.area.remove_client(client)
+        client.hub.remove_client(client)
         self.client_manager.remove_client(client)
 
     def get_player_count(self):
