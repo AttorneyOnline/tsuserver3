@@ -22,7 +22,7 @@ import json
 
 from server import logger
 from server.aoprotocol import AOProtocol
-from server.area_manager import AreaManager
+from server.hub_manager import HubManager
 from server.ban_manager import BanManager
 from server.client_manager import ClientManager
 from server.districtclient import DistrictClient
@@ -36,7 +36,7 @@ class TsuServer3:
         self.load_config()
         self.load_iniswaps()
         self.client_manager = ClientManager(self)
-        self.area_manager = AreaManager(self)
+        self.hub_manager = HubManager(self)
         self.ban_manager = BanManager()
         self.software = 'tsuserver3'
         self.version = 'tsuserver3dev'
@@ -99,7 +99,8 @@ class TsuServer3:
         if self.rp_mode:
             c.in_rp = True
         c.server = self
-        c.area = self.area_manager.default_area()
+        c.hub = self.hub_manager.default_hub()
+        c.area = c.hub.default_area()
         c.area.new_client(c)
         return c
 
@@ -178,9 +179,9 @@ class TsuServer3:
     def build_music_pages_ao1(self):
         self.music_pages_ao1 = []
         index = 0
-        # add areas first
-        for area in self.area_manager.areas:
-            self.music_pages_ao1.append('{}#{}'.format(index, area.name))
+        # add hubs first
+        for hub in self.hub_manager.hubs:
+            self.music_pages_ao1.append('{}#{}'.format(index, hub.name))
             index += 1
         # then add music
         for item in self.music_list:
@@ -193,9 +194,9 @@ class TsuServer3:
 
     def build_music_list_ao2(self):
         self.music_list_ao2 = []
-        # add areas first
-        for area in self.area_manager.areas:
-            self.music_list_ao2.append(area.name)
+        # add hubs first
+        for hub in self.hub_manager.hubs:
+            self.music_list_ao2.append(hub.name)
             # then add music
         for item in self.music_list:
             self.music_list_ao2.append(item['category'])
@@ -230,23 +231,23 @@ class TsuServer3:
 
     def broadcast_global(self, client, msg, as_mod=False):
         char_name = client.get_char_name()
-        ooc_name = '{}[{}][{}]'.format('<dollar>G', client.area.id, char_name)
+        ooc_name = '{}[H{}][{}]'.format('<dollar>G', client.hub.id, char_name)
         if as_mod:
             ooc_name += '[M]'
         self.send_all_cmd_pred('CT', ooc_name, msg, pred=lambda x: not x.muted_global)
         if self.config['use_district']:
             self.district_client.send_raw_message(
-                'GLOBAL#{}#{}#{}#{}'.format(int(as_mod), client.area.id, char_name, msg))
+                'GLOBAL#{}#{}#{}#{}'.format(int(as_mod), client.hub.id, char_name, msg))
 
     def broadcast_need(self, client, msg):
         char_name = client.get_char_name()
-        area_name = client.area.name
-        area_id = client.area.id
+        hub_name = client.hub.name
+        hub_id = client.hub.id
         self.send_all_cmd_pred('CT', '{}'.format(self.config['hostname']),
                                '=== Advert ===\r\n{} in {} [{}] needs {}\r\n==============='
-                               .format(char_name, area_name, area_id, msg), pred=lambda x: not x.muted_adverts)
+                               .format(char_name, hub_name, hub_id, msg), pred=lambda x: not x.muted_adverts)
         if self.config['use_district']:
-            self.district_client.send_raw_message('NEED#{}#{}#{}#{}'.format(char_name, area_name, area_id, msg))
+            self.district_client.send_raw_message('NEED#{}#{}#{}#{}'.format(char_name, hub_name, hub_id, msg))
 
     def refresh(self):
         with open('config/config.yaml', 'r') as cfg:

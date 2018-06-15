@@ -328,7 +328,7 @@ def ooc_cmd_g(client, arg):
     if len(arg) == 0:
         raise ArgumentError("You can't send an empty message.")
     client.server.broadcast_global(client, arg)
-    logger.log_server('[{}][{}][GLOBAL]{}.'.format(client.area.id, client.get_char_name(), arg), client)
+    logger.log_server('[{}][{}][GLOBAL]{}.'.format(client.hub.id, client.get_char_name(), arg), client)
     
 def ooc_cmd_gm(client, arg):
     if not client.is_mod:
@@ -407,13 +407,13 @@ def ooc_cmd_cleardoc(client, arg):
 
 def ooc_cmd_status(client, arg):
     if len(arg) == 0:
-        client.send_host_message('Current status: {}'.format(client.area.status))
+        client.send_host_message('Current status: {}'.format(client.hub.status))
     else:
         try:
-            client.area.change_status(arg)
-            client.area.send_host_message('{} changed status to {}.'.format(client.get_char_name(), client.area.status))
+            client.hub.change_status(arg)
+            client.hub.send_host_message('{} changed status to {}.'.format(client.get_char_name(), client.hub.status))
             logger.log_server(
-                '[{}][{}]Changed status to {}'.format(client.area.id, client.get_char_name(), client.area.status))
+                '[{}][{}]Changed status to {}'.format(client.hub.id, client.get_char_name(), client.hub.status))
         except AreaError:
             raise
 
@@ -421,14 +421,28 @@ def ooc_cmd_status(client, arg):
 def ooc_cmd_online(client, _):
     client.send_player_count()
 
-
+def ooc_cmd_hub(client, arg):
+    args = arg.split()
+    if len(args) == 0:
+        client.send_hub_list()
+    elif len(args) == 1:
+        try:
+            hub = client.server.hub_manager.get_hub_by_id(int(args[0]))
+            client.change_hub(hub)
+        except ValueError:
+            raise ArgumentError('hub ID must be a number.')
+        except (AreaError, ClientError):
+            raise
+    else:
+        raise ArgumentError('Too many arguments. Use /hub <id>.')
+        
 def ooc_cmd_area(client, arg):
     args = arg.split()
     if len(args) == 0:
         client.send_area_list()
     elif len(args) == 1:
         try:
-            area = client.server.area_manager.get_area_by_id(int(args[0]))
+            area = client.hub.get_area_by_id(int(args[0]))
             client.change_area(area)
         except ValueError:
             raise ArgumentError('Area ID must be a number.')
@@ -443,13 +457,13 @@ def ooc_cmd_pm(client, arg):
     msg = None
     if len(args) < 2:
         raise ArgumentError('Not enough arguments. use /pm <target> <message>. Target should be ID, OOC-name or char-name. Use /getarea for getting info like "[ID] char-name".')
-    targets = client.server.client_manager.get_targets(client, TargetType.CHAR_NAME, arg, True)
+    targets = client.server.client_manager.get_targets(client, TargetType.CHAR_NAME, arg, False)
     key = TargetType.CHAR_NAME
     if len(targets) == 0 and args[0].isdigit():
         targets = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), False)
         key = TargetType.ID
     if len(targets) == 0:
-        targets = client.server.client_manager.get_targets(client, TargetType.OOC_NAME, arg, True)
+        targets = client.server.client_manager.get_targets(client, TargetType.OOC_NAME, arg, False)
         key = TargetType.OOC_NAME
     if len(targets) == 0:
         raise ArgumentError('No targets found.')
@@ -530,12 +544,12 @@ def ooc_cmd_evi_swap(client, arg):
 def ooc_cmd_cm(client, arg):
     if 'CM' not in client.area.evidence_mod:
         raise ClientError('You can\'t become a CM in this area')
-    if client.area.owned == False:
-        client.area.owned = True
-        client.is_cm = True
-        if client.area.evidence_mod == 'HiddenCM':
-            client.area.broadcast_evidence_list()
-        client.area.send_host_message('{} is CM in this area now.'.format(client.get_char_name()))
+    # if client.area.owned == False:
+    #     client.area.owned = True
+    #     client.is_cm = True
+    #     if client.area.evidence_mod == 'HiddenCM':
+    #         client.area.broadcast_evidence_list()
+    #     client.area.send_host_message('{} is CM in this area now.'.format(client.get_char_name()))
     
 def ooc_cmd_unmod(client, arg):
     client.is_mod = False
@@ -589,7 +603,7 @@ def ooc_cmd_uninvite(client, arg):
     if not arg:
         raise ClientError('You must specify a target. Use /uninvite <id>')
     arg = arg.split(' ')
-    targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg[0]), True)
+    targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg[0]), False)
     if targets:
         try:
             for c in targets:
@@ -617,11 +631,11 @@ def ooc_cmd_area_kick(client, arg):
         try:
             for c in targets:
                 if len(arg) == 1:
-                    area = client.server.area_manager.get_area_by_id(int(0))
+                    area = client.hub.get_area_by_id(int(0))
                     output = 0
                 else:
                     try:
-                        area = client.server.area_manager.get_area_by_id(int(arg[1]))
+                        area = client.hub.get_area_by_id(int(arg[1]))
                         output = arg[1]
                     except AreaError:
                         raise

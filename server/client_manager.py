@@ -36,7 +36,8 @@ class ClientManager:
             self.pm_mute = False
             self.id = user_id
             self.char_id = -1
-            self.area = server.area_manager.default_area()
+            self.hub = server.hub_manager.default_hub()
+            self.area = self.hub.default_area()
             self.server = server
             self.name = ''
             self.fake_name = ''
@@ -148,6 +149,12 @@ class ClientManager:
             except ClientError:
                 raise
 
+        def change_hub(self, hub):
+            if self.hub == hub:
+                raise ClientError('User already in specified hub.')
+            self.hub = hub
+            self.change_area(hub.default_area())
+
         def change_area(self, area):
             if self.area == area:
                 raise ClientError('User already in specified area.')
@@ -168,33 +175,47 @@ class ClientManager:
             self.area = area
             area.new_client(self)
 
-            self.send_host_message('Changed area to {}.[{}]'.format(area.name, self.area.status))
+            self.send_host_message('Changed area to {}. [HUB: {}]'.format(area.name, area.hub.name))
             logger.log_server(
-                '[{}]Changed area from {} ({}) to {} ({}).'.format(self.get_char_name(), old_area.name, old_area.id,
-                                                                   self.area.name, self.area.id), self)
+                '[{}]Changed area from {} ({} {}) to {} ({} {}).'.format(self.get_char_name(), old_area.name, old_area.id, old_area.hub.name,
+                                                                   self.area.name, self.area.id, self.area.hub.name), self)
             self.send_command('HP', 1, self.area.hp_def)
             self.send_command('HP', 2, self.area.hp_pro)
             self.send_command('BN', self.area.background)
             self.send_command('LE', *self.area.get_evidence_list(self))
 
         def send_area_list(self):
-            msg = '=== Areas ==='
+            msg = '=== Hub [{}]: {} ==='.format(self.hub.id, self.hub.name)
             lock = {True: '[LOCKED]', False: ''}
-            for i, area in enumerate(self.server.area_manager.areas):
+            for i, area in enumerate(self.hub.areas):
                 owner = 'FREE'
-                if area.owned:
-                    for client in [x for x in area.clients if x.is_cm]:
-                        owner = 'MASTER: {}'.format(client.get_char_name())
-                        break
-                msg += '\r\nArea {}: {} (users: {}) [{}][{}]{}'.format(i, area.name, len(area.clients), area.status, owner, lock[area.is_locked])
+                # if area.owned:
+                #     for client in [x for x in area.clients if x.is_cm]:
+                #         owner = 'MASTER: {}'.format(client.get_char_name())
+                #         break
+                msg += '\r\nArea {}: {} (users: {}) [{}]{}'.format(i, area.name, len(area.clients), owner, lock[area.is_locked])
                 if self.area == area:
+                    msg += ' [*]'
+            self.send_host_message(msg)
+
+        def send_hub_list(self):
+            msg = '=== Hubs ==='.format(self.hub.name)
+            for i, hub in enumerate(self.server.hub_manager.hubs):
+                owner = 'FREE'
+                # if area.owned:
+                #     for client in [x for x in area.clients if x.is_cm]:
+                #         owner = 'MASTER: {}'.format(client.get_char_name())
+                #         break
+                msg += '\r\nHub {}: {} (users: {}) [{}][{}]'.format(
+                    i, hub.name, len(hub.clients()), hub.status, owner)
+                if self.hub == hub:
                     msg += ' [*]'
             self.send_host_message(msg)
 
         def get_area_info(self, area_id, mods):
             info = ''
             try:
-                area = self.server.area_manager.get_area_by_id(area_id)
+                area = self.hub.get_area_by_id(area_id)
             except AreaError:
                 raise
             info += '= Area {}: {} =='.format(area.id, area.name)
@@ -216,14 +237,14 @@ class ClientManager:
                 # all areas info
                 cnt = 0
                 info = '\n== Area List =='
-                for i in range(len(self.server.area_manager.areas)):
-                    if len(self.server.area_manager.areas[i].clients) > 0:
-                        cnt += len(self.server.area_manager.areas[i].clients)
+                for i in range(len(self.hun.areas)):
+                    if len(self.hub.areas[i].clients) > 0:
+                        cnt += len(self.hub.areas[i].clients)
                         info += '\r\n{}'.format(self.get_area_info(i, mods))
                 info = 'Current online: {}'.format(cnt) + info
             else:
                 try:
-                    info = 'People in this area: {}\n'.format(len(self.server.area_manager.areas[area_id].clients)) + self.get_area_info(area_id, mods)
+                    info = 'People in this area: {}\n'.format(len(self.hub.areas[area_id].clients)) + self.get_area_info(area_id, mods)
                 except AreaError:
                     raise
             self.send_host_message(info)
@@ -237,15 +258,15 @@ class ClientManager:
 
         def send_all_area_hdid(self):
             info = '== HDID List =='
-            for i in range (len(self.server.area_manager.areas)):
-                 if len(self.server.area_manager.areas[i].clients) > 0:
+            for i in range (len(self.hub.areas)):
+                 if len(self.hub.areas[i].clients) > 0:
                     info += '\r\n{}'.format(self.get_area_hdid(i))
             self.send_host_message(info)			
 
         def send_all_area_ip(self):
             info = '== IP List =='
-            for i in range (len(self.server.area_manager.areas)):
-                 if len(self.server.area_manager.areas[i].clients) > 0:
+            for i in range (len(self.hub.areas)):
+                 if len(self.hub.areas[i].clients) > 0:
                     info += '\r\n{}'.format(self.get_area_ip(i))
             self.send_host_message(info)
 			
@@ -321,7 +342,7 @@ class ClientManager:
         if local:
             areas = [client.area]
         else:
-            areas = client.server.area_manager.areas
+            areas = client.hub.areas
         targets = []
         if key == TargetType.ALL:
             for nkey in range(6):

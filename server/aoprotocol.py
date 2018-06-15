@@ -401,8 +401,8 @@ class AOProtocol(asyncio.Protocol):
         if self.client.is_ooc_muted:  # Checks to see if the client has been muted by a mod
             self.client.send_host_message("You have been muted by a moderator")
             return
-        if self.client.area.is_ooc_muted and not self.client.is_cm and not self.client.is_mod
-            self.client.send_host_message("OOC is muted in this area!")
+        if self.client.hub.is_ooc_muted and not self.client.is_cm and not self.client.is_mod:
+            self.client.send_host_message("OOC is muted in this hub!")
             return
         if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR):
             return
@@ -435,9 +435,9 @@ class AOProtocol(asyncio.Protocol):
         else:
             if self.client.disemvowel:
                 args[1] = self.client.disemvowel_message(args[1])
-            self.client.area.send_command('CT', self.client.name, args[1])
+            self.client.hub.send_command('CT', '[{}] {}'.format(self.client.area.id, self.client.name), args[1])
             logger.log_server(
-                '[OOC][{}][{}][{}]{}'.format(self.client.area.id, self.client.get_char_name(), self.client.name,
+                '[OOC][{}][{}][{}][{}]{}'.format(self.client.hub.name, self.client.area.id, self.client.get_char_name(), self.client.name,
                                              args[1]), self.client)
 
     def net_cmd_mc(self, args):
@@ -447,8 +447,8 @@ class AOProtocol(asyncio.Protocol):
 
         """
         try:
-            area = self.server.area_manager.get_area_by_name(args[0])
-            self.client.change_area(area)
+            hub = self.server.hub_manager.get_hub_by_name(args[0])
+            self.client.change_hub(hub)
         except AreaError:
             if self.client.is_muted:  # Checks to see if the client has been muted by a mod
                 self.client.send_host_message("You have been muted by a moderator")
