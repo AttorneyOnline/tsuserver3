@@ -39,6 +39,9 @@ def ooc_cmd_switch(client, arg):
     client.send_host_message('Character changed.')
     
 def ooc_cmd_bg(client, arg):
+    if client.hub.status.lower() in ['casing-open', 'casing-full'] and not client.is_cm:
+        raise AreaError(
+            'Hub is {} - only the CM can change /bg.'.format(client.hub.status))
     if len(arg) == 0:
         raise ArgumentError('You must specify a name. Use /bg <background>.')
     if not client.is_mod and not client.is_cm and not client.area.bg_lock == True:
@@ -62,19 +65,7 @@ def ooc_cmd_bglock(client,arg):
     client.area.send_host_message('A mod has set the background lock to {}.'.format(client.area.bg_lock))
     logger.log_server('[{}][{}]Changed bglock to {}'.format(client.area.id, client.get_char_name(), client.area.bg_lock), client)
     
-def ooc_cmd_poslock(client, arg):
-    if not client.is_mod and not client.is_cm:
-        raise ClientError('You must be authorized to do that.')
-    if len(arg) != 0:
-        raise ArgumentError('This command has no arguments.')
-    if client.area.bg_lock == True:
-        client.area.bg_lock = False
-    else:
-        client.area.bg_lock = True
-    client.area.send_host_message(
-        'A mod has set the background lock to {}.'.format(client.area.bg_lock))
-    logger.log_server('[{}][{}]Changed bglock to {}'.format(
-        client.area.id, client.get_char_name(), client.area.bg_lock), client)
+
 
 def ooc_cmd_evidence_mod(client, arg):
     if not client.is_mod:
@@ -185,6 +176,8 @@ def ooc_cmd_motd(client, arg):
     client.send_motd()
     
 def ooc_cmd_pos(client, arg):
+    if client.area.pos_lock:
+        raise ClientError('Positions are locked in this area.')
     if len(arg) == 0:
         client.change_position()
         client.send_host_message('Position reset.')
@@ -196,9 +189,22 @@ def ooc_cmd_pos(client, arg):
         client.area.broadcast_evidence_list()
         client.send_host_message('Position changed.')   
 
+def ooc_cmd_poslock(client, arg):
+    if not client.is_mod and not client.is_cm:
+        raise ClientError('You must be authorized to do that.')
+    if not arg or arg == 'clear':
+        client.area.pos_lock = None
+        return
+    if arg not in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
+        raise ClientError('Invalid pos.')
+    client.area.pos_lock = arg
+    client.area.send_host_message('Locked pos into {}.'.format(arg))
+
 def ooc_cmd_forcepos(client, arg):
     if not client.is_cm and not client.is_mod:
         raise ClientError('You must be authorized to do that.')
+    if client.area.pos_lock:
+        raise ClientError('Positions are locked in this area.')
 
     args = arg.split()
 
@@ -400,6 +406,9 @@ def ooc_cmd_toggleadverts(client, arg):
     client.send_host_message('Advertisements turned {}.'.format(adv_stat))
     
 def ooc_cmd_doc(client, arg):
+    if client.hub.status.lower() in ['casing-open', 'casing-full'] and not client.is_cm:
+        raise AreaError(
+            'Hub is {} - only the CM can change /doc.'.format(client.hub.status))
     if len(arg) == 0:
         client.send_host_message('Document: {}'.format(client.area.doc))
         logger.log_server(
@@ -466,7 +475,21 @@ def ooc_cmd_area(client, arg):
             raise
     else:
         raise ArgumentError('Too many arguments. Use /area <id>.')
-        
+
+
+def ooc_cmd_rename(client, arg):
+    if not client.is_mod and not client.is_cm:
+        raise ClientError('You must be authorized to do that.')
+    if not client.area.can_rename:
+        raise ClientError('This area cannot be renamed!')
+
+    if len(arg) == 0:
+        client.area.name = 'Area {}'.format(client.area.id)
+    else:
+        client.area.name = arg[:24]
+    
+    client.area.send_host_message('Area renamed to {}.'.format(client.area.name))
+
 def ooc_cmd_pm(client, arg):
     args = arg.split()
     key = ''
@@ -674,8 +697,8 @@ def ooc_cmd_area_kick(client, arg):
                         raise
                 client.send_host_message("Attempting to kick {} to area {} [Hub {}].".format(
                     c.get_char_name(), output[0], output[1]))
-                if client.area.is_locked:
-                    client.area.invite_list.pop(c.ipid)
+                if c.area.is_locked:
+                    c.area.invite_list.pop(c.ipid)
                 if area.is_locked:
                     area.invite_list[c.ipid] = None
                 c.change_area(area)

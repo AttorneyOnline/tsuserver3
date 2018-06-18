@@ -373,6 +373,10 @@ class AOProtocol(asyncio.Protocol):
         else:
             if pos not in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
                 return
+
+        if self.client.area.pos_lock in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
+            pos = self.client.area.pos_lock
+
         msg = text[:256]
         if msg.startswith('/'):
             self.net_cmd_ct([self.client.name, msg])

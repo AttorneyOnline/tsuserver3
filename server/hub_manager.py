@@ -35,7 +35,7 @@ class HubManager:
 				self.can_rename = can_rename
 				self.background = background
 				self.bg_lock = bg_lock
-				self.pos_lock = pos_lock
+				self.pos_lock = pos_lock in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit') or None
 				self.server = server
 				self.music_looper = None
 				self.next_message_time = 0
@@ -58,7 +58,7 @@ class HubManager:
 				self.clients.add(client)
 
 			def remove_client(self, client):
-				if self.is_locked:
+				if self.is_locked and client.ipid in self.invite_list:
 					self.invite_list.pop(client.ipid)
 				self.clients.remove(client)
 			
@@ -124,8 +124,8 @@ class HubManager:
 				self.send_command('HP', side, val)
 
 			def change_background(self, bg):
-				if bg.lower() not in (name.lower() for name in self.server.backgrounds):
-					raise AreaError('Invalid background name.')
+				# if bg.lower() not in (name.lower() for name in self.server.backgrounds):
+				# 	raise AreaError('Invalid background name.')
 				self.background = bg
 				self.send_command('BN', self.background)
 
@@ -238,7 +238,7 @@ class HubManager:
 				if 'iniswap_allowed' not in area:
 					area['iniswap_allowed'] = True
 				_hub.areas.append(
-					_hub.Area(_hub.cur_id, _hub.server, _hub, area['area'], area['can_rename'], area['background'], area['bglock'], area['evidence_mod'], area['locking_allowed'], area['iniswap_allowed']))
+					_hub.Area(_hub.cur_id, _hub.server, _hub, area['area'], area['can_rename'], area['background'], area['bglock'], area['poslock'], area['evidence_mod'], area['locking_allowed'], area['iniswap_allowed']))
 				_hub.cur_id += 1
 
 	def default_hub(self):
