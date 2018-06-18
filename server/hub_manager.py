@@ -211,10 +211,10 @@ class HubManager:
 			for area in self.areas:
 				area.send_host_message(msg)
 
-		def send_to_cm(self, msg):
+		def send_to_cm(self, msg, exception):
 			for area in self.areas:
 				for client in area.clients:
-					if client.is_cm:
+					if client.is_cm and client != exception:
 						client.send_host_message(msg)
 
 		def get_cm_list(self):

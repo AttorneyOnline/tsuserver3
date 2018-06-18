@@ -349,7 +349,13 @@ def ooc_cmd_g(client, arg):
         raise ArgumentError("You can't send an empty message.")
     client.server.broadcast_global(client, arg)
     logger.log_server('[{}][{}][GLOBAL]{}.'.format(client.hub.id, client.get_char_name(), arg), client)
-    
+
+def ooc_cmd_a(client, arg):
+    if len(arg) == 0:
+        raise ArgumentError("You can't send an empty message.")
+    client.area.send_command('CT', '$A[{}]:'.format(client.get_char_name()), arg)
+    logger.log_server('[{}][{}][GLOBAL]{}.'.format(client.hub.id, client.get_char_name(), arg), client)
+
 def ooc_cmd_gm(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
@@ -508,14 +514,17 @@ def ooc_cmd_pm(client, arg):
     msg = None
     if len(args) < 2:
         raise ArgumentError('Not enough arguments. use /pm <target> <message>. Target should be ID, OOC-name or char-name. Use /getarea for getting info like "[ID] char-name".')
-    targets = client.server.client_manager.get_targets(client, TargetType.CHAR_NAME, arg, False)
-    key = TargetType.CHAR_NAME
-    if len(targets) == 0 and args[0].isdigit():
-        targets = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), False)
-        key = TargetType.ID
-    if len(targets) == 0:
-        targets = client.server.client_manager.get_targets(client, TargetType.OOC_NAME, arg, False)
-        key = TargetType.OOC_NAME
+    if arg.lower() in ['cm', 'gm']:
+        targets = client.hub.get_cm_list()
+    else:
+        targets = client.server.client_manager.get_targets(client, TargetType.CHAR_NAME, arg, False)
+        key = TargetType.CHAR_NAME
+        if len(targets) == 0 and args[0].isdigit():
+            targets = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), False)
+            key = TargetType.ID
+        if len(targets) == 0:
+            targets = client.server.client_manager.get_targets(client, TargetType.OOC_NAME, arg, False)
+            key = TargetType.OOC_NAME
     if len(targets) == 0:
         raise ArgumentError('No targets found.')
     try:
@@ -528,13 +537,13 @@ def ooc_cmd_pm(client, arg):
                 msg = arg[len(targets[0].name) + 1:]
     except:
         raise ArgumentError('Not enough arguments. Use /pm <target> <message>.')
-    c = targets[0]
-    if c.pm_mute:
-        raise ClientError('This user muted all pm conversation')
-    else:
-        c.send_host_message('PM from {} in {} ({}): {}'.format(client.name, client.hub.name, client.get_char_name(), msg))
-        c.hub.send_to_cm('PM from {} ({}) to {} in {}: {}'.format(client.name, client.get_char_name(), args[0], client.hub.name, msg))
-        client.send_host_message('PM sent to {}. Message: {}'.format(args[0], msg))
+    for c in targets:
+        if c.pm_mute:
+            raise ClientError('User {} muted all pm conversation'.format(c.name))
+        else:
+            c.send_host_message('PM from {} in {} ({}): {}'.format(client.name, client.hub.name, client.get_char_name(), msg))
+            c.hub.send_to_cm('[PMLog] PM from {} ({}) to {} in {}: {}'.format(client.name, client.get_char_name(), args[0], client.hub.name, msg), client)
+            client.send_host_message('PM sent to {}. Message: {}'.format(args[0], msg))
  
 def ooc_cmd_mutepm(client, arg):
     if len(arg) != 0:
@@ -600,20 +609,11 @@ def ooc_cmd_evi_swap(client, arg):
         raise ClientError("you must specify 2 numbers")
      
 def ooc_cmd_cm(client, arg):
-    if not client.hub.allow_cm:
-        raise ClientError('You can\'t become a CM in this hub')
-    if not client.hub.master and (len(client.hub.get_cm_list()) <= 0 or client.is_cm):
-        client.hub.master = client
-        client.is_cm = True
-        if client.area.evidence_mod == 'HiddenCM':
-            client.area.broadcast_evidence_list()
-        client.hub.send_host_message('{} is CM in this hub now.'.format(client.get_char_name()))
-        return
-    if not client.is_cm or client.hub.master != client:
-        return
-    if not arg:
-        raise ClientError('You must specify a target. Use /cm <id>')
-    try:
+    if len(arg) > 0:
+        if not client.is_cm or client.hub.master != client:
+            raise ClientError('You must be the master CM to promote co-CM\'s.')
+        if not arg:
+            raise ClientError('You must specify a target. Use /cm <id>')
         c = client.server.client_manager.get_targets(
             client, TargetType.ID, int(arg), False)[0]
         if c == client:
@@ -630,8 +630,23 @@ def ooc_cmd_cm(client, arg):
                 '{} has been made a co-CM.'.format(c.get_char_name()))
             c.send_host_message(
                 'You have been made a co-CM of hub {} by {}.'.format(client.hub.name, client.get_char_name()))
-    except:
-        raise ClientError('You must specify a target. Use /cm <id>')
+    else:
+        if not client.hub.allow_cm:
+            client.send_host_message('You can\'t become a CM in this hub')
+        if not client.hub.master and (len(client.hub.get_cm_list()) <= 0 or client.is_cm):
+            client.hub.master = client
+            client.is_cm = True
+            if client.area.evidence_mod == 'HiddenCM':
+                client.area.broadcast_evidence_list()
+            client.hub.send_host_message('{} is CM in this hub now.'.format(client.get_char_name()))
+            return
+        client.send_host_message('=CM\'s in this area:=')
+        for cm in client.hub.get_cm_list():
+            m = 'co-'
+            if client.hub.master == cm:
+                m = 'Master '
+            client.send_host_message('=>{}CM [{}] {}'.format(m, cm.id, cm.get_char_name()))
+
 
 def ooc_cmd_broadcast_ic(client, arg):
     if not client.is_cm:
@@ -676,7 +691,7 @@ def ooc_cmd_lockarea(client, arg):
         if area.id in args:
             if not area.locking_allowed:
                 client.send_host_message(
-                    'Area locking is disabled in area {}.'.format(a))
+                    'Area locking is disabled in area {}.'.format(area.id))
             if not area.is_locked:
                 client.send_host_message('Area is already locked.')
             
@@ -701,7 +716,7 @@ def ooc_cmd_unlockarea(client, arg):
         if area.id in args:
             if not area.locking_allowed:
                 client.send_host_message(
-                    'Area locking is disabled in area {}.'.format(a))
+                    'Area locking is disabled in area {}.'.format(area.id))
             if not area.is_locked:
                 client.send_host_message('Area is already unlocked.')
             
