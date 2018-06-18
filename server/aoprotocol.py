@@ -374,9 +374,6 @@ class AOProtocol(asyncio.Protocol):
             if pos not in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
                 return
 
-        if self.client.area.pos_lock in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
-            pos = self.client.area.pos_lock
-
         msg = text[:256]
         if msg.startswith('/'):
             self.net_cmd_ct([self.client.name, msg])
@@ -394,17 +391,21 @@ class AOProtocol(asyncio.Protocol):
             for b in self.client.broadcast_ic:
                 area = self.client.hub.get_area_by_id(b)
                 if area:
+                    if area.pos_lock in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
+                        pos = area.pos_lock
                     area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
                                                 sfx_delay, button, self.client.evi_list[evidence], flip, ding, color)
                     area.set_next_msg_delay(len(msg))
                     i += 1
             self.client.send_host_message('Broadcasting message to {} areas.'.format(len(self.client.broadcast_ic)))
         else:
+            if self.client.area.pos_lock in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
+                pos = self.client.area.pos_lock
             self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
                                         sfx_delay, button, self.client.evi_list[evidence], flip, ding, color)
             self.client.area.set_next_msg_delay(len(msg))
 
-        logger.log_server('[IC][{}][{}]{}'.format(self.client.area.id, self.client.get_char_name(), msg), self.client)
+        logger.log_server('[IC][H{}][A{}][{}]{}'.format(self.client.hub.id, self.client.area.id, self.client.get_char_name(), msg), self.client)
 
         if (self.client.area.is_recording):
         	self.client.area.recorded_messages.append(args)
@@ -473,7 +474,7 @@ class AOProtocol(asyncio.Protocol):
             if not self.client.is_dj:
                 self.client.send_host_message('You were blockdj\'d by a moderator.')
                 return
-            if self.client.area.is_locked and not self.client.is_mod and not self_client.is_cm and not self.client.ipid in self.client.area.invite_list:
+            if self.client.area.is_locked and not self.client.is_mod and not self.client.is_cm and not self.client.ipid in self.client.area.invite_list:
                 self.client.send_host_message('This is a locked area.')
                 return
             if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT):

@@ -41,7 +41,6 @@ class HubManager:
 				self.next_message_time = 0
 				self.hp_def = 10
 				self.hp_pro = 10
-				self.doc = 'No document.'
 				self.judgelog = []
 				self.current_music = ''
 				self.current_music_player = ''
@@ -51,17 +50,28 @@ class HubManager:
 				self.evidence_mod = evidence_mod
 				self.locking_allowed = locking_allowed
 				self.hub = hub
+				self.desc = ''
 
 				self.is_locked = False
 
 			def new_client(self, client):
 				self.clients.add(client)
+				self.hub.send_to_cm('{} has entered area {}.'.format(
+					client.get_char_name(), self.id))
 
 			def remove_client(self, client):
 				if self.is_locked and client.ipid in self.invite_list:
 					self.invite_list.pop(client.ipid)
 				self.clients.remove(client)
-			
+				self.hub.send_to_cm('{} has left area {}.'.format(
+					client.get_char_name(), self.id))
+
+			def lock(self):
+				self.is_locked = True
+				for c in self.clients:
+					self.invite_list[c.ipid] = None
+				self.send_host_message('This area is locked now.')
+
 			def unlock(self):
 				self.is_locked = False
 				self.invite_list = {}
@@ -129,9 +139,6 @@ class HubManager:
 				self.background = bg
 				self.send_command('BN', self.background)
 
-			def change_doc(self, doc='No document.'):
-				self.doc = doc
-
 			def add_to_judgelog(self, client, msg):
 				if len(self.judgelog) >= 10:
 					self.judgelog = self.judgelog[1:]
@@ -163,6 +170,10 @@ class HubManager:
 			self.master = None
 			self.is_ooc_muted = False
 			self.status = 'IDLE'
+			self.doc = 'No document.'
+
+		def change_doc(self, doc='No document.'):
+			self.doc = doc
 
 		def new_client(self, client):
 			return
@@ -199,6 +210,21 @@ class HubManager:
 		def send_host_message(self, msg):
 			for area in self.areas:
 				area.send_host_message(msg)
+
+		def send_to_cm(self, msg):
+			for area in self.areas:
+				for client in area.clients:
+					if client.is_cm:
+						client.send_host_message(msg)
+
+		def get_cm_list(self):
+			cms = []
+			for area in self.areas:
+				for client in area.clients:
+					if client.is_cm:
+						cms.append(client)
+			
+			return cms
 
 		def send_command(self, cmd, *args):
 			for area in self.areas:
