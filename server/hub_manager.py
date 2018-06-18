@@ -50,21 +50,15 @@ class HubManager:
 				self.evidence_mod = evidence_mod
 				self.locking_allowed = locking_allowed
 				self.hub = hub
-				self.cards = dict()
 
-				"""
-				#debug
-				self.evidence_list.append(Evidence("WOW", "desc", "1.png"))
-				self.evidence_list.append(Evidence("wewz", "desc2", "2.png"))
-				self.evidence_list.append(Evidence("weeeeeew", "desc3", "3.png"))
-				"""
-				
 				self.is_locked = False
 
 			def new_client(self, client):
 				self.clients.add(client)
 
 			def remove_client(self, client):
+				if self.is_locked:
+					self.invite_list.pop(client.ipid)
 				self.clients.remove(client)
 			
 			def unlock(self):
@@ -112,7 +106,7 @@ class HubManager:
 
 
 			def can_send_message(self, client):
-				if self.is_locked and not client.is_mod and not client.ipid in self.invite_list:
+				if self.is_locked and not client.is_mod and not client.is_cm and not client.ipid in self.invite_list:
 					client.send_host_message('This is a locked area - ask the CM to speak.')
 					return False
 				return (time.time() * 1000.0 - self.next_message_time) > 0
@@ -175,6 +169,7 @@ class HubManager:
 		def remove_client(self, client):
 			if client.is_cm:
 				client.is_cm = False
+				client.broadcast_ic.clear()
 				self.master = None
 
 		def default_area(self):
@@ -207,6 +202,10 @@ class HubManager:
 		def send_command(self, cmd, *args):
 			for area in self.areas:
 				area.send_command(cmd, *args)
+		
+		def set_next_msg_delay(self, msg_length):
+			for area in self.areas:
+				area.set_next_msg_delay(msg_length)
 		
 		def clients(self):
 			clients = set()

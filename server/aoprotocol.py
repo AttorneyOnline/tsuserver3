@@ -384,9 +384,22 @@ class AOProtocol(asyncio.Protocol):
             if self.client.area.evi_list.evidences[self.client.evi_list[evidence] - 1].pos != 'all':
                 self.client.area.evi_list.evidences[self.client.evi_list[evidence] - 1].pos = 'all'
                 self.client.area.broadcast_evidence_list()
-        self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
-                                      sfx_delay, button, self.client.evi_list[evidence], flip, ding, color)
-        self.client.area.set_next_msg_delay(len(msg))
+        
+        if self.client.is_cm and len(self.client.broadcast_ic) > 0:
+            i = 0
+            for b in self.client.broadcast_ic:
+                area = self.client.hub.get_area_by_id(b)
+                if area:
+                    area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
+                                                sfx_delay, button, self.client.evi_list[evidence], flip, ding, color)
+                    area.set_next_msg_delay(len(msg))
+                    i += 1
+            self.client.send_host_message('Broadcasting message to {} areas.'.format(len(self.client.broadcast_ic)))
+        else:
+            self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
+                                        sfx_delay, button, self.client.evi_list[evidence], flip, ding, color)
+            self.client.area.set_next_msg_delay(len(msg))
+
         logger.log_server('[IC][{}][{}]{}'.format(self.client.area.id, self.client.get_char_name(), msg), self.client)
 
         if (self.client.area.is_recording):
@@ -435,7 +448,7 @@ class AOProtocol(asyncio.Protocol):
         else:
             if self.client.disemvowel:
                 args[1] = self.client.disemvowel_message(args[1])
-            self.client.hub.send_command('CT', '[{}] {}'.format(self.client.area.id, self.client.name), args[1])
+            self.client.hub.send_command('CT', self.client.name, args[1])
             logger.log_server(
                 '[OOC][{}][{}][{}][{}]{}'.format(self.client.hub.name, self.client.area.id, self.client.get_char_name(), self.client.name,
                                              args[1]), self.client)
@@ -456,7 +469,7 @@ class AOProtocol(asyncio.Protocol):
             if not self.client.is_dj:
                 self.client.send_host_message('You were blockdj\'d by a moderator.')
                 return
-            if self.client.area.is_locked and not self.client.is_mod and not self.client.ipid in self.client.area.invite_list:
+            if self.client.area.is_locked and not self.client.is_mod and not self_client.is_cm and not self.client.ipid in self.client.area.invite_list:
                 self.client.send_host_message('This is a locked area.')
                 return
             if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT):
@@ -468,8 +481,20 @@ class AOProtocol(asyncio.Protocol):
                 return
             try:
                 name, length = self.server.get_song_data(args[0])
-                self.client.area.play_music(name, self.client.char_id, length)
-                self.client.area.add_music_playing(self.client, name)
+
+                if self.client.is_cm and len(self.client.broadcast_ic) > 0:
+                    i = 0
+                    for b in self.client.broadcast_ic:
+                        area = self.client.hub.get_area_by_id(b)
+                        if area:
+                            area.play_music(name, self.client.char_id, length)
+                            area.add_music_playing(self.client, name)
+                            i += 1
+                    self.client.send_host_message(
+                        'Broadcasting music to {} areas.'.format(len(self.client.broadcast_ic)))
+                else:
+                    self.client.area.play_music(name, self.client.char_id, length)
+                    self.client.area.add_music_playing(self.client, name)
                 logger.log_server('[{}][{}]Changed music to {}.'
                                   .format(self.client.area.id, self.client.get_char_name(), name), self.client)
             except ServerError:

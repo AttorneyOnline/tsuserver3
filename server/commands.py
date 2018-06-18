@@ -41,7 +41,7 @@ def ooc_cmd_switch(client, arg):
 def ooc_cmd_bg(client, arg):
     if len(arg) == 0:
         raise ArgumentError('You must specify a name. Use /bg <background>.')
-    if not client.is_mod and client.area.bg_lock == "true":
+    if not client.is_mod and not client.is_cm and not client.area.bg_lock == True:
         raise AreaError("This area's background is locked")
     try:
         client.area.change_background(arg)
@@ -51,17 +51,31 @@ def ooc_cmd_bg(client, arg):
     logger.log_server('[{}][{}]Changed background to {}'.format(client.area.id, client.get_char_name(), arg), client)
 
 def ooc_cmd_bglock(client,arg):
-    if not client.is_mod:
+    if not client.is_mod and not client.is_cm:
         raise ClientError('You must be authorized to do that.')
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
-    if client.area.bg_lock  == "true":
-        client.area.bg_lock = "false"
+    if client.area.bg_lock  == True:
+        client.area.bg_lock = False
     else:
-        client.area.bg_lock = "true"
+        client.area.bg_lock = True
     client.area.send_host_message('A mod has set the background lock to {}.'.format(client.area.bg_lock))
     logger.log_server('[{}][{}]Changed bglock to {}'.format(client.area.id, client.get_char_name(), client.area.bg_lock), client)
     
+def ooc_cmd_poslock(client, arg):
+    if not client.is_mod and not client.is_cm:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) != 0:
+        raise ArgumentError('This command has no arguments.')
+    if client.area.bg_lock == True:
+        client.area.bg_lock = False
+    else:
+        client.area.bg_lock = True
+    client.area.send_host_message(
+        'A mod has set the background lock to {}.'.format(client.area.bg_lock))
+    logger.log_server('[{}][{}]Changed bglock to {}'.format(
+        client.area.id, client.get_char_name(), client.area.bg_lock), client)
+
 def ooc_cmd_evidence_mod(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
@@ -409,6 +423,8 @@ def ooc_cmd_status(client, arg):
     if len(arg) == 0:
         client.send_host_message('Current status: {}'.format(client.hub.status))
     else:
+        if not client.is_cm:
+            raise ClientError('Only CM can change status.')
         try:
             client.hub.change_status(arg)
             client.hub.send_host_message('{} changed status to {}.'.format(client.get_char_name(), client.hub.status))
@@ -439,7 +455,7 @@ def ooc_cmd_hub(client, arg):
 def ooc_cmd_area(client, arg):
     args = arg.split()
     if len(args) == 0:
-        client.send_area_list()
+        client.send_area_list(client.hub.status.lower() in ['casing-open', 'casing-full'] and not client.is_cm)
     elif len(args) == 1:
         try:
             area = client.hub.get_area_by_id(int(args[0]))
@@ -523,12 +539,18 @@ def ooc_cmd_randomchar(client, arg):
     client.send_host_message('Randomly switched to {}'.format(client.get_char_name()))
     
 def ooc_cmd_getarea(client, arg):
+    if client.hub.status.lower() in ['casing-open', 'casing-full'] and not client.is_cm:
+        raise AreaError('Hub is {} - /getarea functionality disabled.'.format(client.hub.status))
     client.send_area_info(client.area.id, False)
     
 def ooc_cmd_getareas(client, arg):
+    if client.hub.status.lower() in ['casing-open', 'casing-full'] and not client.is_cm:
+        raise AreaError('Hub is {} - /getarea functionality disabled.'.format(client.hub.status))
     client.send_area_info(-1, False)
     
 def ooc_cmd_mods(client, arg):
+    if client.hub.status.lower() in ['casing-open', 'casing-full'] and not client.is_cm:
+        raise AreaError('Hub is {} - /getarea functionality disabled.'.format(client.hub.status))
     client.send_area_info(-1, True)  
     
 def ooc_cmd_evi_swap(client, arg):
@@ -544,7 +566,7 @@ def ooc_cmd_evi_swap(client, arg):
 def ooc_cmd_cm(client, arg):
     if not client.hub.allow_cm:
         raise ClientError('You can\'t become a CM in this hub')
-    if not hub.master:
+    if not client.hub.master:
         client.hub.master = client
         client.is_cm = True
         if client.area.evidence_mod == 'HiddenCM':
@@ -576,7 +598,27 @@ def ooc_cmd_cm(client, arg):
     #             'You have been made a co-CM of hub {} by {}.'.format(client.hub.name, client.get_char_name()))
     # except:
     #     raise ClientError('You must specify a target. Use /cm <id>')
-    
+
+def ooc_cmd_broadcast_ic(client, arg):
+    if not client.is_cm:
+        raise ClientError('Only CM can broadcast IC.')
+    if not arg or arg == 'clear':
+        client.broadcast_ic.clear()
+        client.send_host_message('You have cleared the broadcast_ic list.')
+    else:
+        if arg == 'all':
+            client.broadcast_ic.clear()
+            for area in client.hub.areas:
+                client.broadcast_ic.append(area.id)
+        else:
+            arg = arg.split(' ')
+            for a in arg:
+                try:
+                    client.broadcast_ic.append(int(a))
+                except:
+                    raise ClientError('Invalid area ID.')
+        client.send_host_message('You will now broadcast IC across areas {} in this hub.'.format(client.broadcast_ic))
+
 def ooc_cmd_unmod(client, arg):
     client.is_mod = False
     if client.area.evidence_mod == 'HiddenCM':
@@ -592,7 +634,7 @@ def ooc_cmd_area_lock(client, arg):
         client.area.is_locked = True
         client.area.send_host_message('Area is locked.')
         for c in client.area.clients:
-            client.area.invite_list.pop(c.ipid)
+            client.area.invite_list[c.ipid] = None
         return
     else:
         raise ClientError('Only CM can lock the area.')
@@ -604,44 +646,6 @@ def ooc_cmd_area_unlock(client, arg):
         raise ClientError('Only CM can unlock area.')
     client.area.unlock()
     client.send_host_message('Area is unlocked.')
-        
-def ooc_cmd_invite(client, arg):
-    if not arg:
-        raise ClientError('You must specify a target. Use /invite <id>')
-    if not client.area.is_locked:
-        raise ClientError('Area isn\'t locked.')
-    if not client.is_cm or client.is_mod:
-        raise ClientError('You must be authorized to do that.')
-    try:
-        c = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), False)[0]
-        client.area.invite_list[c.ipid] = None
-        client.send_host_message('{} is invited to your area.'.format(c.get_char_name()))
-        c.send_host_message('You were invited and given access to area {}.'.format(client.area.id))
-    except:
-        raise ClientError('You must specify a target. Use /invite <id>')
-
-def ooc_cmd_uninvite(client, arg):
-    if not client.is_cm and not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
-    if not client.area.is_locked and not client.is_mod:
-        raise ClientError('Area isn\'t locked.')
-    if not arg:
-        raise ClientError('You must specify a target. Use /uninvite <id>')
-    arg = arg.split(' ')
-    targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg[0]), False)
-    if targets:
-        try:
-            for c in targets:
-                client.send_host_message("You have removed {} from the whitelist.".format(c.get_char_name()))
-                c.send_host_message("You were removed from the area whitelist.")
-                if client.area.is_locked:
-                    client.area.invite_list.pop(c.ipid)
-        except AreaError:
-            raise
-        except ClientError:
-            raise
-    else:
-        client.send_host_message("No targets found.")
 
 def ooc_cmd_area_kick(client, arg):
     if not client.is_mod and not client.is_cm:
@@ -650,17 +654,15 @@ def ooc_cmd_area_kick(client, arg):
         raise ClientError('You must specify a target. Use /area_kick <id> [destination #] [hub #]')
     arg = arg.split(' ')
     targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg[0]), False)
-    output = []
+    output = [0, 0]
     if targets:
         try:
             for c in targets:
                 if len(arg) == 1:
                     area = client.server.hub_manager.default_hub().get_area_by_id(int(0))
-                    output[0] = 0
-                    output[1] = 0
                 else:
                     try:
-                        if len(arg) > 2:
+                        if len(arg) > 2 and client.is_mod:
                             hub = client.server.hub_manager.get_hub_by_id(int(arg[2]))
                             output[1] = arg[2]
                         else:
@@ -672,10 +674,12 @@ def ooc_cmd_area_kick(client, arg):
                         raise
                 client.send_host_message("Attempting to kick {} to area {} [Hub {}].".format(
                     c.get_char_name(), output[0], output[1]))
-                c.change_area(area)
-                c.send_host_message("You were kicked from the area to area {} [Hub {}].".format(output[0], output[1]))
                 if client.area.is_locked:
                     client.area.invite_list.pop(c.ipid)
+                if area.is_locked:
+                    area.invite_list[c.ipid] = None
+                c.change_area(area)
+                c.send_host_message("You were kicked from the area to area {} [Hub {}].".format(output[0], output[1]))
         except AreaError:
             raise
         except ClientError:
@@ -772,30 +776,6 @@ def ooc_cmd_unblockdj(client, arg):
         target.is_dj = True
         target.send_host_message('Now you can change music.')
     client.send_host_message('Unblockdj\'d {}.'.format(targets[0].get_char_name()))
-
-def ooc_cmd_notecard(client, arg):
-    if len(arg) == 0:
-        raise ArgumentError('You must specify the contents of the note card.')
-    client.area.cards[client.get_char_name()] = arg
-    client.area.send_host_message('{} wrote a note card.'.format(client.get_char_name()))
-
-def ooc_cmd_notecard_clear(client, arg):
-    try:
-        del client.area.cards[client.get_char_name()]
-        client.area.send_host_message('{} erased their note card.'.format(client.get_char_name()))
-    except KeyError:
-        raise ClientError('You do not have a note card.')
-
-def ooc_cmd_notecard_reveal(client, arg):
-    if not client.is_cm and not client.is_mod:
-        raise ClientError('You must be a CM or moderator to reveal cards.')
-    if len(client.area.cards) == 0:
-        raise ClientError('There are no cards to reveal in this area.')
-    msg = 'Note cards have been revealed.\n'
-    for card_owner, card_msg in client.area.cards.items():
-        msg += '{}: {}\n'.format(card_owner, card_msg)
-    client.area.cards.clear()
-    client.area.send_host_message(msg)
 
 def ooc_cmd_rolla_reload(client, arg):
     if not client.is_mod:

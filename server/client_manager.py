@@ -45,7 +45,6 @@ class ClientManager:
             self.is_dj = True
             self.can_wtce = True
             self.pos = ''
-            self.is_cm = False
             self.evi_list = []
             self.disemvowel = False
             self.muted_global = False
@@ -63,6 +62,10 @@ class ClientManager:
             self.mus_counter = 0
             self.mute_time = 0
             self.mus_change_time = [x * self.server.config['music_change_floodguard']['interval_length'] for x in range(self.server.config['music_change_floodguard']['times_per_interval'])]
+
+            #CMing stuff
+            self.is_cm = False
+            self.broadcast_ic = []
 
         def send_raw_message(self, msg):
             if self.websocket:
@@ -158,9 +161,9 @@ class ClientManager:
         def change_area(self, area):
             if self.area == area:
                 raise ClientError('User already in specified area.')
-            if area.is_locked and not self.is_mod and not self.ipid in area.invite_list:
-                self.send_host_message('This area is locked - you will be unable to send messages ICly.')
-                #raise ClientError("That area is locked!")
+            if area.is_locked and not self.is_mod and not self.is_cm and not self.ipid in area.invite_list:
+                #self.send_host_message('This area is locked - you will be unable to send messages ICly.')
+                raise ClientError("That area is locked!")
             old_area = self.area
             if not area.is_char_available(self.char_id):
                 try:
@@ -188,11 +191,14 @@ class ClientManager:
             self.send_command('BN', self.area.background)
             self.send_command('LE', *self.area.get_evidence_list(self))
 
-        def send_area_list(self):
-            msg = '=== Hub [{}]: {} ==='.format(self.hub.id, self.hub.name)
+        def send_area_list(self, hidden=False):
+            msg = '=== Areas for Hub [{}]: {} ==='.format(self.hub.id, self.hub.name)
             lock = {True: '[LOCKED]', False: ''}
             for i, area in enumerate(self.hub.areas):
-                msg += '\r\nArea {}: {} (users: {}) {}'.format(i, area.name, len(area.clients), lock[area.is_locked])
+                users = ''
+                if not hidden:
+                    users = '(users: {}) '.format(len(area.clients))
+                msg += '\r\nArea {}: {} {}{}'.format(i, area.name, users, lock[area.is_locked])
                 if self.area == area:
                     msg += ' [*]'
             self.send_host_message(msg)
@@ -233,8 +239,8 @@ class ClientManager:
             if area_id == -1:
                 # all areas info
                 cnt = 0
-                info = '\n== Area List =='
-                for i in range(len(self.hun.areas)):
+                msg = '\n=== Areas for Hub [{}]: {} ==='.format(self.hub.id, self.hub.name)
+                for i in range(len(self.hub.areas)):
                     if len(self.hub.areas[i].clients) > 0:
                         cnt += len(self.hub.areas[i].clients)
                         info += '\r\n{}'.format(self.get_area_info(i, mods))
