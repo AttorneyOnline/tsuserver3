@@ -26,12 +26,13 @@ from server.evidence import EvidenceList
 class HubManager:
 	class Hub:
 		class Area:
-			def __init__(self, area_id, server, hub, name, background, bg_lock, pos_lock, evidence_mod = 'FFA', locking_allowed = False, iniswap_allowed = True):
+			def __init__(self, area_id, server, hub, name, can_rename, background, bg_lock, pos_lock, evidence_mod = 'FFA', locking_allowed = False, iniswap_allowed = True):
 				self.iniswap_allowed = iniswap_allowed
 				self.clients = set()
 				self.invite_list = {}
 				self.id = area_id
 				self.name = name
+				self.can_rename = can_rename
 				self.background = background
 				self.bg_lock = bg_lock
 				self.pos_lock = pos_lock
@@ -237,7 +238,7 @@ class HubManager:
 				if 'iniswap_allowed' not in area:
 					area['iniswap_allowed'] = True
 				_hub.areas.append(
-					_hub.Area(_hub.cur_id, _hub.server, _hub, area['area'], area['background'], area['bglock'], area['evidence_mod'], area['locking_allowed'], area['iniswap_allowed']))
+					_hub.Area(_hub.cur_id, _hub.server, _hub, area['area'], area['can_rename'], area['background'], area['bglock'], area['evidence_mod'], area['locking_allowed'], area['iniswap_allowed']))
 				_hub.cur_id += 1
 
 	def default_hub(self):
