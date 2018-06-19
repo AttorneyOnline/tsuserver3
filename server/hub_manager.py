@@ -26,7 +26,7 @@ from server.evidence import EvidenceList
 class HubManager:
 	class Hub:
 		class Area:
-			def __init__(self, area_id, server, hub, name, can_rename, background, bg_lock, pos_lock, evidence_mod = 'FFA', locking_allowed = False, iniswap_allowed = True):
+			def __init__(self, area_id, server, hub, name, can_rename=False, background, bg_lock=False, pos_lock=None, evidence_mod = 'FFA', locking_allowed = False, iniswap_allowed = True, can_remove=False):
 				self.iniswap_allowed = iniswap_allowed
 				self.clients = set()
 				self.invite_list = {}
@@ -51,6 +51,8 @@ class HubManager:
 				self.locking_allowed = locking_allowed
 				self.hub = hub
 				self.desc = ''
+				self.mute_ic = False
+				
 
 				self.is_locked = False
 
@@ -160,17 +162,30 @@ class HubManager:
 				for client in self.clients:
 					client.send_command('LE', *self.get_evidence_list(client))
 
-		def __init__(self, hub_id, server, name, allow_cm):
+		def __init__(self, hub_id, server, name, allow_cm=False, max_areas=1):
 			self.server = server
 			self.id = hub_id
 			self.cur_id = 0
 			self.name = name
 			self.allow_cm = allow_cm
 			self.areas = []
+			self.max_areas = max_areas
 			self.master = None
 			self.is_ooc_muted = False
 			self.status = 'IDLE'
 			self.doc = 'No document.'
+
+		def create_area(self, name, can_rename, bg, bglock, poslock, evimod, lockallow, swapallow, removable):
+			self.areas.append(
+				self.Area(self.cur_id, self.server, self, name, can_rename, bg, bglock, poslock, evimod, lockallow, swapallow, removable))
+			self.cur_id += 1
+
+		def remove_area(self, area):
+			if not (area in self.areas):
+				raise AreaError('Area not found.')
+			for client in area.clients:
+				client.change_area(self.default_area())
+			self.areas.remove(area)
 
 		def change_doc(self, doc='No document.'):
 			self.doc = doc
@@ -206,6 +221,39 @@ class HubManager:
 				raise AreaError('Invalid status. Possible values: {}'.format(
 					', '.join(allowed_values)))
 			self.status = value.upper()
+			if self.status in ('casing-open', 'casing-full'):
+				self.start_recording(True)
+			else:
+				self.stop_recording()
+
+		def clear_recording(self, announce=False)
+			for area in self.areas:
+				area.recorded_messages.clear()
+			
+			if announce:
+				self.send_host_message('Clearing IC records for {} areas.'.format(len(self.areas)))
+
+		def start_recording(self, clear=False, announce=False)
+			msg = ''
+			i = 0
+			for area in self.areas:
+				if clear and not area.is_recording:
+					area.recorded_messages.clear()
+					i += 1
+				area.is_recording = True
+			
+			if i > 0:
+				msg = ' (Clearing records for {} areas)'.format(i)
+
+			if announce:
+				self.send_host_message('Starting IC records for {} areas{}.'.format(len(self.areas), msg))
+
+		def stop_recording(self, announce=False)
+			for area in self.areas:
+				area.is_recording = False
+
+			if announce:
+				self.send_host_message('Clearing IC records for {} areas.'.format(len(self.areas)))
 
 		def send_host_message(self, msg):
 			for area in self.areas:
@@ -252,20 +300,30 @@ class HubManager:
 			hubs = yaml.load(chars)
 
 		for hub in hubs:
+			if 'allow_cm' not in hub:
+				area['allow_cm'] = False
+			if 'max_areas' not in hub:
+				area['max_areas'] = 1
 			_hub = self.Hub(self.cur_id, self.server,
-							hub['hub'], hub['allow_cm'])
+							hub['hub'], hub['allow_cm'], hub['max_areas'])
 			self.hubs.append(_hub)
 			self.cur_id += 1
 			for area in hub['areas']:
+				if 'can_rename' not in area:
+					area['can_rename'] = False
+				if 'bglock' not in area:
+					area['bglock'] = False
+				if 'poslock' not in area:
+					area['poslock'] = None
 				if 'evidence_mod' not in area:
 					area['evidence_mod'] = 'FFA'
 				if 'locking_allowed' not in area:
 					area['locking_allowed'] = False
 				if 'iniswap_allowed' not in area:
 					area['iniswap_allowed'] = True
-				_hub.areas.append(
-					_hub.Area(_hub.cur_id, _hub.server, _hub, area['area'], area['can_rename'], area['background'], area['bglock'], area['poslock'], area['evidence_mod'], area['locking_allowed'], area['iniswap_allowed']))
-				_hub.cur_id += 1
+				if 'can_remove' not in area:
+					area['can_remove'] = False
+				_hub.create_area(area['area'], area['can_rename'], area['background'], area['bglock'], area['poslock'], area['evidence_mod'], area['locking_allowed'], area['iniswap_allowed'], area['can_remove'])
 
 	def default_hub(self):
 		return self.hubs[0]
