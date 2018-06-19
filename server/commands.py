@@ -45,7 +45,7 @@ def ooc_cmd_bg(client, arg):
             'Hub is {} - only the CM can change /bg.'.format(client.hub.status))
     if len(arg) == 0:
         raise ArgumentError('You must specify a name. Use /bg <background>.')
-    if not client.is_mod and not client.is_cm and not client.area.bg_lock == True:
+    if not client.is_mod and not client.is_cm and client.area.bg_lock == True:
         raise AreaError("This area's background is locked")
     try:
         client.area.change_background(arg)
@@ -366,7 +366,7 @@ def ooc_cmd_iclogs(client, arg):
             if lines < 0:
                 raise
             i = 0
-            for line in area.recorded_messages:
+            for line in area.recorded_messages[-lines:]:
                 if i >= lines:
                     break
                 client.send_host_message(line)
@@ -374,9 +374,10 @@ def ooc_cmd_iclogs(client, arg):
             if i == 0:
                 client.send_host_message('Error: logs are empty!')
                 return
-            client.send_host_message('Displaying last {} IC messages in area {} of hub {}.'.format(i, area.id, client.hub.id))
+            client.send_host_message('Displaying last {} IC messages in area [{}] {} of hub {}.'.format(i, area.id, area.name, client.hub.id))
         except:
-            raise ArgumentError('Bad number of lines! Try /grab_ic_logs [num_lines OR pastebin] [area_id]')
+            raise ArgumentError(
+                'Bad number of lines! Try /iclogs [num_lines OR pastebin] [area_id]')
 
 def ooc_cmd_login(client, arg):
     if len(arg) == 0:
@@ -401,7 +402,7 @@ def ooc_cmd_g(client, arg):
 def ooc_cmd_a(client, arg):
     if len(arg) == 0:
         raise ArgumentError("You can't send an empty message.")
-    client.area.send_command('CT', '$A[{}]:'.format(client.get_char_name()), arg)
+    client.area.send_command('CT', '$A[{}]'.format(client.get_char_name()), arg)
     logger.log_server('[{}][{}][GLOBAL]{}.'.format(client.hub.id, client.get_char_name(), arg), client)
 
 def ooc_cmd_gm(client, arg):
@@ -567,7 +568,7 @@ def ooc_cmd_area_remove(client, arg):
             if not area.can_remove:
                 raise AreaError('This area cannot be removed!')
             client.hub.send_host_message('Area {} ({}) removed! ({}/{})'.format(
-                area.id, area.name, client.hub.cur_id, client.hub.max_areas))
+                area.id, area.name, client.hub.cur_id-1, client.hub.max_areas))
             client.hub.remove_area(area)
         except ValueError:
             raise ArgumentError('Area ID must be a number.')
@@ -595,7 +596,7 @@ def ooc_cmd_pm(client, arg):
     msg = None
     if len(args) < 2:
         raise ArgumentError('Not enough arguments. use /pm <target> <message>. Target should be ID, OOC-name or char-name. Use /getarea for getting info like "[ID] char-name".')
-    if arg.lower() in ['cm', 'gm']:
+    if args[0].lower() in ['cm', 'gm']:
         targets = client.hub.get_cm_list()
     else:
         targets = client.server.client_manager.get_targets(client, TargetType.CHAR_NAME, arg, False)
@@ -622,9 +623,9 @@ def ooc_cmd_pm(client, arg):
         if c.pm_mute:
             raise ClientError('User {} muted all pm conversation'.format(c.name))
         else:
-            c.send_host_message('PM from {} in {} ({}): {}'.format(client.name, client.hub.name, client.get_char_name(), msg))
-            c.hub.send_to_cm('[PMLog] PM from {} ({}) to {} in {}: {}'.format(client.name, client.get_char_name(), args[0], client.hub.name, msg), client)
-            client.send_host_message('PM sent to {}. Message: {}'.format(args[0], msg))
+            c.send_host_message('PM from [{}] {} in {} ({}): {}'.format(client.id, client.name, client.hub.name, client.get_char_name(), msg))
+            c.hub.send_to_cm('[PMLog] PM from [{}] {} ({}) to [{}] {} in {}: {}'.format(client.id, client.name, client.get_char_name(), c.id, c.name, client.hub.name, msg), c)
+            client.send_host_message('PM sent to [{}] {}. Message: {}'.format(c.id, c.name, msg))
  
 def ooc_cmd_mutepm(client, arg):
     if len(arg) != 0:
@@ -665,13 +666,45 @@ def ooc_cmd_randomchar(client, arg):
     client.send_host_message('Randomly switched to {}'.format(client.get_char_name()))
     
 def ooc_cmd_getarea(client, arg):
-    if client.hub.status.lower() in ['casing-open', 'casing-full'] and not client.is_cm:
-        raise AreaError('Hub is {} - /getarea functionality disabled.'.format(client.hub.status))
+    # if client.hub.status.lower() in ['casing-open', 'casing-full'] and not client.is_cm:
+    #     raise AreaError('Hub is {} - /getarea functionality disabled.'.format(client.hub.status))
     client.send_area_info(client.area.id, False)
-    
+
+def ooc_cmd_hide(client, arg):
+    arg = arg.split()
+    try:
+        targets = client.server.client_manager.get_targets(
+            client, TargetType.ID, args[0], False)
+        c = targets[0]
+        if c.hidden:
+            raise ClientError(
+                'Client [{}] {} already hidden!'.format(c.id, c.name))
+        c.hide(True)
+        client.send_host_message('You have hidden [{}] {} from /getarea.'.format(c.id, c.name))
+    except (ArgumentError, ClientError):
+        raise
+    except:
+        raise ClientError('You must specify a target. Use /cm <id>')
+
+def ooc_cmd_unhide(client, arg):
+    arg = arg.split()
+    try:
+        targets = client.server.client_manager.get_targets(
+            client, TargetType.ID, args[0], False)
+        c = targets[0]
+        if not c.hidden:
+            raise ClientError(
+                'Client [{}] {} already revealed!'.format(c.id, c.name))
+        c.hide(False)
+        client.send_host_message('You have revealed [{}] {} for /getarea.'.format(c.id, c.name))
+    except (ArgumentError, ClientError):
+        raise
+    except:
+        raise ClientError('You must specify a target. Use /cm <id>')
+
 def ooc_cmd_getareas(client, arg):
     if client.hub.status.lower() in ['casing-open', 'casing-full'] and not client.is_cm:
-        raise AreaError('Hub is {} - /getarea functionality disabled.'.format(client.hub.status))
+        raise AreaError('Hub is {} - /getareas functionality disabled.'.format(client.hub.status))
     client.send_area_info(-1, False)
     
 def ooc_cmd_mods(client, arg):
@@ -759,8 +792,8 @@ def ooc_cmd_unmod(client, arg):
     client.send_host_message('you\'re not a mod now')
     
 def ooc_cmd_lockarea(client, arg):
-    if not client.is_cm:
-        raise ClientError('Only CM can lock the area.')
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can lock the area.')
     args = []
     if arg == 'all':
         for area in client.hub.areas:
@@ -776,16 +809,18 @@ def ooc_cmd_lockarea(client, arg):
             if not area.locking_allowed:
                 client.send_host_message(
                     'Area locking is disabled in area {}.'.format(area.id))
+                continue
             if not area.is_locked:
                 client.send_host_message('Area is already locked.')
+                continue
             
             area.lock()
             i += 1
     client.send_host_message('Locked {} areas.'.format(i))
         
 def ooc_cmd_unlockarea(client, arg):
-    if not client.is_cm:
-        raise ClientError('Only CM can unlock the area.')
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can unlock the area.')
     args = []
     if arg == 'all':
         for area in client.hub.areas:
@@ -808,11 +843,11 @@ def ooc_cmd_unlockarea(client, arg):
             i += 1
     client.send_host_message('Unlocked {} areas.'.format(i))
 
-def ooc_cmd_area_kick(client, arg):
+def ooc_cmd_akick(client, arg):
     if not client.is_mod and not client.is_cm:
         raise ClientError('You must be authorized to do that.')
     if not arg:
-        raise ClientError('You must specify a target. Use /area_kick <id> [destination #] [hub #]')
+        raise ClientError('You must specify a target. Use /akick <id> [destination #] [hub #]')
     arg = arg.split()
     targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg[0]), False)
     output = [0, 0]

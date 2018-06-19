@@ -59,15 +59,21 @@ class HubManager:
 
 			def new_client(self, client):
 				self.clients.add(client)
-				self.hub.send_to_cm('{} has entered area {}.'.format(
-					client.get_char_name(), self.id))
+				hidden = ''
+				if client.hidden:
+					hidden = ' [HIDDEN]'
+				self.hub.send_to_cm('[{}] {} has entered area [{}] {}.{}'.format(
+					client.id, client.get_char_name(), self.id, self.name, hidden))
 
 			def remove_client(self, client):
 				if self.is_locked and client.ipid in self.invite_list:
 					self.invite_list.pop(client.ipid)
 				self.clients.remove(client)
-				self.hub.send_to_cm('{} has left area {}.'.format(
-					client.get_char_name(), self.id))
+				hidden = ''
+				if client.hidden:
+					hidden = ' [HIDDEN]'
+				self.hub.send_to_cm('[{}] {} has left area [{}] {}.{}'.format(
+					client.id, client.get_char_name(), self.id, self.name, hidden))
 
 			def lock(self):
 				self.is_locked = True
@@ -184,7 +190,8 @@ class HubManager:
 		def remove_area(self, area):
 			if not (area in self.areas):
 				raise AreaError('Area not found.')
-			while client in area.clients:
+			clients = area.clients.copy()
+			for client in clients:
 				client.change_area(self.default_area())
 			self.areas.remove(area)
 			self.update_area_ids()
@@ -205,6 +212,9 @@ class HubManager:
 				client.is_cm = False
 				client.broadcast_ic.clear()
 				self.master = None
+			
+			if client.hidden:
+				client.hide(False)
 
 		def default_area(self):
 			return self.areas[0]
@@ -273,7 +283,7 @@ class HubManager:
 		def send_to_cm(self, msg, exception=None):
 			for area in self.areas:
 				for client in area.clients:
-					if client.is_cm and client != exception:
+					if client != exception and client.is_cm:
 						client.send_host_message(msg)
 
 		def get_cm_list(self):

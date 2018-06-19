@@ -66,6 +66,7 @@ class ClientManager:
             #CMing stuff
             self.is_cm = False
             self.broadcast_ic = []
+            self.hidden = False
 
         def send_raw_message(self, msg):
             if self.websocket:
@@ -144,7 +145,12 @@ class ClientManager:
             self.mus_change_time[self.mus_counter] = time.time()
             return 0
                 
-                
+        def hide(self, tog=True):
+            self.hidden = tog
+            msg = 'no longer'
+            if tog:
+                msg = 'now'
+            self.send_host_message('You are {} hidden from /getarea.')
 
         def reload_character(self):
             try:
@@ -224,12 +230,15 @@ class ClientManager:
             sorted_clients = []
             for client in area.clients:
                 if (not mods) or client.is_mod:
-                    sorted_clients.append(client)
+                    if not client.hidden or self.is_cm:
+                        sorted_clients.append(client)
             sorted_clients = sorted(sorted_clients, key=lambda x: x.get_char_name())
             for c in sorted_clients:
                 info += '\r\n[{}] {}'.format(c.id, c.get_char_name())
                 if self.is_mod:
                     info += ' ({})'.format(c.ipid)
+                if c.hidden:
+                    info += ' [HIDDEN]'
             return info
 
         def send_area_info(self, area_id, mods): 
