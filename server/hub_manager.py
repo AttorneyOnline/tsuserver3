@@ -26,7 +26,7 @@ from server.evidence import EvidenceList
 class HubManager:
 	class Hub:
 		class Area:
-			def __init__(self, area_id, server, hub, name, can_rename=False, background, bg_lock=False, pos_lock=None, evidence_mod = 'FFA', locking_allowed = False, iniswap_allowed = True, can_remove=False):
+			def __init__(self, area_id, server, hub, name, can_rename, background, bg_lock, pos_lock, evidence_mod = 'FFA', locking_allowed = False, iniswap_allowed = True, can_remove = False):
 				self.iniswap_allowed = iniswap_allowed
 				self.clients = set()
 				self.invite_list = {}
@@ -46,6 +46,7 @@ class HubManager:
 				self.current_music_player = ''
 				self.evi_list = EvidenceList()
 				self.is_recording = False
+				self.record_start = 0
 				self.recorded_messages = []
 				self.evidence_mod = evidence_mod
 				self.locking_allowed = locking_allowed
@@ -221,26 +222,27 @@ class HubManager:
 				raise AreaError('Invalid status. Possible values: {}'.format(
 					', '.join(allowed_values)))
 			self.status = value.upper()
-			if self.status in ('casing-open', 'casing-full'):
-				self.start_recording(True)
+			if value in ('casing-open', 'casing-full'):
+				self.start_recording(True, True)
 			else:
-				self.stop_recording()
+				self.stop_recording(True)
 
-		def clear_recording(self, announce=False)
+		def clear_recording(self, announce=False):
 			for area in self.areas:
 				area.recorded_messages.clear()
 			
 			if announce:
 				self.send_host_message('Clearing IC records for {} areas.'.format(len(self.areas)))
 
-		def start_recording(self, clear=False, announce=False)
+		def start_recording(self, announce=False, clear=False):
 			msg = ''
 			i = 0
 			for area in self.areas:
-				if clear and not area.is_recording:
+				if clear and not area.is_recording and len(area.recorded_messages) > 0:
 					area.recorded_messages.clear()
 					i += 1
 				area.is_recording = True
+				area.record_start = time.gmtime()
 			
 			if i > 0:
 				msg = ' (Clearing records for {} areas)'.format(i)
@@ -248,18 +250,21 @@ class HubManager:
 			if announce:
 				self.send_host_message('Starting IC records for {} areas{}.'.format(len(self.areas), msg))
 
-		def stop_recording(self, announce=False)
+		def stop_recording(self, announce=False):
+			i = 0
 			for area in self.areas:
-				area.is_recording = False
+				if area.is_recording:
+					area.is_recording = False
+					i += 1
 
-			if announce:
-				self.send_host_message('Clearing IC records for {} areas.'.format(len(self.areas)))
+			if announce and i > 0:
+				self.send_host_message('Stopping IC records for {} areas.'.format(i))
 
 		def send_host_message(self, msg):
 			for area in self.areas:
 				area.send_host_message(msg)
 
-		def send_to_cm(self, msg, exception):
+		def send_to_cm(self, msg, exception=None):
 			for area in self.areas:
 				for client in area.clients:
 					if client.is_cm and client != exception:
@@ -301,9 +306,9 @@ class HubManager:
 
 		for hub in hubs:
 			if 'allow_cm' not in hub:
-				area['allow_cm'] = False
+				hub['allow_cm'] = False
 			if 'max_areas' not in hub:
-				area['max_areas'] = 1
+				hub['max_areas'] = 1
 			_hub = self.Hub(self.cur_id, self.server,
 							hub['hub'], hub['allow_cm'], hub['max_areas'])
 			self.hubs.append(_hub)

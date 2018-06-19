@@ -19,11 +19,12 @@ import random
 import hashlib
 import string
 import time
+
 from server.constants import TargetType
 
 from server import logger
 from server.exceptions import ClientError, ServerError, ArgumentError, AreaError
-
+from server.pastebin_api import paste_it
 
 def ooc_cmd_switch(client, arg):
     if len(arg) == 0:
@@ -329,7 +330,54 @@ def ooc_cmd_unmute(client, arg):
         client.send_host_message('{} existing client(s).'.format(c.get_char_name()))
     except:
         client.send_host_message("No targets found. Use /mute <id> for mute")
+
+def ooc_cmd_iclogs(client, arg):
+    if not client.is_mod and not client.is_cm:
+        raise ClientError('You must be authorized to do that.')
+
+    args = arg.split(' ')
+    area = client.area
     
+    if len(args) > 1:
+        try:
+            area = client.hub.get_area_by_id(args[1])
+        except:
+            raise ArgumentError('Invalid area! Try /iclogs [num_lines OR pastebin] [area_id]')
+
+    if args[0] == "link":
+        client.send_host_message("Fetching pastebin for full IC log...")
+        logs = '[{}] IC logs for area [{}] {} in hub [{}] {}'.format(time.strftime("%d-%b-%y|%H:%M:%S UTC", area.record_start), area.id, area.name, client.hub.id, client.hub.name)
+        for line in area.recorded_messages:
+            logs += '\n{}'.format(line)
+        #print(logs)
+        try:
+            paste = paste_it()
+            link = paste.create_paste(logs, 'IC logs for area [{}] {} in hub [{}] {}'.format(area.id, area.name, client.hub.id, client.hub.name))
+            client.send_host_message('Success! Pastebin: {}'.format(link))
+        except:
+            raise ArgumentError('Failed...')
+    else:
+        if len(args) == 0:
+            args = [10]
+        try:
+            lines = int(args[0])
+            if lines > 30:
+                lines = 30
+            if lines < 0:
+                raise
+            i = 0
+            for line in area.recorded_messages:
+                if i >= lines:
+                    break
+                client.send_host_message(line)
+                i += 1
+            if i == 0:
+                client.send_host_message('Error: logs are empty!')
+                return
+            client.send_host_message('Displaying last {} IC messages in area {} of hub {}.'.format(i, area.id, client.hub.id))
+        except:
+            raise ArgumentError('Bad number of lines! Try /grab_ic_logs [num_lines OR pastebin] [area_id]')
+
 def ooc_cmd_login(client, arg):
     if len(arg) == 0:
         raise ArgumentError('You must specify the password.')
@@ -609,44 +657,45 @@ def ooc_cmd_evi_swap(client, arg):
         raise ClientError("you must specify 2 numbers")
      
 def ooc_cmd_cm(client, arg):
+    if not client.is_cm or client.hub.master != client:
+        raise ClientError('You must be the master CM to promote co-CM\'s.')
     if len(arg) > 0:
-        if not client.is_cm or client.hub.master != client:
-            raise ClientError('You must be the master CM to promote co-CM\'s.')
-        if not arg:
+        try:
+            c = client.server.client_manager.get_targets(
+                client, TargetType.ID, int(arg), False)[0]
+            if c == client:
+                raise
+            if c.is_cm:
+                c.is_cm = False
+                client.hub.send_host_message(
+                    '{} is no longer a co-CM.'.format(c.get_char_name()))
+                c.send_host_message(
+                    'You are no longer a co-CM of hub {}.'.format(client.hub.name))
+            else:
+                c.is_cm = True
+                client.hub.send_host_message(
+                    '{} has been made a co-CM.'.format(c.get_char_name()))
+                c.send_host_message(
+                    'You have been made a co-CM of hub {} by {}.'.format(client.hub.name, client.get_char_name()))
+        except:
             raise ClientError('You must specify a target. Use /cm <id>')
-        c = client.server.client_manager.get_targets(
-            client, TargetType.ID, int(arg), False)[0]
-        if c == client:
-            raise
-        if c.is_cm:
-            c.is_cm = False
-            client.hub.send_host_message(
-                '{} is no longer a co-CM.'.format(c.get_char_name()))
-            c.send_host_message(
-                'You are no longer a co-CM of hub {}.'.format(client.hub.name))
-        else:
-            c.is_cm = True
-            client.hub.send_host_message(
-                '{} has been made a co-CM.'.format(c.get_char_name()))
-            c.send_host_message(
-                'You have been made a co-CM of hub {} by {}.'.format(client.hub.name, client.get_char_name()))
     else:
         if not client.hub.allow_cm:
-            client.send_host_message('You can\'t become a CM in this hub')
+            raise ClientError('You can\'t become a master CM in this hub')
         if not client.hub.master and (len(client.hub.get_cm_list()) <= 0 or client.is_cm):
             client.hub.master = client
             client.is_cm = True
             if client.area.evidence_mod == 'HiddenCM':
                 client.area.broadcast_evidence_list()
-            client.hub.send_host_message('{} is CM in this hub now.'.format(client.get_char_name()))
-            return
-        client.send_host_message('=CM\'s in this area:=')
-        for cm in client.hub.get_cm_list():
-            m = 'co-'
-            if client.hub.master == cm:
-                m = 'Master '
-            client.send_host_message('=>{}CM [{}] {}'.format(m, cm.id, cm.get_char_name()))
+            client.hub.send_host_message('{} is master CM in this hub now.'.format(client.get_char_name()))
 
+def ooc_cmd_cms(client, arg):
+    client.send_host_message('=CM\'s in this hub:=')
+    for cm in client.hub.get_cm_list():
+        m = 'co-'
+        if client.hub.master == cm:
+            m = 'Master '
+        client.send_host_message('=>{}CM [{}] {}'.format(m, cm.id, cm.get_char_name()))
 
 def ooc_cmd_broadcast_ic(client, arg):
     if not client.is_cm:

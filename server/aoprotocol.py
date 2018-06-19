@@ -17,7 +17,7 @@
 
 import asyncio
 import re
-from time import localtime, strftime
+from time import gmtime, localtime, strftime
 from enum import Enum
 
 from . import commands
@@ -396,6 +396,11 @@ class AOProtocol(asyncio.Protocol):
                     area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
                                                 sfx_delay, button, self.client.evi_list[evidence], flip, ding, color)
                     area.set_next_msg_delay(len(msg))
+                    if (area.is_recording):
+                            current_time = strftime("%H:%M:%S UTC", gmtime())
+                            area.recorded_messages.append('[{}][{}] {}: {}'.format(
+                                current_time, self.client.id, self.client.get_char_name(), msg))
+                            #self.client.area.recorded_messages.append(args)
                     i += 1
             self.client.send_host_message('Broadcasting message to {} areas.'.format(len(self.client.broadcast_ic)))
         else:
@@ -404,11 +409,13 @@ class AOProtocol(asyncio.Protocol):
             self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
                                         sfx_delay, button, self.client.evi_list[evidence], flip, ding, color)
             self.client.area.set_next_msg_delay(len(msg))
+            if (self.client.area.is_recording):
+                current_time = strftime("%H:%M:%S UTC", gmtime())
+                self.client.area.recorded_messages.append('[{}][{}] {}: {}'.format(
+                    current_time, self.client.id, self.client.get_char_name(), msg))
+                #self.client.area.recorded_messages.append(args)
 
         logger.log_server('[IC][H{}][A{}][{}]{}'.format(self.client.hub.id, self.client.area.id, self.client.get_char_name(), msg), self.client)
-
-        if (self.client.area.is_recording):
-        	self.client.area.recorded_messages.append(args)
 
     def net_cmd_ct(self, args):
         """ OOC Message
