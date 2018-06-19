@@ -193,11 +193,11 @@ class ClientManager:
         def send_area_list(self, hidden=False):
             msg = '=== Areas for Hub [{}]: {} ==='.format(self.hub.id, self.hub.name)
             lock = {True: '[LOCKED]', False: ''}
-            for i, area in enumerate(self.hub.areas):
+            for area in self.hub.areas:
                 users = ''
                 if not hidden:
                     users = '(users: {}) '.format(len(area.clients))
-                msg += '\r\nArea {}: {} {}{}'.format(i, area.name, users, lock[area.is_locked])
+                msg += '\r\nArea {}: {} {}{}'.format(area.id, area.name, users, lock[area.is_locked])
                 if self.area == area:
                     msg += ' [*]'
             self.send_host_message(msg)

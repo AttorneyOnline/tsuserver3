@@ -542,6 +542,11 @@ def ooc_cmd_area(client, arg):
     else:
         raise ArgumentError('Too many arguments. Use /area <id>.')
 
+def ooc_cmd_area_add(client, arg):
+
+
+def ooc_cmd_area_remove(client, arg):
+    
 
 def ooc_cmd_rename(client, arg):
     if not client.is_mod and not client.is_cm:
@@ -657,9 +662,9 @@ def ooc_cmd_evi_swap(client, arg):
         raise ClientError("you must specify 2 numbers")
      
 def ooc_cmd_cm(client, arg):
-    if not client.is_cm or client.hub.master != client:
-        raise ClientError('You must be the master CM to promote co-CM\'s.')
     if len(arg) > 0:
+        if not client.is_cm or client.hub.master != client:
+            raise ClientError('You must be the master CM to promote co-CM\'s.')
         try:
             c = client.server.client_manager.get_targets(
                 client, TargetType.ID, int(arg), False)[0]
@@ -688,6 +693,8 @@ def ooc_cmd_cm(client, arg):
             if client.area.evidence_mod == 'HiddenCM':
                 client.area.broadcast_evidence_list()
             client.hub.send_host_message('{} is master CM in this hub now.'.format(client.get_char_name()))
+        else:
+            raise ClientError('Master CM exists. Use /cm <id>')
 
 def ooc_cmd_cms(client, arg):
     client.send_host_message('=CM\'s in this hub:=')
@@ -778,7 +785,7 @@ def ooc_cmd_area_kick(client, arg):
         raise ClientError('You must be authorized to do that.')
     if not arg:
         raise ClientError('You must specify a target. Use /area_kick <id> [destination #] [hub #]')
-    arg = arg.split(' ')
+    arg = arg.split()
     targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg[0]), False)
     output = [0, 0]
     if targets:
@@ -940,7 +947,7 @@ def ooc_cmd_rolla(client, arg):
     ability = ability_dice[roll] if roll in ability_dice else "Nothing happens"
     client.area.send_host_message(
         '{} rolled a {} (out of {}): {}.'.format(client.get_char_name(), roll, max_roll, ability))
-		
+        
 def ooc_cmd_refresh(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')

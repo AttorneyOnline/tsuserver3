@@ -53,7 +53,7 @@ class HubManager:
 				self.hub = hub
 				self.desc = ''
 				self.mute_ic = False
-				
+				self.can_remove = can_remove				
 
 				self.is_locked = False
 
@@ -137,8 +137,8 @@ class HubManager:
 				self.send_command('HP', side, val)
 
 			def change_background(self, bg):
-				# if bg.lower() not in (name.lower() for name in self.server.backgrounds):
-				# 	raise AreaError('Invalid background name.')
+				if self.server.bglock and bg.lower() not in (name.lower() for name in self.server.backgrounds):
+					raise AreaError('Invalid background name.')
 				self.background = bg
 				self.send_command('BN', self.background)
 
@@ -184,9 +184,15 @@ class HubManager:
 		def remove_area(self, area):
 			if not (area in self.areas):
 				raise AreaError('Area not found.')
-			for client in area.clients:
+			while client in area.clients:
 				client.change_area(self.default_area())
 			self.areas.remove(area)
+			self.update_area_ids()
+
+		def update_area_ids(self):
+			for i, area in enumerate(self.areas):
+				area.id = i
+			self.cur_id = i+1
 
 		def change_doc(self, doc='No document.'):
 			self.doc = doc
