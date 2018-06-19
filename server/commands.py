@@ -543,10 +543,38 @@ def ooc_cmd_area(client, arg):
         raise ArgumentError('Too many arguments. Use /area <id>.')
 
 def ooc_cmd_area_add(client, arg):
+    if not client.is_mod and not client.is_cm:
+        raise ClientError('You must be authorized to do that.')
 
-
-def ooc_cmd_area_remove(client, arg):
+    if client.hub.cur_id < client.hub.max_areas:
+        client.hub.create_area('Area {}'.format(client.hub.cur_id), True,
+                           client.server.backgrounds[0], False, None, 'FFA', True, True, True)
+        client.hub.send_host_message(
+            'New area created! ({}/{})'.format(client.hub.cur_id, client.hub.max_areas))
+    else:
+        raise AreaError('Too many areas! ({}/{})'.format(client.hub.cur_id, client.hub.max_areas))
     
+def ooc_cmd_area_remove(client, arg):
+    if not client.is_mod and not client.is_cm:
+        raise ClientError('You must be authorized to do that.')
+    args = arg.split()
+    if len(args) == 0:
+        args = [client.area.id]
+
+    if len(args) == 1:
+        try:
+            area = client.hub.get_area_by_id(int(args[0]))
+            if not area.can_remove:
+                raise AreaError('This area cannot be removed!')
+            client.hub.send_host_message('Area {} ({}) removed! ({}/{})'.format(
+                area.id, area.name, client.hub.cur_id, client.hub.max_areas))
+            client.hub.remove_area(area)
+        except ValueError:
+            raise ArgumentError('Area ID must be a number.')
+        except (AreaError, ClientError):
+            raise
+    else:
+        raise ArgumentError('Invalid number of arguments. Use /area <id>.')
 
 def ooc_cmd_rename(client, arg):
     if not client.is_mod and not client.is_cm:
