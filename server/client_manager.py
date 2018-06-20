@@ -201,9 +201,11 @@ class ClientManager:
             lock = {True: '[LOCKED]', False: ''}
             for area in self.hub.areas:
                 users = ''
-                if not hidden:
+                lo = ''
+                if not hidden and not self.is_cm and not self.is_mod:
                     users = '(users: {}) '.format(len(area.clients))
-                msg += '\r\nArea {}: {} {}{}'.format(area.id, area.name, users, lock[area.is_locked])
+                    lo = lock[area.is_locked]
+                msg += '\r\nArea {}: {} {}{}'.format(area.id, area.name, users, lo)
                 if self.area == area:
                     msg += ' [*]'
             self.send_host_message(msg)
@@ -230,7 +232,7 @@ class ClientManager:
             sorted_clients = []
             for client in area.clients:
                 if (not mods) or client.is_mod:
-                    if not client.hidden or self.is_cm:
+                    if not client.hidden or self.is_cm or self.is_mod:
                         sorted_clients.append(client)
             sorted_clients = sorted(sorted_clients, key=lambda x: x.get_char_name())
             for c in sorted_clients:

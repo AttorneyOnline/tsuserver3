@@ -50,7 +50,7 @@ class TsuServer3:
         self.music_list = None
         self.music_list_ao2 = None
         self.music_pages_ao1 = None
-        self.bglock = False
+        self.bglock = True
         self.backgrounds = None
         self.load_characters()
         self.load_music()

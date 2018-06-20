@@ -335,12 +335,12 @@ def ooc_cmd_iclogs(client, arg):
     if not client.is_mod and not client.is_cm:
         raise ClientError('You must be authorized to do that.')
 
-    args = arg.split(' ')
+    args = arg.split()
     area = client.area
     
     if len(args) > 1:
         try:
-            area = client.hub.get_area_by_id(args[1])
+            area = client.hub.get_area_by_id(int(args[1]))
         except:
             raise ArgumentError('Invalid area! Try /iclogs [num_lines OR pastebin] [area_id]')
 
@@ -361,8 +361,8 @@ def ooc_cmd_iclogs(client, arg):
             args = [10]
         try:
             lines = int(args[0])
-            if lines > 30:
-                lines = 30
+            if lines > 50:
+                lines = 50
             if lines < 0:
                 raise
             i = 0
@@ -449,7 +449,7 @@ def ooc_cmd_need(client, arg):
     if len(arg) == 0:
         raise ArgumentError("You must specify what you need.")
     client.server.broadcast_need(client, arg)
-    logger.log_server('[{}][{}][NEED]{}.'.format(client.area.id, client.get_char_name(), arg), client)
+    logger.log_server('[{}][{}][NEED]{}.'.format(client.hub.id, client.get_char_name(), arg), client)
     
 def ooc_cmd_toggleadverts(client, arg):
     if len(arg) != 0:
@@ -596,17 +596,17 @@ def ooc_cmd_pm(client, arg):
     msg = None
     if len(args) < 2:
         raise ArgumentError('Not enough arguments. use /pm <target> <message>. Target should be ID, OOC-name or char-name. Use /getarea for getting info like "[ID] char-name".')
-    if args[0].lower() in ['cm', 'gm']:
+    if args[0].lower()[:2] in ['cm', 'gm']:
         targets = client.hub.get_cm_list()
-    else:
+    if len(targets) == 0:
         targets = client.server.client_manager.get_targets(client, TargetType.CHAR_NAME, arg, False)
         key = TargetType.CHAR_NAME
-        if len(targets) == 0 and args[0].isdigit():
-            targets = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), False)
-            key = TargetType.ID
-        if len(targets) == 0:
-            targets = client.server.client_manager.get_targets(client, TargetType.OOC_NAME, arg, False)
-            key = TargetType.OOC_NAME
+    if len(targets) == 0 and args[0].isdigit():
+        targets = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), False)
+        key = TargetType.ID
+    if len(targets) == 0:
+        targets = client.server.client_manager.get_targets(client, TargetType.OOC_NAME, arg, False)
+        key = TargetType.OOC_NAME
     if len(targets) == 0:
         raise ArgumentError('No targets found.')
     try:
@@ -671,7 +671,7 @@ def ooc_cmd_getarea(client, arg):
     client.send_area_info(client.area.id, False)
 
 def ooc_cmd_hide(client, arg):
-    arg = arg.split()
+    args = arg.split()
     try:
         targets = client.server.client_manager.get_targets(
             client, TargetType.ID, args[0], False)
@@ -687,7 +687,7 @@ def ooc_cmd_hide(client, arg):
         raise ClientError('You must specify a target. Use /cm <id>')
 
 def ooc_cmd_unhide(client, arg):
-    arg = arg.split()
+    args = arg.split()
     try:
         targets = client.server.client_manager.get_targets(
             client, TargetType.ID, args[0], False)
@@ -777,7 +777,7 @@ def ooc_cmd_broadcast_ic(client, arg):
             for area in client.hub.areas:
                 client.broadcast_ic.append(area.id)
         else:
-            arg = arg.split(' ')
+            arg = arg.split()
             for a in arg:
                 try:
                     client.broadcast_ic.append(int(a))
@@ -801,7 +801,7 @@ def ooc_cmd_lockarea(client, arg):
     elif len(arg) == 0:
         args = [client.area.id]
     else:
-        args = arg.split(' ')
+        args = arg.split()
     
     i = 0
     for area in client.hub.areas:
@@ -810,7 +810,7 @@ def ooc_cmd_lockarea(client, arg):
                 client.send_host_message(
                     'Area locking is disabled in area {}.'.format(area.id))
                 continue
-            if not area.is_locked:
+            if area.is_locked:
                 client.send_host_message('Area is already locked.')
                 continue
             
@@ -828,7 +828,7 @@ def ooc_cmd_unlockarea(client, arg):
     elif len(arg) == 0:
         args = [client.area.id]
     else:
-        args = arg.split(' ')
+        args = arg.split()
     
     i = 0
     for area in client.hub.areas:

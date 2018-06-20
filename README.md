@@ -108,7 +108,7 @@ Requires Python 3.6+ and PyYAML.
     - Kicks a player back to the character select screen. If no ID was entered then target yourself.
 * **kick** "IPID" 
     - Kicks the targets with this IPID.
-* **area_kick** "ID" [area]
+* **akick** "ID" [area]
     - Kicks target and all of their multi-accs from your area to area 0 or specified [area] and removes them from invite-list should the area be locked.
 * **ban** "IPID" 
     - Bans the IPID (hdid is linked to ipid so all bans happens in a same time).

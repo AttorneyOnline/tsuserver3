@@ -398,7 +398,7 @@ class AOProtocol(asyncio.Protocol):
                     area.set_next_msg_delay(len(msg))
                     if (area.is_recording):
                             current_time = strftime("%H:%M:%S UTC", gmtime())
-                            area.recorded_messages.append('[{}][{}] {}: {}'.format(
+                            area.recorded_messages.append('[{}][Broadcast][{}] {}: {}'.format(
                                 current_time, self.client.id, self.client.get_char_name(), msg))
                             #self.client.area.recorded_messages.append(args)
                     i += 1

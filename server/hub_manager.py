@@ -211,7 +211,8 @@ class HubManager:
 			if client.is_cm:
 				client.is_cm = False
 				client.broadcast_ic.clear()
-				self.master = None
+				if self.master == client:
+					self.master = None
 			
 			if client.hidden:
 				client.hide(False)
