@@ -150,7 +150,7 @@ class ClientManager:
             msg = 'no longer'
             if tog:
                 msg = 'now'
-            self.send_host_message('You are {} hidden from /getarea.')
+            self.send_host_message('You are {} hidden from /getarea.'.format(msg))
 
         def reload_character(self):
             try:
@@ -202,7 +202,7 @@ class ClientManager:
             for area in self.hub.areas:
                 users = ''
                 lo = ''
-                if not hidden and not self.is_cm and not self.is_mod:
+                if not hidden or (self.is_cm or self.is_mod):
                     users = '(users: {}) '.format(len(area.clients))
                     lo = lock[area.is_locked]
                 msg += '\r\nArea {}: {} {}{}'.format(area.id, area.name, users, lo)

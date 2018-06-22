@@ -596,8 +596,11 @@ def ooc_cmd_pm(client, arg):
     msg = None
     if len(args) < 2:
         raise ArgumentError('Not enough arguments. use /pm <target> <message>. Target should be ID, OOC-name or char-name. Use /getarea for getting info like "[ID] char-name".')
+
+    targets = []
     if args[0].lower()[:2] in ['cm', 'gm']:
         targets = client.hub.get_cm_list()
+        key = TargetType.ID
     if len(targets) == 0:
         targets = client.server.client_manager.get_targets(client, TargetType.CHAR_NAME, arg, False)
         key = TargetType.CHAR_NAME
@@ -671,36 +674,45 @@ def ooc_cmd_getarea(client, arg):
     client.send_area_info(client.area.id, False)
 
 def ooc_cmd_hide(client, arg):
-    args = arg.split()
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    elif len(arg) == 0:
+        raise ArgumentError('You must specify a target.')
     try:
         targets = client.server.client_manager.get_targets(
-            client, TargetType.ID, args[0], False)
+            client, TargetType.ID, int(arg), False)
+    except:
+        raise ArgumentError('You must specify a target. Use /disemvowel <id>.')
+    if targets:
         c = targets[0]
         if c.hidden:
             raise ClientError(
                 'Client [{}] {} already hidden!'.format(c.id, c.name))
         c.hide(True)
-        client.send_host_message('You have hidden [{}] {} from /getarea.'.format(c.id, c.name))
-    except (ArgumentError, ClientError):
-        raise
-    except:
-        raise ClientError('You must specify a target. Use /cm <id>')
+        client.send_host_message(
+            'You have hidden [{}] {} from /getarea.'.format(c.id, c.name))
+    else:
+        client.send_host_message('No targets found.')
 
 def ooc_cmd_unhide(client, arg):
-    args = arg.split()
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    elif len(arg) == 0:
+        raise ArgumentError('You must specify a target.')
     try:
         targets = client.server.client_manager.get_targets(
-            client, TargetType.ID, args[0], False)
+            client, TargetType.ID, int(arg), False)
+    except:
+        raise ArgumentError('You must specify a target. Use /disemvowel <id>.')
+    if targets:
         c = targets[0]
         if not c.hidden:
             raise ClientError(
                 'Client [{}] {} already revealed!'.format(c.id, c.name))
         c.hide(False)
         client.send_host_message('You have revealed [{}] {} for /getarea.'.format(c.id, c.name))
-    except (ArgumentError, ClientError):
-        raise
-    except:
-        raise ClientError('You must specify a target. Use /cm <id>')
+    else:
+        client.send_host_message('No targets found.')
 
 def ooc_cmd_getareas(client, arg):
     if client.hub.status.lower() in ['casing-open', 'casing-full'] and not client.is_cm:
