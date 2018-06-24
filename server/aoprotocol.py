@@ -275,8 +275,9 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_command('EM', *self.server.music_pages_ao1[args[0]])
         else:
             self.client.send_done()
-            self.client.send_area_list()
             self.client.send_motd()
+            self.client.send_hub_list()
+            self.client.send_area_list()
 
     def net_cmd_rc(self, _):
         """ Asks for the whole character list(AO2)
@@ -305,8 +306,9 @@ class AOProtocol(asyncio.Protocol):
         """
 
         self.client.send_done()
-        self.client.send_area_list()
         self.client.send_motd()
+        self.client.send_hub_list()
+        self.client.send_area_list()
 
     def net_cmd_cc(self, args):
         """ Character selection.
@@ -431,12 +433,13 @@ class AOProtocol(asyncio.Protocol):
             return
         if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR):
             return
-        if self.client.name != args[0] and self.client.fake_name != args[0]:
-            if self.client.is_valid_name(args[0]):
-                self.client.name = args[0]
-                self.client.fake_name = args[0]
+        ooc_name = re.sub('\s+', ' ', args[0]).strip() #Strip the ooc_name of any excess whitespace
+        if self.client.name != ooc_name and self.client.fake_name != ooc_name:
+            if self.client.is_valid_name(ooc_name):
+                self.client.name = ooc_name
+                self.client.fake_name = ooc_name
             else:
-                self.client.fake_name = args[0]
+                self.client.fake_name = ooc_name
         if self.client.name == '':
             self.client.send_host_message('You must insert a name with at least one letter')
             return
@@ -460,7 +463,12 @@ class AOProtocol(asyncio.Protocol):
         else:
             if self.client.disemvowel:
                 args[1] = self.client.disemvowel_message(args[1])
-            self.client.hub.send_command('CT', self.client.name, args[1])
+            cm = ''
+            if self.client.is_cm:
+                cm = '[CM]'
+            elif self.client.is_mod:
+                cm = '[MOD]'
+            self.client.hub.send_command('CT', cm + self.client.name, args[1])
             logger.log_server(
                 '[OOC][{}][{}][{}][{}]{}'.format(self.client.hub.name, self.client.area.id, self.client.get_char_name(), self.client.name,
                                              args[1]), self.client)

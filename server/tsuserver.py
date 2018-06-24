@@ -233,7 +233,7 @@ class TsuServer3:
 
     def broadcast_global(self, client, msg, as_mod=False):
         char_name = client.get_char_name()
-        ooc_name = '{}[H{}][{}]'.format('<dollar>G', client.hub.id, char_name)
+        ooc_name = '{}[H{}][{}]'.format('~G', client.hub.id, char_name)
         if as_mod:
             ooc_name += '[M]'
         self.send_all_cmd_pred('CT', ooc_name, msg, pred=lambda x: not x.muted_global)

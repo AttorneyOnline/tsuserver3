@@ -40,7 +40,7 @@ def ooc_cmd_switch(client, arg):
     client.send_host_message('Character changed.')
     
 def ooc_cmd_bg(client, arg):
-    if client.hub.status.lower() in ['casing-open', 'casing-full'] and not client.is_cm:
+    if client.hub.status.lower().startswith('casing') and not client.is_cm:
         raise AreaError(
             'Hub is {} - only the CM can change /bg.'.format(client.hub.status))
     if len(arg) == 0:
@@ -337,47 +337,50 @@ def ooc_cmd_iclogs(client, arg):
 
     args = arg.split()
     area = client.area
-    
-    if len(args) > 1:
-        try:
-            area = client.hub.get_area_by_id(int(args[1]))
-        except:
-            raise ArgumentError('Invalid area! Try /iclogs [num_lines OR pastebin] [area_id]')
+
+    if len(args) == 0:
+        args = [10]
 
     if args[0] == "link":
         client.send_host_message("Fetching pastebin for full IC log...")
-        logs = '[{}] IC logs for area [{}] {} in hub [{}] {}'.format(time.strftime("%d-%b-%y|%H:%M:%S UTC", area.record_start), area.id, area.name, client.hub.id, client.hub.name)
+        logs = '[{}] IC logs for area [{}] {} in hub [{}] {}'.format(time.strftime(
+            "%d-%b-%y|%H:%M:%S UTC", area.record_start), area.id, area.name, client.hub.id, client.hub.name)
         for line in area.recorded_messages:
             logs += '\n{}'.format(line)
         #print(logs)
         try:
             paste = paste_it()
-            link = paste.create_paste(logs, 'IC logs for area [{}] {} in hub [{}] {}'.format(area.id, area.name, client.hub.id, client.hub.name))
+            link = paste.create_paste(logs, 'IC logs for area [{}] {} in hub [{}] {}'.format(
+                area.id, area.name, client.hub.id, client.hub.name))
             client.send_host_message('Success! Pastebin: {}'.format(link))
         except:
             raise ArgumentError('Failed...')
-    else:
-        if len(args) == 0:
-            args = [10]
+
+    if len(args) > 1:
         try:
-            lines = int(args[0])
-            if lines > 50:
-                lines = 50
-            if lines < 0:
-                raise
-            i = 0
-            for line in area.recorded_messages[-lines:]:
-                if i >= lines:
-                    break
-                client.send_host_message(line)
-                i += 1
-            if i == 0:
-                client.send_host_message('Error: logs are empty!')
-                return
-            client.send_host_message('Displaying last {} IC messages in area [{}] {} of hub {}.'.format(i, area.id, area.name, client.hub.id))
+            area = client.hub.get_area_by_id(int(args[1]))
         except:
-            raise ArgumentError(
-                'Bad number of lines! Try /iclogs [num_lines OR pastebin] [area_id]')
+            raise ArgumentError('Invalid area! Try /iclogs [num_lines OR "link"] [area_id]')
+
+    try:
+        lines = int(args[0])
+        if lines > 50:
+            lines = 50
+        if lines < 0:
+            raise
+        i = 0
+        for line in area.recorded_messages[-lines:]:
+            if i >= lines:
+                break
+            client.send_host_message(line)
+            i += 1
+        if i == 0:
+            client.send_host_message('Error: logs are empty!')
+            return
+        client.send_host_message('Displaying last {} IC messages in area [{}] {} of hub {}.'.format(i, area.id, area.name, client.hub.id))
+    except:
+        raise ArgumentError(
+            'Bad number of lines! Try /iclogs [num_lines OR "link"] [area_id]')
 
 def ooc_cmd_login(client, arg):
     if len(arg) == 0:
@@ -402,8 +405,14 @@ def ooc_cmd_g(client, arg):
 def ooc_cmd_a(client, arg):
     if len(arg) == 0:
         raise ArgumentError("You can't send an empty message.")
-    client.area.send_command('CT', '$A[{}]'.format(client.get_char_name()), arg)
-    logger.log_server('[{}][{}][GLOBAL]{}.'.format(client.hub.id, client.get_char_name(), arg), client)
+    cm = ''
+    if client.is_cm:
+        cm = '[CM]'
+    elif client.is_mod:
+        cm = '[MOD]'
+    client.hub.send_command('CT', '~A{}[{}]'.format(
+        cm, client.get_char_name()), arg)
+    logger.log_server('[{}][{}][AOOC]{}.'.format(client.hub.id, client.get_char_name(), arg), client)
 
 def ooc_cmd_gm(client, arg):
     if not client.is_mod:
@@ -442,6 +451,16 @@ def ooc_cmd_toggleglobal(client, arg):
         glob_stat = 'off'
     client.send_host_message('Global chat turned {}.'.format(glob_stat))
 
+def ooc_cmd_togglehub(client, arg):
+    if len(arg) != 0:
+        raise ArgumentError("This command doesn't take any arguments")
+    if not client.is_mod and not client.is_cm:
+        raise ClientError('You must be authorized to do that.')
+    client.hub.is_ooc_muted = not client.hub.is_ooc_muted
+    glob_stat = 'on'
+    if client.hub.is_ooc_muted:
+        glob_stat = 'off'
+    client.hub.send_host_message('Hub chat (/h [msg]) turned {}.'.format(glob_stat))
 
 def ooc_cmd_need(client, arg):
     if client.muted_adverts:
@@ -466,7 +485,7 @@ def ooc_cmd_doc(client, arg):
         logger.log_server(
             '[{}][{}]Requested document. Link: {}'.format(client.area.id, client.get_char_name(), client.hub.doc))
     else:
-        if client.hub.status.lower() in ['casing-open', 'casing-full'] and not client.is_cm:
+        if client.hub.status.lower().startswith('casing') and not client.is_cm:
             raise AreaError(
                 'Hub is {} - only the CM can change /doc.'.format(client.hub.status))
         client.hub.change_doc(arg)
@@ -479,7 +498,7 @@ def ooc_cmd_desc(client, arg):
         logger.log_server(
             '[{}][{}]Requested description: {}'.format(client.area.id, client.get_char_name(), client.area.desc))
     else:
-        if client.hub.status.lower() in ['casing-open', 'casing-full'] and not client.is_cm:
+        if client.hub.status.lower().startswith('casing') and not client.is_cm:
             raise AreaError(
                 'Hub is {} - only the CM can change /desc for this area.'.format(client.hub.status))
         client.area.desc = arg
@@ -499,8 +518,8 @@ def ooc_cmd_status(client, arg):
     if len(arg) == 0:
         client.send_host_message('Current status: {}'.format(client.hub.status))
     else:
-        if not client.is_cm:
-            raise ClientError('Only CM can change status.')
+        if not client.is_cm and not client.is_mod:
+            raise ClientError('Only CM or mods can change status.')
         try:
             client.hub.change_status(arg)
             client.hub.send_host_message('{} changed status to {}.'.format(client.get_char_name(), client.hub.status))
@@ -517,31 +536,37 @@ def ooc_cmd_hub(client, arg):
     args = arg.split()
     if len(args) == 0:
         client.send_hub_list()
-    elif len(args) == 1:
-        try:
-            hub = client.server.hub_manager.get_hub_by_id(int(args[0]))
-            client.change_hub(hub)
-        except ValueError:
-            raise ArgumentError('hub ID must be a number.')
-        except (AreaError, ClientError):
-            raise
-    else:
-        raise ArgumentError('Too many arguments. Use /hub <id>.')
+        return
+
+    try:
+        hub = client.server.hub_manager.get_hub_by_id_or_name(
+            ' '.join(args[0:]))
+        client.change_hub(hub)
+    except ValueError:
+        raise ArgumentError('Hub ID must be a number or name.')
+    except (AreaError, ClientError):
+        raise
         
 def ooc_cmd_area(client, arg):
     args = arg.split()
+    casing = client.hub.status.lower().startswith('casing')
     if len(args) == 0:
-        client.send_area_list(client.hub.status.lower() in ['casing-open', 'casing-full'] and not client.is_cm)
-    elif len(args) == 1:
-        try:
-            area = client.hub.get_area_by_id(int(args[0]))
-            client.change_area(area)
-        except ValueError:
-            raise ArgumentError('Area ID must be a number.')
-        except (AreaError, ClientError):
-            raise
-    else:
-        raise ArgumentError('Too many arguments. Use /area <id>.')
+        client.send_area_list(casing, casing)
+        return
+
+    try:
+        area = client.hub.get_area_by_id_or_name(' '.join(args[0:]))
+
+        if area.is_locked and not client.is_mod and not client.is_cm and not client.ipid in area.invite_list:
+            raise ClientError("That area is locked!")
+        if area != client.area and casing and len(client.area.accessible) > 0 and area.id not in client.area.accessible and not client.is_cm and not client.is_mod:
+            raise AreaError(
+                'Area ID not accessible from your current area!')
+        client.change_area(area)
+    except ValueError:
+        raise ArgumentError('Area ID must be a number or name.')
+    except (AreaError, ClientError):
+        raise
 
 def ooc_cmd_area_add(client, arg):
     if not client.is_mod and not client.is_cm:
@@ -627,7 +652,7 @@ def ooc_cmd_pm(client, arg):
             raise ClientError('User {} muted all pm conversation'.format(c.name))
         else:
             c.send_host_message('PM from [{}] {} in {} ({}): {}'.format(client.id, client.name, client.hub.name, client.get_char_name(), msg))
-            c.hub.send_to_cm('[PMLog] PM from [{}] {} ({}) to [{}] {} in {}: {}'.format(client.id, client.name, client.get_char_name(), c.id, c.name, client.hub.name, msg), c)
+            c.hub.send_to_cm('[PMLog] PM from [{}] {} ({}) to [{}] {} in {}: {}'.format(client.id, client.name, client.get_char_name(), c.id, c.name, client.hub.name, msg), targets)
             client.send_host_message('PM sent to [{}] {}. Message: {}'.format(c.id, c.name, msg))
  
 def ooc_cmd_mutepm(client, arg):
@@ -669,7 +694,7 @@ def ooc_cmd_randomchar(client, arg):
     client.send_host_message('Randomly switched to {}'.format(client.get_char_name()))
     
 def ooc_cmd_getarea(client, arg):
-    # if client.hub.status.lower() in ['casing-open', 'casing-full'] and not client.is_cm:
+    # if client.hub.status.lower().startswith('casing') and not client.is_cm:
     #     raise AreaError('Hub is {} - /getarea functionality disabled.'.format(client.hub.status))
     client.send_area_info(client.area.id, False)
 
@@ -715,12 +740,12 @@ def ooc_cmd_unhide(client, arg):
         client.send_host_message('No targets found.')
 
 def ooc_cmd_getareas(client, arg):
-    if client.hub.status.lower() in ['casing-open', 'casing-full'] and not client.is_cm:
+    if client.hub.status.lower().startswith('casing') and not client.is_cm:
         raise AreaError('Hub is {} - /getareas functionality disabled.'.format(client.hub.status))
     client.send_area_info(-1, False)
     
 def ooc_cmd_mods(client, arg):
-    if client.hub.status.lower() in ['casing-open', 'casing-full'] and not client.is_cm:
+    if client.hub.status.lower().startswith('casing') and not client.is_cm:
         raise AreaError('Hub is {} - /getarea functionality disabled.'.format(client.hub.status))
     client.send_area_info(-1, True)  
     
@@ -778,8 +803,8 @@ def ooc_cmd_cms(client, arg):
         client.send_host_message('=>{}CM [{}] {}'.format(m, cm.id, cm.get_char_name()))
 
 def ooc_cmd_broadcast_ic(client, arg):
-    if not client.is_cm:
-        raise ClientError('Only CM can broadcast IC.')
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can broadcast IC.')
     if not arg or arg == 'clear':
         client.broadcast_ic.clear()
         client.send_host_message('You have cleared the broadcast_ic list.')
@@ -796,6 +821,30 @@ def ooc_cmd_broadcast_ic(client, arg):
                 except:
                     raise ClientError('Invalid area ID.')
         client.send_host_message('You will now broadcast IC across areas {} in this hub.'.format(client.broadcast_ic))
+
+def ooc_cmd_area_access(client, arg):
+    if not arg:
+        client.send_host_message(
+            'Areas that can be accessed from this area: {}.'.format(client.area.accessible))
+        return
+
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can set area accessibility.')
+
+    if arg == 'clear' or arg == 'all':
+        client.area.accessible.clear()
+        client.send_host_message('You have cleared the area accessibility list.')
+    else:
+        arg = arg.split()
+        for a in arg:
+            if client.area.id == int(a):
+                continue
+            try:
+                client.area.accessible.append(int(a))
+            except:
+                raise ClientError('Invalid area ID.')
+        client.area.send_host_message(
+            'Areas that can now be accessed from this area: {}.'.format(client.area.accessible))
 
 def ooc_cmd_unmod(client, arg):
     client.is_mod = False

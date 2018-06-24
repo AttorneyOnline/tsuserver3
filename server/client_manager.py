@@ -24,6 +24,7 @@ from heapq import heappop, heappush
 
 import time
 import re
+import string
 
 
 
@@ -99,11 +100,13 @@ class ClientManager:
                 self.server.config['playerlimit']))
 
         def is_valid_name(self, name):
+            printset = set(string.ascii_letters + string.digits + "~ -_.")
             name_ws = name.replace(' ', '')
             if not name_ws or name_ws.isdigit():
                 return False
+            if not set(name_ws).issubset(printset): #illegal chars in ooc name
+                return False
             for client in self.server.client_manager.clients:
-                print(client.name == name)
                 if client.name == name:
                     return False
             return True
@@ -167,8 +170,6 @@ class ClientManager:
         def change_area(self, area):
             if self.area == area:
                 raise ClientError('User already in specified area.')
-            if area.is_locked and not self.is_mod and not self.is_cm and not self.ipid in area.invite_list:
-                raise ClientError("That area is locked!")
             old_area = self.area
             if not area.is_char_available(self.char_id):
                 try:
@@ -196,16 +197,26 @@ class ClientManager:
             self.send_command('BN', self.area.background)
             self.send_command('LE', *self.area.get_evidence_list(self))
 
-        def send_area_list(self, hidden=False):
-            msg = '=== Areas for Hub [{}]: {} ==='.format(self.hub.id, self.hub.name)
+        def send_area_list(self, hidden=False, accessible=False):
+            acc = ''
+            if accessible:
+                acc = 'Accessible '
+            msg = '=== {}Areas for Hub [{}]: {} ==='.format(acc, self.hub.id, self.hub.name)
             lock = {True: '[LOCKED]', False: ''}
             for area in self.hub.areas:
                 users = ''
                 lo = ''
+                acc = ''
+                if self.area != area and len(self.area.accessible) > 0 and not (area.id in self.area.accessible):
+                    if not accessible or self.is_cm or self.is_mod:
+                        acc = '<X>'
+                    else:
+                        continue
                 if not hidden or (self.is_cm or self.is_mod):
                     users = '(users: {}) '.format(len(area.clients))
                     lo = lock[area.is_locked]
-                msg += '\r\nArea {}: {} {}{}'.format(area.id, area.name, users, lo)
+                msg += '\r\nArea {}: {}{} {}{}'.format(
+                    area.id, acc, area.name, users, lo)
                 if self.area == area:
                     msg += ' [*]'
             self.send_host_message(msg)

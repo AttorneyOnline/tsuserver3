@@ -53,7 +53,8 @@ class HubManager:
 				self.hub = hub
 				self.desc = ''
 				self.mute_ic = False
-				self.can_remove = can_remove				
+				self.can_remove = can_remove
+				self.accessible = []
 
 				self.is_locked = False
 
@@ -222,7 +223,7 @@ class HubManager:
 
 		def get_area_by_name(self, name):
 			for area in self.areas:
-				if area.name == name:
+				if area.name.lower() == name.lower():
 					return area
 			raise AreaError('Area not found.')
 
@@ -232,6 +233,15 @@ class HubManager:
 					return area
 			raise AreaError('Area not found.')
 
+		def get_area_by_id_or_name(self, args):
+			try:
+				return self.get_area_by_name(args)
+			except:
+				try:
+					return self.get_area_by_id(int(args))
+				except:
+					raise AreaError('Area not found.')
+
 		def change_status(self, value):
 			allowed_values = ('idle', 'building-open', 'building-full',
 								'casing-open', 'casing-full', 'recess')
@@ -239,7 +249,7 @@ class HubManager:
 				raise AreaError('Invalid status. Possible values: {}'.format(
 					', '.join(allowed_values)))
 			self.status = value.upper()
-			if value in ('casing-open', 'casing-full'):
+			if value.lower().startswith('casing'):
 				self.start_recording(True, True)
 			else:
 				self.stop_recording(True)
@@ -281,10 +291,10 @@ class HubManager:
 			for area in self.areas:
 				area.send_host_message(msg)
 
-		def send_to_cm(self, msg, exception=None):
+		def send_to_cm(self, msg, exceptions=[]):
 			for area in self.areas:
 				for client in area.clients:
-					if client != exception and client.is_cm:
+					if not (client in exceptions) and client.is_cm:
 						client.send_host_message(msg)
 
 		def get_cm_list(self):
@@ -352,7 +362,7 @@ class HubManager:
 
 	def get_hub_by_name(self, name):
 		for hub in self.hubs:
-			if hub.name == name:
+			if hub.name.lower() == name.lower():
 				return hub
 		raise AreaError('Hub not found.')
 
@@ -362,3 +372,11 @@ class HubManager:
 				return hub
 		raise AreaError('Hub not found.')
 
+	def get_hub_by_id_or_name(self, args):
+		try:
+			return self.get_hub_by_name(args)
+		except:
+			try:
+				return self.get_hub_by_id(int(args))
+			except:
+				raise AreaError('Hub not found.')
