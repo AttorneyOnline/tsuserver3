@@ -410,7 +410,7 @@ def ooc_cmd_a(client, arg):
         cm = '[CM]'
     elif client.is_mod:
         cm = '[MOD]'
-    client.hub.send_command('CT', '~A{}[{}]'.format(
+    client.area.send_command('CT', '~A{}[{}]'.format(
         cm, client.get_char_name()), arg)
     logger.log_server('[{}][{}][AOOC]{}.'.format(client.hub.id, client.get_char_name(), arg), client)
 
