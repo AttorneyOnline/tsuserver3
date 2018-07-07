@@ -213,6 +213,13 @@ class HubManager:
 			self.status = 'IDLE'
 			self.doc = 'No document.'
 
+			#Turn Based System
+			# self.tbs_enabled = False
+			# self.tbs_players = []
+			# self.tbs_turns = 1
+			# self.tbs_turnsleft = 1
+			# self.tbs_current = 0
+
 		def save(self):
 			s = ''
 			for area in self.areas:
@@ -270,6 +277,8 @@ class HubManager:
 			
 			if client.hidden:
 				client.hide(False)
+			if client.blinded:
+				client.blind(False)
 
 		def default_area(self):
 			return self.areas[0]

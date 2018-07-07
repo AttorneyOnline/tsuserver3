@@ -68,6 +68,7 @@ class ClientManager:
             self.is_cm = False
             self.broadcast_ic = []
             self.hidden = False
+            self.blinded = False
 
         def send_raw_message(self, msg):
             if self.websocket:
@@ -78,6 +79,10 @@ class ClientManager:
         def send_command(self, command, *args):
             if args:
                 if command == 'MS':
+                    if self.blinded and args[0] != 'broadcast':
+                        return #Don't receive any chat messages when blinded that are not broadcast_ic'ed
+                    if args[0] == 'broadcast':
+                        args[0] = '0'
                     for evi_num in range(len(self.evi_list)):
                         if self.evi_list[evi_num] == args[11]:
                             lst = list(args)
@@ -155,6 +160,14 @@ class ClientManager:
                 msg = 'now'
             self.send_host_message('You are {} hidden from /getarea.'.format(msg))
 
+        def blind(self, tog=True):
+            self.blinded = tog
+            msg = 'no longer'
+            if tog:
+                msg = 'now'
+            self.send_host_message(
+                'You are {} blinded from /getarea and seeing non-broadcasted IC messages.'.format(msg))
+
         def reload_character(self):
             try:
                 self.change_character(self.char_id, True)
@@ -202,7 +215,7 @@ class ClientManager:
             if accessible:
                 acc = 'Accessible '
             msg = '=== {}Areas for Hub [{}]: {} ==='.format(acc, self.hub.id, self.hub.name)
-            lock = {True: '[LOCKED]', False: ''}
+            lock = {True: '[L]', False: ''}
             for area in self.hub.areas:
                 users = ''
                 lo = ''
@@ -251,7 +264,9 @@ class ClientManager:
                 if self.is_mod:
                     info += ' ({})'.format(c.ipid)
                 if c.hidden:
-                    info += ' [HIDDEN]'
+                    info += ' [H]'
+                if c.blinded:
+                    info += ' [B]'
             return info
 
         def send_area_info(self, area_id, mods): 

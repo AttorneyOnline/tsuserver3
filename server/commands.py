@@ -415,8 +415,13 @@ def ooc_cmd_a(client, arg):
         cm = '[CM]'
     elif client.is_mod:
         cm = '[MOD]'
-    client.area.send_command('CT', '~A{}[{}]'.format(
-        cm, client.get_char_name()), arg)
+
+    name = client.get_char_name()
+    if client.hidden:
+        name = 'HIDDEN'
+        cm = ''
+
+    client.area.send_command('CT', '~A{}[{}]'.format(cm, name), arg)
     logger.log_server('[{}][{}][AOOC]{}.'.format(client.hub.id, client.get_char_name(), arg), client)
 
 def ooc_cmd_gm(client, arg):
@@ -700,6 +705,8 @@ def ooc_cmd_randomchar(client, arg):
 def ooc_cmd_getarea(client, arg):
     # if client.hub.status.lower().startswith('casing') and not client.is_cm:
     #     raise AreaError('Hub is {} - /getarea functionality disabled.'.format(client.hub.status))
+    if client.blinded:
+        raise ArgumentError('You are blinded - you cannot use this command!')
     id = client.area.id
     if len(arg) > 0:
         if not client.is_cm and not client.is_mod:
@@ -748,49 +755,51 @@ def ooc_cmd_unhide(client, arg):
     else:
         client.send_host_message('No targets found.')
 
-# def ooc_cmd_blind(client, arg):
-#     if not client.is_cm and not client.is_mod:
-#         raise ClientError('You must be authorized to do that.')
-#     elif len(arg) == 0:
-#         raise ArgumentError('You must specify a target.')
-#     try:
-#         targets = client.server.client_manager.get_targets(
-#             client, TargetType.ID, int(arg), False)
-#     except:
-#         raise ArgumentError('You must specify a target. Use /blind <id>.')
-#     if targets:
-#         c = targets[0]
-#         if c.hidden:
-#             raise ClientError(
-#                 'Client [{}] {} already blinded!'.format(c.id, c.name))
-#         c.blind(True)
-#         client.send_host_message(
-#             'You have blinded [{}] {} from using /getarea and seeing non-broadcasted IC messages.'.format(c.id, c.name))
-#     else:
-#         client.send_host_message('No targets found.')
+def ooc_cmd_blind(client, arg):
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    elif len(arg) == 0:
+        raise ArgumentError('You must specify a target.')
+    try:
+        targets = client.server.client_manager.get_targets(
+            client, TargetType.ID, int(arg), False)
+    except:
+        raise ArgumentError('You must specify a target. Use /blind <id>.')
+    if targets:
+        c = targets[0]
+        if c.blinded:
+            raise ClientError(
+                'Client [{}] {} already blinded!'.format(c.id, c.name))
+        c.blind(True)
+        client.send_host_message(
+            'You have blinded [{}] {} from using /getarea and seeing non-broadcasted IC messages.'.format(c.id, c.name))
+    else:
+        client.send_host_message('No targets found.')
 
-# def ooc_cmd_unblind(client, arg):
-#     if not client.is_cm and not client.is_mod:
-#         raise ClientError('You must be authorized to do that.')
-#     elif len(arg) == 0:
-#         raise ArgumentError('You must specify a target.')
-#     try:
-#         targets = client.server.client_manager.get_targets(
-#             client, TargetType.ID, int(arg), False)
-#     except:
-#         raise ArgumentError('You must specify a target. Use /unblind <id>.')
-#     if targets:
-#         c = targets[0]
-#         if not c.hidden:
-#             raise ClientError(
-#                 'Client [{}] {} already unblinded!'.format(c.id, c.name))
-#         c.blind(False)
-#         client.send_host_message(
-#             'You have revealed [{}] {} for using /getarea and seeing non-broadcasted IC messages.'.format(c.id, c.name))
-#     else:
-#         client.send_host_message('No targets found.')
+def ooc_cmd_unblind(client, arg):
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    elif len(arg) == 0:
+        raise ArgumentError('You must specify a target.')
+    try:
+        targets = client.server.client_manager.get_targets(
+            client, TargetType.ID, int(arg), False)
+    except:
+        raise ArgumentError('You must specify a target. Use /unblind <id>.')
+    if targets:
+        c = targets[0]
+        if not c.blinded:
+            raise ClientError(
+                'Client [{}] {} already unblinded!'.format(c.id, c.name))
+        c.blind(False)
+        client.send_host_message(
+            'You have revealed [{}] {} for using /getarea and seeing non-broadcasted IC messages.'.format(c.id, c.name))
+    else:
+        client.send_host_message('No targets found.')
 
 def ooc_cmd_getareas(client, arg):
+    if client.blinded:
+        raise ArgumentError('You are blinded - you cannot use this command!')
     if client.hub.status.lower().startswith('casing') and not client.is_cm:
         raise AreaError('Hub is {} - /getareas functionality disabled.'.format(client.hub.status))
     client.send_area_info(-1, False)
@@ -1164,3 +1173,21 @@ def ooc_cmd_sfx(client, arg):
                              ' ', client.pos, arg, 1, 0, 0, 0, 0, 0, 0, 0)
 
     logger.log_server('[{}][{}]Played  sfx {}.'.format(client.area.id, client.get_char_name(), arg), client)
+
+#TURN-BASED SYSTEM COMMANDS#
+# def ooc_cmd_tbs(client, arg):
+#     if not client.is_cm and not client.is_mod:
+#         raise ClientError('You must be a CM or moderator to use this command.')
+#     if not client.hub.tbs_enabled:
+#         raise AreaError('Turn-Based System is currently disabled in this hub. Use /tbs_toggle to turn it on.')
+
+
+# def ooc_cmd_tbs_toggle(client, arg):
+#     if not client.is_cm and not client.is_mod:
+#         raise ClientError('You must be a CM or moderator to use this command.')
+    
+#     client.hub.tbs_enabled = not client.hub.tbs_enabled
+#     msg = 'no longer'
+#     if client.hub.tbs_enabled:
+#         msg = 'now'
+#     client.send_host_message('Turn-Based System is {} enabled for this hub.'.format(msg))
