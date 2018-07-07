@@ -428,9 +428,6 @@ class AOProtocol(asyncio.Protocol):
         if self.client.is_ooc_muted:  # Checks to see if the client has been muted by a mod
             self.client.send_host_message("You have been muted by a moderator")
             return
-        if self.client.hub.is_ooc_muted and not self.client.is_cm and not self.client.is_mod:
-            self.client.send_host_message("OOC is muted in this hub!")
-            return
         if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR):
             return
         ooc_name = re.sub('\s+', ' ', args[0]).strip() #Strip the ooc_name of any excess whitespace
@@ -461,6 +458,9 @@ class AOProtocol(asyncio.Protocol):
             except (ClientError, AreaError, ArgumentError, ServerError) as ex:
                 self.client.send_host_message(ex)
         else:
+            if self.client.hub.is_ooc_muted and not self.client.is_cm and not self.client.is_mod:
+                self.client.send_host_message("OOC is muted in this hub!")
+                return
             if self.client.disemvowel:
                 args[1] = self.client.disemvowel_message(args[1])
             cm = ''
@@ -567,6 +567,7 @@ class AOProtocol(asyncio.Protocol):
         if len(args) < 3:
             return
         #evi = Evidence(args[0], args[1], args[2], self.client.pos)
+
         self.client.area.evi_list.add_evidence(self.client, args[0], args[1], args[2], 'all')
         self.client.area.broadcast_evidence_list()
     
@@ -595,6 +596,24 @@ class AOProtocol(asyncio.Protocol):
         self.client.area.evi_list.edit_evidence(self.client, self.client.evi_list[int(args[0])], evi)
         self.client.area.broadcast_evidence_list()
 
+        desc = self.client.area.evi_list.evidences[self.client.evi_list[int(
+            args[0])]].desc
+
+        if(args[1] == '/loadhub'):
+            if not self.client.is_mod and not self.client.is_cm:
+                self.client.send_host_message(
+                    "You must be authorized to do that.")
+                return
+            try:
+                self.client.hub.load(desc)
+                self.client.hub.send_host_message(
+                    "Loading hub save data...")
+                self.client.area.evi_list.del_evidence(
+                    self.client, self.client.evi_list[int(args[0])])
+                self.client.area.broadcast_evidence_list()
+            except:
+                self.client.send_host_message(
+                    "Could not load hub save data! Try pressing the [X] and make sure if your save data is correct.")
 
     def net_cmd_zz(self, _):
         """ Sent on mod call.

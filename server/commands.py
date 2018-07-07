@@ -193,8 +193,13 @@ def ooc_cmd_pos(client, arg):
 def ooc_cmd_poslock(client, arg):
     if not client.is_mod and not client.is_cm:
         raise ClientError('You must be authorized to do that.')
-    if not arg or arg == 'clear':
+    if not arg:
+        client.send_host_message(
+            'Poslock is currently {}.'.format(client.area.pos_lock))
+        return
+    if arg == 'clear':
         client.area.pos_lock = None
+        client.area.send_host_message('Position lock cleared.')
         return
     if arg not in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
         raise ClientError('Invalid pos.')
@@ -451,7 +456,7 @@ def ooc_cmd_toggleglobal(client, arg):
         glob_stat = 'off'
     client.send_host_message('Global chat turned {}.'.format(glob_stat))
 
-def ooc_cmd_togglehub(client, arg):
+def ooc_cmd_toggleooc(client, arg):
     if len(arg) != 0:
         raise ArgumentError("This command doesn't take any arguments")
     if not client.is_mod and not client.is_cm:
@@ -460,7 +465,7 @@ def ooc_cmd_togglehub(client, arg):
     glob_stat = 'on'
     if client.hub.is_ooc_muted:
         glob_stat = 'off'
-    client.hub.send_host_message('Hub chat (/h [msg]) turned {}.'.format(glob_stat))
+    client.hub.send_host_message('OOC chat turned {}.'.format(glob_stat))
 
 def ooc_cmd_need(client, arg):
     if client.muted_adverts:
@@ -528,7 +533,6 @@ def ooc_cmd_status(client, arg):
         except AreaError:
             raise
 
-
 def ooc_cmd_online(client, _):
     client.send_player_count()
 
@@ -574,7 +578,7 @@ def ooc_cmd_area_add(client, arg):
 
     if client.hub.cur_id < client.hub.max_areas:
         client.hub.create_area('Area {}'.format(client.hub.cur_id), True,
-                           client.server.backgrounds[0], False, None, 'FFA', True, True, True)
+                           client.server.backgrounds[0], False, None, 'FFA', True, True, True, [])
         client.hub.send_host_message(
             'New area created! ({}/{})'.format(client.hub.cur_id, client.hub.max_areas))
     else:
@@ -696,7 +700,12 @@ def ooc_cmd_randomchar(client, arg):
 def ooc_cmd_getarea(client, arg):
     # if client.hub.status.lower().startswith('casing') and not client.is_cm:
     #     raise AreaError('Hub is {} - /getarea functionality disabled.'.format(client.hub.status))
-    client.send_area_info(client.area.id, False)
+    id = client.area.id
+    if len(arg) > 0:
+        if not client.is_cm and not client.is_mod:
+            raise ClientError('You must be authorized to /getarea <id>.')
+        id = int(arg)
+    client.send_area_info(id, False)
 
 def ooc_cmd_hide(client, arg):
     if not client.is_cm and not client.is_mod:
@@ -707,7 +716,7 @@ def ooc_cmd_hide(client, arg):
         targets = client.server.client_manager.get_targets(
             client, TargetType.ID, int(arg), False)
     except:
-        raise ArgumentError('You must specify a target. Use /disemvowel <id>.')
+        raise ArgumentError('You must specify a target. Use /hide <id>.')
     if targets:
         c = targets[0]
         if c.hidden:
@@ -728,7 +737,7 @@ def ooc_cmd_unhide(client, arg):
         targets = client.server.client_manager.get_targets(
             client, TargetType.ID, int(arg), False)
     except:
-        raise ArgumentError('You must specify a target. Use /disemvowel <id>.')
+        raise ArgumentError('You must specify a target. Use /unhide <id>.')
     if targets:
         c = targets[0]
         if not c.hidden:
@@ -738,6 +747,48 @@ def ooc_cmd_unhide(client, arg):
         client.send_host_message('You have revealed [{}] {} for /getarea.'.format(c.id, c.name))
     else:
         client.send_host_message('No targets found.')
+
+# def ooc_cmd_blind(client, arg):
+#     if not client.is_cm and not client.is_mod:
+#         raise ClientError('You must be authorized to do that.')
+#     elif len(arg) == 0:
+#         raise ArgumentError('You must specify a target.')
+#     try:
+#         targets = client.server.client_manager.get_targets(
+#             client, TargetType.ID, int(arg), False)
+#     except:
+#         raise ArgumentError('You must specify a target. Use /blind <id>.')
+#     if targets:
+#         c = targets[0]
+#         if c.hidden:
+#             raise ClientError(
+#                 'Client [{}] {} already blinded!'.format(c.id, c.name))
+#         c.blind(True)
+#         client.send_host_message(
+#             'You have blinded [{}] {} from using /getarea and seeing non-broadcasted IC messages.'.format(c.id, c.name))
+#     else:
+#         client.send_host_message('No targets found.')
+
+# def ooc_cmd_unblind(client, arg):
+#     if not client.is_cm and not client.is_mod:
+#         raise ClientError('You must be authorized to do that.')
+#     elif len(arg) == 0:
+#         raise ArgumentError('You must specify a target.')
+#     try:
+#         targets = client.server.client_manager.get_targets(
+#             client, TargetType.ID, int(arg), False)
+#     except:
+#         raise ArgumentError('You must specify a target. Use /unblind <id>.')
+#     if targets:
+#         c = targets[0]
+#         if not c.hidden:
+#             raise ClientError(
+#                 'Client [{}] {} already unblinded!'.format(c.id, c.name))
+#         c.blind(False)
+#         client.send_host_message(
+#             'You have revealed [{}] {} for using /getarea and seeing non-broadcasted IC messages.'.format(c.id, c.name))
+#     else:
+#         client.send_host_message('No targets found.')
 
 def ooc_cmd_getareas(client, arg):
     if client.hub.status.lower().startswith('casing') and not client.is_cm:
@@ -903,6 +954,17 @@ def ooc_cmd_unlockarea(client, arg):
             area.unlock()
             i += 1
     client.send_host_message('Unlocked {} areas.'.format(i))
+
+def ooc_cmd_savehub(client, arg):
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can save the hub.')
+    area = client.hub.default_area()
+    area.evi_list.add_evidence(client, '--HUB SAVE DATA--', client.hub.save(), '2.png', 'all')
+    area.broadcast_evidence_list()
+    client.send_host_message('The hub data has been saved in an evidence file in area [{}] {}.'.format(area.id, area.name))
+
+def ooc_cmd_loadhub(client, arg):
+    client.send_host_message('Due to the character limit tied to the OOC commands, to load hub save data you must:\n1: Create a piece of evidence\n2: Set its description to the save data\n3: Change its name to /loadhub, press enter\n4: Press the [X] button to upload it\n5:???\n6: Profit!')
 
 def ooc_cmd_akick(client, arg):
     if not client.is_mod and not client.is_cm:

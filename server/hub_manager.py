@@ -26,7 +26,7 @@ from server.evidence import EvidenceList
 class HubManager:
 	class Hub:
 		class Area:
-			def __init__(self, area_id, server, hub, name, can_rename, background, bg_lock, pos_lock, evidence_mod = 'FFA', locking_allowed = False, iniswap_allowed = True, can_remove = False):
+			def __init__(self, area_id, server, hub, name, can_rename, background, bg_lock, pos_lock, evidence_mod = 'FFA', locking_allowed = False, iniswap_allowed = True, can_remove = False, accessible = []):
 				self.iniswap_allowed = iniswap_allowed
 				self.clients = set()
 				self.invite_list = {}
@@ -54,9 +54,39 @@ class HubManager:
 				self.desc = ''
 				self.mute_ic = False
 				self.can_remove = can_remove
-				self.accessible = []
+				self.accessible = accessible
 
 				self.is_locked = False
+
+			def save(self):
+				desc = self.desc
+				if len(self.desc) <= 0:
+					desc = 'None'
+				accessible = ','.join(map(str, self.accessible))
+				if len(accessible) <= 0:
+					accessible = 'None'
+				return '{};{};{};{};{};{};{}'.format(
+					self.id, self.name, desc, self.background, self.pos_lock, accessible, self.is_locked)
+
+			def load(self, arg):
+				# try:
+				args = arg.split(';')
+				print(args)
+				self.name = str(args[1])
+				self.desc = str(args[2])
+				self.background = str(args[3])
+				if str(args[4]).lower() in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
+					self.pos_lock = str(args[4]).lower()
+				else:
+					self.pos_lock = None
+
+				if args[5] == 'None':
+					self.accessible = []
+				else:
+					self.accessible = [int(s) for s in str(args[5]).split(',')]
+				self.is_locked = str(args[6]).lower() == 'true'
+				# except:
+				# 	return AreaError('Bad save file!')
 
 			def new_client(self, client):
 				self.clients.add(client)
@@ -183,9 +213,32 @@ class HubManager:
 			self.status = 'IDLE'
 			self.doc = 'No document.'
 
-		def create_area(self, name, can_rename, bg, bglock, poslock, evimod, lockallow, swapallow, removable):
+		def save(self):
+			s = ''
+			for area in self.areas:
+				if not area.locking_allowed:
+					continue
+				s += area.save() + '\n'
+			return s
+
+		def load(self, arg):
+			args = arg.split('\n')
+			try:
+				while len(self.areas) < len(args):
+					self.create_area('Area {}'.format(self.cur_id), True,
+											self.server.backgrounds[0], False, None, 'FFA', True, True, True, [])
+				i = 1
+				for a in args:
+					if(len(a) < 7):
+						continue
+					self.areas[i].load(a)
+					i += 1
+			except:
+				raise AreaError('Bad save file!')
+
+		def create_area(self, name, can_rename, bg, bglock, poslock, evimod, lockallow, swapallow, removable, accessible):
 			self.areas.append(
-				self.Area(self.cur_id, self.server, self, name, can_rename, bg, bglock, poslock, evimod, lockallow, swapallow, removable))
+				self.Area(self.cur_id, self.server, self, name, can_rename, bg, bglock, poslock, evimod, lockallow, swapallow, removable, accessible))
 			self.cur_id += 1
 
 		def remove_area(self, area):
@@ -355,7 +408,12 @@ class HubManager:
 					area['iniswap_allowed'] = True
 				if 'can_remove' not in area:
 					area['can_remove'] = False
-				_hub.create_area(area['area'], area['can_rename'], area['background'], area['bglock'], area['poslock'], area['evidence_mod'], area['locking_allowed'], area['iniswap_allowed'], area['can_remove'])
+				if 'accessible' not in area:
+					area['accessible'] = []
+				else:		
+					area['accessible'] = [int(s) for s in str(area['accessible']).split(' ')]
+
+				_hub.create_area(area['area'], area['can_rename'], area['background'], area['bglock'], area['poslock'], area['evidence_mod'], area['locking_allowed'], area['iniswap_allowed'], area['can_remove'], area['accessible'])
 
 	def default_hub(self):
 		return self.hubs[0]
