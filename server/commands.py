@@ -712,7 +712,8 @@ def ooc_cmd_getarea(client, arg):
         if not client.is_cm and not client.is_mod:
             raise ClientError('You must be authorized to /getarea <id>.')
         id = int(arg)
-    client.send_area_info(id, False)
+    client.send_area_info(id, False, client.hub.status.lower().startswith(
+        'casing') and not client.is_cm and not client.is_mod)
 
 def ooc_cmd_hide(client, arg):
     if not client.is_cm and not client.is_mod:

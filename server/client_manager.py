@@ -269,7 +269,7 @@ class ClientManager:
                     info += ' [B]'
             return info
 
-        def send_area_info(self, area_id, mods): 
+        def send_area_info(self, area_id, mods, hidden=False): 
             #if area_id is -1 then return all areas. If mods is True then return only mods
             info = ''
             if area_id == -1:
@@ -280,10 +280,14 @@ class ClientManager:
                     if len(self.hub.areas[i].clients) > 0:
                         cnt += len(self.hub.areas[i].clients)
                         info += '\r\n{}'.format(self.get_area_info(i, mods))
-                info = 'Current online: {}'.format(cnt) + info
+                if not hidden:
+                    info = 'Current online: {}'.format(cnt) + info
             else:
                 try:
-                    info = 'People in this area: {}\n'.format(len(self.hub.areas[area_id].clients)) + self.get_area_info(area_id, mods)
+                    info = ''
+                    if not hidden:
+                        info = 'People in this area: {}\n'.format(len(self.hub.areas[area_id].clients))
+                    info += self.get_area_info(area_id, mods)
                 except AreaError:
                     raise
             self.send_host_message(info)
