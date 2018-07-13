@@ -94,7 +94,7 @@ class HubManager:
 				if client.hidden:
 					hidden = ' [HIDDEN]'
 				self.hub.send_to_cm('[{}] {} has entered area [{}] {}.{}'.format(
-					client.id, client.get_char_name(), self.id, self.name, hidden), client)
+					client.id, client.get_char_name(), self.id, self.name, hidden), [client])
 
 			def remove_client(self, client):
 				if self.is_locked and client.ipid in self.invite_list:
@@ -104,7 +104,7 @@ class HubManager:
 				if client.hidden:
 					hidden = ' [HIDDEN]'
 				self.hub.send_to_cm('[{}] {} has left area [{}] {}.{}'.format(
-					client.id, client.get_char_name(), self.id, self.name, hidden), client)
+					client.id, client.get_char_name(), self.id, self.name, hidden), [client])
 
 			def lock(self):
 				self.is_locked = True
@@ -200,7 +200,7 @@ class HubManager:
 				for client in self.clients:
 					client.send_command('LE', *self.get_evidence_list(client))
 
-		def __init__(self, hub_id, server, name, allow_cm=False, max_areas=1, status='IDLE', doc='No document.'):
+		def __init__(self, hub_id, server, name, allow_cm=False, max_areas=1, doc='No document.', status='IDLE'):
 			self.server = server
 			self.id = hub_id
 			self.cur_id = 0

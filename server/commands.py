@@ -583,7 +583,7 @@ def ooc_cmd_area_add(client, arg):
 
     if client.hub.cur_id < client.hub.max_areas:
         client.hub.create_area('Area {}'.format(client.hub.cur_id), True,
-                           client.server.backgrounds[0], False, None, 'FFA', True, True, True, [])
+                           client.server.backgrounds[0], False, None, 'FFA', True, True, True, [], '')
         client.hub.send_host_message(
             'New area created! ({}/{})'.format(client.hub.cur_id, client.hub.max_areas))
     else:
@@ -923,7 +923,7 @@ def ooc_cmd_lockarea(client, arg):
     elif len(arg) == 0:
         args = [client.area.id]
     else:
-        args = arg.split(' ')
+        args = [int(s) for s in str(arg).split(' ')]
     
     i = 0
     for area in client.hub.areas:
@@ -950,7 +950,7 @@ def ooc_cmd_unlockarea(client, arg):
     elif len(arg) == 0:
         args = [client.area.id]
     else:
-        args = arg.split(' ')
+        args = [int(s) for s in str(arg).split(' ')]
     
     i = 0
     for area in client.hub.areas:
