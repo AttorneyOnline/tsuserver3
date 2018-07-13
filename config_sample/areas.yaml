@@ -49,6 +49,7 @@
 #Examples of multi-area general roleplaying set-ups below
 - hub: Roleplay 1
   allow_cm: true
+  max_areas: 50
   areas:
     - area: Lobby
       background: gs5
@@ -62,6 +63,7 @@
 
 - hub: Roleplay 2
   allow_cm: true
+  max_areas: 100
   areas:
     - area: Lobby
       background: gs5
