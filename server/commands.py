@@ -40,15 +40,15 @@ def ooc_cmd_switch(client, arg):
     client.send_host_message('Character changed.')
     
 def ooc_cmd_bg(client, arg):
-    if client.hub.status.lower().startswith('casing') and not client.is_cm:
+    if client.hub.status.lower().startswith('casing') and not client.is_mod and not client.is_cm:
         raise AreaError(
-            'Hub is {} - only the CM can change /bg.'.format(client.hub.status))
+            'Hub is {} - only the CM or mods can change /bg.'.format(client.hub.status))
     if len(arg) == 0:
         raise ArgumentError('You must specify a name. Use /bg <background>.')
     if not client.is_mod and not client.is_cm and client.area.bg_lock == True:
         raise AreaError("This area's background is locked")
     try:
-        client.area.change_background(arg)
+        client.area.change_background(arg, client.is_mod)
     except AreaError:
         raise
     client.area.send_host_message('{} changed the background to {}.'.format(client.get_char_name(), arg))

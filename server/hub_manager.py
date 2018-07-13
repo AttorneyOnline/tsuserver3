@@ -173,8 +173,8 @@ class HubManager:
 					self.hp_pro = val
 				self.send_command('HP', side, val)
 
-			def change_background(self, bg):
-				if self.server.bglock and bg.lower() not in (name.lower() for name in self.server.backgrounds):
+			def change_background(self, bg, bypass=False):
+				if not bypass and self.server.bglock and bg.lower() not in (name.lower() for name in self.server.backgrounds):
 					raise AreaError('Invalid background name.')
 				self.background = bg
 				self.send_command('BN', self.background)

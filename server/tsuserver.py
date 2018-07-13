@@ -50,7 +50,7 @@ class TsuServer3:
         self.music_list = None
         self.music_list_ao2 = None
         self.music_pages_ao1 = None
-        self.bglock = True
+        self.bglock = False
         self.backgrounds = None
         self.load_characters()
         self.load_music()
@@ -78,6 +78,9 @@ class TsuServer3:
         if self.config['use_masterserver']:
             self.ms_client = MasterServerClient(self)
             asyncio.ensure_future(self.ms_client.connect(), loop=loop)
+
+        if self.config['use_backgrounds_yaml']:
+            self.bglock = True
 
         logger.log_debug('Server started.')
 
