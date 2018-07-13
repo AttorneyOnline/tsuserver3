@@ -398,7 +398,7 @@ class AOProtocol(asyncio.Protocol):
                 if area:
                     if area.pos_lock in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
                         pos = area.pos_lock
-                    area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
+                    area.send_command('MS', 'broadcast', pre, folder, anim, msg, pos, sfx, anim_type, cid,
                                                 sfx_delay, button, self.client.evi_list[evidence], flip, ding, color)
                     area.set_next_msg_delay(len(msg))
                     if (area.is_recording):

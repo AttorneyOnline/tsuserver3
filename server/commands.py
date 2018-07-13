@@ -923,7 +923,7 @@ def ooc_cmd_lockarea(client, arg):
     elif len(arg) == 0:
         args = [client.area.id]
     else:
-        args = arg.split()
+        args = arg.split(' ')
     
     i = 0
     for area in client.hub.areas:
@@ -950,7 +950,7 @@ def ooc_cmd_unlockarea(client, arg):
     elif len(arg) == 0:
         args = [client.area.id]
     else:
-        args = arg.split()
+        args = arg.split(' ')
     
     i = 0
     for area in client.hub.areas:

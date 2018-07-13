@@ -26,7 +26,7 @@ from server.evidence import EvidenceList
 class HubManager:
 	class Hub:
 		class Area:
-			def __init__(self, area_id, server, hub, name, can_rename, background, bg_lock, pos_lock, evidence_mod = 'FFA', locking_allowed = False, iniswap_allowed = True, can_remove = False, accessible = []):
+			def __init__(self, area_id, server, hub, name, can_rename, background, bg_lock, pos_lock, evidence_mod = 'FFA', locking_allowed = False, iniswap_allowed = True, can_remove = False, accessible = [], desc = ''):
 				self.iniswap_allowed = iniswap_allowed
 				self.clients = set()
 				self.invite_list = {}
@@ -51,7 +51,7 @@ class HubManager:
 				self.evidence_mod = evidence_mod
 				self.locking_allowed = locking_allowed
 				self.hub = hub
-				self.desc = ''
+				self.desc = desc
 				self.mute_ic = False
 				self.can_remove = can_remove
 				self.accessible = accessible
@@ -94,7 +94,7 @@ class HubManager:
 				if client.hidden:
 					hidden = ' [HIDDEN]'
 				self.hub.send_to_cm('[{}] {} has entered area [{}] {}.{}'.format(
-					client.id, client.get_char_name(), self.id, self.name, hidden))
+					client.id, client.get_char_name(), self.id, self.name, hidden), client)
 
 			def remove_client(self, client):
 				if self.is_locked and client.ipid in self.invite_list:
@@ -104,7 +104,7 @@ class HubManager:
 				if client.hidden:
 					hidden = ' [HIDDEN]'
 				self.hub.send_to_cm('[{}] {} has left area [{}] {}.{}'.format(
-					client.id, client.get_char_name(), self.id, self.name, hidden))
+					client.id, client.get_char_name(), self.id, self.name, hidden), client)
 
 			def lock(self):
 				self.is_locked = True
@@ -200,7 +200,7 @@ class HubManager:
 				for client in self.clients:
 					client.send_command('LE', *self.get_evidence_list(client))
 
-		def __init__(self, hub_id, server, name, allow_cm=False, max_areas=1):
+		def __init__(self, hub_id, server, name, allow_cm=False, max_areas=1, status='IDLE', doc='No document.'):
 			self.server = server
 			self.id = hub_id
 			self.cur_id = 0
@@ -210,8 +210,8 @@ class HubManager:
 			self.max_areas = max_areas
 			self.master = None
 			self.is_ooc_muted = False
-			self.status = 'IDLE'
-			self.doc = 'No document.'
+			self.status = status
+			self.doc = doc
 
 			#Turn Based System
 			# self.tbs_enabled = False
@@ -233,7 +233,7 @@ class HubManager:
 			try:
 				while len(self.areas) < len(args):
 					self.create_area('Area {}'.format(self.cur_id), True,
-											self.server.backgrounds[0], False, None, 'FFA', True, True, True, [])
+											self.server.backgrounds[0], False, None, 'FFA', True, True, True, [], '')
 				i = 1
 				for a in args:
 					if(len(a) < 7):
@@ -243,9 +243,9 @@ class HubManager:
 			except:
 				raise AreaError('Bad save file!')
 
-		def create_area(self, name, can_rename, bg, bglock, poslock, evimod, lockallow, swapallow, removable, accessible):
+		def create_area(self, name, can_rename, bg, bglock, poslock, evimod, lockallow, swapallow, removable, accessible, desc):
 			self.areas.append(
-				self.Area(self.cur_id, self.server, self, name, can_rename, bg, bglock, poslock, evimod, lockallow, swapallow, removable, accessible))
+				self.Area(self.cur_id, self.server, self, name, can_rename, bg, bglock, poslock, evimod, lockallow, swapallow, removable, accessible, desc))
 			self.cur_id += 1
 
 		def remove_area(self, area):
@@ -398,8 +398,12 @@ class HubManager:
 				hub['allow_cm'] = False
 			if 'max_areas' not in hub:
 				hub['max_areas'] = 1
+			if 'doc' not in hub:
+				hub['doc'] = 'No document.'
+			if 'status' not in hub:
+				hub['status'] = 'IDLE'
 			_hub = self.Hub(self.cur_id, self.server,
-							hub['hub'], hub['allow_cm'], hub['max_areas'])
+							hub['hub'], hub['allow_cm'], hub['max_areas'], hub['doc'], hub['status'])
 			self.hubs.append(_hub)
 			self.cur_id += 1
 			for area in hub['areas']:
@@ -417,12 +421,14 @@ class HubManager:
 					area['iniswap_allowed'] = True
 				if 'can_remove' not in area:
 					area['can_remove'] = False
+				if 'desc' not in area:
+					area['desc'] = ''
 				if 'accessible' not in area:
 					area['accessible'] = []
 				else:		
 					area['accessible'] = [int(s) for s in str(area['accessible']).split(' ')]
 
-				_hub.create_area(area['area'], area['can_rename'], area['background'], area['bglock'], area['poslock'], area['evidence_mod'], area['locking_allowed'], area['iniswap_allowed'], area['can_remove'], area['accessible'])
+				_hub.create_area(area['area'], area['can_rename'], area['background'], area['bglock'], area['poslock'], area['evidence_mod'], area['locking_allowed'], area['iniswap_allowed'], area['can_remove'], area['accessible'], area['desc'])
 
 	def default_hub(self):
 		return self.hubs[0]

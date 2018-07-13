@@ -1,8 +1,10 @@
 - hub: Main
   allow_cm: false
+  doc: 'Haha this is not a doc though'
   areas:
     - area: Basement
       background: gs4
+      desc: 'spamzone'
       bglock: true
       poslock: None
       can_rename: false
@@ -11,6 +13,7 @@
       iniswap_allowed: true
     - area: Lounge
       background: gs4
+      desc: 'woah'
       bglock: true
       poslock: None
       can_rename: false
@@ -23,6 +26,7 @@
   areas:
     - area: Courtroom 1
       background: gs5
+      desc: 'woah'
       bglock: false
       poslock: None
       can_rename: false
@@ -31,6 +35,7 @@
       iniswap_allowed: true
     - area: Courtroom 2
       background: gs4
+      desc: 'woah'
       bglock: false
       poslock: None
       can_rename: false
@@ -39,6 +44,7 @@
       iniswap_allowed: true
     - area: Courtroom 2
       background: gs4
+      desc: 'woah'
       bglock: false
       poslock: None
       can_rename: false
@@ -50,9 +56,11 @@
 - hub: Roleplay 1
   allow_cm: true
   max_areas: 50
+  doc: 'A roleplay zone'
   areas:
     - area: Lobby
       background: gs5
+      desc: 'woah'
       bglock: false
       poslock: None
       can_rename: false
@@ -64,9 +72,11 @@
 - hub: Roleplay 2
   allow_cm: true
   max_areas: 100
+  doc: 'A pre-made roleplay zone'
   areas:
     - area: Lobby
       background: gs5
+      desc: 'woah'
       bglock: false
       poslock: None
       can_rename: false
@@ -76,6 +86,7 @@
       iniswap_allowed: true
     - area: Place 1
       background: DGSJapanCourt
+      desc: 'woah'
       bglock: false
       poslock: wit
       accessible: 2 3 4
@@ -86,6 +97,7 @@
       iniswap_allowed: true
     - area: Place 2
       background: DGSJapanCourt
+      desc: 'woah'
       bglock: false
       poslock: jud
       accessible: 1
@@ -96,6 +108,7 @@
       iniswap_allowed: true
     - area: Place 3
       background: DGSJapanCourt
+      desc: 'woah'
       bglock: false
       poslock: def
       accessible: 1 4
@@ -106,6 +119,7 @@
       iniswap_allowed: true
     - area: Place 4
       background: DGSJapanCourt
+      desc: 'woah'
       bglock: false
       poslock: def
       accessible: 1 3
