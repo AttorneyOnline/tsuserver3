@@ -119,9 +119,11 @@ class WebSocket:
 
         masks = data[mask_offset:mask_offset + 4]
         decoded = ""
-        for char in data[mask_offset + 4:payload_length + 6]:
+        for char in data[mask_offset + 4:payload_length + mask_offset + 4]:
             char ^= masks[len(decoded) % 4]
             decoded += chr(char)
+
+        print(decoded)
 
         return opcode_handler(self, decoded)
 
