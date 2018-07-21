@@ -82,7 +82,9 @@ class ClientManager:
                     if self.blinded and args[0] != 'broadcast':
                         return #Don't receive any chat messages when blinded that are not broadcast_ic'ed
                     if args[0] == 'broadcast':
-                        args = ['0', args[1:]]
+                        lst = list(args)
+                        lst[0] = '0'
+                        args = tuple(lst)
                     for evi_num in range(len(self.evi_list)):
                         if self.evi_list[evi_num] == args[11]:
                             lst = list(args)
