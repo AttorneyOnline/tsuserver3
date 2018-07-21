@@ -20,7 +20,7 @@ import logging
 import time
 
 
-def setup_logger(debug):
+def setup_logger(debug, log_size, log_backups):
     logging.Formatter.converter = time.gmtime
     debug_formatter = logging.Formatter('[%(asctime)s UTC]%(message)s')
     srv_formatter = logging.Formatter('[%(asctime)s UTC]%(message)s')
@@ -28,10 +28,9 @@ def setup_logger(debug):
     debug_log = logging.getLogger('debug')
     debug_log.setLevel(logging.DEBUG)
 
-    # TODO: make log rotation size and backup count configurable
-    # 0 maxBytes = no rotattion
+    # 0 maxBytes = no rotation
     # backupCount = number of old logs to save
-    debug_handler = logging.handlers.RotatingFileHandler('logs/debug.log', maxBytes = 1048576, backupCount = 5, encoding='utf-8')
+    debug_handler = logging.handlers.RotatingFileHandler('logs/debug.log', maxBytes = log_size, backupCount = log_backups, encoding='utf-8')
     debug_handler.setLevel(logging.DEBUG)
     debug_handler.setFormatter(debug_formatter)
     debug_log.addHandler(debug_handler)
@@ -42,7 +41,7 @@ def setup_logger(debug):
     server_log = logging.getLogger('server')
     server_log.setLevel(logging.INFO)
 
-    server_handler = logging.handlers.RotatingFileHandler('logs/server.log', maxBytes = 1048576, backupCount = 5, encoding='utf-8')
+    server_handler = logging.handlers.RotatingFileHandler('logs/server.log', maxBytes = log_size, backupCount = log_backups, encoding='utf-8')
     server_handler.setLevel(logging.INFO)
     server_handler.setFormatter(srv_formatter)
     server_log.addHandler(server_handler)

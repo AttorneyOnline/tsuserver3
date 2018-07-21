@@ -58,7 +58,7 @@ class TsuServer3:
         self.district_client = None
         self.ms_client = None
         self.rp_mode = False
-        logger.setup_logger(debug=self.config['debug'])
+        logger.setup_logger(debug=self.config['debug'], log_size=self.config['log_size'], log_backups=self.config['log_backups'])
 
     def start(self):
         loop = asyncio.get_event_loop()
