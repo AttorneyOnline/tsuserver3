@@ -28,7 +28,10 @@ def setup_logger(debug):
     debug_log = logging.getLogger('debug')
     debug_log.setLevel(logging.DEBUG)
 
-    debug_handler = logging.FileHandler('logs/debug.log', encoding='utf-8')
+    # TODO: make log rotation size and backup count configurable
+    # 0 maxBytes = no rotattion
+    # backupCount = number of old logs to save
+    debug_handler = logging.handlers.RotatingFileHandler('logs/debug.log', maxBytes = 1048576, backupCount = 5, encoding='utf-8')
     debug_handler.setLevel(logging.DEBUG)
     debug_handler.setFormatter(debug_formatter)
     debug_log.addHandler(debug_handler)
@@ -39,7 +42,7 @@ def setup_logger(debug):
     server_log = logging.getLogger('server')
     server_log.setLevel(logging.INFO)
 
-    server_handler = logging.FileHandler('logs/server.log', encoding='utf-8')
+    server_handler = logging.handlers.RotatingFileHandler('logs/server.log', maxBytes = 1048576, backupCount = 5, encoding='utf-8')
     server_handler.setLevel(logging.INFO)
     server_handler.setFormatter(srv_formatter)
     server_log.addHandler(server_handler)
