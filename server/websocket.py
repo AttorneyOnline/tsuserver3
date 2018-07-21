@@ -123,8 +123,6 @@ class WebSocket:
             char ^= masks[len(decoded) % 4]
             decoded += chr(char)
 
-        print(decoded)
-
         return opcode_handler(self, decoded)
 
     def send_message(self, message):
