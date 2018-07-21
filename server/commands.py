@@ -898,10 +898,10 @@ def ooc_cmd_area_access(client, arg):
     else:
         arg = arg.split()
         for a in arg:
-            if client.area.id == int(a):
-                continue
+            a = int(a)
             try:
-                client.area.accessible.append(int(a))
+                if a not in client.area.accessible:
+                    client.area.accessible.append(a)
             except:
                 raise ClientError('Invalid area ID.')
         client.area.send_host_message(
@@ -913,7 +913,7 @@ def ooc_cmd_unmod(client, arg):
         client.area.broadcast_evidence_list()
     client.send_host_message('you\'re not a mod now')
     
-def ooc_cmd_lockarea(client, arg):
+def ooc_cmd_lock(client, arg):
     if not client.is_cm and not client.is_mod:
         raise ClientError('Only CM or mods can lock the area.')
     args = []
@@ -940,7 +940,7 @@ def ooc_cmd_lockarea(client, arg):
             i += 1
     client.send_host_message('Locked {} areas.'.format(i))
         
-def ooc_cmd_unlockarea(client, arg):
+def ooc_cmd_unlock(client, arg):
     if not client.is_cm and not client.is_mod:
         raise ClientError('Only CM or mods can unlock the area.')
     args = []
