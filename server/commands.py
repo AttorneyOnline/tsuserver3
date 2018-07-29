@@ -988,7 +988,8 @@ def ooc_cmd_akick(client, arg):
         try:
             for c in targets:
                 if len(arg) == 1:
-                    area = client.server.hub_manager.default_hub().get_area_by_id(int(0))
+                    #area = client.server.hub_manager.default_hub().get_area_by_id(0)
+                    area = client.hub.get_area_by_id(0)
                 else:
                     try:
                         if len(arg) > 2 and client.is_mod:
