@@ -69,6 +69,7 @@ class ClientManager:
             self.broadcast_ic = []
             self.hidden = False
             self.blinded = False
+            self.following = None
 
         def send_raw_message(self, msg):
             if self.websocket:
@@ -202,6 +203,12 @@ class ClientManager:
             if old_area.hub != self.area.hub:
                 old_area.hub.remove_client(self)
                 self.area.hub.new_client(self)
+            else:
+                for c in area.hub.clients():
+                    if c.following == self.id:
+                        c.change_area(area)
+                        c.send_host_message(
+                            'Following [{}] {} to {}. [HUB: {}]'.format(self.id, self.get_char_name(), area.name, area.hub.name))
 
             self.send_host_message('Changed area to {}. [HUB: {}]'.format(area.name, area.hub.name))
             logger.log_server(

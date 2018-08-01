@@ -74,7 +74,7 @@ class HubManager:
 				print(args)
 				self.name = str(args[1])
 				self.desc = str(args[2])
-				self.background = str(args[3])
+				self.change_background(str(args[3]))
 				if str(args[4]).lower() in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
 					self.pos_lock = str(args[4]).lower()
 				else:

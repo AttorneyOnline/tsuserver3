@@ -271,7 +271,15 @@ def ooc_cmd_kick(client, arg):
             c.disconnect()
     else:
         client.send_host_message("No targets found.")
-        
+
+#It's "KickMySelf", t-totally.
+def ooc_cmd_kms(client, arg):
+    targets = client.server.client_manager.get_targets(client, TargetType.IPID, client.ipid, False)
+    for target in targets:
+        if target != client:
+            target.disconnect()
+    client.send_host_message('Kicked other instances of client.')
+
 def ooc_cmd_ban(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
@@ -556,6 +564,51 @@ def ooc_cmd_hub(client, arg):
     except (AreaError, ClientError):
         raise
         
+
+def ooc_cmd_follow(client, arg):
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    elif len(arg) == 0:
+        try:
+            c = client.server.client_manager.get_targets(client, TargetType.ID, int(client.following), False)[0]
+            client.send_host_message(
+                'You are currently following [{}] {}.'.format(c.id, c.get_char_name()))
+        except:
+            raise ArgumentError('You must specify a target. Use /follow <id>.')
+        return
+    try:
+        targets = client.server.client_manager.get_targets(
+            client, TargetType.ID, int(arg), False)
+    except:
+        raise ArgumentError('You must specify a target. Use /follow <id>.')
+    if targets:
+        c = targets[0]
+        if client == c:
+            raise ClientError('Can\'t follow yourself!')
+        if client.following == c.id:
+            raise ClientError(
+                'Already following [{}] {}!'.format(c.id, c.get_char_name()))
+        client.following = c.id
+        client.send_host_message(
+            'You are now following [{}] {}.'.format(c.id, c.get_char_name()))
+        client.change_area(c.area)
+    else:
+        client.send_host_message('No targets found.')
+
+def ooc_cmd_unfollow(client, arg):
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+
+    try:
+        c = client.server.client_manager.get_targets(
+            client, TargetType.ID, int(client.following), False)[0]
+        client.send_host_message(
+            'You are no longer following [{}] {}.'.format(c.id, c.get_char_name()))
+        client.following = None
+    except:
+        client.following = None
+        raise ClientError('You\'re not following anyone!')
+
 def ooc_cmd_area(client, arg):
     args = arg.split()
     casing = client.hub.status.lower().startswith('casing')
@@ -571,6 +624,18 @@ def ooc_cmd_area(client, arg):
         if area != client.area and casing and len(client.area.accessible) > 0 and area.id not in client.area.accessible and not client.is_cm and not client.is_mod:
             raise AreaError(
                 'Area ID not accessible from your current area!')
+
+        #Changing area of your own accord should stop following as well
+        if client.following != None:
+            try:
+                c = client.server.client_manager.get_targets(
+                    client, TargetType.ID, int(client.following), False)[0]
+                client.send_host_message(
+                    'You are no longer following [{}] {}.'.format(c.id, c.get_char_name()))
+                client.following = None
+            except:
+                client.following = None
+
         client.change_area(area)
     except ValueError:
         raise ArgumentError('Area ID must be a number or name.')
@@ -729,10 +794,10 @@ def ooc_cmd_hide(client, arg):
         c = targets[0]
         if c.hidden:
             raise ClientError(
-                'Client [{}] {} already hidden!'.format(c.id, c.name))
+                'Client [{}] {} already hidden!'.format(c.id, c.get_char_name()))
         c.hide(True)
         client.send_host_message(
-            'You have hidden [{}] {} from /getarea.'.format(c.id, c.name))
+            'You have hidden [{}] {} from /getarea.'.format(c.id, c.get_char_name()))
     else:
         client.send_host_message('No targets found.')
 
@@ -750,9 +815,9 @@ def ooc_cmd_unhide(client, arg):
         c = targets[0]
         if not c.hidden:
             raise ClientError(
-                'Client [{}] {} already revealed!'.format(c.id, c.name))
+                'Client [{}] {} already revealed!'.format(c.id, c.get_char_name()))
         c.hide(False)
-        client.send_host_message('You have revealed [{}] {} for /getarea.'.format(c.id, c.name))
+        client.send_host_message('You have revealed [{}] {} for /getarea.'.format(c.id, c.get_char_name()))
     else:
         client.send_host_message('No targets found.')
 
@@ -770,10 +835,10 @@ def ooc_cmd_blind(client, arg):
         c = targets[0]
         if c.blinded:
             raise ClientError(
-                'Client [{}] {} already blinded!'.format(c.id, c.name))
+                'Client [{}] {} already blinded!'.format(c.id, c.get_char_name()))
         c.blind(True)
         client.send_host_message(
-            'You have blinded [{}] {} from using /getarea and seeing non-broadcasted IC messages.'.format(c.id, c.name))
+            'You have blinded [{}] {} from using /getarea and seeing non-broadcasted IC messages.'.format(c.id, c.get_char_name()))
     else:
         client.send_host_message('No targets found.')
 
@@ -791,10 +856,10 @@ def ooc_cmd_unblind(client, arg):
         c = targets[0]
         if not c.blinded:
             raise ClientError(
-                'Client [{}] {} already unblinded!'.format(c.id, c.name))
+                'Client [{}] {} already unblinded!'.format(c.id, c.get_char_name()))
         c.blind(False)
         client.send_host_message(
-            'You have revealed [{}] {} for using /getarea and seeing non-broadcasted IC messages.'.format(c.id, c.name))
+            'You have revealed [{}] {} for using /getarea and seeing non-broadcasted IC messages.'.format(c.id, c.get_char_name()))
     else:
         client.send_host_message('No targets found.')
 
