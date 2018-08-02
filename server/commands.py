@@ -830,6 +830,7 @@ def ooc_cmd_refresh(client, arg):
         try:
             client.server.refresh()
             client.send_host_message('You have reloaded the server.')
+            client.server.force_restart(pred=lambda c: not c.is_mod)
         except ServerError:
             raise
 

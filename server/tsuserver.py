@@ -233,6 +233,11 @@ class TsuServer3:
         for client in self.client_manager.clients:
             if pred(client):
                 client.send_command(cmd, *args)
+				
+    def force_restart(self, pred=lambda x: True):
+        for client in self.client_manager.clients:
+            if pred(client):
+                client.disconnect()
 
     def broadcast_global(self, client, msg, as_mod=False):
         char_name = client.get_char_name()
