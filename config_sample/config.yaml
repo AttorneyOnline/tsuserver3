@@ -18,9 +18,6 @@ masterserver_port: 27016
 masterserver_name: My First Server
 masterserver_description: This is my flashy new server
 
-log_size: 1048576
-log_backups: 5
-
 timeout: 250
 debug: false
 
@@ -29,7 +26,4 @@ music_change_floodguard:
   interval_length: 20
   mute_length: 180
 
-wtce_floodguard:
-  times_per_interval: 5
-  interval_length: 10
-  mute_length: 1000
+use_backgrounds_yaml: true

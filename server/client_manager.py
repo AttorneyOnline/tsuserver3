@@ -24,6 +24,7 @@ from heapq import heappop, heappush
 
 import time
 import re
+import string
 
 
 
@@ -36,7 +37,8 @@ class ClientManager:
             self.pm_mute = False
             self.id = user_id
             self.char_id = -1
-            self.area = server.area_manager.default_area()
+            self.hub = server.hub_manager.default_hub()
+            self.area = self.hub.default_area()
             self.server = server
             self.name = ''
             self.fake_name = ''
@@ -44,7 +46,6 @@ class ClientManager:
             self.is_dj = True
             self.can_wtce = True
             self.pos = ''
-            self.is_cm = False
             self.evi_list = []
             self.disemvowel = False
             self.muted_global = False
@@ -53,17 +54,22 @@ class ClientManager:
             self.is_ooc_muted = False
             self.pm_mute = False
             self.mod_call_time = 0
+            self.command_time = 0
             self.in_rp = False
             self.ipid = ipid
             self.websocket = None
             
-            #flood-guard stuff
+            #music flood-guard stuff
             self.mus_counter = 0
-            self.mus_mute_time = 0
+            self.mute_time = 0
             self.mus_change_time = [x * self.server.config['music_change_floodguard']['interval_length'] for x in range(self.server.config['music_change_floodguard']['times_per_interval'])]
-            self.wtce_counter = 0
-            self.wtce_mute_time = 0
-            self.wtce_time = [x * self.server.config['wtce_floodguard']['interval_length'] for x in range(self.server.config['wtce_floodguard']['times_per_interval'])]
+
+            #CMing stuff
+            self.is_cm = False
+            self.broadcast_ic = []
+            self.hidden = False
+            self.blinded = False
+            self.following = None
 
         def send_raw_message(self, msg):
             if self.websocket:
@@ -74,6 +80,12 @@ class ClientManager:
         def send_command(self, command, *args):
             if args:
                 if command == 'MS':
+                    if self.blinded and args[0] != 'broadcast':
+                        return #Don't receive any chat messages when blinded that are not broadcast_ic'ed
+                    if args[0] == 'broadcast':
+                        lst = list(args)
+                        lst[0] = '0'
+                        args = tuple(lst)
                     for evi_num in range(len(self.evi_list)):
                         if self.evi_list[evi_num] == args[11]:
                             lst = list(args)
@@ -96,11 +108,13 @@ class ClientManager:
                 self.server.config['playerlimit']))
 
         def is_valid_name(self, name):
+            printset = set(string.ascii_letters + string.digits + "~ -_.")
             name_ws = name.replace(' ', '')
             if not name_ws or name_ws.isdigit():
                 return False
+            if not set(name_ws).issubset(printset): #illegal chars in ooc name
+                return False
             for client in self.server.client_manager.clients:
-                print(client.name == name)
                 if client.name == name:
                     return False
             return True
@@ -128,36 +142,34 @@ class ClientManager:
         def change_music_cd(self):
             if self.is_mod or self.is_cm:
                 return 0
-            if self.mus_mute_time:
-                if time.time() - self.mus_mute_time < self.server.config['music_change_floodguard']['mute_length']:
-                    return self.server.config['music_change_floodguard']['mute_length'] - (time.time() - self.mus_mute_time)
+            if self.mute_time:
+                if time.time() - self.mute_time < self.server.config['music_change_floodguard']['mute_length']:
+                    return self.server.config['music_change_floodguard']['mute_length'] - (time.time() - self.mute_time)
                 else:
-                    self.mus_mute_time = 0
+                    self.mute_time = 0
             times_per_interval = self.server.config['music_change_floodguard']['times_per_interval']
             interval_length = self.server.config['music_change_floodguard']['interval_length']
             if time.time() - self.mus_change_time[(self.mus_counter - times_per_interval + 1) % times_per_interval] < interval_length:
-                self.mus_mute_time = time.time()
+                self.mute_time = time.time()
                 return self.server.config['music_change_floodguard']['mute_length']
             self.mus_counter = (self.mus_counter + 1) % times_per_interval
             self.mus_change_time[self.mus_counter] = time.time()
             return 0
+                
+        def hide(self, tog=True):
+            self.hidden = tog
+            msg = 'no longer'
+            if tog:
+                msg = 'now'
+            self.send_host_message('You are {} hidden from /getarea.'.format(msg))
 
-        def wtce_mute(self):
-            if self.is_mod or self.is_cm:
-                return 0
-            if self.wtce_mute_time:
-                if time.time() - self.wtce_mute_time < self.server.config['wtce_floodguard']['mute_length']:
-                    return self.server.config['wtce_floodguard']['mute_length'] - (time.time() - self.wtce_mute_time)
-                else:
-                    self.wtce_mute_time = 0
-            times_per_interval = self.server.config['wtce_floodguard']['times_per_interval']
-            interval_length = self.server.config['wtce_floodguard']['interval_length']
-            if time.time() - self.wtce_time[(self.wtce_counter - times_per_interval + 1) % times_per_interval] < interval_length:
-                self.wtce_mute_time = time.time()
-                return self.server.config['music_change_floodguard']['mute_length']
-            self.wtce_counter = (self.wtce_counter + 1) % times_per_interval
-            self.wtce_time[self.wtce_counter] = time.time()
-            return 0
+        def blind(self, tog=True):
+            self.blinded = tog
+            msg = 'no longer'
+            if tog:
+                msg = 'now'
+            self.send_host_message(
+                'You are {} blinded from /getarea and seeing non-broadcasted IC messages.'.format(msg))
 
         def reload_character(self):
             try:
@@ -165,12 +177,15 @@ class ClientManager:
             except ClientError:
                 raise
 
+        def change_hub(self, hub):
+            if self.hub == hub:
+                raise ClientError('User already in specified hub.')
+            self.hub = hub
+            self.change_area(hub.default_area())
+
         def change_area(self, area):
             if self.area == area:
                 raise ClientError('User already in specified area.')
-            if area.is_locked and not self.is_mod and not self.ipid in area.invite_list:
-                self.send_host_message('This area is locked - you will be unable to send messages ICly.')
-                #raise ClientError("That area is locked!")
             old_area = self.area
             if not area.is_char_available(self.char_id):
                 try:
@@ -185,62 +200,103 @@ class ClientManager:
             self.area = area
             area.new_client(self)
 
-            self.send_host_message('Changed area to {}.[{}]'.format(area.name, self.area.status))
+            if old_area.hub != self.area.hub:
+                old_area.hub.remove_client(self)
+                self.area.hub.new_client(self)
+            else:
+                for c in area.hub.clients():
+                    if c.following == self.id:
+                        c.change_area(area)
+                        c.send_host_message(
+                            'Following [{}] {} to {}. [HUB: {}]'.format(self.id, self.get_char_name(), area.name, area.hub.name))
+
+            self.send_host_message('Changed area to {}. [HUB: {}]'.format(area.name, area.hub.name))
             logger.log_server(
-                '[{}]Changed area from {} ({}) to {} ({}).'.format(self.get_char_name(), old_area.name, old_area.id,
-                                                                   self.area.name, self.area.id), self)
+                '[{}]Changed area from {} ({} {}) to {} ({} {}).'.format(self.get_char_name(), old_area.name, old_area.id, old_area.hub.name,
+                                                                   self.area.name, self.area.id, self.area.hub.name), self)
             self.send_command('HP', 1, self.area.hp_def)
             self.send_command('HP', 2, self.area.hp_pro)
             self.send_command('BN', self.area.background)
             self.send_command('LE', *self.area.get_evidence_list(self))
 
-        def send_area_list(self):
-            msg = '=== Areas ==='
-            lock = {True: '[LOCKED]', False: ''}
-            for i, area in enumerate(self.server.area_manager.areas):
-                owner = 'FREE'
-                if area.owned:
-                    for client in [x for x in area.clients if x.is_cm]:
-                        owner = 'MASTER: {}'.format(client.get_char_name())
-                        break
-                msg += '\r\nArea {}: {} (users: {}) [{}][{}]{}'.format(i, area.name, len(area.clients), area.status, owner, lock[area.is_locked])
+        def send_area_list(self, hidden=False, accessible=False):
+            acc = ''
+            if accessible:
+                acc = 'Accessible '
+            msg = '=== {}Areas for Hub [{}]: {} ==='.format(acc, self.hub.id, self.hub.name)
+            lock = {True: '[L]', False: ''}
+            for area in self.hub.areas:
+                users = ''
+                lo = ''
+                acc = ''
+                if self.area != area and len(self.area.accessible) > 0 and not (area.id in self.area.accessible):
+                    if not accessible or self.is_cm or self.is_mod:
+                        acc = '<X>'
+                    else:
+                        continue
+                if not hidden or (self.is_cm or self.is_mod):
+                    users = '(users: {}) '.format(len(area.clients))
+                    lo = lock[area.is_locked]
+                msg += '\r\nArea {}: {}{} {}{}'.format(
+                    area.id, acc, area.name, users, lo)
                 if self.area == area:
+                    msg += ' [*]'
+            self.send_host_message(msg)
+
+        def send_hub_list(self):
+            msg = '=== Hubs ==='.format(self.hub.name)
+            for i, hub in enumerate(self.server.hub_manager.hubs):
+                owner = 'FREE'
+                if hub.master:
+                    owner = 'MASTER: {}'.format(hub.master.get_char_name())
+                msg += '\r\nHub {}: {} (users: {}) [{}][{}]'.format(
+                    i, hub.name, len(hub.clients()), hub.status, owner)
+                if self.hub == hub:
                     msg += ' [*]'
             self.send_host_message(msg)
 
         def get_area_info(self, area_id, mods):
             info = ''
             try:
-                area = self.server.area_manager.get_area_by_id(area_id)
+                area = self.hub.get_area_by_id(area_id)
             except AreaError:
                 raise
             info += '= Area {}: {} =='.format(area.id, area.name)
             sorted_clients = []
             for client in area.clients:
                 if (not mods) or client.is_mod:
-                    sorted_clients.append(client)
+                    if not client.hidden or self.is_cm or self.is_mod:
+                        sorted_clients.append(client)
             sorted_clients = sorted(sorted_clients, key=lambda x: x.get_char_name())
             for c in sorted_clients:
                 info += '\r\n[{}] {}'.format(c.id, c.get_char_name())
                 if self.is_mod:
                     info += ' ({})'.format(c.ipid)
+                if c.hidden:
+                    info += ' [H]'
+                if c.blinded:
+                    info += ' [B]'
             return info
 
-        def send_area_info(self, area_id, mods): 
+        def send_area_info(self, area_id, mods, hidden=False): 
             #if area_id is -1 then return all areas. If mods is True then return only mods
             info = ''
             if area_id == -1:
                 # all areas info
                 cnt = 0
-                info = '\n== Area List =='
-                for i in range(len(self.server.area_manager.areas)):
-                    if len(self.server.area_manager.areas[i].clients) > 0:
-                        cnt += len(self.server.area_manager.areas[i].clients)
+                msg = '\n=== Areas for Hub [{}]: {} ==='.format(self.hub.id, self.hub.name)
+                for i in range(len(self.hub.areas)):
+                    if len(self.hub.areas[i].clients) > 0:
+                        cnt += len(self.hub.areas[i].clients)
                         info += '\r\n{}'.format(self.get_area_info(i, mods))
-                info = 'Current online: {}'.format(cnt) + info
+                if not hidden:
+                    info = 'Current online: {}'.format(cnt) + info
             else:
                 try:
-                    info = 'People in this area: {}\n'.format(len(self.server.area_manager.areas[area_id].clients)) + self.get_area_info(area_id, mods)
+                    info = ''
+                    if not hidden:
+                        info = 'People in this area: {}\n'.format(len(self.hub.areas[area_id].clients))
+                    info += self.get_area_info(area_id, mods)
                 except AreaError:
                     raise
             self.send_host_message(info)
@@ -254,15 +310,15 @@ class ClientManager:
 
         def send_all_area_hdid(self):
             info = '== HDID List =='
-            for i in range (len(self.server.area_manager.areas)):
-                 if len(self.server.area_manager.areas[i].clients) > 0:
+            for i in range (len(self.hub.areas)):
+                 if len(self.hub.areas[i].clients) > 0:
                     info += '\r\n{}'.format(self.get_area_hdid(i))
             self.send_host_message(info)			
 
         def send_all_area_ip(self):
             info = '== IP List =='
-            for i in range (len(self.server.area_manager.areas)):
-                 if len(self.server.area_manager.areas[i].clients) > 0:
+            for i in range (len(self.hub.areas)):
+                 if len(self.hub.areas[i].clients) > 0:
                     info += '\r\n{}'.format(self.get_area_ip(i))
             self.send_host_message(info)
 			
@@ -338,7 +394,7 @@ class ClientManager:
         if local:
             areas = [client.area]
         else:
-            areas = client.server.area_manager.areas
+            areas = client.hub.areas
         targets = []
         if key == TargetType.ALL:
             for nkey in range(6):

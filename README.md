@@ -40,18 +40,22 @@ Requires Python 3.6+ and PyYAML.
     - Sends a serverwide advert
 * **toggleadverts** 
     - Toggles adverts on and off
-* **area** "area number" 
-    - Displays all areas when blank, swaps to area with number
+* **hub** "hub number" OR "hub name"
+    - Displays all hubs when blank, swaps to hub with number/name
+* **area** "area number" OR "area name"
+    - Displays all areas when blank, swaps to area with number/name
 * **getarea** 
     - Shows the current characters in your area
 * **getareas** 
     - Shows all characters in all areas
-* **doc** "url" 
-    - Gives the doc url if blank, updates the doc url
+* **doc** "url or txt" 
+    - Gives the doc url/text if blank, updates the doc url/text in current hub if provided
 * **cleardoc** 
-    - Clears the doc url
+    - Clears the doc url/text
+* **desc** <string>
+    - Display the area description if blank, set that area's description to <desc> otherwise.
 * **status** "status" 
-    - Shows current areas status if blank, updates the status
+    - Shows current areas status if blank, updates the status if filled
     - Statuses: 'idle', 'building-open', 'building-full', 'casing-open', 'casing-full', 'recess'
 * **pm** "target" "Message" 
     - PMs the target, can either be character name or OOC name
@@ -68,8 +72,6 @@ Requires Python 3.6+ and PyYAML.
 * **pos** "position" 
     - Changes your position in the court
     - Positions: 'def', 'pro', 'hld', 'hlp', 'jud', 'wit'
-* **bg** "background" 
-    - Changes the current background
 * **roll** "max" 
     - Rolls a 1D6 if blank
 * **coinflip**
@@ -78,20 +80,53 @@ Requires Python 3.6+ and PyYAML.
     - Displays the current music
 * **evi_swap** <id1> <id2>
     - Swaps <id1> and <id2> evidence.
-* **cm**
-    - Makes you a CM of this area.
+
 ### CM Commands
-* **area_lock**
-    - Locks your area, preventing anyone outside of the invite list from speaking IC.
-* **area_unlock**
-    - Unlocks your area.
-* **invite** "ID"
-    - Adds target in invite list of your area.
-* **uninvite** "ID"
-    - Removes target from invite list of your area.
+* **cm** <id1>
+    - Makes you a CM of this area. As a Master CM you can also assign co-cm's with <id1>
+* **cms**
+    - Shows you the list of CMs in this hub.
+* **lock** <id1> <id2> <idx>
+    - Locks your area (or list of areas if you provide <id1> <id2> <idx>), preventing anyone outside of the invite list from speaking IC.
+* **unlock** <id1> <id2> <idx>
+    - Unlocks your area (or list of areas if you provide <id1> <id2> <idx>).
 * **forcepos** "position" [target]
     - Forcibly change [target]'s position. Leave blank to affect everyone in area.
     - Positions: 'def', 'pro', 'hld', 'hlp', 'jud', 'wit'
+* **follow** <id> or blank
+    - Follow specified character <id> when they move areas or display who you're following if left blank.
+* **unfollow**
+    - Stop following.
+* **hide** <id>
+    - Hide specified character <id> from /getarea
+* **unhide** <id>
+    - Unhide specified character <id> for /getarea
+* **blind** <id>
+    - Make specified character <id> unable to see or speak ICly unless receiving a /broadcast_ic message. Also disallow usage of /getarea.
+* **unblind** <id>
+    - Undo the /blind command for specified <id>
+* **broadcast_ic** <id1> <id2> <idx> or <clear>
+    - Blank to display the list of areas currently broadcasting your IC messages to. <idx> to add area(s) to the list. <clear> to reset the list.
+* **iclogs** <numlines> <id>
+    - Display last <numlines> of logged IC lines in area <id> in OOC. Max 50
+* **savehub**
+    - Save the area save data as an evidence file in area 0 of the hub.
+* **loadhub**
+    - Display instructions on how to load area save data using the evidence system.
+* **akick** <id> <area#> (<hub#>)
+    - Kicks target and all of their multi-accs from your area to area 0 or specified <area#> in same hub (or specified <hub#> if you're a mod)
+
+### Area Commands
+* **bg** "background" 
+    - Changes the current background
+* **area_add**
+    - Add an area
+* **area_remove** <id1> <id2> <idx>
+    - Remove listed areas
+* **poslock** <def> <hld> <pro> <hlp> <wit> <jud>
+    - Lock the position of current area into provided pos.
+* **rename** <text>
+    - Rename current area's display name to <text>
 ### Mod Commands
 * **login** "Password"
 * **gm** "Message" 
@@ -108,8 +143,8 @@ Requires Python 3.6+ and PyYAML.
     - Kicks a player back to the character select screen. If no ID was entered then target yourself.
 * **kick** "IPID" 
     - Kicks the targets with this IPID.
-* **area_kick** "ID" [area]
-    - Kicks target and all of their multi-accs from your area to area 0 or specified [area] and removes them from invite-list should the area be locked.
+* **akick** <id> <area#> (<hub#>)
+    - Kicks target and all of their multi-accs from your area to area 0 or specified <area#> in same hub (or specified <hub#> if you're a mod)
 * **ban** "IPID" 
     - Bans the IPID (hdid is linked to ipid so all bans happens in a same time).
 * **unban** "IPID" 
@@ -132,10 +167,6 @@ Requires Python 3.6+ and PyYAML.
     - Mutes the target from changing music. 
 * **unblockdj** "target"
     - Undo previous command.
-* **blockwtce** "target"
-    - Blocks the target from using Witness Testimony/Cross Examination signs.
-* **unblockwtce** "target"
-    - Undo previous command.
 * **evidence_mod** <MOD>
     - Changes evidence_mod in this area. Possible values: FFA, CM, HiddenCM, Mods
         * **FFA**
@@ -149,6 +180,9 @@ Requires Python 3.6+ and PyYAML.
 * **allow_iniswap**
     - Toggle allow_iniswap var in this area. 
     - Even if iniswap at all is forbidden you can configure all-time allowed iniswaps in *iniswaps.yaml*
+
+
+
 
 ## License
 

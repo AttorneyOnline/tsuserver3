@@ -17,7 +17,7 @@
 
 import asyncio
 import re
-from time import localtime, strftime
+from time import gmtime, localtime, strftime
 from enum import Enum
 
 from . import commands
@@ -275,8 +275,9 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_command('EM', *self.server.music_pages_ao1[args[0]])
         else:
             self.client.send_done()
-            self.client.send_area_list()
             self.client.send_motd()
+            self.client.send_hub_list()
+            self.client.send_area_list()
 
     def net_cmd_rc(self, _):
         """ Asks for the whole character list(AO2)
@@ -305,8 +306,9 @@ class AOProtocol(asyncio.Protocol):
         """
 
         self.client.send_done()
-        self.client.send_area_list()
         self.client.send_motd()
+        self.client.send_hub_list()
+        self.client.send_area_list()
 
     def net_cmd_cc(self, args):
         """ Character selection.
@@ -331,6 +333,9 @@ class AOProtocol(asyncio.Protocol):
         if self.client.is_muted:  # Checks to see if the client has been muted by a mod
             self.client.send_host_message("You have been muted by a moderator")
             return
+        if self.client.blinded:  # Checks to see if the client has been blinded by CM or mod
+            self.client.send_host_message("You are blinded - you cannot speak or see IC messages!")
+            return
         if not self.client.area.can_send_message(self.client):
             return
         if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
@@ -345,17 +350,17 @@ class AOProtocol(asyncio.Protocol):
             return
         if msg_type not in ('chat', '0', '1'):
             return
-        if anim_type not in (0, 1, 2, 5, 6):
+        if anim_type not in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10):
             return
         if cid != self.client.char_id:
             return
         if sfx_delay < 0:
             return
-        if button not in (0, 1, 2, 3, 4):
+        if button not in (0, 1, 2, 3, 4, 5, 6, 7):
             return
         if evidence < 0:
         	return
-        if ding not in (0, 1):
+        if ding not in (0, 1, 2):
             return
         if color not in (0, 1, 2, 3, 4, 5, 6):
             return
@@ -373,7 +378,11 @@ class AOProtocol(asyncio.Protocol):
         else:
             if pos not in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
                 return
+
         msg = text[:256]
+        if msg.startswith('/'):
+            self.net_cmd_ct([self.client.name, msg])
+            return
         if self.client.disemvowel:
             msg = self.client.disemvowel_message(msg)
         self.client.pos = pos
@@ -381,13 +390,37 @@ class AOProtocol(asyncio.Protocol):
             if self.client.area.evi_list.evidences[self.client.evi_list[evidence] - 1].pos != 'all':
                 self.client.area.evi_list.evidences[self.client.evi_list[evidence] - 1].pos = 'all'
                 self.client.area.broadcast_evidence_list()
-        self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
-                                      sfx_delay, button, self.client.evi_list[evidence], flip, ding, color)
-        self.client.area.set_next_msg_delay(len(msg))
-        logger.log_server('[IC][{}][{}]{}'.format(self.client.area.id, self.client.get_char_name(), msg), self.client)
+        
+        if self.client.is_cm and len(self.client.broadcast_ic) > 0:
+            i = 0
+            for b in self.client.broadcast_ic:
+                area = self.client.hub.get_area_by_id(b)
+                if area:
+                    if area.pos_lock in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
+                        pos = area.pos_lock
+                    area.send_command('MS', 'broadcast', pre, folder, anim, msg, pos, sfx, anim_type, cid,
+                                                sfx_delay, button, self.client.evi_list[evidence], flip, ding, color)
+                    area.set_next_msg_delay(len(msg))
+                    if (area.is_recording):
+                            current_time = strftime("%H:%M:%S UTC", gmtime())
+                            area.recorded_messages.append('[{}][Broadcast][{}] {}: {}'.format(
+                                current_time, self.client.id, self.client.get_char_name(), msg))
+                            #self.client.area.recorded_messages.append(args)
+                    i += 1
+            self.client.send_host_message('Broadcasting message to {} areas.'.format(len(self.client.broadcast_ic)))
+        else:
+            if self.client.area.pos_lock in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
+                pos = self.client.area.pos_lock
+            self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
+                                        sfx_delay, button, self.client.evi_list[evidence], flip, ding, color)
+            self.client.area.set_next_msg_delay(len(msg))
+            if (self.client.area.is_recording):
+                current_time = strftime("%H:%M:%S UTC", gmtime())
+                self.client.area.recorded_messages.append('[{}][{}] {}: {}'.format(
+                    current_time, self.client.id, self.client.get_char_name(), msg))
+                #self.client.area.recorded_messages.append(args)
 
-        if (self.client.area.is_recording):
-        	self.client.area.recorded_messages.append(args)
+        logger.log_server('[IC][H{}][A{}][{}]{}'.format(self.client.hub.id, self.client.area.id, self.client.get_char_name(), msg), self.client)
 
     def net_cmd_ct(self, args):
         """ OOC Message
@@ -400,16 +433,17 @@ class AOProtocol(asyncio.Protocol):
             return
         if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR):
             return
-        if self.client.name != args[0] and self.client.fake_name != args[0]:
-            if self.client.is_valid_name(args[0]):
-                self.client.name = args[0]
-                self.client.fake_name = args[0]
+        ooc_name = re.sub('\s+', ' ', args[0]).strip() #Strip the ooc_name of any excess whitespace
+        if self.client.name != ooc_name and self.client.fake_name != ooc_name:
+            if self.client.is_valid_name(ooc_name):
+                self.client.name = ooc_name
+                self.client.fake_name = ooc_name
             else:
-                self.client.fake_name = args[0]
+                self.client.fake_name = ooc_name
         if self.client.name == '':
             self.client.send_host_message('You must insert a name with at least one letter')
             return
-        if self.client.name.startswith(self.server.config['hostname']) or self.client.name.startswith('<dollar>G'):
+        if self.client.name.startswith(self.server.config['hostname']) or self.client.name.startswith('<dollar>G') or self.client.name.startswith('CM') or  self.client.name.startswith('GM'):
             self.client.send_host_message('That name is reserved!')
             return
         if args[1].startswith('/'):
@@ -427,11 +461,19 @@ class AOProtocol(asyncio.Protocol):
             except (ClientError, AreaError, ArgumentError, ServerError) as ex:
                 self.client.send_host_message(ex)
         else:
+            if self.client.hub.is_ooc_muted and not self.client.is_cm and not self.client.is_mod:
+                self.client.send_host_message("OOC is muted in this hub!")
+                return
             if self.client.disemvowel:
                 args[1] = self.client.disemvowel_message(args[1])
-            self.client.area.send_command('CT', self.client.name, args[1])
+            cm = ''
+            if self.client.is_cm:
+                cm = '[CM]'
+            elif self.client.is_mod:
+                cm = '[MOD]'
+            self.client.hub.send_command('CT', cm + self.client.name, args[1])
             logger.log_server(
-                '[OOC][{}][{}][{}]{}'.format(self.client.area.id, self.client.get_char_name(), self.client.name,
+                '[OOC][{}][{}][{}][{}]{}'.format(self.client.hub.name, self.client.area.id, self.client.get_char_name(), self.client.name,
                                              args[1]), self.client)
 
     def net_cmd_mc(self, args):
@@ -441,8 +483,8 @@ class AOProtocol(asyncio.Protocol):
 
         """
         try:
-            area = self.server.area_manager.get_area_by_name(args[0])
-            self.client.change_area(area)
+            hub = self.server.hub_manager.get_hub_by_name(args[0])
+            self.client.change_hub(hub)
         except AreaError:
             if self.client.is_muted:  # Checks to see if the client has been muted by a mod
                 self.client.send_host_message("You have been muted by a moderator")
@@ -450,17 +492,32 @@ class AOProtocol(asyncio.Protocol):
             if not self.client.is_dj:
                 self.client.send_host_message('You were blockdj\'d by a moderator.')
                 return
+            if self.client.area.is_locked and not self.client.is_mod and not self.client.is_cm and not self.client.ipid in self.client.area.invite_list:
+                self.client.send_host_message('This is a locked area.')
+                return
             if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT):
                 return
             if args[1] != self.client.char_id:
                 return
             if self.client.change_music_cd():
-                self.client.send_host_message('You changed song too many times. Please try again after {} seconds.'.format(int(self.client.change_music_cd())))
+                self.client.send_host_message('You changed song too much times. Please try again after {} seconds.'.format(int(self.client.change_music_cd())))
                 return
             try:
                 name, length = self.server.get_song_data(args[0])
-                self.client.area.play_music(name, self.client.char_id, length)
-                self.client.area.add_music_playing(self.client, name)
+
+                if self.client.is_cm and len(self.client.broadcast_ic) > 0:
+                    i = 0
+                    for b in self.client.broadcast_ic:
+                        area = self.client.hub.get_area_by_id(b)
+                        if area:
+                            area.play_music(name, self.client.char_id, length)
+                            area.add_music_playing(self.client, name)
+                            i += 1
+                    self.client.send_host_message(
+                        'Broadcasting music to {} areas.'.format(len(self.client.broadcast_ic)))
+                else:
+                    self.client.area.play_music(name, self.client.char_id, length)
+                    self.client.area.add_music_playing(self.client, name)
                 logger.log_server('[{}][{}]Changed music to {}.'
                                   .format(self.client.area.id, self.client.get_char_name(), name), self.client)
             except ServerError:
@@ -477,22 +534,12 @@ class AOProtocol(asyncio.Protocol):
         if self.client.is_muted:  # Checks to see if the client has been muted by a mod
             self.client.send_host_message("You have been muted by a moderator")
             return
-        if not self.client.can_wtce:
-            self.client.send_host_message('You were blocked from using judge signs by a moderator.')
-            return
         if not self.validate_net_cmd(args, self.ArgType.STR):
             return
-        if args[0] == 'testimony1':
-            sign = 'WT'
-        elif args[0] == 'testimony2':
-            sign = 'CE'
-        else:
-            return
-        if self.client.wtce_mute():
-            self.client.send_host_message('You used witness testimony/cross examination signs too many times. Please try again after {} seconds.'.format(int(self.client.wtce_mute())))
+        if args[0] not in ('testimony1', 'testimony2'):
             return
         self.client.area.send_command('RT', args[0])
-        self.client.area.add_to_judgelog(self.client, 'used {}'.format(sign))
+        self.client.area.add_to_judgelog(self.client, 'used WT/CE')
         logger.log_server("[{}]{} Used WT/CE".format(self.client.area.id, self.client.get_char_name()), self.client)
 
     def net_cmd_hp(self, args):
@@ -523,6 +570,7 @@ class AOProtocol(asyncio.Protocol):
         if len(args) < 3:
             return
         #evi = Evidence(args[0], args[1], args[2], self.client.pos)
+
         self.client.area.evi_list.add_evidence(self.client, args[0], args[1], args[2], 'all')
         self.client.area.broadcast_evidence_list()
     
@@ -551,6 +599,24 @@ class AOProtocol(asyncio.Protocol):
         self.client.area.evi_list.edit_evidence(self.client, self.client.evi_list[int(args[0])], evi)
         self.client.area.broadcast_evidence_list()
 
+        desc = self.client.area.evi_list.evidences[self.client.evi_list[int(
+            args[0])]].desc
+
+        if(args[1] == '/loadhub'):
+            if not self.client.is_mod and not self.client.is_cm:
+                self.client.send_host_message(
+                    "You must be authorized to do that.")
+                return
+            try:
+                self.client.hub.load(desc)
+                self.client.hub.send_host_message(
+                    "Loading hub save data...")
+                self.client.area.evi_list.del_evidence(
+                    self.client, self.client.evi_list[int(args[0])])
+                self.client.area.broadcast_evidence_list()
+            except:
+                self.client.send_host_message(
+                    "Could not load hub save data! Try pressing the [X] and make sure if your save data is correct.")
 
     def net_cmd_zz(self, _):
         """ Sent on mod call.
