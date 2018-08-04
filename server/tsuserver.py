@@ -22,7 +22,7 @@ import json
 
 from server import logger
 from server.aoprotocol import AOProtocol
-from server.hub_manager import HubManager
+from server.area_manager import AreaManager
 from server.ban_manager import BanManager
 from server.client_manager import ClientManager
 from server.districtclient import DistrictClient
@@ -36,7 +36,7 @@ class TsuServer3:
         self.load_config()
         self.load_iniswaps()
         self.client_manager = ClientManager(self)
-        self.hub_manager = HubManager(self)
+        self.area_manager = AreaManager(self)
         self.ban_manager = BanManager()
         self.software = 'tsuserver3'
         self.version = 'tsuserver3dev'
@@ -50,7 +50,6 @@ class TsuServer3:
         self.music_list = None
         self.music_list_ao2 = None
         self.music_pages_ao1 = None
-        self.bglock = False
         self.backgrounds = None
         self.load_characters()
         self.load_music()
@@ -59,7 +58,7 @@ class TsuServer3:
         self.district_client = None
         self.ms_client = None
         self.rp_mode = False
-        logger.setup_logger(debug=self.config['debug'])
+        logger.setup_logger(debug=self.config['debug'], log_size=self.config['log_size'], log_backups=self.config['log_backups'])
 
     def start(self):
         loop = asyncio.get_event_loop()
@@ -78,9 +77,6 @@ class TsuServer3:
         if self.config['use_masterserver']:
             self.ms_client = MasterServerClient(self)
             asyncio.ensure_future(self.ms_client.connect(), loop=loop)
-
-        if self.config['use_backgrounds_yaml']:
-            self.bglock = True
 
         logger.log_debug('Server started.')
 
@@ -103,14 +99,12 @@ class TsuServer3:
         if self.rp_mode:
             c.in_rp = True
         c.server = self
-        c.hub = self.hub_manager.default_hub()
-        c.area = c.hub.default_area()
+        c.area = self.area_manager.default_area()
         c.area.new_client(c)
         return c
 
     def remove_client(self, client):
         client.area.remove_client(client)
-        client.hub.remove_client(client)
         self.client_manager.remove_client(client)
 
     def get_player_count(self):
@@ -122,6 +116,12 @@ class TsuServer3:
             self.config['motd'] = self.config['motd'].replace('\\n', ' \n') 
         if 'music_change_floodguard' not in self.config:
             self.config['music_change_floodguard'] = {'times_per_interval': 1,  'interval_length': 0, 'mute_length': 0}
+        if 'wtce_floodguard' not in self.config:
+            self.config['wtce_floodguard'] = {'times_per_interval': 1, 'interval_length': 0, 'mute_length': 0}
+        if 'log_size' not in self.config:
+            self.config['log_size'] = 1048576
+        if 'log_backups' not in self.config:
+            self.config['log_backups'] = 5
 
     def load_characters(self):
         with open('config/characters.yaml', 'r', encoding = 'utf-8') as chars:
@@ -184,9 +184,9 @@ class TsuServer3:
     def build_music_pages_ao1(self):
         self.music_pages_ao1 = []
         index = 0
-        # add hubs first
-        for hub in self.hub_manager.hubs:
-            self.music_pages_ao1.append('{}#{}'.format(index, hub.name))
+        # add areas first
+        for area in self.area_manager.areas:
+            self.music_pages_ao1.append('{}#{}'.format(index, area.name))
             index += 1
         # then add music
         for item in self.music_list:
@@ -199,9 +199,9 @@ class TsuServer3:
 
     def build_music_list_ao2(self):
         self.music_list_ao2 = []
-        # add hubs first
-        for hub in self.hub_manager.hubs:
-            self.music_list_ao2.append(hub.name)
+        # add areas first
+        for area in self.area_manager.areas:
+            self.music_list_ao2.append(area.name)
             # then add music
         for item in self.music_list:
             self.music_list_ao2.append(item['category'])
@@ -236,23 +236,23 @@ class TsuServer3:
 
     def broadcast_global(self, client, msg, as_mod=False):
         char_name = client.get_char_name()
-        ooc_name = '{}[H{}][{}]'.format('~G', client.hub.id, char_name)
+        ooc_name = '{}[{}][{}]'.format('<dollar>G', client.area.id, char_name)
         if as_mod:
             ooc_name += '[M]'
         self.send_all_cmd_pred('CT', ooc_name, msg, pred=lambda x: not x.muted_global)
         if self.config['use_district']:
             self.district_client.send_raw_message(
-                'GLOBAL#{}#{}#{}#{}'.format(int(as_mod), client.hub.id, char_name, msg))
+                'GLOBAL#{}#{}#{}#{}'.format(int(as_mod), client.area.id, char_name, msg))
 
     def broadcast_need(self, client, msg):
         char_name = client.get_char_name()
-        hub_name = client.hub.name
-        hub_id = client.hub.id
+        area_name = client.area.name
+        area_id = client.area.id
         self.send_all_cmd_pred('CT', '{}'.format(self.config['hostname']),
                                '=== Advert ===\r\n{} in {} [{}] needs {}\r\n==============='
-                               .format(char_name, hub_name, hub_id, msg), pred=lambda x: not x.muted_adverts)
+                               .format(char_name, area_name, area_id, msg), pred=lambda x: not x.muted_adverts)
         if self.config['use_district']:
-            self.district_client.send_raw_message('NEED#{}#{}#{}#{}'.format(char_name, hub_name, hub_id, msg))
+            self.district_client.send_raw_message('NEED#{}#{}#{}#{}'.format(char_name, area_name, area_id, msg))
 
     def refresh(self):
         with open('config/config.yaml', 'r') as cfg:
