@@ -18,6 +18,9 @@ masterserver_port: 27016
 masterserver_name: My First Server
 masterserver_description: This is my flashy new server
 
+log_size: 1048576
+log_backups: 5
+
 timeout: 250
 debug: false
 

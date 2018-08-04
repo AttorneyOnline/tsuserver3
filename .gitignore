@@ -1,4 +1,5 @@
-/config/*
+/config*/*
 /storage/*.json
 /logs/*.log
 __pycache__/
+run_server.bat
