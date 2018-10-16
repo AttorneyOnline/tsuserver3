@@ -30,7 +30,7 @@ class EvidenceList:
         if client.area.evidence_mod == 'FFA':
             pass
         if client.area.evidence_mod == 'Mods':
-            if not client.is_cm:
+            if not client.is_mod:
                 return False
         if client.area.evidence_mod == 'CM':
             if not client.is_cm and not client.is_mod:

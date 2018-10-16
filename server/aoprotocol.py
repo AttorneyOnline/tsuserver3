@@ -461,9 +461,6 @@ class AOProtocol(asyncio.Protocol):
             except (ClientError, AreaError, ArgumentError, ServerError) as ex:
                 self.client.send_host_message(ex)
         else:
-            if self.client.hub.is_ooc_muted and not self.client.is_cm and not self.client.is_mod:
-                self.client.send_host_message("OOC is muted in this hub!")
-                return
             if self.client.disemvowel:
                 args[1] = self.client.disemvowel_message(args[1])
             cm = ''
@@ -471,7 +468,7 @@ class AOProtocol(asyncio.Protocol):
                 cm = '[CM]'
             elif self.client.is_mod:
                 cm = '[MOD]'
-            self.client.hub.send_command('CT', cm + self.client.name, args[1])
+            self.client.area.send_command('CT', cm + self.client.name, args[1])
             logger.log_server(
                 '[OOC][{}][{}][{}][{}]{}'.format(self.client.hub.name, self.client.area.id, self.client.get_char_name(), self.client.name,
                                              args[1]), self.client)
@@ -608,7 +605,7 @@ class AOProtocol(asyncio.Protocol):
                     "You must be authorized to do that.")
                 return
             try:
-                self.client.hub.load(desc)
+                self.client.hub.load(desc.rstrip())
                 self.client.hub.send_host_message(
                     "Loading hub save data...")
                 self.client.area.evi_list.del_evidence(

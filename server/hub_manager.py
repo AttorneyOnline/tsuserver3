@@ -356,7 +356,7 @@ class HubManager:
 		def send_to_cm(self, msg, exceptions=[]):
 			for area in self.areas:
 				for client in area.clients:
-					if not (client in exceptions) and client.is_cm:
+					if not (client in exceptions) and client.is_cm and client.receive_cm_messages:
 						client.send_host_message(msg)
 
 		def get_cm_list(self):

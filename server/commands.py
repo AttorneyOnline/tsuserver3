@@ -254,7 +254,7 @@ def ooc_cmd_forcepos(client, arg):
 def ooc_cmd_help(client, arg):
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
-    help_url = 'https://github.com/AttorneyOnline/tsuserver3/blob/master/README.md'
+    help_url = 'https://github.com/Crystalwarrior/KFO-Server/blob/master/README.md'
     help_msg = 'Available commands, source code and issues can be found here: {}'.format(help_url)
     client.send_host_message(help_msg)
         
@@ -413,24 +413,30 @@ def ooc_cmd_g(client, arg):
     if len(arg) == 0:
         raise ArgumentError("You can't send an empty message.")
     client.server.broadcast_global(client, arg)
-    logger.log_server('[{}][{}][GLOBAL]{}.'.format(client.hub.id, client.get_char_name(), arg), client)
+    logger.log_server('[{}][{}][GLOBAL]{}.'.format(client.hub.id, client.name, arg), client)
 
-def ooc_cmd_a(client, arg):
+def ooc_cmd_h(client, arg):
     if len(arg) == 0:
         raise ArgumentError("You can't send an empty message.")
+
+    if client.hub.is_ooc_muted and not client.is_cm and not client.is_mod:
+        client.send_host_message("OOC is muted in this hub!")
+        return
+
     cm = ''
     if client.is_cm:
         cm = '[CM]'
     elif client.is_mod:
         cm = '[MOD]'
 
-    name = client.get_char_name()
-    if client.hidden:
-        name = 'HIDDEN'
-        cm = ''
+    # name = client.get_char_name()
+    # if client.hidden:
+    #     name = 'HIDDEN'
+    #     cm = ''
 
-    client.area.send_command('CT', '~A{}[{}]'.format(cm, name), arg)
-    logger.log_server('[{}][{}][AOOC]{}.'.format(client.hub.id, client.get_char_name(), arg), client)
+    client.hub.send_command('CT', '~H{}[{}]'.format(cm, client.name), arg)
+    logger.log_server(
+        '[HOOC][{}][{}][{}][{}]{}'.format(client.hub.name, client.area.id, client.get_char_name(), client.name, arg), client)
 
 def ooc_cmd_gm(client, arg):
     if not client.is_mod:
@@ -611,7 +617,11 @@ def ooc_cmd_unfollow(client, arg):
 
 def ooc_cmd_area(client, arg):
     args = arg.split()
-    casing = client.hub.status.lower().startswith('casing')
+    casing = not client.is_mod and not client.is_cm and client.hub.status.lower().startswith(
+        'casing')
+    if arg.lower() in ('accessible', 'visible', 'player'):
+        casing = True
+        args.clear()
     if len(args) == 0:
         client.send_area_list(casing, casing)
         return
@@ -874,17 +884,54 @@ def ooc_cmd_mods(client, arg):
     if client.hub.status.lower().startswith('casing') and not client.is_cm:
         raise AreaError('Hub is {} - /getarea functionality disabled.'.format(client.hub.status))
     client.send_area_info(-1, True)  
-    
+
 def ooc_cmd_evi_swap(client, arg):
-    args = list(arg.split(' '))
+    args = arg.split(' ')
     if len(args) != 2:
-        raise ClientError("you must specify 2 numbers")
+        raise ClientError("You must specify 2 numbers.")
     try:
         client.area.evi_list.evidence_swap(client, int(args[0]), int(args[1]))
         client.area.broadcast_evidence_list()
     except:
-        raise ClientError("you must specify 2 numbers")
-     
+        raise ClientError("You must specify 2 numbers.")
+
+def ooc_cmd_evi_edit(client, arg):
+    #<id: int>#<name: string>#<description: string>#<image: string>#%
+    args = arg.split(' ')
+    if len(args) < 2:
+        raise ClientError("Usage: <id: int> <name: string> <description: string> <image: string>. Replace string with . (period) if you wish to keep original data.")
+
+    try:
+        ID = int(args[0])
+
+        name = args[1]
+
+        if len(args) >= 3:
+            desc = args[2]
+        else:
+            desc = '.'
+
+        if len(args) >= 4:
+            image = args[3]
+        else:
+            image = '.'
+
+        ebdns = client.area.evi_list.evidences[client.evi_list[ID]]
+        if ebdns:
+            if name == '.':
+                name = ebdns.name
+            if desc == '.':
+                desc = ebdns.desc
+            if image == '.':
+                image = ebdns.image
+
+        evi = (name, desc, image, 'all')
+
+        client.area.evi_list.edit_evidence(client, client.evi_list[ID], evi)
+        client.area.broadcast_evidence_list()
+    except:
+        raise ArgumentError("Error: One or more arguments invalid. Usage: <id: int> <name: string> <description: string> <image: string>. Replace string with . if you wish to keep original data.")
+
 def ooc_cmd_cm(client, arg):
     if len(arg) > 0:
         if not client.is_cm or client.hub.master != client:
@@ -895,6 +942,8 @@ def ooc_cmd_cm(client, arg):
             if c == client:
                 raise
             if c.is_cm:
+                if c.hub.master == c:
+                    c.hub.master = None
                 c.is_cm = False
                 client.hub.send_host_message(
                     '{} is no longer a co-CM.'.format(c.get_char_name()))
@@ -927,6 +976,31 @@ def ooc_cmd_cms(client, arg):
         if client.hub.master == cm:
             m = 'Master '
         client.send_host_message('=>{}CM [{}] {}'.format(m, cm.id, cm.get_char_name()))
+
+def ooc_cmd_uncm(client, arg):
+    if client.is_cm:
+        if client.hub.master == c:
+            client.hub.master = None
+        client.is_cm = False
+        client.send_host_message(
+            'You are no longer a CM of hub {}.'.format(client.hub.name))
+
+def ooc_cmd_cmlogs(client, arg):
+    if len(arg.split()) > 1:
+        raise ArgumentError("This command can only take one argument ('on' or 'off') or no arguments at all!")
+    if arg:
+        if arg == 'on':
+            client.receive_cm_messages = True
+        elif arg == 'off':
+            client.receive_cm_messages = False
+        else:
+            raise ArgumentError("Invalid argument: {}".format(arg))
+    else:
+        client.receive_cm_messages = not client.receive_cm_messages
+    stat = 'off'
+    if client.receive_cm_messages:
+        stat = 'on'
+    client.send_host_message('CM-related logging features turned {}.'.format(stat))
 
 def ooc_cmd_broadcast_ic(client, arg):
     if not client.is_cm and not client.is_mod:
@@ -971,6 +1045,85 @@ def ooc_cmd_area_access(client, arg):
                 raise ClientError('Invalid area ID.')
         client.area.send_host_message(
             'Areas that can now be accessed from this area: {}.'.format(client.area.accessible))
+
+def ooc_cmd_area_link(client, arg):
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can set area accessibility.')
+    if not arg:
+        raise ArgumentError(
+            'Must provide valid args! Command usage: /area_link id1> (id2) (idx)')
+
+    args = arg.split()
+    if len(args) == 0:
+        raise ArgumentError('At least one arg must be provided! Command usage: /area_link <id1> (id2) (idx)')
+
+    # if args[0].lower() == "self":
+    #     args[0] = client.area.id
+
+    try:
+        area_from = client.hub.get_area_by_id(client.area.id) #client.hub.get_area_by_id(int(args[0]))
+        for a in args: #args[1:]:
+            a = int(a)
+            area_to = client.hub.get_area_by_id(a)
+            if a not in area_from.accessible:
+                area_from.accessible.append(a)
+            if area_from.id not in area_to.accessible:
+                area_to.accessible.append(area_from.id)
+    except ValueError:
+        raise ArgumentError('Area ID must be a number.')
+    except (AreaError, ClientError):
+        raise
+
+    client.area.send_host_message(
+        'Areas that can now be accessed from and to area [{}] {}: {}.'.format(area_from.id, area_from.name, area_from.accessible))
+
+def ooc_cmd_area_unlink(client, arg):
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can set area accessibility.')
+    if not arg:
+        raise ArgumentError(
+            'Must provide valid args! Command usage: /area_unlink <id1> (id2) (idx)')
+
+    args = arg.split()
+    if len(args) == 0:
+        raise ArgumentError('At least one arg must be provided! Command usage: /area_link <id1> (id2) (idx)')
+
+    # if args[0].lower() == "self":
+    #     args[0] = client.area.id
+
+    try:
+        area_from = client.hub.get_area_by_id(client.area.id) #client.hub.get_area_by_id(int(args[0]))
+        for a in args: #args[1:]:
+            a = int(a)
+            area_to = client.hub.get_area_by_id(a)
+            if a in area_from.accessible:
+                area_from.accessible.remove(a)
+            if area_from.id in area_to.accessible:
+                area_to.accessible.remove(area_from.id)
+    except ValueError:
+        raise ArgumentError('Area ID must be a number.')
+    except (AreaError, ClientError):
+        raise
+
+    client.area.send_host_message(
+        'Areas that can now be accessed from and to area [{}] {}: {}.'.format(area_from.id, area_from.name, area_from.accessible))
+
+def ooc_cmd_announce_movement(client, arg):
+    if len(arg.split()) > 1:
+        raise ArgumentError("This command can only take one argument ('on' or 'off') or no arguments at all!")
+    if arg:
+        if arg == 'on':
+            client.announce_movement = True
+        elif arg == 'off':
+            client.announce_movement = False
+        else:
+            raise ArgumentError("Invalid argument: {}".format(arg))
+    else:
+        client.announce_movement = not client.announce_movement
+    stat = 'off'
+    if client.announce_movement:
+        stat = 'on'
+    client.send_host_message('Area transfer announcements turned {}.'.format(stat))
 
 def ooc_cmd_unmod(client, arg):
     client.is_mod = False
@@ -1073,7 +1226,7 @@ def ooc_cmd_akick(client, arg):
                     c.area.invite_list.pop(c.ipid)
                 if area.is_locked:
                     area.invite_list[c.ipid] = None
-                c.change_area(area)
+                c.change_area(area, True) #hidden change area regardless of announce_movement
                 c.send_host_message("You were kicked from the area to area {} [Hub {}].".format(output[0], output[1]))
         except AreaError:
             raise

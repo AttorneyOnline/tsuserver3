@@ -80,12 +80,20 @@ Requires Python 3.6+ and PyYAML.
     - Displays the current music
 * **evi_swap** <id1> <id2>
     - Swaps <id1> and <id2> evidence.
+* **evi_edit** <id: int> <name: string> <description: string> <image: string>
+    - A command emulating the in-client editing interface. Replace string with . (period) if you wish to keep original data.
+* **announce_movement** <on/off or blank>
+    - Toggles whether or not you transfering areas will be announced in local area chat, e.g. "Gym: Phoenix leaves to Hallway." "Hallway: Phoenix enters from Gym."
 
 ### CM Commands
 * **cm** <id1>
     - Makes you a CM of this area. As a Master CM you can also assign co-cm's with <id1>
 * **cms**
     - Shows you the list of CMs in this hub.
+* **uncm**
+    - Removes your CM status
+* **cmlogs** <on/off or blank>
+    - Changes whether or not you can see CM-related logging features. Useful for alt. clients which you want to keep clean of OOC logging or if you don't need to meticulously track everyone down in the first place.
 * **lock** <id1> <id2> <idx>
     - Locks your area (or list of areas if you provide <id1> <id2> <idx>), preventing anyone outside of the invite list from speaking IC.
 * **unlock** <id1> <id2> <idx>
@@ -127,6 +135,13 @@ Requires Python 3.6+ and PyYAML.
     - Lock the position of current area into provided pos.
 * **rename** <text>
     - Rename current area's display name to <text>
+* **area_access** <id1> <id2> <idx>
+    - Set which areas are accessible from your area for movement.
+* **area_link** <id1> <id2> <idx>
+    - Set up a two-way accessibility from and to your area for listed ID's.
+* **area_unlink** <id1> <id2> <idx>
+    - Unlink specified areas from the area you're in.
+
 ### Mod Commands
 * **login** "Password"
 * **gm** "Message" 

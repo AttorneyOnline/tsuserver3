@@ -66,10 +66,12 @@ class ClientManager:
 
             #CMing stuff
             self.is_cm = False
+            self.receive_cm_messages = True #If we're CM, we'll receive CM-related shenanigans
             self.broadcast_ic = []
             self.hidden = False
             self.blinded = False
             self.following = None
+            self.announce_movement = True
 
         def send_raw_message(self, msg):
             if self.websocket:
@@ -183,7 +185,7 @@ class ClientManager:
             self.hub = hub
             self.change_area(hub.default_area())
 
-        def change_area(self, area):
+        def change_area(self, area, hidden=False):
             if self.area == area:
                 raise ClientError('User already in specified area.')
             old_area = self.area
@@ -210,7 +212,12 @@ class ClientManager:
                         c.send_host_message(
                             'Following [{}] {} to {}. [HUB: {}]'.format(self.id, self.get_char_name(), area.name, area.hub.name))
 
-            self.send_host_message('Changed area to {}. [HUB: {}]'.format(area.name, area.hub.name))
+            if self.announce_movement and not hidden:
+                old_area.send_host_message('{} leaves to [{}] {}. [HUB: {}]'.format(self.get_char_name(), area.id, area.name, area.hub.name))
+                area.send_host_message('{} enters from [{}] {}. [HUB: {}]'.format(self.get_char_name(), old_area.id, old_area.name, old_area.hub.name))
+            else:
+                self.send_host_message('Changed area to {}. [HUB: {}]'.format(area.name, area.hub.name))
+
             logger.log_server(
                 '[{}]Changed area from {} ({} {}) to {} ({} {}).'.format(self.get_char_name(), old_area.name, old_area.id, old_area.hub.name,
                                                                    self.area.name, self.area.id, self.area.hub.name), self)
@@ -230,11 +237,11 @@ class ClientManager:
                 lo = ''
                 acc = ''
                 if self.area != area and len(self.area.accessible) > 0 and not (area.id in self.area.accessible):
-                    if not accessible or self.is_cm or self.is_mod:
+                    if not accessible:
                         acc = '<X>'
                     else:
                         continue
-                if not hidden or (self.is_cm or self.is_mod):
+                if not hidden:
                     users = '(users: {}) '.format(len(area.clients))
                     lo = lock[area.is_locked]
                 msg += '\r\nArea {}: {}{} {}{}'.format(
