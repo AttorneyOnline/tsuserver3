@@ -61,11 +61,6 @@ class HubManager:
 
 				self.is_locked = False
 				self.is_hidden = False
-				self.blankposting_allowed = True
-				self.non_int_pres_only = non_int_pres_only
-				self.jukebox = jukebox
-				self.jukebox_votes = []
-				self.jukebox_prev_char_id = -1
 
 			def save(self):
 				desc = self.desc
@@ -314,17 +309,6 @@ class HubManager:
 				self.judgelog.append('{} ({}) {}.'.format(
 					client.get_char_name(), client.get_ip(), msg))
 
-			def add_music_playing(self, client, name):
-				self.current_music_player = client.get_char_name()
-				self.current_music_player_ipid = client.ipid
-				self.current_music = name
-
-			def add_music_playing_shownamed(self, client, showname, name):
-				self.current_music_player = showname + \
-					" (" + client.get_char_name() + ")"
-				self.current_music_player_ipid = client.ipid
-				self.current_music = name
-
 			def get_evidence_list(self, client):
 				client.evi_list, evi_list = self.evi_list.create_evi_list(client)
 				return evi_list
@@ -345,14 +329,6 @@ class HubManager:
 			# 		msg = msg[:-2]
 			# 	return msg
 
-			class JukeboxVote:
-				def __init__(self, client, name, length, showname):
-					self.client = client
-					self.name = name
-					self.length = length
-					self.chance = 1
-					self.showname = showname
-
 		def __init__(self, hub_id, server, name, allow_cm=False, max_areas=1, doc='No document.', status='IDLE'):
 			self.server = server
 			self.id = hub_id
@@ -366,13 +342,7 @@ class HubManager:
 			self.status = status
 			self.doc = doc
 
-			#Turn Based System
-			# self.tbs_enabled = False
-			# self.tbs_players = []
-			# self.tbs_turns = 1
-			# self.tbs_turnsleft = 1
-			# self.tbs_current = 0
-
+			
 		def save(self):
 			s = ''
 			for area in self.areas:
