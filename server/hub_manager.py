@@ -57,21 +57,23 @@ class HubManager:
 				self.accessible = accessible
 
 				self.is_locked = False
+				self.is_hidden = False
 
 			def save(self):
 				desc = self.desc
 				if len(self.desc) <= 0:
 					desc = 'None'
+				desc = desc.strip()
 				accessible = ','.join(map(str, self.accessible))
 				if len(accessible) <= 0:
 					accessible = 'None'
 				return '{};{};{};{};{};{};{}'.format(
-					self.id, self.name, desc, self.background, self.pos_lock, accessible, self.is_locked)
+					self.id, self.name.replace(';', ''), desc.replace(';', ''), self.background, self.pos_lock, accessible, self.is_locked)
 
 			def load(self, arg):
 				# try:
 				args = arg.split(';')
-				print(args)
+				#print(args)
 				self.name = str(args[1])
 				self.desc = str(args[2])
 				self.change_background(str(args[3]))
@@ -93,7 +95,7 @@ class HubManager:
 				hidden = ''
 				if client.hidden:
 					hidden = ' [HIDDEN]'
-				self.hub.send_to_cm('[{}] {} has entered area [{}] {}.{}'.format(
+				self.hub.send_to_cm('MoveLog', '[{}] {} has entered area [{}] {}.{}'.format(
 					client.id, client.get_char_name(), self.id, self.name, hidden), [client])
 
 			def remove_client(self, client):
@@ -103,7 +105,7 @@ class HubManager:
 				hidden = ''
 				if client.hidden:
 					hidden = ' [HIDDEN]'
-				self.hub.send_to_cm('[{}] {} has left area [{}] {}.{}'.format(
+				self.hub.send_to_cm('MoveLog', '[{}] {} has left area [{}] {}.{}'.format(
 					client.id, client.get_char_name(), self.id, self.name, hidden), [client])
 
 			def lock(self):
@@ -116,7 +118,18 @@ class HubManager:
 				self.is_locked = False
 				self.invite_list = {}
 				self.send_host_message('This area is open now.')
-			
+
+			def hide(self):
+				self.is_hidden = True
+				for c in self.clients:
+					self.invite_list[c.ipid] = None
+				self.send_host_message('This area is hidden now.')
+
+			def unhide(self):
+				self.is_hidden = False
+				self.invite_list = {}
+				self.send_host_message('This area is unhidden now.')
+
 			def is_char_available(self, char_id):
 				return char_id not in [x.char_id for x in self.clients]
 
@@ -157,9 +170,9 @@ class HubManager:
 
 
 			def can_send_message(self, client):
-				if self.is_locked and not client.is_mod and not client.is_cm and not client.ipid in self.invite_list:
-					client.send_host_message('This is a locked area - ask the CM to speak.')
-					return False
+				# if self.is_locked and not client.is_mod and not client.is_cm and not client.ipid in self.invite_list:
+				# 	client.send_host_message('This is a locked area - ask the CM to speak.')
+				# 	return False
 				return (time.time() * 1000.0 - self.next_message_time) > 0
 
 			def change_hp(self, side, val):
@@ -231,11 +244,12 @@ class HubManager:
 		def load(self, arg):
 			args = arg.split('\n')
 			try:
-				while len(self.areas) < len(args):
+				while len(self.areas) <= len(args):
 					self.create_area('Area {}'.format(self.cur_id), True,
 											self.server.backgrounds[0], False, None, 'FFA', True, True, True, [], '')
 				i = 1
 				for a in args:
+					print(a)
 					if(len(a) < 7):
 						continue
 					self.areas[i].load(a)
@@ -353,11 +367,11 @@ class HubManager:
 			for area in self.areas:
 				area.send_host_message(msg)
 
-		def send_to_cm(self, msg, exceptions=[]):
+		def send_to_cm(self, T, msg, exceptions=[]):
 			for area in self.areas:
 				for client in area.clients:
-					if not (client in exceptions) and client.is_cm and client.receive_cm_messages:
-						client.send_host_message(msg)
+					if not (client in exceptions) and client.is_cm and T in client.cm_log_type:
+						client.send_host_message('$CM[{}]{}'.format(T, msg))
 
 		def get_cm_list(self):
 			cms = []

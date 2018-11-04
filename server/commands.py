@@ -95,64 +95,126 @@ def ooc_cmd_allow_iniswap(client, arg):
     answer = {True: 'allowed', False: 'forbidden'}
     client.send_host_message('iniswap is {}.'.format(answer[client.area.iniswap_allowed]))
     return
+
+def rtd(arg):
+    DICE_MAX = 11037
+    NUMDICE_MAX = 20
+    MODIFIER_LENGTH_MAX = 12 #Change to a higher at your own risk
+    ACCEPTABLE_IN_MODIFIER = '1234567890+-*/().r'
+    MAXDIVZERO_ATTEMPTS = 10
+    MAXACCEPTABLETERM = DICE_MAX*10 #Change to a higher number at your own risk
+
+    special_calculation = False
+    args = arg.split(' ')
+    arg_length = len(args)
     
+    if arg != '':
+        if arg_length == 2:
+            dice_type, modifiers = args
+            if len(modifiers) > MODIFIER_LENGTH_MAX:
+                raise ArgumentError('The given modifier is too long to compute. Please try a shorter one')
+        elif arg_length == 1:
+            dice_type, modifiers = arg, ''
+        else:
+             raise ArgumentError('This command takes one or two arguments. Use /roll [<num of rolls>]d[<max>] [modifiers]')
+
+        dice_type = dice_type.split('d')
+        if len(dice_type) == 1:
+            dice_type.insert(0,1)
+        if dice_type[0] == '':
+            dice_type[0] = '1'
+            
+        try:
+            num_dice,chosen_max = int(dice_type[0]),int(dice_type[1])
+        except ValueError:
+            raise ArgumentError('Expected integer value for number of rolls and max value of dice')
+
+        if not 1 <= num_dice <= NUMDICE_MAX: 
+            raise ArgumentError('Number of rolls must be between 1 and {}'.format(NUMDICE_MAX))
+        if not 1 <= chosen_max <= DICE_MAX:
+            raise ArgumentError('Dice value must be between 1 and {}'.format(DICE_MAX))
+            
+        for char in modifiers:
+            if char not in ACCEPTABLE_IN_MODIFIER:
+                raise ArgumentError('Expected numbers and standard mathematical operations in modifier')
+            if char == 'r':
+                special_calculation = True
+        if '**' in modifiers: #Exponentiation manually disabled, it can be pretty dangerous
+            raise ArgumentError('Expected numbers and standard mathematical operations in modifier')
+    else:
+        num_dice,chosen_max,modifiers = 1,6,'' #Default
+
+    roll = ''
     
+    for i in range(num_dice):
+        divzero_attempts = 0
+        while True:
+            raw_roll = str(random.randint(1, chosen_max))
+            if modifiers == '':
+                aux_modifier = ''
+                mid_roll = int(raw_roll)
+            else:
+                if special_calculation:
+                    aux_modifier = modifiers.replace('r',raw_roll)+'='
+                elif modifiers[0].isdigit():
+                    aux_modifier = raw_roll+"+"+modifiers+'='
+                else:
+                    aux_modifier = raw_roll+modifiers+'='
+                
+                #Prevent any terms from reaching past MAXACCEPTABLETERM in order to prevent server lag due to potentially frivolous dice rolls
+                aux = aux_modifier[:-1]
+                for i in "+-*/()":
+                    aux = aux.replace(i,"!")
+                aux = aux.split('!')
+                for i in aux:
+                    try:
+                        if i != '' and round(float(i)) > MAXACCEPTABLETERM:
+                            raise ArgumentError("Given mathematical formula takes numbers past the server's computation limit")
+                    except ValueError:
+                        raise ArgumentError('Given mathematical formula has a syntax error and cannot be computed')
+                        
+                try: 
+                    mid_roll = round(eval(aux_modifier[:-1])) #By this point it should be 'safe' to run eval
+                except SyntaxError:
+                    raise ArgumentError('Given mathematical formula has a syntax error and cannot be computed')
+                except TypeError: #Deals with inputs like 3(r-1)
+                    raise ArgumentError('Given mathematical formula has a syntax error and cannot be computed')
+                except ZeroDivisionError:
+                    divzero_attempts += 1
+                    if divzero_attempts == MAXDIVZERO_ATTEMPTS:
+                        raise ArgumentError('Given mathematical formula produces divisions by zero too often and cannot be computed')
+                    continue
+            break
+
+        final_roll = mid_roll #min(chosen_max,max(1,mid_roll))
+        if final_roll != mid_roll:
+            final_roll = "|"+str(final_roll) #This visually indicates the roll was capped off due to exceeding the acceptable roll range
+        else:
+            final_roll = str(final_roll)
+        if modifiers != '':
+            roll += str(raw_roll+':')
+        roll += str(aux_modifier+final_roll) + ', '
+    roll = roll[:-2]
+    if num_dice > 1:
+        roll = '(' + roll + ')'
+    
+    return roll, num_dice, chosen_max, modifiers
     
 def ooc_cmd_roll(client, arg):
-    roll_max = 11037
-    if len(arg) != 0:
-        try:
-            val = list(map(int, arg.split(' ')))
-            if not 1 <= val[0] <= roll_max:
-                raise ArgumentError('Roll value must be between 1 and {}.'.format(roll_max))
-        except ValueError:
-            raise ArgumentError('Wrong argument. Use /roll [<max>] [<num of rolls>]')
-    else:
-        val = [6]
-    if len(val) == 1:
-        val.append(1)
-    if len(val) > 2:
-        raise ArgumentError('Too many arguments. Use /roll [<max>] [<num of rolls>]')
-    if val[1] > 20 or val[1] < 1:
-        raise ArgumentError('Num of rolls must be between 1 and 20')
-    roll = ''
-    for i in range(val[1]):
-        roll += str(random.randint(1, val[0])) + ', '
-    roll = roll[:-2]
-    if val[1] > 1:
-        roll = '(' + roll + ')'
-    client.area.send_host_message('{} rolled {} out of {}.'.format(client.get_char_name(), roll, val[0]))
+    roll, num_dice, chosen_max, modifiers = rtd(arg)
+
+    client.area.send_host_message('{} rolled {} out of {}.'.format(client.get_char_name(), roll, chosen_max))
+    client.hub.send_to_cm('RollLog', '[{}][{}]Used /roll and got {} out of {}.'.format(client.area.id, client.get_char_name(), roll, chosen_max))
     logger.log_server(
-        '[{}][{}]Used /roll and got {} out of {}.'.format(client.area.id, client.get_char_name(), roll, val[0]))
-        
+        '[{}][{}]Used /roll and got {} out of {}.'.format(client.area.id, client.get_char_name(), roll, chosen_max), client)
+    
 def ooc_cmd_rollp(client, arg):
-    roll_max = 11037
-    if len(arg) != 0:
-        try:
-            val = list(map(int, arg.split(' ')))
-            if not 1 <= val[0] <= roll_max:
-                raise ArgumentError('Roll value must be between 1 and {}.'.format(roll_max))
-        except ValueError:
-            raise ArgumentError('Wrong argument. Use /roll [<max>] [<num of rolls>]')
-    else:
-        val = [6]
-    if len(val) == 1:
-        val.append(1)
-    if len(val) > 2:
-        raise ArgumentError('Too many arguments. Use /roll [<max>] [<num of rolls>]')
-    if val[1] > 20 or val[1] < 1:
-        raise ArgumentError('Num of rolls must be between 1 and 20')
-    roll = ''
-    for i in range(val[1]):
-        roll += str(random.randint(1, val[0])) + ', '
-    roll = roll[:-2]
-    if val[1] > 1:
-        roll = '(' + roll + ')'
-    client.send_host_message('{} rolled {} out of {}.'.format(client.get_char_name(), roll, val[0]))
-    client.area.send_host_message('{} rolled.'.format(client.get_char_name(), roll, val[0]))
-    SALT = ''.join(random.choices(string.ascii_uppercase + string.digits, k=16))
+    roll, num_dice, chosen_max, modifiers = rtd(arg)
+
+    client.send_host_message('[Hidden] You rolled {} out of {}.'.format(roll, chosen_max))
+    client.hub.send_to_cm('RollLog', '[{}][{}]Used /rollp and got {} out of {}.'.format(client.area.id, client.get_char_name(), roll, chosen_max))
     logger.log_server(
-        '[{}][{}]Used /roll and got {} out of {}.'.format(client.area.id, client.get_char_name(), hashlib.sha1((str(roll) + SALT).encode('utf-8')).hexdigest() + '|' + SALT, val[0]))
+        '[{}][{}]Used /rollp and got {} out of {}.'.format(client.area.id, client.get_char_name(), roll, chosen_max), client)
 
 def ooc_cmd_currentmusic(client, arg):
     if len(arg) != 0:
@@ -652,6 +714,15 @@ def ooc_cmd_area(client, arg):
     except (AreaError, ClientError):
         raise
 
+def ooc_cmd_a(client, arg): #a for "area"
+    return ooc_cmd_area(client, arg)
+
+def ooc_cmd_p(client, arg): #p for "pass"
+    return ooc_cmd_area(client, arg)
+
+def ooc_cmd_pass(client, arg): #p for "pass"
+    return ooc_cmd_area(client, arg)
+
 def ooc_cmd_area_add(client, arg):
     if not client.is_mod and not client.is_cm:
         raise ClientError('You must be authorized to do that.')
@@ -736,7 +807,7 @@ def ooc_cmd_pm(client, arg):
             raise ClientError('User {} muted all pm conversation'.format(c.name))
         else:
             c.send_host_message('PM from [{}] {} in {} ({}): {}'.format(client.id, client.name, client.hub.name, client.get_char_name(), msg))
-            c.hub.send_to_cm('[PMLog] PM from [{}] {} ({}) to [{}] {} in {}: {}'.format(client.id, client.name, client.get_char_name(), c.id, c.name, client.hub.name, msg), targets)
+            c.hub.send_to_cm('PMLog', 'PM from [{}] {} ({}) to [{}] {} in {}: {}'.format(client.id, client.name, client.get_char_name(), c.id, c.name, client.hub.name, msg), targets)
             client.send_host_message('PM sent to [{}] {}. Message: {}'.format(c.id, c.name, msg))
  
 def ooc_cmd_mutepm(client, arg):
@@ -979,7 +1050,7 @@ def ooc_cmd_cms(client, arg):
 
 def ooc_cmd_uncm(client, arg):
     if client.is_cm:
-        if client.hub.master == c:
+        if client.hub.master == client:
             client.hub.master = None
         client.is_cm = False
         client.send_host_message(
@@ -990,15 +1061,18 @@ def ooc_cmd_cmlogs(client, arg):
         raise ArgumentError("This command can only take one argument ('on' or 'off') or no arguments at all!")
     if arg:
         if arg == 'on':
-            client.receive_cm_messages = True
+            client.cm_log_type = ['MoveLog', 'RollLog', 'PMLog']
         elif arg == 'off':
-            client.receive_cm_messages = False
+            client.cm_log_type = []
         else:
             raise ArgumentError("Invalid argument: {}".format(arg))
     else:
-        client.receive_cm_messages = not client.receive_cm_messages
+        if len(client.cm_log_type) > 0:
+            client.cm_log_type = []
+        else:
+            client.cm_log_type = ['MoveLog', 'RollLog', 'PMLog']
     stat = 'off'
-    if client.receive_cm_messages:
+    if len(client.cm_log_type) > 0:
         stat = 'on'
     client.send_host_message('CM-related logging features turned {}.'.format(stat))
 
@@ -1130,7 +1204,7 @@ def ooc_cmd_unmod(client, arg):
     if client.area.evidence_mod == 'HiddenCM':
         client.area.broadcast_evidence_list()
     client.send_host_message('you\'re not a mod now')
-    
+
 def ooc_cmd_lock(client, arg):
     if not client.is_cm and not client.is_mod:
         raise ClientError('Only CM or mods can lock the area.')
@@ -1141,7 +1215,10 @@ def ooc_cmd_lock(client, arg):
     elif len(arg) == 0:
         args = [client.area.id]
     else:
-        args = [int(s) for s in str(arg).split(' ')]
+        try:
+            args = [int(s) for s in str(arg).split(' ')]
+        except:
+            raise ArgumentError('Invalid argument!')
     
     i = 0
     for area in client.hub.areas:
@@ -1151,7 +1228,8 @@ def ooc_cmd_lock(client, arg):
                     'Area locking is disabled in area {}.'.format(area.id))
                 continue
             if area.is_locked:
-                client.send_host_message('Area is already locked.')
+                client.send_host_message(
+                    'Area {} is already locked.'.format(area.id))
                 continue
             
             area.lock()
@@ -1168,7 +1246,10 @@ def ooc_cmd_unlock(client, arg):
     elif len(arg) == 0:
         args = [client.area.id]
     else:
-        args = [int(s) for s in str(arg).split(' ')]
+        try:
+            args = [int(s) for s in str(arg).split(' ')]
+        except:
+            raise ArgumentError('Invalid argument!')
     
     i = 0
     for area in client.hub.areas:
@@ -1176,12 +1257,75 @@ def ooc_cmd_unlock(client, arg):
             if not area.locking_allowed:
                 client.send_host_message(
                     'Area locking is disabled in area {}.'.format(area.id))
+                continue
             if not area.is_locked:
-                client.send_host_message('Area is already unlocked.')
+                client.send_host_message(
+                    'Area {} is already unlocked.'.format(area.id))
+                continue
             
             area.unlock()
             i += 1
     client.send_host_message('Unlocked {} areas.'.format(i))
+
+def ooc_cmd_area_hide(client, arg):
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can hide the area.')
+    args = []
+    if arg == 'all':
+        for area in client.hub.areas:
+            args.append(area.id)
+    elif len(arg) == 0:
+        args = [client.area.id]
+    else:
+        try:
+            args = [int(s) for s in str(arg).split(' ')]
+        except:
+            raise ArgumentError('Invalid argument!')
+    
+    i = 0
+    for area in client.hub.areas:
+        if area.id in args:
+            # if not area.hiding_allowed:
+            #     client.send_host_message(
+            #         'Area hiding is disabled in area {}.'.format(area.id))
+            #     continue
+            if area.is_hidden:
+                client.send_host_message('Area {} is already hidden.'.format(area.id))
+                continue
+            
+            area.hide()
+            i += 1
+    client.send_host_message('Hid {} areas.'.format(i))
+
+def ooc_cmd_area_unhide(client, arg):
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can unhide the area.')
+    args = []
+    if arg == 'all':
+        for area in client.hub.areas:
+            args.append(area.id)
+    elif len(arg) == 0:
+        args = [client.area.id]
+    else:
+        try:
+            args = [int(s) for s in str(arg).split(' ')]
+        except:
+            raise ArgumentError('Invalid argument!')
+    
+    i = 0
+    for area in client.hub.areas:
+        if area.id in args:
+            # if not area.hiding_allowed:
+            #     client.send_host_message(
+            #         'Area hiding is disabled in area {}.'.format(area.id))
+            #     continue
+            if not area.is_hidden:
+                client.send_host_message('Area {} is already unhidden.'.format(area.id))
+                continue
+            
+            area.unhide()
+            i += 1
+    client.send_host_message('Unhid {} areas.'.format(i))
 
 def ooc_cmd_savehub(client, arg):
     if not client.is_cm and not client.is_mod:

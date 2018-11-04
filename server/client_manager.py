@@ -66,7 +66,7 @@ class ClientManager:
 
             #CMing stuff
             self.is_cm = False
-            self.receive_cm_messages = True #If we're CM, we'll receive CM-related shenanigans
+            self.cm_log_type = ['MoveLog', 'RollLog', 'PMLog'] # If we're CM, we'll receive CM-related shenanigans
             self.broadcast_ic = []
             self.hidden = False
             self.blinded = False
@@ -232,20 +232,27 @@ class ClientManager:
                 acc = 'Accessible '
             msg = '=== {}Areas for Hub [{}]: {} ==='.format(acc, self.hub.id, self.hub.name)
             lock = {True: '[L]', False: ''}
+            hide = {True: '[H]', False: ''}
             for area in self.hub.areas:
                 users = ''
                 lo = ''
+                hi = ''
                 acc = ''
                 if self.area != area and len(self.area.accessible) > 0 and not (area.id in self.area.accessible):
                     if not accessible:
                         acc = '<X>'
                     else:
                         continue
+
                 if not hidden:
                     users = '(users: {}) '.format(len(area.clients))
                     lo = lock[area.is_locked]
-                msg += '\r\nArea {}: {}{} {}{}'.format(
-                    area.id, acc, area.name, users, lo)
+                    hi = hide[area.is_hidden]
+                elif self.area != area and area.is_hidden:
+                    continue
+
+                msg += '\r\nArea {}: {}{} {}{}{}'.format(
+                    area.id, acc, area.name, users, lo, hi)
                 if self.area == area:
                     msg += ' [*]'
             self.send_host_message(msg)

@@ -350,6 +350,8 @@ class AOProtocol(asyncio.Protocol):
             return
         if msg_type not in ('chat', '0', '1'):
             return
+        if msg_type == 'chat':
+            msg_type = '1'
         if anim_type not in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10):
             return
         if cid != self.client.char_id:
@@ -382,6 +384,9 @@ class AOProtocol(asyncio.Protocol):
         msg = text[:256]
         if msg.startswith('/'):
             self.net_cmd_ct([self.client.name, msg])
+            return
+        if msg.lstrip().startswith('(('):
+            self.client.send_host_message("Please, for the love of God and all that is holy, use OOC instead of polluting IC with this mess.")
             return
         if self.client.disemvowel:
             msg = self.client.disemvowel_message(msg)
@@ -605,7 +610,7 @@ class AOProtocol(asyncio.Protocol):
                     "You must be authorized to do that.")
                 return
             try:
-                self.client.hub.load(desc.rstrip())
+                self.client.hub.load(desc.strip())
                 self.client.hub.send_host_message(
                     "Loading hub save data...")
                 self.client.area.evi_list.del_evidence(
