@@ -26,6 +26,7 @@ from .exceptions import ClientError, AreaError, ArgumentError, ServerError
 from .fantacrypt import fanta_decrypt
 from .evidence import EvidenceList
 from .websocket import WebSocket
+import unicodedata
 
 
 class AOProtocol(asyncio.Protocol):
@@ -171,6 +172,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.server.dump_hdids()
         for ipid in self.client.server.hdid_list[self.client.hdid]:
             if self.server.ban_manager.is_banned(ipid):
+                self.client.send_command('BD')
                 self.client.disconnect()
                 return
         logger.log_server('Connected. HDID: {}.'.format(self.client.hdid), self.client)
@@ -211,7 +213,7 @@ class AOProtocol(asyncio.Protocol):
 
         self.client.is_ao2 = True
 
-        self.client.send_command('FL', 'yellowtext', 'customobjections', 'flipping', 'fastloading', 'noencryption', 'deskmod', 'evidence')
+        self.client.send_command('FL', 'yellowtext', 'customobjections', 'flipping', 'fastloading', 'noencryption', 'deskmod', 'evidence', 'modcall_reason', 'cccc_ic_support', 'arup', 'casing_alerts')
 
     def net_cmd_ch(self, _):
         """ Periodically checks the connection.
@@ -333,16 +335,94 @@ class AOProtocol(asyncio.Protocol):
             return
         if not self.client.area.can_send_message(self.client):
             return
-        if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
+        
+        target_area = []
+
+        if self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
                                      self.ArgType.STR,
                                      self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
                                      self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
                                      self.ArgType.INT, self.ArgType.INT, self.ArgType.INT):
+            # Vanilla validation monstrosity.
+            msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color = args
+            showname = ""
+            charid_pair = -1
+            offset_pair = 0
+            nonint_pre = 0
+        elif self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
+                                     self.ArgType.STR,
+                                     self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
+                                     self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
+                                     self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR_OR_EMPTY):
+            # 1.3.0 validation monstrosity.
+            msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname = args
+            charid_pair = -1
+            offset_pair = 0
+            nonint_pre = 0
+            if len(showname) > 0 and not self.client.area.showname_changes_allowed:
+                self.client.send_host_message("Showname changes are forbidden in this area!")
+                return
+        elif self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
+                                     self.ArgType.STR,
+                                     self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
+                                     self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
+                                     self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.INT, self.ArgType.INT):
+            # 1.3.5 validation monstrosity.
+            msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair = args
+            nonint_pre = 0
+            if len(showname) > 0 and not self.client.area.showname_changes_allowed:
+                self.client.send_host_message("Showname changes are forbidden in this area!")
+                return
+        elif self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
+                                     self.ArgType.STR,
+                                     self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
+                                     self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
+                                     self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.INT, self.ArgType.INT, self.ArgType.INT):
+            # 1.4.0 validation monstrosity.
+            msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre = args
+            if len(showname) > 0 and not self.client.area.showname_changes_allowed:
+                self.client.send_host_message("Showname changes are forbidden in this area!")
+                return
+        else:
             return
-        msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color = args
         if self.client.area.is_iniswap(self.client, pre, anim, folder) and folder != self.client.get_char_name():
             self.client.send_host_message("Iniswap is blocked in this area")
             return
+        if len(self.client.charcurse) > 0 and folder != self.client.get_char_name():
+            self.client.send_host_message("You may not iniswap while you are charcursed!")
+            return
+        if not self.client.area.blankposting_allowed:
+            if text == ' ':
+                self.client.send_host_message("Blankposting is forbidden in this area!")
+                return
+            if text.isspace():
+                self.client.send_host_message("Blankposting is forbidden in this area, and putting more spaces in does not make it not blankposting.")
+                return
+            if len(re.sub(r'[{}\\`|(~~)]','', text).replace(' ', '')) < 3 and text != '<' and text != '>':
+                self.client.send_host_message("While that is not a blankpost, it is still pretty spammy. Try forming sentences.")
+                return
+        if text.startswith('/a '):
+            part = text.split(' ')
+            try:
+                aid = int(part[1])
+                if self.client in self.server.area_manager.get_area_by_id(aid).owners:
+                    target_area.append(aid)
+                if not target_area:
+                    self.client.send_host_message('You don\'t own {}!'.format(self.server.area_manager.get_area_by_id(aid).name))
+                    return
+                text = ' '.join(part[2:])
+            except ValueError:
+                self.client.send_host_message("That does not look like a valid area ID!")
+                return
+        elif text.startswith('/s '):
+            part = text.split(' ')
+            for a in self.server.area_manager.areas:
+                if self.client in a.owners:
+                    target_area.append(a.id)
+            if not target_area:
+                self.client.send_host_message('You don\'t any areas!')
+                return
+            text = ' '.join(part[1:])
         if msg_type not in ('chat', '0', '1'):
             return
         if anim_type not in (0, 1, 2, 5, 6):
@@ -354,12 +434,38 @@ class AOProtocol(asyncio.Protocol):
         if button not in (0, 1, 2, 3, 4):
             return
         if evidence < 0:
-        	return
+            return
         if ding not in (0, 1):
             return
-        if color not in (0, 1, 2, 3, 4, 5, 6):
+        if color not in (0, 1, 2, 3, 4, 5, 6, 7, 8):
             return
-        if color == 2 and not self.client.is_mod:
+        if len(showname) > 15:
+            self.client.send_host_message("Your IC showname is way too long!")
+            return
+        if nonint_pre == 1:
+            if button in (1, 2, 3, 4, 23):
+                if anim_type == 1 or anim_type == 2:
+                    anim_type = 0
+                elif anim_type == 6:
+                    anim_type = 5
+        if self.client.area.non_int_pres_only:
+            if anim_type == 1 or anim_type == 2:
+                anim_type = 0
+                nonint_pre = 1
+            elif anim_type == 6:
+                anim_type = 5
+                nonint_pre = 1
+        if not self.client.area.shouts_allowed:
+            # Old clients communicate the objecting in anim_type.
+            if anim_type == 2:
+                anim_type = 1
+            elif anim_type == 6:
+                anim_type = 5
+            # New clients do it in a specific objection message area.
+            button = 0
+            # Turn off the ding.
+            ding = 0
+        if color == 2 and not (self.client.is_mod or self.client in self.client.area.owners):
             color = 0
         if color == 6:
             text = re.sub(r'[^\x00-\x7F]+',' ', text) #remove all unicode to prevent redtext abuse
@@ -371,9 +477,11 @@ class AOProtocol(asyncio.Protocol):
         if self.client.pos:
             pos = self.client.pos
         else:
-            if pos not in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
+            if pos not in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'jur', 'sea'):
                 return
         msg = text[:256]
+        if self.client.shaken:
+            msg = self.client.shake_message(msg)
         if self.client.disemvowel:
             msg = self.client.disemvowel_message(msg)
         self.client.pos = pos
@@ -381,13 +489,53 @@ class AOProtocol(asyncio.Protocol):
             if self.client.area.evi_list.evidences[self.client.evi_list[evidence] - 1].pos != 'all':
                 self.client.area.evi_list.evidences[self.client.evi_list[evidence] - 1].pos = 'all'
                 self.client.area.broadcast_evidence_list()
+        
+        # Here, we check the pair stuff, and save info about it to the client.
+        # Notably, while we only get a charid_pair and an offset, we send back a chair_pair, an emote, a talker offset
+        # and an other offset.
+        self.client.charid_pair = charid_pair
+        self.client.offset_pair = offset_pair
+        if anim_type not in (5, 6):
+            self.client.last_sprite = anim
+        self.client.flip = flip
+        self.client.claimed_folder = folder
+        other_offset = 0
+        other_emote = ''
+        other_flip = 0
+        other_folder = ''
+
+        confirmed = False
+        if charid_pair > -1:
+            for target in self.client.area.clients:
+                if target.char_id == self.client.charid_pair and target.charid_pair == self.client.char_id and target != self.client and target.pos == self.client.pos:
+                    confirmed = True
+                    other_offset = target.offset_pair
+                    other_emote = target.last_sprite
+                    other_flip = target.flip
+                    other_folder = target.claimed_folder
+                    break
+
+        if not confirmed:
+            charid_pair = -1
+            offset_pair = 0
+
         self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
-                                      sfx_delay, button, self.client.evi_list[evidence], flip, ding, color)
+                                      sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
+                                      charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip, nonint_pre)
+        
+        self.client.area.send_owner_command('MS', msg_type, pre, folder, anim, '[' + self.client.area.abbreviation + ']' + msg, pos, sfx, anim_type, cid,
+                                      sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
+                                      charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip, nonint_pre)
+        
+        self.server.area_manager.send_remote_command(target_area, 'MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
+                                      sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
+                                      charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip, nonint_pre)
+        
         self.client.area.set_next_msg_delay(len(msg))
-        logger.log_server('[IC][{}][{}]{}'.format(self.client.area.id, self.client.get_char_name(), msg), self.client)
+        logger.log_server('[IC][{}][{}]{}'.format(self.client.area.abbreviation, self.client.get_char_name(), msg), self.client)
 
         if (self.client.area.is_recording):
-        	self.client.area.recorded_messages.append(args)
+            self.client.area.recorded_messages.append(args)
 
     def net_cmd_ct(self, args):
         """ OOC Message
@@ -409,12 +557,22 @@ class AOProtocol(asyncio.Protocol):
         if self.client.name == '':
             self.client.send_host_message('You must insert a name with at least one letter')
             return
-        if self.client.name.startswith(self.server.config['hostname']) or self.client.name.startswith('<dollar>G'):
+        if len(self.client.name) > 30:
+            self.client.send_host_message('Your OOC name is too long! Limit it to 30 characters.')
+            return
+        for c in self.client.name:
+            if unicodedata.category(c) == 'Cf':
+                self.client.send_host_message('You cannot use format characters in your name!')
+                return
+        if self.client.name.startswith(self.server.config['hostname']) or self.client.name.startswith('<dollar>G') or self.client.name.startswith('<dollar>M'):
             self.client.send_host_message('That name is reserved!')
+            return
+        if args[1].startswith(' /'):
+            self.client.send_host_message('Your message was not sent for safety reasons: you left a space before that slash.')
             return
         if args[1].startswith('/'):
             spl = args[1][1:].split(' ', 1)
-            cmd = spl[0]
+            cmd = spl[0].lower()
             arg = ''
             if len(spl) == 2:
                 arg = spl[1][:256]
@@ -427,11 +585,14 @@ class AOProtocol(asyncio.Protocol):
             except (ClientError, AreaError, ArgumentError, ServerError) as ex:
                 self.client.send_host_message(ex)
         else:
+            if self.client.shaken:
+                args[1] = self.client.shake_message(args[1])
             if self.client.disemvowel:
                 args[1] = self.client.disemvowel_message(args[1])
             self.client.area.send_command('CT', self.client.name, args[1])
+            self.client.area.send_owner_command('CT', '[' + self.client.area.abbreviation + ']' + self.client.name, args[1])
             logger.log_server(
-                '[OOC][{}][{}][{}]{}'.format(self.client.area.id, self.client.get_char_name(), self.client.name,
+                '[OOC][{}][{}]{}'.format(self.client.area.abbreviation, self.client.get_char_name(),
                                              args[1]), self.client)
 
     def net_cmd_mc(self, args):
@@ -450,7 +611,10 @@ class AOProtocol(asyncio.Protocol):
             if not self.client.is_dj:
                 self.client.send_host_message('You were blockdj\'d by a moderator.')
                 return
-            if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT):
+            if self.client.area.cannot_ic_interact(self.client):
+                self.client.send_host_message("You are not on the area's invite list, and thus, you cannot change music!")
+                return
+            if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT) and not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT, self.ArgType.STR):
                 return
             if args[1] != self.client.char_id:
                 return
@@ -459,10 +623,29 @@ class AOProtocol(asyncio.Protocol):
                 return
             try:
                 name, length = self.server.get_song_data(args[0])
-                self.client.area.play_music(name, self.client.char_id, length)
-                self.client.area.add_music_playing(self.client, name)
-                logger.log_server('[{}][{}]Changed music to {}.'
-                                  .format(self.client.area.id, self.client.get_char_name(), name), self.client)
+
+                if self.client.area.jukebox:
+                    showname = ''
+                    if len(args) > 2:
+                        showname = args[2]
+                        if len(showname) > 0 and not self.client.area.showname_changes_allowed:
+                            self.client.send_host_message("Showname changes are forbidden in this area!")
+                            return
+                    self.client.area.add_jukebox_vote(self.client, name, length, showname)
+                    logger.log_server('[{}][{}]Added a jukebox vote for {}.'.format(self.client.area.abbreviation, self.client.get_char_name(), name), self.client)
+                else:
+                    if len(args) > 2:
+                        showname = args[2]
+                        if len(showname) > 0 and not self.client.area.showname_changes_allowed:
+                            self.client.send_host_message("Showname changes are forbidden in this area!")
+                            return
+                        self.client.area.play_music_shownamed(name, self.client.char_id, showname, length)
+                        self.client.area.add_music_playing_shownamed(self.client, showname, name)
+                    else:
+                        self.client.area.play_music(name, self.client.char_id, length)
+                        self.client.area.add_music_playing(self.client, name)
+                    logger.log_server('[{}][{}]Changed music to {}.'
+                                    .format(self.client.area.abbreviation, self.client.get_char_name(), name), self.client)
             except ServerError:
                 return
         except ClientError as ex:
@@ -474,26 +657,37 @@ class AOProtocol(asyncio.Protocol):
         RT#<type:string>#%
 
         """
+        if not self.client.area.shouts_allowed:
+            self.client.send_host_message("You cannot use the testimony buttons here!")
+            return
         if self.client.is_muted:  # Checks to see if the client has been muted by a mod
             self.client.send_host_message("You have been muted by a moderator")
             return
         if not self.client.can_wtce:
             self.client.send_host_message('You were blocked from using judge signs by a moderator.')
             return
-        if not self.validate_net_cmd(args, self.ArgType.STR):
+        if self.client.area.cannot_ic_interact(self.client):
+            self.client.send_host_message("You are not on the area's invite list, and thus, you cannot use the WTCE buttons!")
+            return
+        if not self.validate_net_cmd(args, self.ArgType.STR) and not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT):
             return
         if args[0] == 'testimony1':
             sign = 'WT'
         elif args[0] == 'testimony2':
             sign = 'CE'
+        elif args[0] == 'judgeruling':
+            sign = 'JR'
         else:
             return
         if self.client.wtce_mute():
             self.client.send_host_message('You used witness testimony/cross examination signs too many times. Please try again after {} seconds.'.format(int(self.client.wtce_mute())))
             return
-        self.client.area.send_command('RT', args[0])
+        if len(args) == 1:
+            self.client.area.send_command('RT', args[0])
+        elif len(args) == 2:
+            self.client.area.send_command('RT', args[0], args[1])
         self.client.area.add_to_judgelog(self.client, 'used {}'.format(sign))
-        logger.log_server("[{}]{} Used WT/CE".format(self.client.area.id, self.client.get_char_name()), self.client)
+        logger.log_server("[{}]{} Used WT/CE".format(self.client.area.abbreviation, self.client.get_char_name()), self.client)
 
     def net_cmd_hp(self, args):
         """ Sets the penalty bar.
@@ -504,13 +698,16 @@ class AOProtocol(asyncio.Protocol):
         if self.client.is_muted:  # Checks to see if the client has been muted by a mod
             self.client.send_host_message("You have been muted by a moderator")
             return
+        if self.client.area.cannot_ic_interact(self.client):
+            self.client.send_host_message("You are not on the area's invite list, and thus, you cannot change the Confidence bars!")
+            return
         if not self.validate_net_cmd(args, self.ArgType.INT, self.ArgType.INT):
             return
         try:
             self.client.area.change_hp(args[0], args[1])
             self.client.area.add_to_judgelog(self.client, 'changed the penalties')
             logger.log_server('[{}]{} changed HP ({}) to {}'
-                              .format(self.client.area.id, self.client.get_char_name(), args[0], args[1]), self.client)
+                              .format(self.client.area.abbreviation, self.client.get_char_name(), args[0], args[1]), self.client)
         except AreaError:
             return
 
@@ -552,7 +749,7 @@ class AOProtocol(asyncio.Protocol):
         self.client.area.broadcast_evidence_list()
 
 
-    def net_cmd_zz(self, _):
+    def net_cmd_zz(self, args):
         """ Sent on mod call.
 
         """
@@ -566,11 +763,16 @@ class AOProtocol(asyncio.Protocol):
 
         current_time = strftime("%H:%M", localtime())
 
-        self.server.send_all_cmd_pred('ZZ', '[{}] {} ({}) in {} ({})'
-                                      .format(current_time, self.client.get_char_name(), self.client.get_ip(), self.client.area.name,
-                                              self.client.area.id), pred=lambda c: c.is_mod)
-        self.client.set_mod_call_delay()
-        logger.log_server('[{}][{}]{} called a moderator.'.format(self.client.get_ip(), self.client.area.id, self.client.get_char_name()))
+        if len(args) < 1:
+            self.server.send_all_cmd_pred('ZZ', '[{}] {} ({}) in {} without reason (not using the Case Café client?)'
+                                      .format(current_time, self.client.get_char_name(), self.client.get_ip(), self.client.area.name), pred=lambda c: c.is_mod)
+            self.client.set_mod_call_delay()
+            logger.log_server('[{}]{} called a moderator.'.format(self.client.area.abbreviation, self.client.get_char_name()), self.client)
+        else:
+            self.server.send_all_cmd_pred('ZZ', '[{}] {} ({}) in {} with reason: {}'
+                                        .format(current_time, self.client.get_char_name(), self.client.get_ip(), self.client.area.name, args[0][:100]), pred=lambda c: c.is_mod)
+            self.client.set_mod_call_delay()
+            logger.log_server('[{}]{} called a moderator: {}.'.format(self.client.area.abbreviation, self.client.get_char_name(), args[0]), self.client)
 
     def net_cmd_opKICK(self, args):
         self.net_cmd_ct(['opkick', '/kick {}'.format(args[0])])

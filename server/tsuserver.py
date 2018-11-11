@@ -58,7 +58,7 @@ class TsuServer3:
         self.district_client = None
         self.ms_client = None
         self.rp_mode = False
-        logger.setup_logger(debug=self.config['debug'], log_size=self.config['log_size'], log_backups=self.config['log_backups'])
+        logger.setup_logger(debug=self.config['debug'])
 
     def start(self):
         loop = asyncio.get_event_loop()
@@ -118,10 +118,6 @@ class TsuServer3:
             self.config['music_change_floodguard'] = {'times_per_interval': 1,  'interval_length': 0, 'mute_length': 0}
         if 'wtce_floodguard' not in self.config:
             self.config['wtce_floodguard'] = {'times_per_interval': 1, 'interval_length': 0, 'mute_length': 0}
-        if 'log_size' not in self.config:
-            self.config['log_size'] = 1048576
-        if 'log_backups' not in self.config:
-            self.config['log_backups'] = 5
 
     def load_characters(self):
         with open('config/characters.yaml', 'r', encoding = 'utf-8') as chars:
@@ -236,7 +232,7 @@ class TsuServer3:
 
     def broadcast_global(self, client, msg, as_mod=False):
         char_name = client.get_char_name()
-        ooc_name = '{}[{}][{}]'.format('<dollar>G', client.area.id, char_name)
+        ooc_name = '{}[{}][{}]'.format('<dollar>G', client.area.abbreviation, char_name)
         if as_mod:
             ooc_name += '[M]'
         self.send_all_cmd_pred('CT', ooc_name, msg, pred=lambda x: not x.muted_global)
@@ -244,15 +240,57 @@ class TsuServer3:
             self.district_client.send_raw_message(
                 'GLOBAL#{}#{}#{}#{}'.format(int(as_mod), client.area.id, char_name, msg))
 
+    def send_modchat(self, client, msg):
+        name = client.name
+        ooc_name = '{}[{}][{}]'.format('<dollar>M', client.area.abbreviation, name)
+        self.send_all_cmd_pred('CT', ooc_name, msg, pred=lambda x: x.is_mod)
+        if self.config['use_district']:
+            self.district_client.send_raw_message(
+                'MODCHAT#{}#{}#{}'.format(client.area.id, char_name, msg))
+
     def broadcast_need(self, client, msg):
         char_name = client.get_char_name()
         area_name = client.area.name
-        area_id = client.area.id
+        area_id = client.area.abbreviation
         self.send_all_cmd_pred('CT', '{}'.format(self.config['hostname']),
-                               '=== Advert ===\r\n{} in {} [{}] needs {}\r\n==============='
-                               .format(char_name, area_name, area_id, msg), pred=lambda x: not x.muted_adverts)
+                               ['=== Advert ===\r\n{} in {} [{}] needs {}\r\n==============='
+                               .format(char_name, area_name, area_id, msg), '1'], pred=lambda x: not x.muted_adverts)
         if self.config['use_district']:
             self.district_client.send_raw_message('NEED#{}#{}#{}#{}'.format(char_name, area_name, area_id, msg))
+
+    def send_arup(self, args):
+        """ Updates the area properties on the Case Café Custom Client.
+
+        Playercount: 
+            ARUP#0#<area1_p: int>#<area2_p: int>#...
+        Status:
+            ARUP#1##<area1_s: string>##<area2_s: string>#...
+        CM:
+            ARUP#2##<area1_cm: string>##<area2_cm: string>#...
+        Lockedness:
+            ARUP#3##<area1_l: string>##<area2_l: string>#...
+
+        """
+        if len(args) < 2:
+            # An argument count smaller than 2 means we only got the identifier of ARUP.
+            return
+        if args[0] not in (0,1,2,3):
+            return
+
+        if args[0] == 0:
+            for part_arg in args[1:]:
+                try:
+                    sanitised = int(part_arg)
+                except:
+                    return
+        elif args[0] in (1, 2, 3):
+            for part_arg in args[1:]:
+                try:
+                    sanitised = str(part_arg)
+                except:
+                    return
+        
+        self.send_all_cmd_pred('ARUP', *args, pred=lambda x: True)
 
     def refresh(self):
         with open('config/config.yaml', 'r') as cfg:

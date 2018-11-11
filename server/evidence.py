@@ -24,19 +24,28 @@ class EvidenceList:
             
     def __init__(self):
         self.evidences = []
-        self.poses = {'def':['def', 'hld'], 'pro':['pro', 'hlp'], 'wit':['wit'], 'hlp':['hlp', 'pro'], 'hld':['hld', 'def'], 'jud':['jud'], 'all':['hlp', 'hld', 'wit', 'jud', 'pro', 'def', ''], 'pos':[]}
+        self.poses = {'def':['def', 'hld'], 
+                      'pro':['pro', 'hlp'], 
+                      'wit':['wit', 'sea'],
+                      'sea':['sea', 'wit'], 
+                      'hlp':['hlp', 'pro'], 
+                      'hld':['hld', 'def'], 
+                      'jud':['jud', 'jur'],
+                      'jur':['jur', 'jud'], 
+                      'all':['hlp', 'hld', 'wit', 'jud', 'pro', 'def', 'jur', 'sea', ''], 
+                      'pos':[]}
         
     def login(self, client):
         if client.area.evidence_mod == 'FFA':
             pass
         if client.area.evidence_mod == 'Mods':
-            if not client.is_cm:
+            if not client in client.area.owners:
                 return False
         if client.area.evidence_mod == 'CM':
-            if not client.is_cm and not client.is_mod:
+            if not client in client.area.owners and not client.is_mod:
                 return False
         if client.area.evidence_mod == 'HiddenCM':
-            if not client.is_cm and not client.is_mod:
+            if not client in client.area.owners and not client.is_mod:
                 return False
         return True
 

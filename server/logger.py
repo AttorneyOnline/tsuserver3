@@ -16,22 +16,20 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import logging.handlers
 
 import time
 
 
-def setup_logger(debug, log_size, log_backups):
+def setup_logger(debug):
     logging.Formatter.converter = time.gmtime
     debug_formatter = logging.Formatter('[%(asctime)s UTC]%(message)s')
     srv_formatter = logging.Formatter('[%(asctime)s UTC]%(message)s')
+    mod_formatter = logging.Formatter('[%(asctime)s UTC]%(message)s')
 
     debug_log = logging.getLogger('debug')
     debug_log.setLevel(logging.DEBUG)
 
-    # 0 maxBytes = no rotation
-    # backupCount = number of old logs to save
-    debug_handler = logging.handlers.RotatingFileHandler('logs/debug.log', maxBytes = log_size, backupCount = log_backups, encoding='utf-8')
+    debug_handler = logging.FileHandler('logs/debug.log', encoding='utf-8')
     debug_handler.setLevel(logging.DEBUG)
     debug_handler.setFormatter(debug_formatter)
     debug_log.addHandler(debug_handler)
@@ -42,10 +40,18 @@ def setup_logger(debug, log_size, log_backups):
     server_log = logging.getLogger('server')
     server_log.setLevel(logging.INFO)
 
-    server_handler = logging.handlers.RotatingFileHandler('logs/server.log', maxBytes = log_size, backupCount = log_backups, encoding='utf-8')
+    server_handler = logging.FileHandler('logs/server.log', encoding='utf-8')
     server_handler.setLevel(logging.INFO)
     server_handler.setFormatter(srv_formatter)
     server_log.addHandler(server_handler)
+
+    mod_log = logging.getLogger('mod')
+    mod_log.setLevel(logging.INFO)
+
+    mod_handler = logging.FileHandler('logs/mod.log', encoding='utf-8')
+    mod_handler.setLevel(logging.INFO)
+    mod_handler.setFormatter(mod_formatter)
+    mod_log.addHandler(mod_handler)
 
 
 def log_debug(msg, client=None):
@@ -58,10 +64,15 @@ def log_server(msg, client=None):
     logging.getLogger('server').info(msg)
 
 
+def log_mod(msg, client=None):
+    msg = parse_client_info(client) + msg
+    logging.getLogger('mod').info(msg)
+
+
 def parse_client_info(client):
     if client is None:
         return ''
     info = client.get_ip()
     if client.is_mod:
-        return '[{:<15}][{}][MOD]'.format(info, client.id)
-    return '[{:<15}][{}]'.format(info, client.id)
+        return '[{:<15}][{:<3}][{}][MOD]'.format(info, client.id, client.name)
+    return '[{:<15}][{:<3}][{}]'.format(info, client.id, client.name)
