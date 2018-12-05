@@ -40,10 +40,10 @@ class TsuServer3:
         self.area_manager = AreaManager(self)
         self.ban_manager = BanManager()
         self.software = 'tsuserver3'
-        self.version = 'tsuserver3dev'
+        self.version = 'vanilla'
         self.release = 3
-        self.major_version = 1
-        self.minor_version = 1
+        self.major_version = 2
+        self.minor_version = 0
         self.ipid_list = {}
         self.hdid_list = {}
         self.char_list = None
