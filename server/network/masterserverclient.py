@@ -77,7 +77,10 @@ class MasterServerClient:
 
     async def send_server_info(self):
         cfg = self.server.config
-        msg = 'SCC#{}#{}#{}#{}#%'.format(cfg['port'], cfg['masterserver_name'], cfg['masterserver_description'],
+        port = str(cfg['port'])
+        if cfg['use_websockets']:
+            port += '&{}'.format(cfg['websocket_port'])
+        msg = 'SCC#{}#{}#{}#{}#%'.format(port, cfg['masterserver_name'], cfg['masterserver_description'],
                                          self.server.software)
         await self.send_raw_message(msg)
 
