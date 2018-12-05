@@ -18,16 +18,18 @@
 import asyncio
 import json
 
+import websockets
 import yaml
 
 from server import logger
-from server.aoprotocol import AOProtocol
+from server.network.aoprotocol import AOProtocol
 from server.area_manager import AreaManager
 from server.ban_manager import BanManager
 from server.client_manager import ClientManager
-from server.districtclient import DistrictClient
+from server.network.aoprotocol_ws import new_websocket_client
+from server.network.districtclient import DistrictClient
 from server.exceptions import ServerError
-from server.masterserverclient import MasterServerClient
+from server.network.masterserverclient import MasterServerClient
 
 
 class TsuServer3:
@@ -70,6 +72,10 @@ class TsuServer3:
 
         ao_server_crt = loop.create_server(lambda: AOProtocol(self), bound_ip, self.config['port'])
         ao_server = loop.run_until_complete(ao_server_crt)
+
+        if self.config['use_websockets']:
+            ao_server_ws = websockets.serve(new_websocket_client(self), bound_ip, self.config['websocket_port'])
+            asyncio.ensure_future(ao_server_ws)
 
         if self.config['use_district']:
             self.district_client = DistrictClient(self)
