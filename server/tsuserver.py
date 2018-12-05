@@ -242,6 +242,7 @@ class TsuServer3:
                 'GLOBAL#{}#{}#{}#{}'.format(int(as_mod), client.area.id, char_name, msg))
 
     def send_modchat(self, client, msg):
+        char_name = client.get_char_name()
         name = client.name
         ooc_name = '{}[{}][{}]'.format('<dollar>M', client.area.abbreviation, name)
         self.send_all_cmd_pred('CT', ooc_name, msg, pred=lambda x: x.is_mod)
