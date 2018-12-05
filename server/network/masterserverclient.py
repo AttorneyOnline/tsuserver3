@@ -52,7 +52,7 @@ class MasterServerClient:
 
         await self.send_server_info()
         ping_timeout = False
-        lastping = time.time() - 20
+        last_ping = time.time() - 20
         while True:
             self.reader.feed_data(b'END')
             full_data = await self.reader.readuntil(b'END')
@@ -70,11 +70,11 @@ class MasterServerClient:
                         ping_timeout = False
                     elif cmd == 'NOSERV':
                         await self.send_server_info()
-            if time.time() - lastping > 10:
+            if time.time() - last_ping > 10:
                 if ping_timeout:
                     self.writer.close()
                     return
-                lastping = time.time()
+                last_ping = time.time()
                 ping_timeout = True
                 await self.send_raw_message('PING#%')
             await asyncio.sleep(1)
