@@ -26,6 +26,10 @@ class AOProtocolWS(AOProtocol):
             message = message.decode('utf-8')
             asyncio.ensure_future(self.ws_try_writing_message(message))
 
+        def close(self):
+            """ Disconnects the client by force. """
+            asyncio.ensure_future(self.ws.close())
+
         async def ws_try_writing_message(self, message):
             try:
                 await self.ws.send(message)
