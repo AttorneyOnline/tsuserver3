@@ -54,7 +54,11 @@ def no_args(f):
 
 
 def require_arg(err_msg='This command requires an argument.'):
-    """ Command requires an argument, you may provide a custom error message. """
+    """ Command requires an argument, you may provide a custom error message.
+     Note as this is a decorator factory, you need to call it as a function to get default arguments:
+     @require_arg()
+     @require_arg('Custom error')
+    """
 
     def require_arg_func(f):
         @functools.wraps(f)
