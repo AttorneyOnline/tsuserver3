@@ -26,7 +26,7 @@ from server.ooc_commands.decorators import require_arg, mod_only, no_args, area_
 
 # possible keys: ip, OOC, id, cname, ipid, hdid
 
-@require_arg('You must specify an area.')
+@require_arg(error='You must specify an area.')
 def ooc_cmd_a(client, arg):
     arg = arg.split(' ')
 
@@ -58,7 +58,7 @@ def message_areas_cm(client, areas, message):
         a.send_owner_command('CT', client.name, message)
 
 
-@require_arg('You must specify a character name.')
+@require_arg(error='You must specify a character name.')
 def ooc_cmd_switch(client, arg):
     try:
         cid = client.server.get_char_id_by_name(arg)
@@ -71,7 +71,7 @@ def ooc_cmd_switch(client, arg):
     client.send_host_message('Character changed.')
 
 
-@require_arg('You must specify a name. Use /bg <background>.')
+@require_arg(error='You must specify a name. Use /bg <background>.')
 def ooc_cmd_bg(client, arg):
     if not client.is_mod and client.area.bg_lock == "true":
         raise AreaError("This area's background is locked")
@@ -372,7 +372,7 @@ def ooc_cmd_help(client, arg):
 
 
 @mod_only
-@require_arg('You must specify a target. Use /kick <ipid> <ipid> ...')
+@require_arg(error='You must specify a target. Use /kick <ipid> <ipid> ...')
 def ooc_cmd_kick(client, arg):
     args = list(arg.split(' '))
     client.send_host_message('Attempting to kick {} IPIDs.'.format(len(args)))
@@ -394,7 +394,7 @@ def ooc_cmd_kick(client, arg):
 
 
 @mod_only
-@require_arg('You must specify a target. Use /ban <ipid> <ipid> ...')
+@require_arg(error='You must specify a target. Use /ban <ipid> <ipid> ...')
 def ooc_cmd_ban(client, arg):
     args = list(arg.split(' '))
     client.send_host_message('Attempting to ban {} IPIDs.'.format(len(args)))
@@ -420,7 +420,7 @@ def ooc_cmd_ban(client, arg):
 
 
 @mod_only
-@require_arg('You must specify a target. Use /unban <ipid> <ipid> ...')
+@require_arg(error='You must specify a target. Use /unban <ipid> <ipid> ...')
 def ooc_cmd_unban(client, arg):
     args = list(arg.split(' '))
     client.send_host_message('Attempting to unban {} IPIDs.'.format(len(args)))
@@ -435,7 +435,7 @@ def ooc_cmd_unban(client, arg):
 
 
 @mod_only
-@require_arg('You must specify a song.')
+@require_arg(error='You must specify a song.')
 def ooc_cmd_play(client, arg):
     client.area.play_music(arg, client.char_id, -1)
     client.area.add_music_playing(client, arg)
@@ -444,7 +444,7 @@ def ooc_cmd_play(client, arg):
 
 
 @mod_only
-@require_arg('You must specify a target. Use /mute <ipid>.')
+@require_arg(error='You must specify a target. Use /mute <ipid>.')
 def ooc_cmd_mute(client, arg):
     args = list(arg.split(' '))
     client.send_host_message('Attempting to mute {} IPIDs.'.format(len(args)))
@@ -469,7 +469,7 @@ def ooc_cmd_mute(client, arg):
 
 
 @mod_only
-@require_arg('You must specify a target.')
+@require_arg(error='You must specify a target.')
 def ooc_cmd_unmute(client, arg):
     args = list(arg.split(' '))
     client.send_host_message('Attempting to unmute {} IPIDs.'.format(len(args)))
@@ -493,7 +493,7 @@ def ooc_cmd_unmute(client, arg):
             client.send_host_message('{} does not look like a valid IPID.'.format(raw_ipid))
 
 
-@require_arg('You must specify the password.')
+@require_arg(error='You must specify the password.')
 def ooc_cmd_login(client, arg):
     try:
         client.auth_mod(arg)
@@ -506,7 +506,7 @@ def ooc_cmd_login(client, arg):
     logger.log_mod('Logged in as moderator.', client)
 
 
-@require_arg("You can't send an empty message.")
+@require_arg(error="You can't send an empty message.")
 def ooc_cmd_g(client, arg):
     if client.muted_global:
         raise ClientError('Global chat toggled off.')
@@ -515,7 +515,7 @@ def ooc_cmd_g(client, arg):
 
 
 @mod_only
-@require_arg("You can't send an empty message.")
+@require_arg(error="You can't send an empty message.")
 def ooc_cmd_gm(client, arg):
     if client.muted_global:
         raise ClientError('You have the global chat muted.')
@@ -525,7 +525,7 @@ def ooc_cmd_gm(client, arg):
 
 
 @mod_only
-@require_arg("You can't send an empty message.")
+@require_arg(error="You can't send an empty message.")
 def ooc_cmd_m(client, arg):
     client.server.send_modchat(client, arg)
     logger.log_server('[{}][{}][MODCHAT]{}.'.format(client.area.abbreviation, client.get_char_name(), arg), client)
@@ -533,7 +533,7 @@ def ooc_cmd_m(client, arg):
 
 
 @mod_only
-@require_arg("You can't send an empty message.")
+@require_arg(error="You can't send an empty message.")
 def ooc_cmd_lm(client, arg):
     client.area.send_command('CT', '{}[MOD][{}]'
                              .format(client.server.config['hostname'], client.get_char_name()), arg)
@@ -542,7 +542,7 @@ def ooc_cmd_lm(client, arg):
 
 
 @mod_only
-@require_arg("You can't send an empty message.")
+@require_arg(error="You can't send an empty message.")
 def ooc_cmd_announce(client, arg):
     client.server.send_all_cmd_pred('CT', '{}'.format(client.server.config['hostname']),
                                     '=== Announcement ===\r\n{}\r\n=================='.format(arg), '1')
@@ -559,7 +559,7 @@ def ooc_cmd_toggleglobal(client, arg):
     client.send_host_message('Global chat turned {}.'.format(glob_stat))
 
 
-@require_arg("You must specify what you need.")
+@require_arg(error="You must specify what you need.")
 def ooc_cmd_need(client, arg):
     if client.muted_adverts:
         raise ClientError('You have advertisements muted.')
@@ -891,7 +891,7 @@ def ooc_cmd_area_unlock(client, arg):
 
 
 @area_owner
-@require_arg('You must specify a target. Use /invite <id>')
+@require_arg(error='You must specify a target. Use /invite <id>')
 def ooc_cmd_invite(client, arg):
     if client.area.is_locked == client.area.Locked.FREE:
         raise ClientError('Area isn\'t locked.')
@@ -905,7 +905,7 @@ def ooc_cmd_invite(client, arg):
 
 
 @area_owner
-@require_arg('You must specify a target. Use /uninvite <id>')
+@require_arg(error='You must specify a target. Use /uninvite <id>')
 def ooc_cmd_uninvite(client, arg):
     if client.area.is_locked == client.area.Locked.FREE:
         raise ClientError('Area isn\'t locked.')
@@ -927,7 +927,7 @@ def ooc_cmd_uninvite(client, arg):
 
 
 @mod_only
-@require_arg('You must specify a target. Use /area_kick <id> [destination #]')
+@require_arg(error='You must specify a target. Use /area_kick <id> [destination #]')
 def ooc_cmd_area_kick(client, arg):
     if client.area.is_locked == client.area.Locked.FREE:
         raise ClientError('Area isn\'t locked.')
@@ -959,7 +959,7 @@ def ooc_cmd_area_kick(client, arg):
 
 
 @mod_only
-@require_arg('You must specify a target. Use /ooc_mute <OOC-name>.')
+@require_arg(error='You must specify a target. Use /ooc_mute <OOC-name>.')
 def ooc_cmd_ooc_mute(client, arg):
     targets = client.server.client_manager.get_targets(client, TargetType.OOC_NAME, arg, False)
     if not targets:
@@ -970,7 +970,7 @@ def ooc_cmd_ooc_mute(client, arg):
 
 
 @mod_only
-@require_arg('You must specify a target. Use /ooc_unmute <OOC-name>.')
+@require_arg(error='You must specify a target. Use /ooc_unmute <OOC-name>.')
 def ooc_cmd_ooc_unmute(client, arg):
     targets = client.server.client_manager.get_ooc_muted_clients()
     if not targets:
@@ -981,7 +981,7 @@ def ooc_cmd_ooc_unmute(client, arg):
 
 
 @mod_only
-@require_arg('You must specify a target.')
+@require_arg(error='You must specify a target.')
 def ooc_cmd_disemvowel(client, arg):
     try:
         targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), False)
@@ -998,7 +998,7 @@ def ooc_cmd_disemvowel(client, arg):
 
 
 @mod_only
-@require_arg('You must specify a target.')
+@require_arg(error='You must specify a target.')
 def ooc_cmd_undisemvowel(client, arg):
     try:
         targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), False)
@@ -1015,7 +1015,7 @@ def ooc_cmd_undisemvowel(client, arg):
 
 
 @mod_only
-@require_arg('You must specify a target.')
+@require_arg(error='You must specify a target.')
 def ooc_cmd_shake(client, arg):
     try:
         targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), False)
@@ -1032,7 +1032,7 @@ def ooc_cmd_shake(client, arg):
 
 
 @mod_only
-@require_arg('You must specify a target.')
+@require_arg(error='You must specify a target.')
 def ooc_cmd_unshake(client, arg):
     try:
         targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), False)
@@ -1085,7 +1085,7 @@ def ooc_cmd_charcurse(client, arg):
 
 
 @mod_only
-@require_arg('You must specify a target (an ID).')
+@require_arg(error='You must specify a target (an ID).')
 def ooc_cmd_uncharcurse(client, arg):
     args = arg.split()
     try:
@@ -1116,7 +1116,7 @@ def ooc_cmd_charids(client, arg):
 
 
 @mod_only
-@require_arg('You must specify a target. Use /blockdj <id>.')
+@require_arg(error='You must specify a target. Use /blockdj <id>.')
 def ooc_cmd_blockdj(client, arg):
     try:
         targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), False)
@@ -1134,7 +1134,7 @@ def ooc_cmd_blockdj(client, arg):
 
 
 @mod_only
-@require_arg('You must specify a target. Use /unblockdj <id>.')
+@require_arg(error='You must specify a target. Use /unblockdj <id>.')
 def ooc_cmd_unblockdj(client, arg):
     try:
         targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), False)
@@ -1152,7 +1152,7 @@ def ooc_cmd_unblockdj(client, arg):
 
 
 @mod_only
-@require_arg('You must specify a target. Use /blockwtce <id>.')
+@require_arg(error='You must specify a target. Use /blockwtce <id>.')
 def ooc_cmd_blockwtce(client, arg):
     try:
         targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), False)
@@ -1170,7 +1170,7 @@ def ooc_cmd_blockwtce(client, arg):
 
 
 @mod_only
-@require_arg('You must specify a target. Use /unblockwtce <id>.')
+@require_arg(error='You must specify a target. Use /unblockwtce <id>.')
 def ooc_cmd_unblockwtce(client, arg):
     try:
         targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), False)
@@ -1187,7 +1187,7 @@ def ooc_cmd_unblockwtce(client, arg):
     client.send_host_message('unblockwtce\'d {}.'.format(targets[0].get_char_name()))
 
 
-@require_arg('You must specify the contents of the note card.')
+@require_arg(error='You must specify the contents of the note card.')
 def ooc_cmd_notecard(client, arg):
     client.area.cards[client.get_char_name()] = arg
     client.area.send_host_message('{} wrote a note card.'.format(client.get_char_name()))
