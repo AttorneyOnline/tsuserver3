@@ -21,7 +21,7 @@ import re
 from server import logger
 from server.constants import TargetType
 from server.exceptions import ClientError, ServerError, ArgumentError, AreaError
-from server.ooc_commands.decorators import require_arg, mod_only, no_args, mod_or_area_owner
+from server.ooc_commands.decorators import require_arg, mod_only, no_args, area_owner
 
 
 # possible keys: ip, OOC, id, cname, ipid, hdid
@@ -125,7 +125,7 @@ def ooc_cmd_allow_iniswap(client, arg):
     return
 
 
-@mod_or_area_owner
+@area_owner
 def ooc_cmd_allow_blankposting(client, arg):
     client.area.blankposting_allowed = not client.area.blankposting_allowed
     answer = {True: 'allowed', False: 'forbidden'}
@@ -135,7 +135,7 @@ def ooc_cmd_allow_blankposting(client, arg):
     return
 
 
-@mod_or_area_owner
+@area_owner
 def ooc_cmd_force_nonint_pres(client, arg):
     client.area.non_int_pres_only = not client.area.non_int_pres_only
     answer = {True: 'non-interrupting only', False: 'non-interrupting or interrupting as you choose'}
@@ -223,7 +223,7 @@ def ooc_cmd_currentmusic(client, arg):
                                                                                         client.area.current_music_player))
 
 
-@mod_or_area_owner
+@area_owner
 @no_args
 def ooc_cmd_jukebox_toggle(client, arg):
     client.area.jukebox = not client.area.jukebox
@@ -232,7 +232,7 @@ def ooc_cmd_jukebox_toggle(client, arg):
         '{} [{}] has set the jukebox to {}.'.format(client.get_char_name(), client.id, client.area.jukebox))
 
 
-@mod_or_area_owner
+@area_owner
 @no_args
 def ooc_cmd_jukebox_skip(client, arg):
     if not client.area.jukebox:
@@ -323,7 +323,7 @@ def ooc_cmd_pos(client, arg):
         client.send_host_message('Position changed.')
 
 
-@mod_or_area_owner
+@area_owner
 def ooc_cmd_forcepos(client, arg):
     args = arg.split()
 
@@ -890,7 +890,7 @@ def ooc_cmd_area_unlock(client, arg):
     client.send_host_message('Area is unlocked.')
 
 
-@mod_or_area_owner
+@area_owner
 @require_arg('You must specify a target. Use /invite <id>')
 def ooc_cmd_invite(client, arg):
     if client.area.is_locked == client.area.Locked.FREE:
@@ -904,7 +904,7 @@ def ooc_cmd_invite(client, arg):
         raise ClientError('You must specify a target. Use /invite <id>')
 
 
-@mod_or_area_owner
+@area_owner
 @require_arg('You must specify a target. Use /uninvite <id>')
 def ooc_cmd_uninvite(client, arg):
     if client.area.is_locked == client.area.Locked.FREE:
@@ -1201,7 +1201,7 @@ def ooc_cmd_notecard_clear(client, arg):
         raise ClientError('You do not have a note card.')
 
 
-@mod_or_area_owner
+@area_owner
 def ooc_cmd_notecard_reveal(client, arg):
     if len(client.area.cards) == 0:
         raise ClientError('There are no cards to reveal in this area.')

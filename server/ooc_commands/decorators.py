@@ -40,8 +40,8 @@ def mod_only(f):
     return wrapper
 
 
-def mod_or_area_owner(f):
-    """ Command requires you to be either a moderator or the owner of the area. """
+def area_owner(f):
+    """ Command requires you to be the current area owner (or a moderator). """
 
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
