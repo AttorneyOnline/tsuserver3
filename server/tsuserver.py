@@ -3,31 +3,34 @@
 # Copyright (C) 2016 argoneus <argoneuscze@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# GNU Affero General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import asyncio
-
-import yaml
 import json
 
+import websockets
+import yaml
+
 from server import logger
-from server.aoprotocol import AOProtocol
 from server.area_manager import AreaManager
 from server.ban_manager import BanManager
 from server.client_manager import ClientManager
-from server.districtclient import DistrictClient
 from server.exceptions import ServerError
-from server.masterserverclient import MasterServerClient
+from server.network.aoprotocol import AOProtocol
+from server.network.aoprotocol_ws import new_websocket_client
+from server.network.districtclient import DistrictClient
+from server.network.masterserverclient import MasterServerClient
+
 
 class TsuServer3:
     def __init__(self):
@@ -39,10 +42,10 @@ class TsuServer3:
         self.area_manager = AreaManager(self)
         self.ban_manager = BanManager()
         self.software = 'tsuserver3'
-        self.version = 'tsuserver3dev'
+        self.version = 'vanilla'
         self.release = 3
-        self.major_version = 1
-        self.minor_version = 1
+        self.major_version = 2
+        self.minor_version = 0
         self.ipid_list = {}
         self.hdid_list = {}
         self.char_list = None
@@ -70,6 +73,10 @@ class TsuServer3:
         ao_server_crt = loop.create_server(lambda: AOProtocol(self), bound_ip, self.config['port'])
         ao_server = loop.run_until_complete(ao_server_crt)
 
+        if self.config['use_websockets']:
+            ao_server_ws = websockets.serve(new_websocket_client(self), bound_ip, self.config['websocket_port'])
+            asyncio.ensure_future(ao_server_ws)
+
         if self.config['use_district']:
             self.district_client = DistrictClient(self)
             asyncio.ensure_future(self.district_client.connect(), loop=loop)
@@ -79,6 +86,7 @@ class TsuServer3:
             asyncio.ensure_future(self.ms_client.connect(), loop=loop)
 
         logger.log_debug('Server started.')
+        print('Server started.')
 
         try:
             loop.run_forever()
@@ -111,66 +119,65 @@ class TsuServer3:
         return len(self.client_manager.clients)
 
     def load_config(self):
-        with open('config/config.yaml', 'r', encoding = 'utf-8') as cfg:
+        with open('config/config.yaml', 'r', encoding='utf-8') as cfg:
             self.config = yaml.load(cfg)
-            self.config['motd'] = self.config['motd'].replace('\\n', ' \n') 
+            self.config['motd'] = self.config['motd'].replace('\\n', ' \n')
         if 'music_change_floodguard' not in self.config:
-            self.config['music_change_floodguard'] = {'times_per_interval': 1,  'interval_length': 0, 'mute_length': 0}
+            self.config['music_change_floodguard'] = {'times_per_interval': 1, 'interval_length': 0, 'mute_length': 0}
         if 'wtce_floodguard' not in self.config:
             self.config['wtce_floodguard'] = {'times_per_interval': 1, 'interval_length': 0, 'mute_length': 0}
 
     def load_characters(self):
-        with open('config/characters.yaml', 'r', encoding = 'utf-8') as chars:
+        with open('config/characters.yaml', 'r', encoding='utf-8') as chars:
             self.char_list = yaml.load(chars)
         self.build_char_pages_ao1()
 
     def load_music(self):
-        with open('config/music.yaml', 'r', encoding = 'utf-8') as music:
+        with open('config/music.yaml', 'r', encoding='utf-8') as music:
             self.music_list = yaml.load(music)
         self.build_music_pages_ao1()
         self.build_music_list_ao2()
-        
+
     def load_ids(self):
         self.ipid_list = {}
         self.hdid_list = {}
-        #load ipids
+        # load ipids
         try:
-            with open('storage/ip_ids.json', 'r', encoding = 'utf-8') as whole_list:
+            with open('storage/ip_ids.json', 'r', encoding='utf-8') as whole_list:
                 self.ipid_list = json.loads(whole_list.read())
         except:
             logger.log_debug('Failed to load ip_ids.json from ./storage. If ip_ids.json is exist then remove it.')
-        #load hdids
+        # load hdids
         try:
-            with open('storage/hd_ids.json', 'r', encoding = 'utf-8') as whole_list:
+            with open('storage/hd_ids.json', 'r', encoding='utf-8') as whole_list:
                 self.hdid_list = json.loads(whole_list.read())
         except:
             logger.log_debug('Failed to load hd_ids.json from ./storage. If hd_ids.json is exist then remove it.')
-           
+
     def dump_ipids(self):
         with open('storage/ip_ids.json', 'w') as whole_list:
             json.dump(self.ipid_list, whole_list)
-            
+
     def dump_hdids(self):
         with open('storage/hd_ids.json', 'w') as whole_list:
             json.dump(self.hdid_list, whole_list)
-         
+
     def get_ipid(self, ip):
         if not (ip in self.ipid_list):
             self.ipid_list[ip] = len(self.ipid_list)
             self.dump_ipids()
         return self.ipid_list[ip]
-         
+
     def load_backgrounds(self):
-        with open('config/backgrounds.yaml', 'r', encoding = 'utf-8') as bgs:
+        with open('config/backgrounds.yaml', 'r', encoding='utf-8') as bgs:
             self.backgrounds = yaml.load(bgs)
-            
+
     def load_iniswaps(self):
         try:
-            with open('config/iniswaps.yaml', 'r', encoding = 'utf-8') as iniswaps:
+            with open('config/iniswaps.yaml', 'r', encoding='utf-8') as iniswaps:
                 self.allowed_iniswaps = yaml.load(iniswaps)
         except:
             logger.log_debug('cannot find iniswaps.yaml')
-            
 
     def build_char_pages_ao1(self):
         self.char_pages_ao1 = [self.char_list[x:x + 10] for x in range(0, len(self.char_list), 10)]
@@ -241,6 +248,7 @@ class TsuServer3:
                 'GLOBAL#{}#{}#{}#{}'.format(int(as_mod), client.area.id, char_name, msg))
 
     def send_modchat(self, client, msg):
+        char_name = client.get_char_name()
         name = client.name
         ooc_name = '{}[{}][{}]'.format('<dollar>M', client.area.abbreviation, name)
         self.send_all_cmd_pred('CT', ooc_name, msg, pred=lambda x: x.is_mod)
@@ -274,7 +282,7 @@ class TsuServer3:
         if len(args) < 2:
             # An argument count smaller than 2 means we only got the identifier of ARUP.
             return
-        if args[0] not in (0,1,2,3):
+        if args[0] not in (0, 1, 2, 3):
             return
 
         if args[0] == 0:
@@ -289,7 +297,7 @@ class TsuServer3:
                     sanitised = str(part_arg)
                 except:
                     return
-        
+
         self.send_all_cmd_pred('ARUP', *args, pred=lambda x: True)
 
     def refresh(self):

@@ -3,21 +3,21 @@
 # Copyright (C) 2016 argoneus <argoneuscze@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# GNU Affero General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import asyncio
 import time
+
 from server import logger
 
 
@@ -47,9 +47,11 @@ class MasterServerClient:
 
     async def handle_connection(self):
         logger.log_debug('Master server connected.')
+        print('Master server connected.')
+
         await self.send_server_info()
-        fl = False
-        lastping = time.time() - 20
+        ping_timeout = False
+        last_ping = time.time() - 20
         while True:
             self.reader.feed_data(b'END')
             full_data = await self.reader.readuntil(b'END')
@@ -64,20 +66,24 @@ class MasterServerClient:
                     elif cmd == 'CHECK':
                         await self.send_raw_message('PING#%')
                     elif cmd == 'PONG':
-                        fl = False
+                        ping_timeout = False
                     elif cmd == 'NOSERV':
                         await self.send_server_info()
-            if time.time() - lastping > 5:
-                if fl:
+            if time.time() - last_ping > 10:
+                if ping_timeout:
+                    self.writer.close()
                     return
-                lastping = time.time()
-                fl = True
+                last_ping = time.time()
+                ping_timeout = True
                 await self.send_raw_message('PING#%')
             await asyncio.sleep(1)
 
     async def send_server_info(self):
         cfg = self.server.config
-        msg = 'SCC#{}#{}#{}#{}#%'.format(cfg['port'], cfg['masterserver_name'], cfg['masterserver_description'],
+        port = str(cfg['port'])
+        if cfg['use_websockets']:
+            port += '&{}'.format(cfg['websocket_port'])
+        msg = 'SCC#{}#{}#{}#{}#%'.format(port, cfg['masterserver_name'], cfg['masterserver_description'],
                                          self.server.software)
         await self.send_raw_message(msg)
 
