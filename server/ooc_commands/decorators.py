@@ -47,7 +47,7 @@ def area_owner(f):
     def wrapper(*args, **kwargs):
         client = args[0]
         if not client.is_mod and client not in client.area.owners:
-            raise ClientError('You must be either a moderator or the area owner to do that.')
+            raise ClientError('You need to own the current area to do that.')
         return f(*args, **kwargs)
 
     return wrapper
