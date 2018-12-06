@@ -28,6 +28,8 @@ from server.exceptions import ClientError, ArgumentError
 
 
 def mod_only(f):
+    """ Command requires you to be logged in as a moderator. """
+
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
         client = args[0]
@@ -39,6 +41,8 @@ def mod_only(f):
 
 
 def no_args(f):
+    """ Command doesn't take any arguments. """
+
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
         arg = args[1]
@@ -47,3 +51,19 @@ def no_args(f):
         return f(*args, **kwargs)
 
     return wrapper
+
+
+def require_arg(err_msg='This command requires an argument.'):
+    """ Command requires an argument, you may provide a custom error message. """
+
+    def require_arg_func(f):
+        @functools.wraps(f)
+        def wrapper(*args, **kwargs):
+            arg = args[1]
+            if len(arg) == 0:
+                raise ArgumentError(err_msg)
+            return f(*args, **kwargs)
+
+        return wrapper
+
+    return require_arg_func
