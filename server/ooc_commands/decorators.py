@@ -40,6 +40,19 @@ def mod_only(f):
     return wrapper
 
 
+def mod_or_area_owner(f):
+    """ Command requires you to be either a moderator or the owner of the area. """
+
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        client = args[0]
+        if not client.is_mod and client not in client.area.owners:
+            raise ClientError('You must be either a moderator or the area owner to do that.')
+        return f(*args, **kwargs)
+
+    return wrapper
+
+
 def no_args(f):
     """ Command doesn't take any arguments. """
 
