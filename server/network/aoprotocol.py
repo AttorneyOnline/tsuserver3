@@ -21,10 +21,10 @@ import unicodedata
 from enum import Enum
 from time import localtime, strftime
 
-from server import commands
 from server import logger
 from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
 from server.fantacrypt import fanta_decrypt
+from server.ooc_commands import commands
 
 
 class AOProtocol(asyncio.Protocol):
@@ -576,11 +576,11 @@ class AOProtocol(asyncio.Protocol):
             arg = ''
             if len(spl) == 2:
                 arg = spl[1][:256]
+            called_function = 'ooc_cmd_{}'.format(cmd)
             try:
-                called_function = 'ooc_cmd_{}'.format(cmd)
                 getattr(commands, called_function)(self.client, arg)
             except AttributeError:
-                print('Attribute error with ' + called_function)
+                logger.log_debug('Attribute error with ' + called_function, self.client)
                 self.client.send_host_message('Invalid command.')
             except (ClientError, AreaError, ArgumentError, ServerError) as ex:
                 self.client.send_host_message(ex)
