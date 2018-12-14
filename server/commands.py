@@ -804,7 +804,9 @@ def ooc_cmd_cm(client, arg):
             try:
                 id = int(id)
                 c = client.server.client_manager.get_targets(client, TargetType.ID, id, False)[0]
-                if c in client.area.owners:
+                if not c in client.area.clients:
+                    raise ArgumentError('You can only \'nominate\' people to be CMs when they are in the area.')
+                elif c in client.area.owners:
                     client.send_host_message('{} [{}] is already a CM here.'.format(c.get_char_name(), c.id))
                 else:
                     client.area.owners.append(c)
@@ -819,7 +821,7 @@ def ooc_cmd_cm(client, arg):
 
 
 def ooc_cmd_uncm(client, arg):
-    if client in client.area.owners:
+    if client in client.area.owners or client.is_mod:
         if len(arg) > 0:
             arg = arg.split(' ')
         else:
@@ -840,7 +842,7 @@ def ooc_cmd_uncm(client, arg):
     else:
         raise ClientError('You must be authorized to do that.')
 
-
+# LEGACY
 def ooc_cmd_setcase(client, arg):
     args = re.findall(r'(?:[^\s,"]|"(?:\\.|[^"])*")+', arg)
     if len(args) == 0:
@@ -854,7 +856,7 @@ def ooc_cmd_setcase(client, arg):
         client.casing_jur = args[5] == "1"
         client.casing_steno = args[6] == "1"
 
-
+# LEGACY
 def ooc_cmd_anncase(client, arg):
     if client in client.area.owners:
         if not client.can_call_case():
@@ -895,7 +897,6 @@ def ooc_cmd_anncase(client, arg):
                 client)
     else:
         raise ClientError('You cannot announce a case in an area where you are not a CM!')
-
 
 def ooc_cmd_unmod(client, arg):
     client.is_mod = False
