@@ -704,6 +704,66 @@ class AOProtocol(asyncio.Protocol):
         logger.log_server("[{}]{} Used WT/CE".format(self.client.area.abbreviation, self.client.get_char_name()),
                           self.client)
 
+    def net_cmd_setcase(self, args):
+        """ Sets the casing preferences of the given client.
+
+        SETCASE#<cases:string>#<will_cm:int>#<will_def:int>#<will_pro:int>#<will_judge:int>#<will_jury:int>#<will_steno:int>#%
+
+        Note: Though all but the first arguments are ints, they technically behave as bools of 0 and 1 value.
+
+        """
+        self.client.casing_cases = args[0]
+        self.client.casing_cm = args[1] == "1"
+        self.client.casing_def = args[2] == "1"
+        self.client.casing_pro = args[3] == "1"
+        self.client.casing_jud = args[4] == "1"
+        self.client.casing_jur = args[5] == "1"
+        self.client.casing_steno = args[6] == "1"
+
+
+    def net_cmd_casea(self, args):
+        """ Announces a case with a title, and specific set of people to look for.
+
+        CASEA#<casetitle:string>#<need_cm:int>#<need_def:int>#<need_pro:int>#<need_judge:int>#<need_jury:int>#<need_steno:int>#%
+
+        Note: Though all but the first arguments are ints, they technically behave as bools of 0 and 1 value.
+
+        """
+        if self.client in self.client.area.owners:
+            if not self.client.can_call_case():
+                raise ClientError('Please wait 60 seconds between case announcements!')
+
+            if not args[1] == "1" and not args[2] == "1" and not args[3] == "1" and not args[4] == "1" and not args[5] == "1":
+                raise ArgumentError('You should probably announce the case to at least one person.')
+            msg = '=== Case Announcement ===\r\n{} [{}] is hosting {}, looking for '.format(self.client.get_char_name(),
+                                                                                            self.client.id, args[0])
+
+            lookingfor = []
+
+            if args[1] == "1":
+                lookingfor.append("defence")
+            if args[2] == "1":
+                lookingfor.append("prosecutor")
+            if args[3] == "1":
+                lookingfor.append("judge")
+            if args[4] == "1":
+                lookingfor.append("juror")
+            if args[5] == "1":
+                lookingfor.append("stenographer")
+
+            msg = msg + ', '.join(lookingfor) + '.\r\n=================='
+
+            self.client.server.send_all_cmd_pred('CASEA', msg, args[1], args[2], args[3], args[4], args[5], '1')
+
+            self.client.set_case_call_delay()
+
+            logger.log_server('[{}][{}][CASE_ANNOUNCEMENT]{}, DEF: {}, PRO: {}, JUD: {}, JUR: {}, STENO: {}.'.format(
+                self.client.area.abbreviation, self.client.get_char_name(), args[0], args[1], args[2], args[3], args[4], args[5]),
+                self.client)
+        else:
+            raise ClientError('You cannot announce a case in an area where you are not a CM!')
+
+
     def net_cmd_hp(self, args):
         """ Sets the penalty bar.
 
@@ -819,6 +879,8 @@ class AOProtocol(asyncio.Protocol):
         'CT': net_cmd_ct,  # OOC message
         'MC': net_cmd_mc,  # play song
         'RT': net_cmd_rt,  # WT/CE buttons
+        'SETCASE': net_cmd_setcase, # set case-announcement preferences for user
+        'CASEA': net_cmd_casea, # announce a case
         'HP': net_cmd_hp,  # penalties
         'PE': net_cmd_pe,  # add evidence
         'DE': net_cmd_de,  # delete evidence

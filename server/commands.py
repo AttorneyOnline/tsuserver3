@@ -842,7 +842,7 @@ def ooc_cmd_uncm(client, arg):
     else:
         raise ClientError('You must be authorized to do that.')
 
-
+# LEGACY
 def ooc_cmd_setcase(client, arg):
     args = re.findall(r'(?:[^\s,"]|"(?:\\.|[^"])*")+', arg)
     if len(args) == 0:
@@ -856,7 +856,7 @@ def ooc_cmd_setcase(client, arg):
         client.casing_jur = args[5] == "1"
         client.casing_steno = args[6] == "1"
 
-
+# LEGACY
 def ooc_cmd_anncase(client, arg):
     if client in client.area.owners:
         if not client.can_call_case():
@@ -897,7 +897,6 @@ def ooc_cmd_anncase(client, arg):
                 client)
     else:
         raise ClientError('You cannot announce a case in an area where you are not a CM!')
-
 
 def ooc_cmd_unmod(client, arg):
     client.is_mod = False
