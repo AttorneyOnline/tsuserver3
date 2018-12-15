@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-# Idiotproof setup
+# Install PyYAML in case it's missing
 def check_pyyaml():
     try:
         import yaml
@@ -29,6 +29,7 @@ def check_pyyaml():
             pip.main(["install", "--user", "pyyaml"])
         except ModuleNotFoundError:
             print("Couldn't install it for you, because you don't have pip.")
+
 
 def main():
     from server.tsuserver import TsuServer3
