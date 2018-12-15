@@ -395,52 +395,56 @@ def ooc_cmd_kick(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
-        raise ArgumentError('You must specify a target. Use /kick <ipid> <ipid> ...')
+        raise ArgumentError('You must specify a target. Use /kick <ipid> [reason]')
     args = list(arg.split(' '))
-    client.send_host_message('Attempting to kick {} IPIDs.'.format(len(args)))
-    for raw_ipid in args:
-        try:
-            ipid = int(raw_ipid)
-        except:
-            raise ClientError('{} does not look like a valid IPID.'.format(raw_ipid))
-        targets = client.server.client_manager.get_targets(client, TargetType.IPID, ipid, False)
-        if targets:
-            for c in targets:
-                logger.log_server('Kicked {} [{}]({}).'.format(c.get_char_name(), c.id, c.ipid), client)
-                logger.log_mod('Kicked {} [{}]({}).'.format(c.get_char_name(), c.id, c.ipid), client)
-                client.send_host_message("{} was kicked.".format(c.get_char_name()))
-                c.send_command('KK', c.char_id)
-                c.disconnect()
-        else:
-            client.send_host_message("No targets with the IPID {} were found.".format(ipid))
+    raw_ipid = args[0]
+    try:
+        ipid = int(raw_ipid)
+    except:
+        raise ClientError('{} does not look like a valid IPID.'.format(raw_ipid))
+    targets = client.server.client_manager.get_targets(client, TargetType.IPID, ipid, False)
+    if targets:
+        reason = ' '.join(args[1:])
+        if reason == '':
+            reason = 'N/A'
+        for c in targets:
+            logger.log_server('Kicked {} [{}]({}) (reason: {}).'.format(c.get_char_name(), c.id, c.ipid, reason), client)
+            logger.log_mod('Kicked {} [{}]({}) (reason: {}).'.format(c.get_char_name(), c.id, c.ipid, reason), client)
+            client.send_host_message("{} was kicked.".format(c.get_char_name()))
+            c.send_command('KK', reason)
+            c.disconnect()
+    else:
+        client.send_host_message("No targets with the IPID {} were found.".format(ipid))
 
 
 def ooc_cmd_ban(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
-        raise ArgumentError('You must specify a target. Use /ban <ipid> <ipid> ...')
+        raise ArgumentError('You must specify a target. Use /ban <ipid> [reason]')
     args = list(arg.split(' '))
-    client.send_host_message('Attempting to ban {} IPIDs.'.format(len(args)))
-    for raw_ipid in args:
-        try:
-            ipid = int(raw_ipid)
-        except:
-            raise ClientError('{} does not look like a valid IPID.'.format(raw_ipid))
-        try:
-            client.server.ban_manager.add_ban(ipid)
-        except ServerError:
-            raise
-        if ipid != None:
-            targets = client.server.client_manager.get_targets(client, TargetType.IPID, ipid, False)
-            if targets:
-                for c in targets:
-                    c.send_command('KB', c.char_id)
-                    c.disconnect()
-                client.send_host_message('{} clients was kicked.'.format(len(targets)))
-            client.send_host_message('{} was banned.'.format(ipid))
-            logger.log_server('Banned {}.'.format(ipid), client)
-            logger.log_mod('Banned {}.'.format(ipid), client)
+    raw_ipid = args[0]
+    try:
+        ipid = int(raw_ipid)
+    except:
+        raise ClientError('{} does not look like a valid IPID.'.format(raw_ipid))
+    try:
+        client.server.ban_manager.add_ban(ipid)
+    except ServerError:
+        raise
+    if ipid != None:
+        targets = client.server.client_manager.get_targets(client, TargetType.IPID, ipid, False)
+        if targets:
+            reason = ' '.join(args[1:])
+            if reason == '':
+                reason = 'N/A'
+            for c in targets:
+                c.send_command('KB', reason)
+                c.disconnect()
+            client.send_host_message('{} clients were kicked.'.format(len(targets)))
+        client.send_host_message('{} was banned.'.format(ipid))
+        logger.log_server('Banned {} (reason: {}).'.format(ipid, reason), client)
+        logger.log_mod('Banned {} (reason: {}).'.format(ipid, reason), client)
 
 
 def ooc_cmd_unban(client, arg):
