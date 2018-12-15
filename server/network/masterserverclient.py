@@ -47,7 +47,8 @@ class MasterServerClient:
 
     async def handle_connection(self):
         logger.log_debug('Master server connected.')
-        print('Master server connected.')
+        print('Master server connected ({}:{})'.format(self.server.config['masterserver_ip'],
+                                                        self.server.config['masterserver_port']))
 
         await self.send_server_info()
         ping_timeout = False

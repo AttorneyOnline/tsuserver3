@@ -18,17 +18,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-# Install PyYAML in case it's missing
-def check_pyyaml():
+# Install dependencies in case one is missing
+def check_deps():
     try:
-        import yaml
+        import yaml, websockets
     except ModuleNotFoundError:
-        print("Couldn't import PyYAML. Installing it for you...")
+        print("Installing dependencies for you...")
         try:
-            import pip
-            pip.main(["install", "--user", "pyyaml"])
-        except ModuleNotFoundError:
-            print("Couldn't install it for you, because you don't have pip.")
+            import sys, subprocess
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "-r", "requirements.txt"])
+        except CalledProcessError:
+            print("Couldn't install it for you, because you don't have pip, or another error occurred.")
 
 
 def main():
@@ -38,5 +38,6 @@ def main():
 
 
 if __name__ == '__main__':
-    check_pyyaml()
+    print("tsuserver3 - an Attorney Online server")
+    check_deps()
     main()

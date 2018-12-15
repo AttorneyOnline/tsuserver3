@@ -86,7 +86,7 @@ class TsuServer3:
             asyncio.ensure_future(self.ms_client.connect(), loop=loop)
 
         logger.log_debug('Server started.')
-        print('Server started.')
+        print('Server started and is listening on port {}'.format(self.config['port']))
 
         try:
             loop.run_forever()
