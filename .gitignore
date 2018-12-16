@@ -1,10 +1,4 @@
-<<<<<<< HEAD
 /config*/*
-/storage/*.json
-/logs/*.log
-__pycache__/
-run_server.bat
-=======
 ### Server related
 # Sensitive data
 config/
@@ -80,4 +74,3 @@ coverage.xml
 .idea/**/dynamic.xml
 .idea/**/uiDesigner.xml
 .idea/**/dbnavigator.xml
->>>>>>> 5ce06f0da24c4ad4a06a29fa06d987685dc9e714

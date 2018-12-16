@@ -16,12 +16,9 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import re
-<<<<<<< HEAD
 import string
-=======
 import time
 from heapq import heappop, heappush
->>>>>>> 5ce06f0da24c4ad4a06a29fa06d987685dc9e714
 
 from server import logger
 from server.constants import TargetType
@@ -59,13 +56,6 @@ class ClientManager:
             self.command_time = 0
             self.in_rp = False
             self.ipid = ipid
-<<<<<<< HEAD
-            self.websocket = None
-            
-            #music flood-guard stuff
-            self.mus_counter = 0
-            self.mute_time = 0
-            self.mus_change_time = [x * self.server.config['music_change_floodguard']['interval_length'] for x in range(self.server.config['music_change_floodguard']['times_per_interval'])]
 
             #CMing stuff
             self.is_cm = False
@@ -75,7 +65,6 @@ class ClientManager:
             self.blinded = False
             self.following = None
             self.announce_movement = True
-=======
 
             # Pairing stuff
             self.charid_pair = -1
@@ -103,7 +92,6 @@ class ClientManager:
             self.wtce_mute_time = 0
             self.wtce_time = [x * self.server.config['wtce_floodguard']['interval_length'] for x in
                               range(self.server.config['wtce_floodguard']['times_per_interval'])]
->>>>>>> 5ce06f0da24c4ad4a06a29fa06d987685dc9e714
 
         def send_raw_message(self, msg):
             self.transport.write(msg.encode('utf-8'))
@@ -178,33 +166,21 @@ class ClientManager:
         def change_music_cd(self):
             if self.is_mod or self in self.area.owners:
                 return 0
-<<<<<<< HEAD
-            if self.mute_time:
-                if time.time() - self.mute_time < self.server.config['music_change_floodguard']['mute_length']:
-                    return self.server.config['music_change_floodguard']['mute_length'] - (time.time() - self.mute_time)
-=======
             if self.mus_mute_time:
                 if time.time() - self.mus_mute_time < self.server.config['music_change_floodguard']['mute_length']:
                     return self.server.config['music_change_floodguard']['mute_length'] - (
                             time.time() - self.mus_mute_time)
->>>>>>> 5ce06f0da24c4ad4a06a29fa06d987685dc9e714
                 else:
                     self.mute_time = 0
             times_per_interval = self.server.config['music_change_floodguard']['times_per_interval']
             interval_length = self.server.config['music_change_floodguard']['interval_length']
-<<<<<<< HEAD
-            if time.time() - self.mus_change_time[(self.mus_counter - times_per_interval + 1) % times_per_interval] < interval_length:
-                self.mute_time = time.time()
-=======
             if time.time() - self.mus_change_time[
                 (self.mus_counter - times_per_interval + 1) % times_per_interval] < interval_length:
                 self.mus_mute_time = time.time()
->>>>>>> 5ce06f0da24c4ad4a06a29fa06d987685dc9e714
                 return self.server.config['music_change_floodguard']['mute_length']
             self.mus_counter = (self.mus_counter + 1) % times_per_interval
             self.mus_change_time[self.mus_counter] = time.time()
             return 0
-<<<<<<< HEAD
                 
         def hide(self, tog=True):
             self.hidden = tog
@@ -220,7 +196,6 @@ class ClientManager:
                 msg = 'now'
             self.send_host_message(
                 'You are {} blinded from /getarea and seeing non-broadcasted IC messages.'.format(msg))
-=======
 
         def wtce_mute(self):
             if self.is_mod or self in self.area.owners:
@@ -239,7 +214,6 @@ class ClientManager:
             self.wtce_counter = (self.wtce_counter + 1) % times_per_interval
             self.wtce_time[self.wtce_counter] = time.time()
             return 0
->>>>>>> 5ce06f0da24c4ad4a06a29fa06d987685dc9e714
 
         def reload_character(self):
             try:
@@ -256,18 +230,9 @@ class ClientManager:
         def change_area(self, area, hidden=False):
             if self.area == area:
                 raise ClientError('User already in specified area.')
-<<<<<<< HEAD
-=======
-            if area.is_locked == area.Locked.LOCKED and not self.is_mod and not self.id in area.invite_list:
-                raise ClientError("That area is locked!")
-            if area.is_locked == area.Locked.SPECTATABLE and not self.is_mod and not self.id in area.invite_list:
-                self.send_host_message(
-                    'This area is spectatable, but not free - you will be unable to send messages ICly unless invited.')
-
             if self.area.jukebox:
                 self.area.remove_jukebox_vote(self, True)
 
->>>>>>> 5ce06f0da24c4ad4a06a29fa06d987685dc9e714
             old_area = self.area
             if not area.is_char_available(self.char_id):
                 try:
@@ -299,20 +264,14 @@ class ClientManager:
                 self.send_host_message('Changed area to {}. [HUB: {}]'.format(area.name, area.hub.name))
 
             logger.log_server(
-<<<<<<< HEAD
                 '[{}]Changed area from {} ({} {}) to {} ({} {}).'.format(self.get_char_name(), old_area.name, old_area.id, old_area.hub.name,
                                                                    self.area.name, self.area.id, self.area.hub.name), self)
-=======
-                '[{}]Changed area from {} ({}) to {} ({}).'.format(self.get_char_name(), old_area.name, old_area.id,
-                                                                   self.area.name, self.area.id), self)
             self.area.send_command('CharsCheck', *self.get_available_char_list())
->>>>>>> 5ce06f0da24c4ad4a06a29fa06d987685dc9e714
             self.send_command('HP', 1, self.area.hp_def)
             self.send_command('HP', 2, self.area.hp_pro)
             self.send_command('BN', self.area.background)
             self.send_command('LE', *self.area.get_evidence_list(self))
 
-<<<<<<< HEAD
         def send_area_list(self, hidden=False, accessible=False):
             acc = ''
             if accessible:
@@ -340,17 +299,6 @@ class ClientManager:
 
                 msg += '\r\nArea {}: {}{} {}{}{}'.format(
                     area.id, acc, area.name, users, lo, hi)
-=======
-        def send_area_list(self):
-            msg = '=== Areas ==='
-            for i, area in enumerate(self.server.area_manager.areas):
-                owner = 'FREE'
-                if len(area.owners) > 0:
-                    owner = 'CM: {}'.format(area.get_cms())
-                lock = {area.Locked.FREE: '', area.Locked.SPECTATABLE: '[SPECTATABLE]', area.Locked.LOCKED: '[LOCKED]'}
-                msg += '\r\nArea {}: {} (users: {}) [{}][{}]{}'.format(area.abbreviation, area.name, len(area.clients),
-                                                                       area.status, owner, lock[area.is_locked])
->>>>>>> 5ce06f0da24c4ad4a06a29fa06d987685dc9e714
                 if self.area == area:
                     msg += ' [*]'
             self.send_host_message(msg)
@@ -383,17 +331,8 @@ class ClientManager:
             sorted_clients = []
             for client in area.clients:
                 if (not mods) or client.is_mod:
-<<<<<<< HEAD
                     if not client.hidden or self.is_cm or self.is_mod:
                         sorted_clients.append(client)
-=======
-                    sorted_clients.append(client)
-            for owner in area.owners:
-                if not (mods or owner in area.clients):
-                    sorted_clients.append(owner)
-            if not sorted_clients:
-                return ''
->>>>>>> 5ce06f0da24c4ad4a06a29fa06d987685dc9e714
             sorted_clients = sorted(sorted_clients, key=lambda x: x.get_char_name())
             for c in sorted_clients:
                 info += '\r\n'
@@ -405,7 +344,6 @@ class ClientManager:
                 info += '[{}] {}'.format(c.id, c.get_char_name())
                 if self.is_mod:
                     info += ' ({})'.format(c.ipid)
-<<<<<<< HEAD
                 if c.hidden:
                     info += ' [H]'
                 if c.blinded:
@@ -414,19 +352,10 @@ class ClientManager:
 
         def send_area_info(self, area_id, mods, hidden=False): 
             #if area_id is -1 then return all areas. If mods is True then return only mods
-=======
-                    info += ': {}'.format(c.name)
-
-            return info
-
-        def send_area_info(self, area_id, mods):
-            # if area_id is -1 then return all areas. If mods is True then return only mods
->>>>>>> 5ce06f0da24c4ad4a06a29fa06d987685dc9e714
             info = ''
             if area_id == -1:
                 # all areas info
                 cnt = 0
-<<<<<<< HEAD
                 msg = '\n=== Areas for Hub [{}]: {} ==='.format(self.hub.id, self.hub.name)
                 for i in range(len(self.hub.areas)):
                     if len(self.hub.areas[i].clients) > 0:
@@ -440,19 +369,6 @@ class ClientManager:
                     if not hidden:
                         info = 'People in this area: {}\n'.format(len(self.hub.areas[area_id].clients))
                     info += self.get_area_info(area_id, mods)
-=======
-                info = '\n== Area List =='
-                for i in range(len(self.server.area_manager.areas)):
-                    if len(self.server.area_manager.areas[i].clients) > 0 or len(
-                            self.server.area_manager.areas[i].owners) > 0:
-                        cnt += len(self.server.area_manager.areas[i].clients)
-                        info += '{}'.format(self.get_area_info(i, mods))
-                info = 'Current online: {}'.format(cnt) + info
-            else:
-                try:
-                    info = 'People in this area: {}'.format(
-                        len(self.server.area_manager.areas[area_id].clients)) + self.get_area_info(area_id, mods)
->>>>>>> 5ce06f0da24c4ad4a06a29fa06d987685dc9e714
                 except AreaError:
                     raise
             self.send_host_message(info)
@@ -466,25 +382,15 @@ class ClientManager:
 
         def send_all_area_hdid(self):
             info = '== HDID List =='
-<<<<<<< HEAD
             for i in range (len(self.hub.areas)):
                  if len(self.hub.areas[i].clients) > 0:
-=======
-            for i in range(len(self.server.area_manager.areas)):
-                if len(self.server.area_manager.areas[i].clients) > 0:
->>>>>>> 5ce06f0da24c4ad4a06a29fa06d987685dc9e714
                     info += '\r\n{}'.format(self.get_area_hdid(i))
             self.send_host_message(info)
 
         def send_all_area_ip(self):
             info = '== IP List =='
-<<<<<<< HEAD
             for i in range (len(self.hub.areas)):
                  if len(self.hub.areas[i].clients) > 0:
-=======
-            for i in range(len(self.server.area_manager.areas)):
-                if len(self.server.area_manager.areas[i].clients) > 0:
->>>>>>> 5ce06f0da24c4ad4a06a29fa06d987685dc9e714
                     info += '\r\n{}'.format(self.get_area_ip(i))
             self.send_host_message(info)
 
