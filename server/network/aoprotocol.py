@@ -455,7 +455,7 @@ class AOProtocol(asyncio.Protocol):
             button = 0
             # Turn off the ding.
             ding = 0
-        if color == 2 and not (self.client.is_mod or self.client in self.client.area.owners):
+        if color == 2 and not (self.client.is_mod):
             color = 0
         if color == 6:
             text = re.sub(r'[^\x00-\x7F]+', ' ', text)  # remove all unicode to prevent redtext abuse
@@ -533,7 +533,9 @@ class AOProtocol(asyncio.Protocol):
                           self.client)
 
         if (self.client.area.is_recording):
-            self.client.area.recorded_messages.append(args)
+            current_time = strftime("%H:%M:%S UTC", gmtime())
+            self.client.area.recorded_messages.append('[{}][{}] {}: {}'.format(
+                current_time, self.client.id, self.client.get_char_name(), msg))
 
     def net_cmd_ct(self, args):
         """ OOC Message
