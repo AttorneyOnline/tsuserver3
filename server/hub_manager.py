@@ -50,6 +50,9 @@ class HubManager:
 				self.recorded_messages = []
 				self.evidence_mod = evidence_mod
 				self.locking_allowed = locking_allowed
+				self.showname_changes_allowed = showname_changes_allowed
+				self.shouts_allowed = shouts_allowed
+				self.abbreviation = abbreviation
 				self.hub = hub
 				self.desc = desc
 				self.mute_ic = False
@@ -58,6 +61,11 @@ class HubManager:
 
 				self.is_locked = False
 				self.is_hidden = False
+				self.blankposting_allowed = True
+				self.non_int_pres_only = non_int_pres_only
+				self.jukebox = jukebox
+				self.jukebox_votes = []
+				self.jukebox_prev_char_id = -1
 
 			def save(self):
 				desc = self.desc
@@ -159,7 +167,90 @@ class HubManager:
 					if client.get_char_name() in char_link and char in char_link:
 						return False
 				return True
-			
+
+			def add_jukebox_vote(self, client, music_name, length=-1, showname=''):
+				if not self.jukebox:
+					return
+				if length <= 0:
+					self.remove_jukebox_vote(client, False)
+				else:
+					self.remove_jukebox_vote(client, True)
+					self.jukebox_votes.append(self.JukeboxVote(
+						client, music_name, length, showname))
+					client.send_host_message('Your song was added to the jukebox.')
+					if len(self.jukebox_votes) == 1:
+						self.start_jukebox()
+
+			def remove_jukebox_vote(self, client, silent):
+				if not self.jukebox:
+					return
+				for current_vote in self.jukebox_votes:
+					if current_vote.client.id == client.id:
+						self.jukebox_votes.remove(current_vote)
+				if not silent:
+					client.send_host_message(
+						'You removed your song from the jukebox.')
+
+			def get_jukebox_picked(self):
+				if not self.jukebox:
+					return
+				if len(self.jukebox_votes) == 0:
+					return None
+				elif len(self.jukebox_votes) == 1:
+					return self.jukebox_votes[0]
+				else:
+					weighted_votes = []
+					for current_vote in self.jukebox_votes:
+						i = 0
+						while i < current_vote.chance:
+							weighted_votes.append(current_vote)
+							i += 1
+					return random.choice(weighted_votes)
+
+			def start_jukebox(self):
+				# There is a probability that the jukebox feature has been turned off since then,
+				# we should check that.
+				# We also do a check if we were the last to play a song, just in case.
+				if not self.jukebox:
+					if self.current_music_player == 'The Jukebox' and self.current_music_player_ipid == 'has no IPID':
+						self.current_music = ''
+					return
+
+				vote_picked = self.get_jukebox_picked()
+
+				if vote_picked is None:
+					self.current_music = ''
+					return
+
+				if vote_picked.client.char_id != self.jukebox_prev_char_id or vote_picked.name != self.current_music or len(
+						self.jukebox_votes) > 1:
+					self.jukebox_prev_char_id = vote_picked.client.char_id
+					if vote_picked.showname == '':
+						self.send_command('MC', vote_picked.name,
+										vote_picked.client.char_id)
+					else:
+						self.send_command(
+							'MC', vote_picked.name, vote_picked.client.char_id, vote_picked.showname)
+				else:
+					self.send_command('MC', vote_picked.name, -1)
+
+				self.current_music_player = 'The Jukebox'
+				self.current_music_player_ipid = 'has no IPID'
+				self.current_music = vote_picked.name
+
+				for current_vote in self.jukebox_votes:
+					# Choosing the same song will get your votes down to 0, too.
+					# Don't want the same song twice in a row!
+					if current_vote.name == vote_picked.name:
+						current_vote.chance = 0
+					else:
+						current_vote.chance += 1
+
+				if self.music_looper:
+					self.music_looper.cancel()
+				self.music_looper = asyncio.get_event_loop().call_later(
+					vote_picked.length, lambda: self.start_jukebox())
+
 			def play_music(self, name, cid, length=-1):
 				self.send_command('MC', name, cid)
 				if self.music_looper:
@@ -168,12 +259,23 @@ class HubManager:
 					self.music_looper = asyncio.get_event_loop().call_later(length,
 																			lambda: self.play_music(name, -1, length))
 
+			def play_music_shownamed(self, name, cid, showname, length=-1):
+				self.send_command('MC', name, cid, showname)
+				if self.music_looper:
+					self.music_looper.cancel()
+				if length > 0:
+					self.music_looper = asyncio.get_event_loop().call_later(length,
+																			lambda: self.play_music(name, -1, length))
 
 			def can_send_message(self, client):
-				# if self.is_locked and not client.is_mod and not client.is_cm and not client.ipid in self.invite_list:
-				# 	client.send_host_message('This is a locked area - ask the CM to speak.')
-				# 	return False
+				if self.cannot_ic_interact(client):
+					client.send_host_message('This is a locked area - ask the CM to speak.')
+					return False
 				return (time.time() * 1000.0 - self.next_message_time) > 0
+
+			def cannot_ic_interact(self, client):
+				return True
+				# return self.is_locked != self.Locked.FREE and not client.is_mod and not client.id in self.invite_list
 
 			def change_hp(self, side, val):
 				if not 0 <= val <= 10:
@@ -192,13 +294,35 @@ class HubManager:
 				self.background = bg
 				self.send_command('BN', self.background)
 
+			def change_status(self, value):
+				allowed_values = ('idle', 'rp', 'casing',
+								'looking-for-players', 'lfp', 'recess', 'gaming')
+				if value.lower() not in allowed_values:
+					raise AreaError('Invalid status. Possible values: {}'.format(
+						', '.join(allowed_values)))
+				if value.lower() == 'lfp':
+					value = 'looking-for-players'
+				self.status = value.upper()
+				self.server.area_manager.send_arup_status()
+
+			def change_doc(self, doc='No document.'):
+				self.doc = doc
+
 			def add_to_judgelog(self, client, msg):
 				if len(self.judgelog) >= 10:
 					self.judgelog = self.judgelog[1:]
-				self.judgelog.append('{} ({}) {}.'.format(client.get_char_name(), client.get_ip(), msg))
+				self.judgelog.append('{} ({}) {}.'.format(
+					client.get_char_name(), client.get_ip(), msg))
 
 			def add_music_playing(self, client, name):
 				self.current_music_player = client.get_char_name()
+				self.current_music_player_ipid = client.ipid
+				self.current_music = name
+
+			def add_music_playing_shownamed(self, client, showname, name):
+				self.current_music_player = showname + \
+					" (" + client.get_char_name() + ")"
+				self.current_music_player_ipid = client.ipid
 				self.current_music = name
 
 			def get_evidence_list(self, client):
@@ -212,6 +336,22 @@ class HubManager:
 				"""
 				for client in self.clients:
 					client.send_command('LE', *self.get_evidence_list(client))
+
+			# def get_cms(self):
+			# 	msg = ''
+			# 	for i in self.owners:
+			# 		msg = msg + '[' + str(i.id) + '] ' + i.get_char_name() + ', '
+			# 	if len(msg) > 2:
+			# 		msg = msg[:-2]
+			# 	return msg
+
+			class JukeboxVote:
+				def __init__(self, client, name, length, showname):
+					self.client = client
+					self.name = name
+					self.length = length
+					self.chance = 1
+					self.showname = showname
 
 		def __init__(self, hub_id, server, name, allow_cm=False, max_areas=1, doc='No document.', status='IDLE'):
 			self.server = server

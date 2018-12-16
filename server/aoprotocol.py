@@ -25,7 +25,6 @@ from . import logger
 from .exceptions import ClientError, AreaError, ArgumentError, ServerError
 from .fantacrypt import fanta_decrypt
 from .evidence import EvidenceList
-from .websocket import WebSocket
 
 
 class AOProtocol(asyncio.Protocol):

@@ -22,12 +22,8 @@ import websockets
 import yaml
 
 from server import logger
-<<<<<<< HEAD
-from server.aoprotocol import AOProtocol
+# from server.aoprotocol import AOProtocol
 from server.hub_manager import HubManager
-=======
-from server.area_manager import AreaManager
->>>>>>> 5ce06f0da24c4ad4a06a29fa06d987685dc9e714
 from server.ban_manager import BanManager
 from server.client_manager import ClientManager
 from server.exceptions import ServerError
@@ -249,12 +245,7 @@ class TsuServer3:
                 client.send_command(cmd, *args)
 
     def broadcast_global(self, client, msg, as_mod=False):
-<<<<<<< HEAD
         ooc_name = '{}[H{}][{}]'.format('~G', client.hub.id, client.name)
-=======
-        char_name = client.get_char_name()
-        ooc_name = '{}[{}][{}]'.format('<dollar>G', client.area.abbreviation, char_name)
->>>>>>> 5ce06f0da24c4ad4a06a29fa06d987685dc9e714
         if as_mod:
             ooc_name += '[M]'
         self.send_all_cmd_pred('CT', ooc_name, msg, pred=lambda x: not x.muted_global)
@@ -273,19 +264,11 @@ class TsuServer3:
 
     def broadcast_need(self, client, msg):
         char_name = client.get_char_name()
-<<<<<<< HEAD
         hub_name = client.hub.name
         hub_id = client.hub.id
         self.send_all_cmd_pred('CT', '{}'.format(self.config['hostname']),
                                '=== Advert ===\r\n{} in {} [{}] needs {}\r\n==============='
                                .format(char_name, hub_name, hub_id, msg), pred=lambda x: not x.muted_adverts)
-=======
-        area_name = client.area.name
-        area_id = client.area.abbreviation
-        self.send_all_cmd_pred('CT', '{}'.format(self.config['hostname']),
-                               '=== Advert ===\r\n{} in {} [{}] needs {}\r\n==============='
-                               .format(char_name, area_name, area_id, msg), '1', pred=lambda x: not x.muted_adverts)
->>>>>>> 5ce06f0da24c4ad4a06a29fa06d987685dc9e714
         if self.config['use_district']:
             self.district_client.send_raw_message('NEED#{}#{}#{}#{}'.format(char_name, hub_name, hub_id, msg))
 

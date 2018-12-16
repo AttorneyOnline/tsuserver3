@@ -16,10 +16,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import asyncio
-<<<<<<< HEAD:server/masterserverclient.py
-=======
 import time
->>>>>>> 5ce06f0da24c4ad4a06a29fa06d987685dc9e714:server/network/masterserverclient.py
 
 from server import logger
 
@@ -54,17 +51,6 @@ class MasterServerClient:
                                                         self.server.config['masterserver_port']))
 
         await self.send_server_info()
-<<<<<<< HEAD:server/masterserverclient.py
-        while True:
-            data = await self.reader.readuntil(b'#%')
-            if not data:
-                return
-            raw_msg = data.decode()[:-2]
-            cmd, *args = raw_msg.split('#')
-            if cmd != 'CHECK' and cmd != 'PONG':
-                logger.log_debug('[MASTERSERVER][INC][RAW]{}'.format(raw_msg))
-            if cmd == 'CHECK':
-=======
         ping_timeout = False
         last_ping = time.time() - 20
         while True:
@@ -90,23 +76,17 @@ class MasterServerClient:
                     return
                 last_ping = time.time()
                 ping_timeout = True
->>>>>>> 5ce06f0da24c4ad4a06a29fa06d987685dc9e714:server/network/masterserverclient.py
                 await self.send_raw_message('PING#%')
             elif cmd == 'NOSERV':
                 await self.send_server_info()
 
     async def send_server_info(self):
         cfg = self.server.config
-<<<<<<< HEAD:server/masterserverclient.py
-        msg = 'SCC#{}#{}#{}#{}#%'.format(cfg['port'], cfg['masterserver_name'], cfg['masterserver_description'],
-                                         self.server.version)
-=======
         port = str(cfg['port'])
         if cfg['use_websockets']:
             port += '&{}'.format(cfg['websocket_port'])
         msg = 'SCC#{}#{}#{}#{}#%'.format(port, cfg['masterserver_name'], cfg['masterserver_description'],
                                          self.server.software)
->>>>>>> 5ce06f0da24c4ad4a06a29fa06d987685dc9e714:server/network/masterserverclient.py
         await self.send_raw_message(msg)
 
     async def send_raw_message(self, msg):
