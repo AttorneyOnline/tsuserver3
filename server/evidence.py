@@ -1,3 +1,20 @@
+# tsuserver3, an Attorney Online server
+#
+# Copyright (C) 2016 argoneus <argoneuscze@gmail.com>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 class EvidenceList:
     limit = 35
 
@@ -21,11 +38,20 @@ class EvidenceList:
         def to_string(self):
             sequence = (self.name, self.desc, self.image)
             return '&'.join(sequence)
-            
+
     def __init__(self):
         self.evidences = []
-        self.poses = {'def':['def', 'hld'], 'pro':['pro', 'hlp'], 'wit':['wit'], 'hlp':['hlp', 'pro'], 'hld':['hld', 'def'], 'jud':['jud'], 'all':['hlp', 'hld', 'wit', 'jud', 'pro', 'def', ''], 'pos':[]}
-        
+        self.poses = {'def': ['def', 'hld'],
+                      'pro': ['pro', 'hlp'],
+                      'wit': ['wit', 'sea'],
+                      'sea': ['sea', 'wit'],
+                      'hlp': ['hlp', 'pro'],
+                      'hld': ['hld', 'def'],
+                      'jud': ['jud', 'jur'],
+                      'jur': ['jur', 'jud'],
+                      'all': ['hlp', 'hld', 'wit', 'jud', 'pro', 'def', 'jur', 'sea', ''],
+                      'pos': []}
+
     def login(self, client):
         if client.area.evidence_mod == 'FFA':
             pass
@@ -33,10 +59,10 @@ class EvidenceList:
             if not client.is_mod:
                 return False
         if client.area.evidence_mod == 'CM':
-            if not client.is_cm and not client.is_mod:
+            if not client in client.area.owners and not client.is_mod:
                 return False
         if client.area.evidence_mod == 'HiddenCM':
-            if not client.is_cm and not client.is_mod:
+            if not client in client.area.owners and not client.is_mod:
                 return False
         return True
 
@@ -44,13 +70,12 @@ class EvidenceList:
         if client.area.evidence_mod != 'HiddenCM':
             return True
         else:
-            #correct format: <owner = pos>\ndesc
+            # correct format: <owner = pos>\ndesc
             if desc[:9] == '<owner = ' and desc[9:12] in self.poses and desc[12:14] == '>\n':
                 return True
             return False
-            
-        
-    def add_evidence(self, client, name, description, image, pos = 'all'):
+
+    def add_evidence(self, client, name, description, image, pos='all'):
         if self.login(client):
             if client.area.evidence_mod == 'HiddenCM':
                 pos = 'pos'
@@ -58,11 +83,11 @@ class EvidenceList:
                 client.send_host_message('You can\'t have more than {} evidence items at a time.'.format(self.limit))
             else:
                 self.evidences.append(self.Evidence(name, description, image, pos))
-        
+
     def evidence_swap(self, client, id1, id2):
         if self.login(client):
             self.evidences[id1], self.evidences[id2] = self.evidences[id2], self.evidences[id1]
-            
+
     def create_evi_list(self, client):
         evi_list = []
         nums_list = [0]
@@ -70,16 +95,17 @@ class EvidenceList:
             if client.area.evidence_mod == 'HiddenCM' and self.login(client):
                 nums_list.append(i + 1)
                 evi = self.evidences[i]
-                evi_list.append(self.Evidence(evi.name, '<owner = {}>\n{}'.format(evi.pos, evi.desc), evi.image, evi.pos).to_string())
+                evi_list.append(self.Evidence(evi.name, '<owner = {}>\n{}'.format(evi.pos, evi.desc), evi.image,
+                                              evi.pos).to_string())
             elif client.pos in self.poses[self.evidences[i].pos]:
                 nums_list.append(i + 1)
                 evi_list.append(self.evidences[i].to_string())
         return nums_list, evi_list
-    
+
     def del_evidence(self, client, id):
         if self.login(client):
             self.evidences.pop(id)
-        
+
     def edit_evidence(self, client, id, arg):
         if self.login(client):
             if client.area.evidence_mod == 'HiddenCM' and self.correct_format(client, arg[1]):

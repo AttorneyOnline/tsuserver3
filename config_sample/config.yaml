@@ -7,6 +7,9 @@ modpass: mod
 
 motd: Welcome to my server!
 
+use_websockets: true
+websocket_port: 50001
+
 use_district: false
 district_ip: 127.0.0.1
 district_port: 11037
