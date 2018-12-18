@@ -60,6 +60,9 @@ class HubManager:
 				self.is_locked = False
 				self.is_hidden = False
 
+			def set_desc(self, dsc):
+				desc = dsc[:512]
+
 			def save(self):
 				desc = self.desc
 				if len(self.desc) <= 0:
@@ -174,7 +177,7 @@ class HubManager:
 				return (time.time() * 1000.0 - self.next_message_time) > 0
 
 			def cannot_ic_interact(self, client):
-				return True
+				return False
 				# return self.is_locked != self.Locked.FREE and not client.is_mod and not client.id in self.invite_list
 
 			def change_hp(self, side, val):
@@ -224,7 +227,7 @@ class HubManager:
 			# 	return msg
 
 		def __init__(self, hub_id, server, name, allow_cm=False, max_areas=1, doc='No document.', status='IDLE', showname_changes_allowed=False,
-					 shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, abbreviation=''):
+					 shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation=''):
 			self.server = server
 			self.id = hub_id
 			self.name = name
@@ -236,6 +239,7 @@ class HubManager:
 			self.shouts_allowed = shouts_allowed
 			self.non_int_pres_only = non_int_pres_only
 			self.iniswap_allowed = iniswap_allowed
+			self.blankposting_allowed = blankposting_allowed
 			self.abbreviation = abbreviation
 			
 			self.rpmode = False
@@ -449,11 +453,14 @@ class HubManager:
 				hub['noninterrupting_pres'] = False
 			if 'iniswap_allowed' not in hub:
 				hub['iniswap_allowed'] = True
+			if 'blankposting_allowed' not in hub:
+				hub['blankposting_allowed'] = True
 			if 'abbreviation' not in hub:
 				hub['abbreviation'] = self.get_generated_abbreviation(hub['hub'])
 			_hub = self.Hub(self.cur_id, self.server, hub['hub'], hub['allow_cm'],
 							hub['max_areas'], hub['doc'], hub['status'], hub['showname_changes_allowed'],
-							hub['shouts_allowed'], hub['noninterrupting_pres'], hub['iniswap_allowed'], hub['abbreviation'])
+							hub['shouts_allowed'], hub['noninterrupting_pres'], hub['iniswap_allowed'],
+							hub['blankposting_allowed'], hub['abbreviation'])
 			self.hubs.append(_hub)
 			self.cur_id += 1
 			for area in hub['areas']:
@@ -515,3 +522,30 @@ class HubManager:
 			return name[:3].upper()
 		else:
 			return name.upper()
+
+	def send_arup_players(self):
+		players_list = [0]
+		for hub in self.hubs:
+			players_list.append(len(hub.clients()))
+		self.server.send_arup(players_list)
+
+	def send_arup_status(self):
+		status_list = [1]
+		for hub in self.hubs:
+			status_list.append(hub.status)
+		self.server.send_arup(status_list)
+
+	def send_arup_cms(self):
+		cms_list = [2]
+		for hub in self.hubs:
+			cm = 'FREE'
+			if len(hub.get_cm_list()) > 0:
+				cm = hub.get_cm_list()
+			cms_list.append(cm)
+		self.server.send_arup(cms_list)
+
+	def send_arup_lock(self):
+		lock_list = [3]
+		for hub in self.hubs:
+			lock_list.append(hub.rpmode)
+		self.server.send_arup(lock_list)

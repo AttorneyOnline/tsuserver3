@@ -90,7 +90,7 @@ def ooc_cmd_bg(client, arg):
     except AreaError:
         raise
     client.area.send_host_message('{} changed the background to {}.'.format(client.get_char_name(), arg))
-    logger.log_server('[{}][{}]Changed background to {}'.format(client.area.abbreviation, client.get_char_name(), arg),
+    logger.log_server('[{}][{}]Changed background to {}'.format(client.hub.abbreviation, client.get_char_name(), arg),
                       client)
 
 def ooc_cmd_bglock(client,arg):
@@ -127,7 +127,7 @@ def ooc_cmd_evidence_mod(client, arg):
 
 
 def ooc_cmd_allow_iniswap(client, arg):
-    if not client.is_mod:
+    if not client.is_mod and not client.is_cm:
         raise ClientError('You must be authorized to do that.')
     client.hub.iniswap_allowed = not client.hub.iniswap_allowed
     answer = {True: 'allowed', False: 'forbidden'}
@@ -135,24 +135,33 @@ def ooc_cmd_allow_iniswap(client, arg):
     return
 
 def ooc_cmd_allow_blankposting(client, arg):
-    if not client.is_mod and not client in client.area.owners:
+    if not client.is_mod and not client.is_cm:
         raise ClientError('You must be authorized to do that.')
-    client.area.blankposting_allowed = not client.area.blankposting_allowed
+    client.hub.blankposting_allowed = not client.hub.blankposting_allowed
     answer = {True: 'allowed', False: 'forbidden'}
-    client.area.send_host_message(
-        '{} [{}] has set blankposting in the area to {}.'.format(client.get_char_name(), client.id,
-                                                                 answer[client.area.blankposting_allowed]))
+    client.hub.send_host_message(
+        '{} [{}] has set blankposting in the hub to {}.'.format(client.get_char_name(), client.id,
+                                                                 answer[client.hub.blankposting_allowed]))
     return
 
+def ooc_cmd_allow_shownames(client, arg):
+    if not client.is_mod and not client.is_cm:
+        raise ClientError('You must be authorized to do that.')
+    client.hub.showname_changes_allowed = not client.hub.showname_changes_allowed
+    answer = {True: 'allowed', False: 'forbidden'}
+    client.hub.send_host_message(
+        '{} [{}] has set showname changing in the hub to {}.'.format(client.get_char_name(), client.id,
+                                                                 answer[client.hub.showname_changes_allowed]))
+    return
 
 def ooc_cmd_force_nonint_pres(client, arg):
-    if not client.is_mod and not client in client.area.owners:
+    if not client.is_mod and not client.is_cm:
         raise ClientError('You must be authorized to do that.')
-    client.area.non_int_pres_only = not client.area.non_int_pres_only
+    client.hub.non_int_pres_only = not client.hub.non_int_pres_only
     answer = {True: 'non-interrupting only', False: 'non-interrupting or interrupting as you choose'}
-    client.area.send_host_message('{} [{}] has set pres in the area to be {}.'.format(client.get_char_name(), client.id,
+    client.hub.send_host_message('{} [{}] has set pres in the hub to be {}.'.format(client.get_char_name(), client.id,
                                                                                       answer[
-                                                                                          client.area.non_int_pres_only]))
+                                                                                          client.hub.non_int_pres_only]))
     return
 
 def rtd(arg):
@@ -288,85 +297,6 @@ def ooc_cmd_currentmusic(client, arg):
         client.send_host_message('The current music is {} and was played by {}.'.format(client.area.current_music,
                                                                                         client.area.current_music_player))
 
-
-def ooc_cmd_jukebox_toggle(client, arg):
-    if not client.is_mod and not client in client.area.owners:
-        raise ClientError('You must be authorized to do that.')
-    if len(arg) != 0:
-        raise ArgumentError('This command has no arguments.')
-    client.area.jukebox = not client.area.jukebox
-    client.area.jukebox_votes = []
-    client.area.send_host_message(
-        '{} [{}] has set the jukebox to {}.'.format(client.get_char_name(), client.id, client.area.jukebox))
-
-
-def ooc_cmd_jukebox_skip(client, arg):
-    if not client.is_mod and not client in client.area.owners:
-        raise ClientError('You must be authorized to do that.')
-    if len(arg) != 0:
-        raise ArgumentError('This command has no arguments.')
-    if not client.area.jukebox:
-        raise ClientError('This area does not have a jukebox.')
-    if len(client.area.jukebox_votes) == 0:
-        raise ClientError('There is no song playing right now, skipping is pointless.')
-    client.area.start_jukebox()
-    if len(client.area.jukebox_votes) == 1:
-        client.area.send_host_message(
-            '{} [{}] has forced a skip, restarting the only jukebox song.'.format(client.get_char_name(), client.id))
-    else:
-        client.area.send_host_message(
-            '{} [{}] has forced a skip to the next jukebox song.'.format(client.get_char_name(), client.id))
-    logger.log_server(
-        '[{}][{}]Skipped the current jukebox song.'.format(client.area.abbreviation, client.get_char_name()), client)
-
-
-def ooc_cmd_jukebox(client, arg):
-    if len(arg) != 0:
-        raise ArgumentError('This command has no arguments.')
-    if not client.area.jukebox:
-        raise ClientError('This area does not have a jukebox.')
-    if len(client.area.jukebox_votes) == 0:
-        client.send_host_message('The jukebox has no songs in it.')
-    else:
-        total = 0
-        songs = []
-        voters = dict()
-        chance = dict()
-        message = ''
-
-        for current_vote in client.area.jukebox_votes:
-            if songs.count(current_vote.name) == 0:
-                songs.append(current_vote.name)
-                voters[current_vote.name] = [current_vote.client]
-                chance[current_vote.name] = current_vote.chance
-            else:
-                voters[current_vote.name].append(current_vote.client)
-                chance[current_vote.name] += current_vote.chance
-            total += current_vote.chance
-
-        for song in songs:
-            message += '\n- ' + song + '\n'
-            message += '-- VOTERS: '
-
-            first = True
-            for voter in voters[song]:
-                if first:
-                    first = False
-                else:
-                    message += ', '
-                message += voter.get_char_name() + ' [' + str(voter.id) + ']'
-                if client.is_mod:
-                    message += '(' + str(voter.ipid) + ')'
-            message += '\n'
-
-            if total == 0:
-                message += '-- CHANCE: 100'
-            else:
-                message += '-- CHANCE: ' + str(round(chance[song] / total * 100))
-
-        client.send_host_message('The jukebox has the following songs in it:{}'.format(message))
-
-
 def ooc_cmd_coinflip(client, arg):
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
@@ -374,7 +304,7 @@ def ooc_cmd_coinflip(client, arg):
     flip = random.choice(coin)
     client.area.send_host_message('{} flipped a coin and got {}.'.format(client.get_char_name(), flip))
     logger.log_server(
-        '[{}][{}]Used /coinflip and got {}.'.format(client.area.abbreviation, client.get_char_name(), flip), client)
+        '[{}][{}]Used /coinflip and got {}.'.format(client.hub.abbreviation, client.get_char_name(), flip), client)
 
 
 def ooc_cmd_motd(client, arg):
@@ -415,7 +345,7 @@ def ooc_cmd_poslock(client, arg):
     client.area.send_host_message('Locked pos into {}.'.format(arg))
 
 def ooc_cmd_forcepos(client, arg):
-    if not client in client.area.owners and not client.is_mod:
+    if not client.is_cm and not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if client.area.pos_lock:
         raise ClientError('Positions are locked in this area.')
@@ -455,7 +385,7 @@ def ooc_cmd_forcepos(client, arg):
     client.area.send_host_message(
         '{} forced {} client(s) into /pos {}.'.format(client.get_char_name(), len(targets), pos))
     logger.log_server(
-        '[{}][{}]Used /forcepos {} for {} client(s).'.format(client.area.abbreviation, client.get_char_name(), pos,
+        '[{}][{}]Used /forcepos {} for {} client(s).'.format(client.hub.abbreviation, client.get_char_name(), pos,
                                                              len(targets)), client)
 
 
@@ -553,8 +483,8 @@ def ooc_cmd_play(client, arg):
     if len(arg) == 0:
         raise ArgumentError('You must specify a song.')
     client.area.play_music(arg, client.char_id, -1)
-    client.area.add_music_playing(client, arg)
-    logger.log_server('[{}][{}]Changed music to {}.'.format(client.area.abbreviation, client.get_char_name(), arg),
+    # client.area.add_music_playing(client, arg)
+    logger.log_server('[{}][{}]Changed music to {}.'.format(client.hub.abbreviation, client.get_char_name(), arg),
                       client)
 
 
@@ -715,8 +645,8 @@ def ooc_cmd_gm(client, arg):
     if len(arg) == 0:
         raise ArgumentError("Can't send an empty message.")
     client.server.broadcast_global(client, arg, True)
-    logger.log_server('[{}][{}][GLOBAL-MOD]{}.'.format(client.area.abbreviation, client.get_char_name(), arg), client)
-    logger.log_mod('[{}][{}][GLOBAL-MOD]{}.'.format(client.area.abbreviation, client.get_char_name(), arg), client)
+    logger.log_server('[{}][{}][GLOBAL-MOD]{}.'.format(client.hub.abbreviation, client.get_char_name(), arg), client)
+    logger.log_mod('[{}][{}][GLOBAL-MOD]{}.'.format(client.hub.abbreviation, client.get_char_name(), arg), client)
 
 
 def ooc_cmd_m(client, arg):
@@ -725,8 +655,8 @@ def ooc_cmd_m(client, arg):
     if len(arg) == 0:
         raise ArgumentError("You can't send an empty message.")
     client.server.send_modchat(client, arg)
-    logger.log_server('[{}][{}][MODCHAT]{}.'.format(client.area.abbreviation, client.get_char_name(), arg), client)
-    logger.log_mod('[{}][{}][MODCHAT]{}.'.format(client.area.abbreviation, client.get_char_name(), arg), client)
+    logger.log_server('[{}][{}][MODCHAT]{}.'.format(client.hub.abbreviation, client.get_char_name(), arg), client)
+    logger.log_mod('[{}][{}][MODCHAT]{}.'.format(client.hub.abbreviation, client.get_char_name(), arg), client)
 
 
 def ooc_cmd_lm(client, arg):
@@ -736,8 +666,8 @@ def ooc_cmd_lm(client, arg):
         raise ArgumentError("Can't send an empty message.")
     client.area.send_command('CT', '{}[MOD][{}]'
                              .format(client.server.config['hostname'], client.get_char_name()), arg)
-    logger.log_server('[{}][{}][LOCAL-MOD]{}.'.format(client.area.abbreviation, client.get_char_name(), arg), client)
-    logger.log_mod('[{}][{}][LOCAL-MOD]{}.'.format(client.area.abbreviation, client.get_char_name(), arg), client)
+    logger.log_server('[{}][{}][LOCAL-MOD]{}.'.format(client.hub.abbreviation, client.get_char_name(), arg), client)
+    logger.log_mod('[{}][{}][LOCAL-MOD]{}.'.format(client.hub.abbreviation, client.get_char_name(), arg), client)
 
 
 def ooc_cmd_announce(client, arg):
@@ -747,8 +677,8 @@ def ooc_cmd_announce(client, arg):
         raise ArgumentError("Can't send an empty message.")
     client.server.send_all_cmd_pred('CT', '{}'.format(client.server.config['hostname']),
                                     '=== Announcement ===\r\n{}\r\n=================='.format(arg), '1')
-    logger.log_server('[{}][{}][ANNOUNCEMENT]{}.'.format(client.area.abbreviation, client.get_char_name(), arg), client)
-    logger.log_mod('[{}][{}][ANNOUNCEMENT]{}.'.format(client.area.abbreviation, client.get_char_name(), arg), client)
+    logger.log_server('[{}][{}][ANNOUNCEMENT]{}.'.format(client.hub.abbreviation, client.get_char_name(), arg), client)
+    logger.log_mod('[{}][{}][ANNOUNCEMENT]{}.'.format(client.hub.abbreviation, client.get_char_name(), arg), client)
 
 
 def ooc_cmd_toggleglobal(client, arg):
@@ -815,12 +745,23 @@ def ooc_cmd_desc(client, arg):
         client.area.send_host_message('{} changed the area description.'.format(client.get_char_name()))
         logger.log_server('[{}][{}]Changed document to: {}'.format(client.area.id, client.get_char_name(), arg))
 
+def ooc_cmd_descadd(client, arg):
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a string. Use /descadd <str>.')
+
+    if client.hub.status.lower().startswith('rp-strict') and not client.is_cm:
+        raise AreaError(
+            'Hub is {} - only the CM can change /descadd for this area.'.format(client.hub.status))
+    client.area.desc += arg
+    client.area.send_host_message('{} added to the area description.'.format(client.get_char_name()))
+    logger.log_server('[{}][{}]Changed document to: {}'.format(client.area.id, client.get_char_name(), arg))
+
 def ooc_cmd_cleardoc(client, arg):
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
     client.area.send_host_message('{} cleared the doc link.'.format(client.get_char_name()))
     logger.log_server('[{}][{}]Cleared document. Old link: {}'
-                      .format(client.area.abbreviation, client.get_char_name(), client.area.doc), client)
+                      .format(client.hub.abbreviation, client.get_char_name(), client.area.doc), client)
     client.area.change_doc()
 
 
@@ -903,7 +844,7 @@ def ooc_cmd_unfollow(client, arg):
 
 def ooc_cmd_area(client, arg):
     args = arg.split()
-    casing = not client.is_mod and not client.is_cm and client.hub.rpmode
+    rpmode = not client.is_mod and not client.is_cm and client.hub.rpmode
     if arg.lower() in ('accessible', 'visible', 'player'):
         rpmode = True
         args.clear()
@@ -952,7 +893,7 @@ def ooc_cmd_area_add(client, arg):
 
     if client.hub.cur_id < client.hub.max_areas:
         client.hub.create_area('Area {}'.format(client.hub.cur_id), True,
-                           client.server.backgrounds[0], False, None, 'FFA', True, True, True, [], '')
+                           client.server.backgrounds[0], False, None, 'FFA', True, True, [], '')
         client.hub.send_host_message(
             'New area created! ({}/{})'.format(client.hub.cur_id, client.hub.max_areas))
     else:
@@ -1799,7 +1740,6 @@ def ooc_cmd_blockdj(client, arg):
         target.send_host_message('A moderator muted you from changing the music.')
         logger.log_server('BlockDJ\'d {} [{}]({}).'.format(target.get_char_name(), target.id, target.get_ip()), client)
         logger.log_mod('BlockDJ\'d {} [{}]({}).'.format(target.get_char_name(), target.id, target.get_ip()), client)
-        target.area.remove_jukebox_vote(target, True)
     client.send_host_message('blockdj\'d {}.'.format(targets[0].get_char_name()))
 
 

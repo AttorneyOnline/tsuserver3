@@ -256,7 +256,7 @@ class TsuServer3:
     def send_modchat(self, client, msg):
         char_name = client.get_char_name()
         name = client.name
-        ooc_name = '{}[{}][{}]'.format('<dollar>M', client.area.abbreviation, name)
+        ooc_name = '{}[{}][{}]'.format('<dollar>M', client.hub.abbreviation, name)
         self.send_all_cmd_pred('CT', ooc_name, msg, pred=lambda x: x.is_mod)
         if self.config['use_district']:
             self.district_client.send_raw_message(

@@ -161,10 +161,10 @@ class ClientManager:
             self.send_command('PV', self.id, 'CID', self.char_id)
             self.area.send_command('CharsCheck', *self.get_available_char_list())
             logger.log_server('[{}]Changed character from {} to {}.'
-                              .format(self.area.abbreviation, old_char, self.get_char_name()), self)
+                              .format(self.hub.abbreviation, old_char, self.get_char_name()), self)
 
         def change_music_cd(self):
-            if self.is_mod or self in self.area.owners:
+            if self.is_mod or self.is_cm:
                 return 0
             if self.mus_mute_time:
                 if time.time() - self.mus_mute_time < self.server.config['music_change_floodguard']['mute_length']:
@@ -198,7 +198,7 @@ class ClientManager:
                 'You are {} blinded from /getarea and seeing non-broadcasted IC messages.'.format(msg))
 
         def wtce_mute(self):
-            if self.is_mod or self in self.area.owners:
+            if self.is_mod or self.is_cm:
                 return 0
             if self.wtce_mute_time:
                 if time.time() - self.wtce_mute_time < self.server.config['wtce_floodguard']['mute_length']:
@@ -230,8 +230,8 @@ class ClientManager:
         def change_area(self, area, hidden=False):
             if self.area == area:
                 raise ClientError('User already in specified area.')
-            if self.area.jukebox:
-                self.area.remove_jukebox_vote(self, True)
+            # if self.area.jukebox:
+            #     self.area.remove_jukebox_vote(self, True)
 
             old_area = self.area
             if not area.is_char_available(self.char_id):
@@ -316,18 +316,12 @@ class ClientManager:
             self.send_host_message(msg)
 
         def get_area_info(self, area_id, mods):
-            info = '\r\n'
             try:
                 area = self.hub.get_area_by_id(area_id)
             except AreaError:
                 raise
-            info += '=== {} ==='.format(area.name)
-            info += '\r\n'
-
-            lock = {area.Locked.FREE: '', area.Locked.SPECTATABLE: '[SPECTATABLE]', area.Locked.LOCKED: '[LOCKED]'}
-            info += '[{}]: [{} users][{}]{}'.format(area.abbreviation, len(area.clients), area.status,
-                                                    lock[area.is_locked])
-
+            info = '= Area {}: {} =='.format(area.id, area.name)
+            
             sorted_clients = []
             for client in area.clients:
                 if (not mods) or client.is_mod:
@@ -336,11 +330,8 @@ class ClientManager:
             sorted_clients = sorted(sorted_clients, key=lambda x: x.get_char_name())
             for c in sorted_clients:
                 info += '\r\n'
-                if c in area.owners:
-                    if not c in area.clients:
-                        info += '[RCM]'
-                    else:
-                        info += '[CM]'
+                if c.is_cm:
+                    info += '[CM]'
                 info += '[{}] {}'.format(c.id, c.get_char_name())
                 if self.is_mod:
                     info += ' ({})'.format(c.ipid)
@@ -367,7 +358,7 @@ class ClientManager:
                 try:
                     info = ''
                     if not hidden:
-                        info = 'People in this area: {}\n'.format(len(self.hub.areas[area_id].clients))
+                        info = 'People in this area: {}\n'.format(len(self.hub.clients()))
                     info += self.get_area_info(area_id, mods)
                 except AreaError:
                     raise
