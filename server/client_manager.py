@@ -402,10 +402,10 @@ class ClientManager:
             self.send_command('LE', *self.area.get_evidence_list(self))
             self.send_command('MM', 1)
 
-            self.server.area_manager.send_arup_players()
-            self.server.area_manager.send_arup_status()
-            self.server.area_manager.send_arup_cms()
-            self.server.area_manager.send_arup_lock()
+            self.server.hub_manager.send_arup_players()
+            self.server.hub_manager.send_arup_status()
+            self.server.hub_manager.send_arup_cms()
+            self.server.hub_manager.send_arup_lock()
 
             self.send_command('DONE')
 
@@ -479,15 +479,15 @@ class ClientManager:
         return c
 
     def remove_client(self, client):
-        if client.area.jukebox:
-            client.area.remove_jukebox_vote(client, True)
-        for a in self.server.area_manager.areas:
-            if client in a.owners:
-                a.owners.remove(client)
-                client.server.area_manager.send_arup_cms()
-                if len(a.owners) == 0:
-                    if a.is_locked != a.Locked.FREE:
-                        a.unlock()
+        # if client.area.jukebox:
+        #     client.area.remove_jukebox_vote(client, True)
+        # for a in self.server.hub_manager.areas:
+        #     if client in a.owners:
+        #         a.owners.remove(client)
+        #         client.server.hub_manager.send_arup_cms()
+        #         if len(a.owners) == 0:
+        #             if a.is_locked != a.Locked.FREE:
+        #                 a.unlock()
         heappush(self.cur_id, client.id)
         self.clients.remove(client)
 

@@ -372,7 +372,7 @@ class AOProtocol(asyncio.Protocol):
                 return
         else:
             return
-        if self.client.area.is_iniswap(self.client, pre, anim, folder) and folder != self.client.get_char_name():
+        if self.client.hub.is_iniswap(self.client, pre, anim, folder) and folder != self.client.get_char_name():
             self.client.send_host_message("Iniswap is blocked in this area")
             return
         if len(self.client.charcurse) > 0 and folder != self.client.get_char_name():
@@ -390,29 +390,29 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_host_message(
                     "While that is not a blankpost, it is still pretty spammy. Try forming sentences.")
                 return
-        if text.startswith('/a '):
-            part = text.split(' ')
-            try:
-                aid = int(part[1])
-                if self.client in self.server.area_manager.get_area_by_id(aid).owners:
-                    target_area.append(aid)
-                if not target_area:
-                    self.client.send_host_message(
-                        'You don\'t own {}!'.format(self.server.area_manager.get_area_by_id(aid).name))
-                    return
-                text = ' '.join(part[2:])
-            except ValueError:
-                self.client.send_host_message("That does not look like a valid area ID!")
-                return
-        elif text.startswith('/s '):
-            part = text.split(' ')
-            for a in self.server.area_manager.areas:
-                if self.client in a.owners:
-                    target_area.append(a.id)
-            if not target_area:
-                self.client.send_host_message('You don\'t any areas!')
-                return
-            text = ' '.join(part[1:])
+        # if text.startswith('/a '):
+        #     part = text.split(' ')
+        #     try:
+        #         aid = int(part[1])
+        #         if self.client in self.server.area_manager.get_area_by_id(aid).owners:
+        #             target_area.append(aid)
+        #         if not target_area:
+        #             self.client.send_host_message(
+        #                 'You don\'t own {}!'.format(self.server.area_manager.get_area_by_id(aid).name))
+        #             return
+        #         text = ' '.join(part[2:])
+        #     except ValueError:
+        #         self.client.send_host_message("That does not look like a valid area ID!")
+        #         return
+        # elif text.startswith('/s '):
+        #     part = text.split(' ')
+        #     for a in self.server.area_manager.areas:
+        #         if self.client in a.owners:
+        #             target_area.append(a.id)
+        #     if not target_area:
+        #         self.client.send_host_message('You don\'t any areas!')
+        #         return
+        #     text = ' '.join(part[1:])
         if msg_type not in ('chat', '0', '1'):
             return
         if anim_type not in (0, 1, 2, 5, 6):
@@ -509,27 +509,41 @@ class AOProtocol(asyncio.Protocol):
             charid_pair = -1
             offset_pair = 0
 
-        self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
-                                      sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
-                                      charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
-                                      nonint_pre)
-
-        self.client.area.send_owner_command('MS', msg_type, pre, folder, anim,
-                                            '[' + self.client.area.abbreviation + ']' + msg, pos, sfx, anim_type, cid,
-                                            sfx_delay, button, self.client.evi_list[evidence], flip, ding, color,
-                                            showname,
-                                            charid_pair, other_folder, other_emote, offset_pair, other_offset,
-                                            other_flip, nonint_pre)
-
-        self.server.area_manager.send_remote_command(target_area, 'MS', msg_type, pre, folder, anim, msg, pos, sfx,
-                                                     anim_type, cid,
-                                                     sfx_delay, button, self.client.evi_list[evidence], flip, ding,
-                                                     color, showname,
-                                                     charid_pair, other_folder, other_emote, offset_pair, other_offset,
-                                                     other_flip, nonint_pre)
+        if self.client.is_cm and len(self.client.broadcast_ic) > 0:
+            i = 0
+            for b in self.client.broadcast_ic:
+                area = self.client.hub.get_area_by_id(b)
+                if area:
+                    if area.pos_lock in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
+                        pos = area.pos_lock
+                    area.send_command('MS', 'broadcast', pre, folder, anim, msg, pos, sfx, anim_type, cid,
+                                        sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
+                                        charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
+                                        nonint_pre)
+                    area.set_next_msg_delay(len(msg))
+                    if (area.is_recording):
+                            current_time = strftime("%H:%M:%S UTC", gmtime())
+                            area.recorded_messages.append('[{}][Broadcast][{}] {}: {}'.format(
+                                current_time, self.client.id, self.client.get_char_name(), msg))
+                            #self.client.area.recorded_messages.append(args)
+                    i += 1
+            self.client.send_host_message(
+                'Broadcasting message to {} areas.'.format(len(self.client.broadcast_ic)))
+        else:
+            if self.client.area.pos_lock in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
+                pos = self.client.area.pos_lock
+            self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
+                                        sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
+                                        charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
+                                        nonint_pre)
+            self.client.area.set_next_msg_delay(len(msg))
+            if (self.client.area.is_recording):
+                current_time = strftime("%H:%M:%S UTC", gmtime())
+                self.client.area.recorded_messages.append('[{}][{}] {}: {}'.format(
+                    current_time, self.client.id, self.client.get_char_name(), msg))
 
         self.client.area.set_next_msg_delay(len(msg))
-        logger.log_server('[IC][{}][{}]{}'.format(self.client.area.abbreviation, self.client.get_char_name(), msg),
+        logger.log_server('[IC][{}][{}]{}'.format(self.client.hub.abbreviation, self.client.area.id, self.client.get_char_name(), msg),
                           self.client)
 
         if (self.client.area.is_recording):
@@ -548,6 +562,7 @@ class AOProtocol(asyncio.Protocol):
             return
         if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR):
             return
+        ooc_name = re.sub('\s+', ' ', args[0]).strip() #Strip the ooc_name of any excess whitespace
         if self.client.name != args[0] and self.client.fake_name != args[0]:
             if self.client.is_valid_name(args[0]):
                 self.client.name = args[0]
@@ -564,8 +579,8 @@ class AOProtocol(asyncio.Protocol):
             if unicodedata.category(c) == 'Cf':
                 self.client.send_host_message('You cannot use format characters in your name!')
                 return
-        if self.client.name.startswith(self.server.config['hostname']) or self.client.name.startswith(
-                '<dollar>G') or self.client.name.startswith('<dollar>M'):
+        if self.client.name.startswith(self.server.config['hostname']) or self.client.name.startswith('<dollar>G')
+                or self.client.name.startswith('CM') or self.client.name.startswith('GM'):
             self.client.send_host_message('That name is reserved!')
             return
         if args[1].startswith(' /'):
@@ -605,7 +620,7 @@ class AOProtocol(asyncio.Protocol):
 
         """
         try:
-            area = self.server.area_manager.get_area_by_name(args[0])
+            area = self.client.hub.get_area_by_name(args[0])
             self.client.change_area(area)
         except AreaError:
             if self.client.is_muted:  # Checks to see if the client has been muted by a mod
@@ -826,6 +841,26 @@ class AOProtocol(asyncio.Protocol):
 
         self.client.area.evi_list.edit_evidence(self.client, self.client.evi_list[int(args[0])], evi)
         self.client.area.broadcast_evidence_list()
+
+        desc = self.client.area.evi_list.evidences[self.client.evi_list[int(
+            args[0])]].desc
+
+        if(args[1] == '/loadhub'):
+            if not self.client.is_mod and not self.client.is_cm:
+                self.client.send_host_message(
+                    "You must be authorized to do that.")
+                return
+            try:
+                self.client.hub.load(desc.strip())
+                self.client.hub.send_host_message(
+                    "Loading hub save data...")
+                self.client.area.evi_list.del_evidence(
+                    self.client, self.client.evi_list[int(args[0])])
+                self.client.area.broadcast_evidence_list()
+            except:
+                self.client.send_host_message(
+                    "Could not load hub save data! Try pressing the [X] and make sure if your save data is correct.")
+
 
     def net_cmd_zz(self, args):
         """ Sent on mod call.

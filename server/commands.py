@@ -30,37 +30,37 @@ from server.pastebin_api import paste_it
 
 # possible keys: ip, OOC, id, cname, ipid, hdid
 
-def ooc_cmd_a(client, arg):
-    if len(arg) == 0:
-        raise ArgumentError('You must specify an area.')
-    arg = arg.split(' ')
+# def ooc_cmd_a(client, arg):
+#     if len(arg) == 0:
+#         raise ArgumentError('You must specify an area.')
+#     arg = arg.split(' ')
 
-    try:
-        area = client.server.area_manager.get_area_by_id(int(arg[0]))
-    except AreaError:
-        raise
+#     try:
+#         area = client.server.hub_manager.get_area_by_id(int(arg[0]))
+#     except AreaError:
+#         raise
 
-    message_areas_cm(client, [area], ' '.join(arg[1:]))
-
-
-def ooc_cmd_s(client, arg):
-    areas = []
-    for a in client.server.area_manager.areas:
-        if client in a.owners:
-            areas.append(a)
-    if not areas:
-        client.send_host_message('You aren\'t a CM in any area!')
-        return
-    message_areas_cm(client, areas, arg)
+#     message_areas_cm(client, [area], ' '.join(arg[1:]))
 
 
-def message_areas_cm(client, areas, message):
-    for a in areas:
-        if not client in a.owners:
-            client.send_host_message('You are not a CM in {}!'.format(a.name))
-            return
-        a.send_command('CT', client.name, message)
-        a.send_owner_command('CT', client.name, message)
+# def ooc_cmd_s(client, arg):
+#     areas = []
+#     for a in client.server.area_manager.areas:
+#         if client in a.owners:
+#             areas.append(a)
+#     if not areas:
+#         client.send_host_message('You aren\'t a CM in any area!')
+#         return
+#     message_areas_cm(client, areas, arg)
+
+
+# def message_areas_cm(client, areas, message):
+#     for a in areas:
+#         if not client in a.owners:
+#             client.send_host_message('You are not a CM in {}!'.format(a.name))
+#             return
+#         a.send_command('CT', client.name, message)
+#         a.send_owner_command('CT', client.name, message)
 
 
 def ooc_cmd_switch(client, arg):
@@ -71,14 +71,14 @@ def ooc_cmd_switch(client, arg):
     except ServerError:
         raise
     try:
-        client.change_character(cid, client.is_mod)
+        client.change_character(cid, client.is_mod or client.is_cm)
     except ClientError:
         raise
     client.send_host_message('Character changed.')
 
 
 def ooc_cmd_bg(client, arg):
-    if client.hub.status.lower().startswith('casing') and not client.is_mod and not client.is_cm:
+    if client.hub.status.lower().startswith('rp-strict') and not client.is_mod and not client.is_cm:
         raise AreaError(
             'Hub is {} - only the CM or mods can change /bg.'.format(client.hub.status))
     if len(arg) == 0:
@@ -106,7 +106,7 @@ def ooc_cmd_bglock(client,arg):
     logger.log_server('[{}][{}]Changed bglock to {}'.format(client.area.id, client.get_char_name(), client.area.bg_lock), client)
 
 def ooc_cmd_evidence_mod(client, arg):
-    if not client.is_mod:
+    if not client.is_mod and not client.is_cm:
         raise ClientError('You must be authorized to do that.')
     if not arg:
         client.send_host_message('current evidence mod: {}'.format(client.area.evidence_mod))
@@ -129,9 +129,9 @@ def ooc_cmd_evidence_mod(client, arg):
 def ooc_cmd_allow_iniswap(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
-    client.area.iniswap_allowed = not client.area.iniswap_allowed
+    client.hub.iniswap_allowed = not client.hub.iniswap_allowed
     answer = {True: 'allowed', False: 'forbidden'}
-    client.send_host_message('iniswap is {}.'.format(answer[client.area.iniswap_allowed]))
+    client.send_host_message('iniswap is {}.'.format(answer[client.hub.iniswap_allowed]))
     return
 
 def ooc_cmd_allow_blankposting(client, arg):
@@ -795,7 +795,7 @@ def ooc_cmd_doc(client, arg):
         logger.log_server(
             '[{}][{}]Requested document. Link: {}'.format(client.area.id, client.get_char_name(), client.hub.doc))
     else:
-        if client.hub.status.lower().startswith('casing') and not client.is_cm:
+        if client.hub.status.lower().startswith('rp-strict') and not client.is_cm:
             raise AreaError(
                 'Hub is {} - only the CM can change /doc.'.format(client.hub.status))
         client.hub.change_doc(arg)
@@ -808,7 +808,7 @@ def ooc_cmd_desc(client, arg):
         logger.log_server(
             '[{}][{}]Requested description: {}'.format(client.area.id, client.get_char_name(), client.area.desc))
     else:
-        if client.hub.status.lower().startswith('casing') and not client.is_cm:
+        if client.hub.status.lower().startswith('rp-strict') and not client.is_cm:
             raise AreaError(
                 'Hub is {} - only the CM can change /desc for this area.'.format(client.hub.status))
         client.area.desc = arg
@@ -903,13 +903,12 @@ def ooc_cmd_unfollow(client, arg):
 
 def ooc_cmd_area(client, arg):
     args = arg.split()
-    casing = not client.is_mod and not client.is_cm and client.hub.status.lower().startswith(
-        'casing')
+    casing = not client.is_mod and not client.is_cm and client.hub.rpmode
     if arg.lower() in ('accessible', 'visible', 'player'):
-        casing = True
+        rpmode = True
         args.clear()
     if len(args) == 0:
-        client.send_area_list(casing, casing)
+        client.send_area_list(rpmode, rpmode)
         return
 
     try:
@@ -917,7 +916,7 @@ def ooc_cmd_area(client, arg):
 
         if area.is_locked and not client.is_mod and not client.is_cm and not client.ipid in area.invite_list:
             raise ClientError("That area is locked!")
-        if area != client.area and casing and len(client.area.accessible) > 0 and area.id not in client.area.accessible and not client.is_cm and not client.is_mod:
+        if area != client.area and rpmode and len(client.area.accessible) > 0 and area.id not in client.area.accessible and not client.is_cm and not client.is_mod:
             raise AreaError(
                 'Area ID not accessible from your current area!')
 
@@ -1080,7 +1079,7 @@ def ooc_cmd_randomchar(client, arg):
 
 
 def ooc_cmd_getarea(client, arg):
-    # if client.hub.status.lower().startswith('casing') and not client.is_cm:
+    # if client.hub.rpmode and not client.is_cm:
     #     raise AreaError('Hub is {} - /getarea functionality disabled.'.format(client.hub.status))
     if client.blinded:
         raise ArgumentError('You are blinded - you cannot use this command!')
@@ -1089,8 +1088,7 @@ def ooc_cmd_getarea(client, arg):
         if not client.is_cm and not client.is_mod:
             raise ClientError('You must be authorized to /getarea <id>.')
         id = int(arg)
-    client.send_area_info(id, False, client.hub.status.lower().startswith(
-        'casing') and not client.is_cm and not client.is_mod)
+    client.send_area_info(id, False, client.hub.rpmode and not client.is_cm and not client.is_mod)
 
 def ooc_cmd_hide(client, arg):
     if not client.is_cm and not client.is_mod:
@@ -1178,13 +1176,13 @@ def ooc_cmd_unblind(client, arg):
 def ooc_cmd_getareas(client, arg):
     if client.blinded:
         raise ArgumentError('You are blinded - you cannot use this command!')
-    if client.hub.status.lower().startswith('casing') and not client.is_cm:
+    if client.hub.rpmode and not client.is_cm:
         raise AreaError('Hub is {} - /getareas functionality disabled.'.format(client.hub.status))
     client.send_area_info(-1, False)
 
 
 def ooc_cmd_mods(client, arg):
-    if client.hub.status.lower().startswith('casing') and not client.is_cm:
+    if client.hub.rpmode and not client.is_cm:
         raise AreaError('Hub is {} - /getarea functionality disabled.'.format(client.hub.status))
     client.send_area_info(-1, True)  
 

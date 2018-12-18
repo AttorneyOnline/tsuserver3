@@ -26,17 +26,25 @@ from server.evidence import EvidenceList
 class HubManager:
 	class Hub:
 		class Area:
-			def __init__(self, area_id, server, hub, name, can_rename, background, bg_lock, pos_lock, evidence_mod = 'FFA', locking_allowed = False, iniswap_allowed = True, can_remove = False, accessible = [], desc = ''):
-				self.iniswap_allowed = iniswap_allowed
-				self.clients = set()
-				self.invite_list = {}
+			def __init__(self, area_id, server, hub, name, can_rename, background, bg_lock, pos_lock, evidence_mod = 'FFA',
+						locking_allowed = False, can_remove = False, accessible = [], desc = ''):
 				self.id = area_id
+				self.server = server
+				self.hub = hub
 				self.name = name
 				self.can_rename = can_rename
 				self.background = background
 				self.bg_lock = bg_lock
-				self.pos_lock = pos_lock in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit') or None
-				self.server = server
+				self.pos_lock = pos_lock in (
+					'def', 'pro', 'hld', 'hlp', 'jud', 'wit') or None
+				self.evidence_mod = evidence_mod
+				self.locking_allowed = locking_allowed
+				self.can_remove = can_remove
+				self.accessible = accessible
+				self.desc = desc
+
+				self.clients = set()
+				self.invite_list = {}
 				self.music_looper = None
 				self.next_message_time = 0
 				self.hp_def = 10
@@ -48,17 +56,7 @@ class HubManager:
 				self.is_recording = False
 				self.record_start = 0
 				self.recorded_messages = []
-				self.evidence_mod = evidence_mod
-				self.locking_allowed = locking_allowed
-				self.showname_changes_allowed = showname_changes_allowed
-				self.shouts_allowed = shouts_allowed
-				self.abbreviation = abbreviation
-				self.hub = hub
-				self.desc = desc
 				self.mute_ic = False
-				self.can_remove = can_remove
-				self.accessible = accessible
-
 				self.is_locked = False
 				self.is_hidden = False
 
@@ -152,99 +150,6 @@ class HubManager:
 			def set_next_msg_delay(self, msg_length):
 				delay = min(3000, 100 + 60 * msg_length)
 				self.next_message_time = round(time.time() * 1000.0 + delay)
-			
-			def is_iniswap(self, client, anim1, anim2, char):
-				if self.iniswap_allowed:
-					return False
-				if '..' in anim1 or '..' in anim2:
-					return True
-				for char_link in self.server.allowed_iniswaps:
-					if client.get_char_name() in char_link and char in char_link:
-						return False
-				return True
-
-			def add_jukebox_vote(self, client, music_name, length=-1, showname=''):
-				if not self.jukebox:
-					return
-				if length <= 0:
-					self.remove_jukebox_vote(client, False)
-				else:
-					self.remove_jukebox_vote(client, True)
-					self.jukebox_votes.append(self.JukeboxVote(
-						client, music_name, length, showname))
-					client.send_host_message('Your song was added to the jukebox.')
-					if len(self.jukebox_votes) == 1:
-						self.start_jukebox()
-
-			def remove_jukebox_vote(self, client, silent):
-				if not self.jukebox:
-					return
-				for current_vote in self.jukebox_votes:
-					if current_vote.client.id == client.id:
-						self.jukebox_votes.remove(current_vote)
-				if not silent:
-					client.send_host_message(
-						'You removed your song from the jukebox.')
-
-			def get_jukebox_picked(self):
-				if not self.jukebox:
-					return
-				if len(self.jukebox_votes) == 0:
-					return None
-				elif len(self.jukebox_votes) == 1:
-					return self.jukebox_votes[0]
-				else:
-					weighted_votes = []
-					for current_vote in self.jukebox_votes:
-						i = 0
-						while i < current_vote.chance:
-							weighted_votes.append(current_vote)
-							i += 1
-					return random.choice(weighted_votes)
-
-			def start_jukebox(self):
-				# There is a probability that the jukebox feature has been turned off since then,
-				# we should check that.
-				# We also do a check if we were the last to play a song, just in case.
-				if not self.jukebox:
-					if self.current_music_player == 'The Jukebox' and self.current_music_player_ipid == 'has no IPID':
-						self.current_music = ''
-					return
-
-				vote_picked = self.get_jukebox_picked()
-
-				if vote_picked is None:
-					self.current_music = ''
-					return
-
-				if vote_picked.client.char_id != self.jukebox_prev_char_id or vote_picked.name != self.current_music or len(
-						self.jukebox_votes) > 1:
-					self.jukebox_prev_char_id = vote_picked.client.char_id
-					if vote_picked.showname == '':
-						self.send_command('MC', vote_picked.name,
-										vote_picked.client.char_id)
-					else:
-						self.send_command(
-							'MC', vote_picked.name, vote_picked.client.char_id, vote_picked.showname)
-				else:
-					self.send_command('MC', vote_picked.name, -1)
-
-				self.current_music_player = 'The Jukebox'
-				self.current_music_player_ipid = 'has no IPID'
-				self.current_music = vote_picked.name
-
-				for current_vote in self.jukebox_votes:
-					# Choosing the same song will get your votes down to 0, too.
-					# Don't want the same song twice in a row!
-					if current_vote.name == vote_picked.name:
-						current_vote.chance = 0
-					else:
-						current_vote.chance += 1
-
-				if self.music_looper:
-					self.music_looper.cancel()
-				self.music_looper = asyncio.get_event_loop().call_later(
-					vote_picked.length, lambda: self.start_jukebox())
 
 			def play_music(self, name, cid, length=-1):
 				self.send_command('MC', name, cid)
@@ -289,17 +194,6 @@ class HubManager:
 				self.background = bg
 				self.send_command('BN', self.background)
 
-			def change_status(self, value):
-				allowed_values = ('idle', 'rp', 'casing',
-								'looking-for-players', 'lfp', 'recess', 'gaming')
-				if value.lower() not in allowed_values:
-					raise AreaError('Invalid status. Possible values: {}'.format(
-						', '.join(allowed_values)))
-				if value.lower() == 'lfp':
-					value = 'looking-for-players'
-				self.status = value.upper()
-				self.server.area_manager.send_arup_status()
-
 			def change_doc(self, doc='No document.'):
 				self.doc = doc
 
@@ -329,19 +223,26 @@ class HubManager:
 			# 		msg = msg[:-2]
 			# 	return msg
 
-		def __init__(self, hub_id, server, name, allow_cm=False, max_areas=1, doc='No document.', status='IDLE'):
+		def __init__(self, hub_id, server, name, allow_cm=False, max_areas=1, doc='No document.', status='IDLE', showname_changes_allowed=False,
+					 shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, abbreviation=''):
 			self.server = server
 			self.id = hub_id
-			self.cur_id = 0
 			self.name = name
 			self.allow_cm = allow_cm
-			self.areas = []
 			self.max_areas = max_areas
-			self.master = None
-			self.is_ooc_muted = False
-			self.status = status
 			self.doc = doc
-
+			self.status = status
+			self.showname_changes_allowed = showname_changes_allowed
+			self.shouts_allowed = shouts_allowed
+			self.non_int_pres_only = non_int_pres_only
+			self.iniswap_allowed = iniswap_allowed
+			self.abbreviation = abbreviation
+			
+			self.rpmode = False
+			self.master = None
+			self.is_ooc_muted = False			
+			self.areas = []
+			self.cur_id = 0
 			
 		def save(self):
 			s = ''
@@ -356,7 +257,7 @@ class HubManager:
 			try:
 				while len(self.areas) <= len(args):
 					self.create_area('Area {}'.format(self.cur_id), True,
-											self.server.backgrounds[0], False, None, 'FFA', True, True, True, [], '')
+											self.server.backgrounds[0], False, None, 'FFA', True, True, [], '')
 				i = 1
 				for a in args:
 					print(a)
@@ -367,9 +268,9 @@ class HubManager:
 			except:
 				raise AreaError('Bad save file!')
 
-		def create_area(self, name, can_rename, bg, bglock, poslock, evimod, lockallow, swapallow, removable, accessible, desc):
+		def create_area(self, name, can_rename, bg, bglock, poslock, evimod, lockallow, removable, accessible, desc):
 			self.areas.append(
-				self.Area(self.cur_id, self.server, self, name, can_rename, bg, bglock, poslock, evimod, lockallow, swapallow, removable, accessible, desc))
+				self.Area(self.cur_id, self.server, self, name, can_rename, bg, bglock, poslock, evimod, lockallow, removable, accessible, desc))
 			self.cur_id += 1
 
 		def remove_area(self, area):
@@ -429,16 +330,30 @@ class HubManager:
 					raise AreaError('Area not found.')
 
 		def change_status(self, value):
-			allowed_values = ('idle', 'building-open', 'building-full',
-								'casing-open', 'casing-full', 'recess')
+			allowed_values = ('idle', 'rp', 'rp-strict',
+							'looking-for-players', 'lfp', 'recess', 'gaming')
 			if value.lower() not in allowed_values:
 				raise AreaError('Invalid status. Possible values: {}'.format(
 					', '.join(allowed_values)))
+			if value.lower() == 'lfp':
+				value = 'looking-for-players'
 			self.status = value.upper()
-			if value.lower().startswith('casing'):
+			if value.lower().startswith('rp'):
 				self.start_recording(True, True)
+				self.rpmode = True
 			else:
 				self.stop_recording(True)
+				self.rpmode = False
+
+		def is_iniswap(self, client, anim1, anim2, char):
+			if self.iniswap_allowed:
+				return False
+			if '..' in anim1 or '..' in anim2:
+				return True
+			for char_link in self.server.allowed_iniswaps:
+				if client.get_char_name() in char_link and char in char_link:
+					return False
+			return True
 
 		def clear_recording(self, announce=False):
 			for area in self.areas:
@@ -526,8 +441,19 @@ class HubManager:
 				hub['doc'] = 'No document.'
 			if 'status' not in hub:
 				hub['status'] = 'IDLE'
-			_hub = self.Hub(self.cur_id, self.server,
-							hub['hub'], hub['allow_cm'], hub['max_areas'], hub['doc'], hub['status'])
+			if 'showname_changes_allowed' not in hub:
+				hub['showname_changes_allowed'] = False
+			if 'shouts_allowed' not in hub:
+				hub['shouts_allowed'] = True
+			if 'noninterrupting_pres' not in hub:
+				hub['noninterrupting_pres'] = False
+			if 'iniswap_allowed' not in hub:
+				hub['iniswap_allowed'] = True
+			if 'abbreviation' not in hub:
+				hub['abbreviation'] = self.get_generated_abbreviation(hub['hub'])
+			_hub = self.Hub(self.cur_id, self.server, hub['hub'], hub['allow_cm'],
+							hub['max_areas'], hub['doc'], hub['status'], hub['showname_changes_allowed'],
+							hub['shouts_allowed'], hub['noninterrupting_pres'], hub['iniswap_allowed'], hub['abbreviation'])
 			self.hubs.append(_hub)
 			self.cur_id += 1
 			for area in hub['areas']:
@@ -541,18 +467,18 @@ class HubManager:
 					area['evidence_mod'] = 'FFA'
 				if 'locking_allowed' not in area:
 					area['locking_allowed'] = False
-				if 'iniswap_allowed' not in area:
-					area['iniswap_allowed'] = True
 				if 'can_remove' not in area:
 					area['can_remove'] = False
-				if 'desc' not in area:
-					area['desc'] = ''
 				if 'accessible' not in area:
 					area['accessible'] = []
 				else:		
 					area['accessible'] = [int(s) for s in str(area['accessible']).split(' ')]
+				if 'desc' not in area:
+					area['desc'] = ''
 
-				_hub.create_area(area['area'], area['can_rename'], area['background'], area['bglock'], area['poslock'], area['evidence_mod'], area['locking_allowed'], area['iniswap_allowed'], area['can_remove'], area['accessible'], area['desc'])
+				_hub.create_area(area['area'], area['can_rename'], area['background'], area['bglock'],
+								area['poslock'], area['evidence_mod'], area['locking_allowed'],
+								area['can_remove'], area['accessible'], area['desc'])
 
 	def default_hub(self):
 		return self.hubs[0]
@@ -577,3 +503,15 @@ class HubManager:
 				return self.get_hub_by_id(int(args))
 			except:
 				raise AreaError('Hub not found.')
+
+	def get_generated_abbreviation(self, name):
+		if name.lower().startswith("courtroom"):
+			return "CR" + name.split()[-1]
+		elif name.lower().startswith("area"):
+			return "A" + name.split()[-1]
+		elif len(name.split()) > 1:
+			return "".join(item[0].upper() for item in name.split())
+		elif len(name) > 3:
+			return name[:3].upper()
+		else:
+			return name.upper()
