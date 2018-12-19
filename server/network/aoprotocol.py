@@ -390,6 +390,9 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_host_message(
                     "While that is not a blankpost, it is still pretty spammy. Try forming sentences.")
                 return
+        if text.lstrip().startswith('((')
+            self.client.send_host_message("Please, *please* use the OOC chat instead of polluting IC. Normal OOC is local to area. You can use /h to talk hub-wide or /g to talk across the entire server.")
+            return
         # if text.startswith('/a '):
         #     part = text.split(' ')
         #     try:
@@ -415,6 +418,8 @@ class AOProtocol(asyncio.Protocol):
         #     text = ' '.join(part[1:])
         if msg_type not in ('chat', '0', '1'):
             return
+        if msg_type == 'chat': #For foregrounds
+            msg_type = '1'
         if anim_type not in (0, 1, 2, 5, 6):
             return
         if cid != self.client.char_id:

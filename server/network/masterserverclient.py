@@ -43,12 +43,13 @@ class MasterServerClient:
             finally:
                 logger.log_debug(
                     "Couldn't connect to the master server, retrying in 30 seconds.")
+                print("Couldn't connect to the master server, retrying in 30 seconds.")
                 await asyncio.sleep(30)
 
     async def handle_connection(self):
         logger.log_debug('Master server connected.')
         print('Master server connected ({}:{})'.format(self.server.config['masterserver_ip'],
-                                                        self.server.config['masterserver_port']))
+                                                       self.server.config['masterserver_port']))
 
         await self.send_server_info()
         ping_timeout = False
@@ -63,7 +64,8 @@ class MasterServerClient:
                     raw_msg = data.decode()
                     cmd, *args = raw_msg.split('#')
                     if cmd != 'CHECK' and cmd != 'PONG':
-                        logger.log_debug('[MASTERSERVER][INC][RAW]{}'.format(raw_msg))
+                        logger.log_debug(
+                            '[MASTERSERVER][INC][RAW]{}'.format(raw_msg))
                     elif cmd == 'CHECK':
                         await self.send_raw_message('PING#%')
                     elif cmd == 'PONG':
@@ -77,8 +79,7 @@ class MasterServerClient:
                 last_ping = time.time()
                 ping_timeout = True
                 await self.send_raw_message('PING#%')
-            elif cmd == 'NOSERV':
-                await self.send_server_info()
+            await asyncio.sleep(1)
 
     async def send_server_info(self):
         cfg = self.server.config

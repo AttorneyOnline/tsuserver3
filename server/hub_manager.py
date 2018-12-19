@@ -101,6 +101,7 @@ class HubManager:
 					hidden = ' [HIDDEN]'
 				self.hub.send_to_cm('MoveLog', '[{}] {} has entered area [{}] {}.{}'.format(
 					client.id, client.get_char_name(), self.id, self.name, hidden), [client])
+				self.server.hub_manager.send_arup_players()
 
 			def remove_client(self, client):
 				if self.is_locked and client.ipid in self.invite_list:
@@ -111,6 +112,7 @@ class HubManager:
 					hidden = ' [HIDDEN]'
 				self.hub.send_to_cm('MoveLog', '[{}] {} has left area [{}] {}.{}'.format(
 					client.id, client.get_char_name(), self.id, self.name, hidden), [client])
+				self.server.hub_manager.send_arup_players()
 
 			def lock(self):
 				self.is_locked = True
@@ -348,6 +350,7 @@ class HubManager:
 			else:
 				self.stop_recording(True)
 				self.rpmode = False
+			self.send_arup_status()
 
 		def is_iniswap(self, client, anim1, anim2, char):
 			if self.iniswap_allowed:

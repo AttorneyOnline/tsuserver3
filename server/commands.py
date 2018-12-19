@@ -125,7 +125,6 @@ def ooc_cmd_evidence_mod(client, arg):
         raise ArgumentError('Wrong Argument. Use /evidence_mod <MOD>. Possible values: FFA, CM, Mods, HiddenCM')
         return
 
-
 def ooc_cmd_allow_iniswap(client, arg):
     if not client.is_mod and not client.is_cm:
         raise ClientError('You must be authorized to do that.')
@@ -152,6 +151,15 @@ def ooc_cmd_allow_shownames(client, arg):
     client.hub.send_host_message(
         '{} [{}] has set showname changing in the hub to {}.'.format(client.get_char_name(), client.id,
                                                                  answer[client.hub.showname_changes_allowed]))
+    return
+
+def ooc_cmd_allow_shouts(client, arg):
+    if not client.is_mod and not client.is_cm:
+        raise ClientError('You must be authorized to do that.')
+    client.hub.shouts_allowed = not client.hub.shouts_allowed
+    answer = {True: 'allowed', False: 'forbidden'}
+    client.hub.send_host_message('{} [{}] has set interjections in the hub to {}.'.format(client.get_char_name(), client.id,
+                                                                                answer[client.hub.non_int_pres_only]))
     return
 
 def ooc_cmd_force_nonint_pres(client, arg):
