@@ -390,7 +390,7 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_host_message(
                     "While that is not a blankpost, it is still pretty spammy. Try forming sentences.")
                 return
-        if text.lstrip().startswith('((')
+        if text.lstrip().startswith('(('):
             self.client.send_host_message("Please, *please* use the OOC chat instead of polluting IC. Normal OOC is local to area. You can use /h to talk hub-wide or /g to talk across the entire server.")
             return
         # if text.startswith('/a '):
@@ -650,6 +650,19 @@ class AOProtocol(asyncio.Protocol):
                         int(self.client.change_music_cd())))
                 return
             try:
+                if args[0].startswith('=='): #Trying to stop music because we pressed a category track
+                    if len(args) > 2:
+                        showname = args[2]
+                        if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
+                            self.client.send_host_message("Showname changes are forbidden in this hub!")
+                            return
+                        self.client.area.play_music_shownamed('Stop', self.client.char_id, showname, 0)
+                    else:
+                        self.client.area.play_music('Stop', self.client.char_id, 0)
+                    logger.log_server('[{}][{}]Stopped music.'
+                                        .format(self.client.hub.abbreviation, self.client.get_char_name()),
+                                        self.client)
+                    return
                 name, length = self.server.get_song_data(args[0])
 
                 # if self.client.area.jukebox:
@@ -678,7 +691,7 @@ class AOProtocol(asyncio.Protocol):
                                     .format(self.client.hub.abbreviation, self.client.get_char_name(), name),
                                     self.client)
             except ServerError:
-                return
+                self.client.send_host_message('Error: song {} isn\'t recognized by server!'.format(args[0]))
         except ClientError as ex:
             self.client.send_host_message(ex)
 

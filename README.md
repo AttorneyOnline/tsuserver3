@@ -131,8 +131,8 @@ Requires Python 3.6+ and PyYAML.
     - Add an area
 * **area_remove** <id1> <id2> <idx>
     - Remove listed areas
-* **poslock** <def> <hld> <pro> <hlp> <wit> <jud>
-    - Lock the position of current area into provided pos.
+* **poslock** <def> <hld> <pro> <hlp> <wit> <jud> <clear>
+    - Lock the position of current area into provided pos. <clear> to unlock.
 * **rename** <text>
     - Rename current area's display name to <text>
 * **area_access** <id1> <id2> <idx>

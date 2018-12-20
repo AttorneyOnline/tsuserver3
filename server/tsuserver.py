@@ -214,7 +214,14 @@ class TsuServer3:
             self.music_list_ao2.append(hub.name)
             # then add music
         for item in self.music_list:
-            self.music_list_ao2.append(item['category'])
+            prefixes = ''
+            for song in item['songs']:
+                if song['name'].startswith('['):
+                    s = song['name']
+                    pre = s[s.find("[") : s.find("]")+1]
+                    prefixes += pre + ' '
+                
+            self.music_list_ao2.append('{}  {}'.format(item['category'], prefixes))
             for song in item['songs']:
                 self.music_list_ao2.append(song['name'])
 
