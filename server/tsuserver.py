@@ -152,7 +152,7 @@ class TsuServer3:
             with open('storage/hd_ids.json', 'r', encoding='utf-8') as whole_list:
                 self.hdid_list = json.loads(whole_list.read())
         except:
-            logger.log_debug('Failed to load hd_ids.json from ./storage. If hd_ids.json is exist then remove it.')
+            logger.log_debug('Failed to load hd_ids.json from ./storage. If hd_ids.json exists then remove it.')
 
     def dump_ipids(self):
         with open('storage/ip_ids.json', 'w') as whole_list:
