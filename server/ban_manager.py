@@ -22,15 +22,26 @@ from server.exceptions import ServerError
 
 class BanManager:
     def __init__(self):
-        self.bans = []
+        self.bans = [] #each element: [ipid, reason]
         self.load_banlist()
 
     def load_banlist(self):
         try:
             with open('storage/banlist.json', 'r') as banlist_file:
                 self.bans = json.load(banlist_file)
+                try: #if this fails, or throws a TypeError, we should convert banlist to 2.6.0 style
+                    if len(self.bans[0]) != 2:
+                        self.convert_to_modern_banlist()
+                except TypeError:
+                    self.convert_to_modern_banlist()
+                    
         except FileNotFoundError:
             return
+
+    def convert_to_modern_banlist():
+        bantmp = self.bans
+        for ipid in bantmp:
+            self.write_banlist(ipid, 'N/A')
 
     def write_banlist(self):
         with open('storage/banlist.json', 'w') as banlist_file:
