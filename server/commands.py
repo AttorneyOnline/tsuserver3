@@ -423,21 +423,23 @@ def ooc_cmd_ban(client, arg):
     if len(arg) == 0:
         raise ArgumentError('You must specify a target. Use /ban <ipid> [reason]')
     args = list(arg.split(' '))
+
     raw_ipid = args[0]
+    reason = ' '.join(args[1:])
+    if reason == '':
+        reason = 'N/A'
+
     try:
         ipid = int(raw_ipid)
     except:
         raise ClientError('{} does not look like a valid IPID.'.format(raw_ipid))
     try:
-        client.server.ban_manager.add_ban(ipid)
+        client.server.ban_manager.add_ban(ipid, reason)
     except ServerError:
         raise
     if ipid != None:
         targets = client.server.client_manager.get_targets(client, TargetType.IPID, ipid, False)
         if targets:
-            reason = ' '.join(args[1:])
-            if reason == '':
-                reason = 'N/A'
             for c in targets:
                 c.send_command('KB', reason)
                 c.disconnect()
