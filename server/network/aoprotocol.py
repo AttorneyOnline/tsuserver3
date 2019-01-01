@@ -158,7 +158,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.server.dump_hdids()
         for ipid in self.client.server.hdid_list[self.client.hdid]:
             if self.server.ban_manager.is_banned(ipid):
-                self.client.send_command('BD')
+                self.client.send_command('BD', self.server.ban_manager.get_ban_reason(ipid))
                 self.client.disconnect()
                 return
         logger.log_server('Connected. HDID: {}.'.format(self.client.hdid), self.client)
