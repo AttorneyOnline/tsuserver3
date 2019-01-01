@@ -38,10 +38,11 @@ class BanManager:
         except FileNotFoundError:
             return
 
-    def convert_to_modern_banlist():
+    def convert_to_modern_banlist(self):
         bantmp = self.bans
+        self.bans = []
         for ipid in bantmp:
-            self.write_banlist(ipid, 'N/A')
+            self.add_ban(ipid, 'N/A')
 
     def write_banlist(self):
         with open('storage/banlist.json', 'w') as banlist_file:
