@@ -55,7 +55,7 @@ class AOProtocol(asyncio.Protocol):
         buf = data
 
         if not self.client.is_checked and self.server.ban_manager.is_banned(self.client.ipid):
-            self.client.send_command('BD', self.server.ban_manager.get_ban_reason(ipid))
+            self.client.send_command('BD', self.server.ban_manager.get_ban_reason(self.client.ipid))
             self.client.transport.close()
         else:
             self.client.is_checked = True

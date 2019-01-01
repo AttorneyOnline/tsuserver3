@@ -36,17 +36,17 @@ class BanManager:
         with open('storage/banlist.json', 'w') as banlist_file:
             json.dump(self.bans, banlist_file)
 
-    def add_ban(self, ip, reason):
-        if not self.is_banned(ip):
-            self.bans.append([ip, reason])
+    def add_ban(self, ipid, reason):
+        if not self.is_banned(ipid):
+            self.bans.append([ipid, reason])
         else:
             raise ServerError('This IPID is already banned.')
         self.write_banlist()
 
-    def remove_ban(self, ip):
-        if self.is_banned(ip):
+    def remove_ban(self, ipid):
+        if self.is_banned(ipid):
             for ban in bans:
-                if ip in ban:
+                if ipid in ban:
                     self.bans.remove(ban)
         
         else:
@@ -55,12 +55,12 @@ class BanManager:
 
     def is_banned(self, ipid):
         for ban in self.bans:
-            if ip in ban:
+            if ipid in ban:
                 return True
         return False
 
     def get_ban_reason(self, ipid):
         for ban in self.bans:
-            if ip in ban:
+            if ipid in ban:
                 return ban[1]
         raise ServerError('This IPID is not banned.')
