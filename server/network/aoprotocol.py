@@ -54,12 +54,6 @@ class AOProtocol(asyncio.Protocol):
         """
         buf = data
 
-        if not self.client.is_checked and self.server.ban_manager.is_banned(self.client.ipid):
-            self.client.send_command('BD', self.server.ban_manager.get_ban_reason(self.client.ipid))
-            self.client.transport.close()
-        else:
-            self.client.is_checked = True
-
         if buf is None:
             buf = b''
 
@@ -83,7 +77,13 @@ class AOProtocol(asyncio.Protocol):
                 logger.log_debug('[INC][RAW]{}'.format(msg), self.client)
             try:
                 cmd, *args = msg.split('#')
-                self.net_cmd_dispatcher[cmd](self, args)
+                if not self.client.is_checked:
+                    if cmd == 'HI':
+                        self.net_cmd_dispatcher[cmd](self, args)
+                    else:
+                        logger.log_server('Client did not start handshake. Sent "{}" instead of "HI". IPID: {}'.format(cmd, self.client.ipid), self.client)
+                else:
+                    self.net_cmd_dispatcher[cmd](self, args)
             except KeyError:
                 logger.log_debug('[INC][UNK]{}'.format(msg), self.client)
 
@@ -159,8 +159,10 @@ class AOProtocol(asyncio.Protocol):
         for ipid in self.client.server.hdid_list[self.client.hdid]:
             if self.server.ban_manager.is_banned(ipid):
                 self.client.send_command('BD', self.server.ban_manager.get_ban_reason(ipid))
+                logger.log_server('Banned client tried to connect. HDID: {}. IPID: {}. Ban reason: "{}".' .format(self.client.hdid, self.client.ipid,
                 self.client.disconnect()
                 return
+        self.client.is_checked = True
         logger.log_server('Connected. HDID: {}.'.format(self.client.hdid), self.client)
         self.client.send_command('ID', self.client.id, self.server.software, self.server.get_version_string())
         self.client.send_command('PN', self.server.get_player_count() - 1, self.server.config['playerlimit'])
