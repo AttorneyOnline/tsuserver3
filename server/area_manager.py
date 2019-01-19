@@ -39,7 +39,6 @@ class AreaManager:
             self.background = background
             self.bg_lock = bg_lock
             self.server = server
-            self.music_looper = None
             self.next_message_time = 0
             self.hp_def = 10
             self.hp_pro = 10
@@ -224,25 +223,11 @@ class AreaManager:
                 else:
                     current_vote.chance += 1
 
-            if self.music_looper:
-                self.music_looper.cancel()
-            self.music_looper = asyncio.get_event_loop().call_later(vote_picked.length, lambda: self.start_jukebox())
-
         def play_music(self, name, cid, length=-1):
             self.send_command('MC', name, cid)
-            if self.music_looper:
-                self.music_looper.cancel()
-            if length > 0:
-                self.music_looper = asyncio.get_event_loop().call_later(length,
-                                                                        lambda: self.play_music(name, -1, length))
 
         def play_music_shownamed(self, name, cid, showname, length=-1):
             self.send_command('MC', name, cid, showname)
-            if self.music_looper:
-                self.music_looper.cancel()
-            if length > 0:
-                self.music_looper = asyncio.get_event_loop().call_later(length,
-                                                                        lambda: self.play_music(name, -1, length))
 
         def can_send_message(self, client):
             if self.cannot_ic_interact(client):
@@ -271,7 +256,7 @@ class AreaManager:
             self.send_command('BN', self.background)
 
         def change_status(self, value):
-            allowed_values = ('idle', 'rp', 'casing', 'looking-for-players', 'lfp', 'recess', 'gaming')
+            allowed_values = ('idle', 'rp', 'casing', 'looking-for-players', 'lfp', 'recess', 'gaming', 'casing-open', 'casing-full', 'building-open', 'building-full')
             if value.lower() not in allowed_values:
                 raise AreaError('Invalid status. Possible values: {}'.format(', '.join(allowed_values)))
             if value.lower() == 'lfp':

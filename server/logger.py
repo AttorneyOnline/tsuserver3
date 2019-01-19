@@ -53,6 +53,12 @@ def setup_logger(debug):
     mod_handler.setFormatter(mod_formatter)
     mod_log.addHandler(mod_handler)
 
+    serverpoll_log = logging.getLogger('serverpoll')
+    serverpoll_log.setLevel(logging.INFO)
+    serverpoll_handler = logging.FileHandler('logs/serverpoll.log', encoding='utf-8')
+    serverpoll_handler.setLevel(logging.INFO)
+    serverpoll_handler.setFormatter(srv_formatter)
+    serverpoll_log.addHandler(serverpoll_handler)
 
 def log_debug(msg, client=None):
     msg = parse_client_info(client) + msg
@@ -68,7 +74,17 @@ def log_mod(msg, client=None):
     msg = parse_client_info(client) + msg
     logging.getLogger('mod').info(msg)
 
+def log_serverpoll(msg, client=None):
+    msg = parse_client_info(client) + msg
+    logging.getLogger('serverpoll').info(msg)
 
+def log_connect(msg, client=None):
+    msg = parse_client_info(client) + msg
+    logging.getLogger('connect').info(msg)
+    logging.getLogger('server').info(msg)
+
+    
+    
 def parse_client_info(client):
     if client is None:
         return ''

@@ -410,6 +410,7 @@ def ooc_cmd_kick(client, arg):
         for c in targets:
             logger.log_server('Kicked {} [{}]({}) (reason: {}).'.format(c.get_char_name(), c.id, c.ipid, reason), client)
             logger.log_mod('Kicked {} [{}]({}) (reason: {}).'.format(c.get_char_name(), c.id, c.ipid, reason), client)
+            client.server.stats_manager.kicked_user(c.ipid)
             client.send_host_message("{} was kicked.".format(c.get_char_name()))
             c.send_command('KK', reason)
             c.disconnect()
@@ -443,10 +444,11 @@ def ooc_cmd_ban(client, arg):
             for c in targets:
                 c.send_command('KB', reason)
                 c.disconnect()
-            client.send_host_message('{} clients were kicked.'.format(len(targets)))
+            client.send_host_message('{} clients were banned.'.format(len(targets)))
         client.send_host_message('{} was banned.'.format(ipid))
         logger.log_server('Banned {} (reason: {}).'.format(ipid, reason), client)
         logger.log_mod('Banned {} (reason: {}).'.format(ipid, reason), client)
+        client.server.stats_manager.banned_user(ipid)
 
 
 def ooc_cmd_unban(client, arg):
@@ -778,8 +780,12 @@ def ooc_cmd_getareas(client, arg):
 
 
 def ooc_cmd_mods(client, arg):
-    client.send_area_info(-1, True)
-
+    try:
+        client.send_host_message(
+            "There are {} mods online. {} is in the area.".format(client.server.area_manager.mods_online(),
+                                                                  len(client.area.get_mods())))
+    except Exception as E:
+        print(E)
 
 def ooc_cmd_evi_swap(client, arg):
     args = list(arg.split(' '))
@@ -1369,3 +1375,217 @@ def ooc_cmd_judgelog(client, arg):
         client.send_host_message(jlog_msg)
     else:
         raise ServerError('There have been no judge actions in this area since start of session.')
+
+
+def ooc_cmd_vote(client, arg):
+    if len(arg) == 0:
+        polls = client.server.serverpoll_manager.show_poll_list()
+        if not polls:
+            client.send_host_message('There are currently no polls to vote for. Have a nice day, and God bless.')
+        else:
+            message = 'Current polls:'
+            for x, poll in enumerate(polls):
+                message += '\n{}. {}'.format(x + 1, poll)
+            message += '\nEnter the number of the poll in which you would like to vote in. Enter 0 to cancel.'
+            client.send_host_message(message)
+            client.voting += 1
+    else:
+        client.send_host_message('This command doesn\'t take arguments')
+
+
+def ooc_cmd_votelist(client, arg):
+    if len(arg) > 0:
+        client.send_host_message('This command doesn\'t take arguments')
+    else:
+        polls = client.server.serverpoll_manager.show_poll_list()
+        if not polls:
+            client.send_host_message('There are currently no polls.')
+        else:
+            message = 'Current polls:'
+            for x, poll in enumerate(polls):
+                message += '\n{}. {}'.format(x + 1, poll)
+            client.send_host_message(message)
+
+
+def ooc_cmd_pollset(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be a moderator to use this command.')
+    client.server.serverpoll_manager.add_poll(arg)
+    client.send_host_message('Added {} as a poll.'.format(arg))
+    logger.log_mod('[{}][{}] added {} as a poll.'.format(client.area.id, client.get_char_name(),
+                    arg), client)
+
+
+def ooc_cmd_pollremove(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be a moderator to use this command.')
+    client.server.serverpoll_manager.remove_poll(arg)
+    client.send_host_message('Removed {} as a poll.'.format(arg))
+    logger.log_mod('[{}][{}] removed {} as a poll.'.format(client.area.id, client.get_char_name(),
+                    arg), client)
+
+
+def ooc_cmd_addpolldetail(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be a moderator to use this command.')
+    if len(arg) == 0:
+        client.send_host_message('Command must have an argument!')
+    else:
+        args = arg.split()
+        poll = 1
+        for word in args:
+            if word.lower().endswith(':'):
+                break
+            else:
+                poll += 1
+        if poll == len(args):
+            raise ArgumentError(
+                'Invalid syntax. Add \':\' in the end of pollname. \n \'/addpolldetail <poll name>: <detail>\'')
+        poll_name = ' '.join(args[:poll])
+        poll_name = poll_name[:len(poll_name) - 1]
+        detail = ' '.join(args[poll:])
+        if not detail:
+            raise ArgumentError(
+                'Invalid syntax. Expected message after \':\'. \n \'/addpolldetail <poll name>: <detail>\'')
+        x = client.server.serverpoll_manager.polldetail(poll_name, detail)
+        if x == 1:
+            client.send_host_message('Added "{}" as details in poll "{}"'.format(detail, poll_name))
+            logger.log_mod('[{}][{}] detail to poll {}.'.format(client.area.id, client.get_char_name(),
+                                                                 poll_name), client)
+        else:
+            client.send_host_message('Poll does not exist!')
+        
+def ooc_cmd_pollchoiceclear(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be a moderator to use this command.')
+    client.server.serverpoll_manager.clear_poll_choice(arg)
+    client.send_host_message('Poll {} choices cleared.'.format(arg))
+    logger.log_mod('[{}][{}] cleared poll {} choices.'.format(client.area.id, client.get_char_name(),
+                    arg), client)
+
+def ooc_cmd_pollchoiceremove(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be a moderator to use this command.')
+    args = arg.split()
+    ooc_name = 1
+    for word in args:
+        if word.lower().endswith(':'):
+            break
+        else:
+            ooc_name += 1
+    if ooc_name == len(args) + 1:
+        raise ArgumentError('Invalid syntax. Add \':\' in the end of target.')
+    poll = ' '.join(args[:ooc_name])
+    poll = poll[:len(poll) - 1]
+    choice = ' '.join(args[ooc_name:])
+    if not choice:
+        raise ArgumentError('Not enough arguments. Use /pollchoiceremove <poll>: <choice to be removed>.')
+    x = client.server.serverpoll_manager.remove_poll_choice(client, poll, choice)
+    if x is None:
+        return
+    client.send_host_message(
+        'Removed {} as a choice in poll {}. Current choices:\n{} '.format(choice, poll, "\n".join(x)))
+    logger.log_mod('[{}][{}] removed {} as a choice in poll {}.'.format(client.area.id, client.get_char_name(),
+                    choice, poll), client)
+
+
+def ooc_cmd_pollchoiceadd(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be a moderator to use this command.')
+    args = arg.split()
+    ooc_name = 1
+    for word in args:
+        if word.lower().endswith(':'):
+            break
+        else:
+            ooc_name += 1
+    if ooc_name == len(args) + 1:
+        raise ArgumentError('Invalid syntax. Add \':\' in the end of target.')
+    poll = ' '.join(args[:ooc_name])
+    poll = poll[:len(poll) - 1]
+    choice = ' '.join(args[ooc_name:])
+    if not choice:
+        raise ArgumentError('Not enough arguments. Use /pollchoiceremove <poll>: <choice to be removed>.')
+    x = client.server.serverpoll_manager.add_poll_choice(client, poll, choice)
+    if x is None:
+        return
+    client.send_host_message(
+        'Added {} as a choice in poll {}. Current choices:\n{} '.format(choice, poll, "\n".join(x)))
+    logger.log_mod('[{}][{}] added {} as a choice in poll {}.'.format(client.area.id, client.get_char_name(),
+                    choice, poll), client)
+
+
+def ooc_cmd_makepollmulti(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be a moderator to use this command.')
+    x = client.server.serverpoll_manager.make_multipoll(arg)
+    if x:
+        client.send_host_message('Poll {} made multipoll.'.format(arg))
+        logger.log_mod('[{}][{}] made poll {} a multipoll.'.format(client.area.id, client.get_char_name(),
+                    arg), client)
+    else:
+        client.send_host_message('Poll {} made single poll.'.format(arg))
+        logger.log_mod('[{}][{}] made poll {} a singlepoll.'.format(client.area.id, client.get_char_name(),
+                    arg), client)
+
+
+def ooc_cmd_gimp(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    elif len(arg) == 0:
+        raise ArgumentError('You must specify a target.')
+    try:
+        if len(arg) == 12:
+            targets = client.server.client_manager.get_targets(client, TargetType.IPID, arg, False)
+        elif len(arg) < 12 and arg.isdigit():
+            targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), False)
+        else:
+            raise ArgumentError()
+    except:
+        raise ArgumentError('You must specify a target. Use /gimp <id> or <ipid>.')
+        return
+    if targets:
+        for c in targets:
+            logger.log_mod('[{}][{}] gimped {} [{}].'.format(client.area.id, client.get_char_name(), c.get_ip(),
+                                                                     c.get_char_name()), client)
+            c.gimp = True
+        client.send_host_message('Gimped {} targets.'.format(len(targets)))
+    else:
+        client.send_host_message('No targets found.')
+
+
+def ooc_cmd_ungimp(client, arg):
+    if not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+    elif len(arg) == 0:
+        raise ArgumentError('You must specify a target.')
+    try:
+        if len(arg) == 12 and arg.isdigit():
+            targets = client.server.client_manager.get_targets(client, TargetType.IPID, arg, False)
+        elif len(arg) < 12 and arg.isdigit():
+            targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), False)
+    except:
+        raise ArgumentError('You must specify a target. Use /gimp <id>.')
+    if targets:
+        for c in targets:
+            logger.log_mod('[{}][{}] ungimped {} [{}].'.format(client.area.id, client.get_char_name(), c.get_ip(),
+                                                                     c.get_char_name()), client)
+            c.gimp = False
+        client.send_host_message('Ungimped {} targets.'.format(len(targets)))
+    else:
+        client.send_host_message('No targets found.')
+
+def ooc_cmd_lastchar(client, arg):
+    if client.is_mod:
+        try:
+            cid = client.server.get_char_id_by_name(arg)
+        except ServerError:
+            raise
+        try:
+            ex = client.area.shadow_status[cid]
+        except KeyError:
+            client.send_host_message("Character hasn't been occupied in area since server start.")
+            return
+        client.send_host_message('Last person on {}: IPID: {}, HDID: {}.'.format(arg, ex[0], ex[1]))
+    else:
+        return

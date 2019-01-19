@@ -17,6 +17,7 @@
 
 import re
 import time
+import random
 from heapq import heappop, heappush
 
 from server import logger
@@ -44,6 +45,7 @@ class ClientManager:
             self.evi_list = []
             self.disemvowel = False
             self.shaken = False
+            self.gimp = False
             self.charcurse = []
             self.muted_global = False
             self.muted_adverts = False
@@ -80,6 +82,8 @@ class ClientManager:
             self.wtce_mute_time = 0
             self.wtce_time = [x * self.server.config['wtce_floodguard']['interval_length'] for x in
                               range(self.server.config['wtce_floodguard']['times_per_interval'])]
+            self.voting = 0
+            self.voting_at = 0
 
         def send_raw_message(self, msg):
             self.transport.write(msg.encode('utf-8'))
@@ -384,6 +388,10 @@ class ClientManager:
             parts = message.split()
             random.shuffle(parts)
             return ' '.join(parts)
+
+        def gimp_message(self, message):
+            message = self.server.gimp_list
+            return random.choice(message)
 
     def __init__(self, server):
         self.clients = set()
