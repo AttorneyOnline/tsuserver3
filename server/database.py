@@ -90,15 +90,15 @@ class Database:
         except FileNotFoundError:
             if not os.path.exists('storage/stats/'):
                 os.makedirs('storage/stats/')
-            with open('storage/stats/user.yaml', 'w') as char:
-                yaml.dump([], char, default_flow_style = False)
+            with open('storage/stats/user.yaml', 'w+') as char:
+                yaml.dump({}, char, default_flow_style = False)
         except ValueError:
             return
         return data
 
     def write_user_data(self):
         data = copy.deepcopy(self.user_data)
-        with open('storage/stats/user.yaml', 'w') as udata:
+        with open('storage/stats/user.yaml', 'w+') as udata:
             yaml.dump(data, udata, default_flow_style = False)
 
     def create_new_char_database(self):
@@ -139,7 +139,7 @@ class Database:
 
     def connect_data(self, ipid, hdid):
         if ipid not in self.user_data:
-            self.user_data[ipid] = userData(ipid, hdid)
+            self.user_data.update({ipid:userData(ipid, hdid)})
         else:
             self.user_data[ipid].data["times_connected"] += 1
             if hdid not in self.user_data[ipid].hdid:
