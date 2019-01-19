@@ -191,8 +191,23 @@ class AOProtocol(asyncio.Protocol):
         """
         if not self.validate_net_cmd(args, self.ArgType.STR, needs_auth=False):
             return
-        hdid = self.client.hdid = args[0]
-        ipid = self.client.ipid
+        self.client.hdid = args[0]
+        if self.client.hdid not in self.client.server.hdid_list:
+            self.client.server.hdid_list[self.client.hdid] = []
+        if self.client.ipid not in self.client.server.hdid_list[self.client.hdid]:
+            self.client.server.hdid_list[self.client.hdid].append(self.client.ipid)
+            self.client.server.dump_hdids()
+        for ipid in self.client.server.hdid_list[self.client.hdid]:
+            if self.server.ban_manager.is_banned(ipid):
+                self.client.send_command('BD', self.server.ban_manager.get_ban_reason(ipid))
+                self.client.disconnect()
+                return
+        logger.log_server('Connected. HDID: {}.'.format(self.client.hdid), self.client)
+        print("before")
+        self.server.stats_manager.connect_data(self.client.ipid, self.client.hdid)
+        print("after")
+        self.client.send_command('ID', self.client.id, self.server.software, self.server.get_version_string())
+        self.client.send_command('PN', self.server.get_player_count() - 1, self.server.config['playerlimit'])
 
         database.add_hdid(ipid, hdid)
         ban = database.find_ban(ipid, hdid)
@@ -229,6 +244,22 @@ class AOProtocol(asyncio.Protocol):
                                  'flipping', 'fastloading', 'noencryption',
                                  'deskmod', 'evidence', 'modcall_reason',
                                  'cccc_ic_support', 'arup', 'casing_alerts')
+
+        if args[0] != 'AO2':
+            return
+        if release < 2:
+            return
+        elif release == 2:
+            if major < 2:
+                return
+            elif major == 2:
+                if minor < 5:
+                    return
+
+        self.client.is_ao2 = True
+
+        self.client.send_command('FL', 'yellowtext', 'customobjections', 'flipping', 'fastloading', 'noencryption',
+                                 'deskmod', 'evidence', 'modcall_reason', 'cccc_ic_support', 'arup', 'casing_alerts', 'looping_sfx')
 
     def net_cmd_ch(self, _):
         """Reset the client drop timeout (keepalive).
@@ -344,6 +375,7 @@ class AOProtocol(asyncio.Protocol):
         cid = args[1]
         try:
             self.client.change_character(cid)
+            self.server.stats_manager.character_picked(cid)
         except ClientError:
             return
 
@@ -376,26 +408,79 @@ class AOProtocol(asyncio.Protocol):
             charid_pair = -1
             offset_pair = 0
             nonint_pre = 0
-        elif self.validate_net_cmd(
-                args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,#msg_type, pre
-                self.ArgType.STR, self.ArgType.STR, self.ArgType.STR,#folder, anim, text
-                self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,# pos, sfx, anim_type
-                self.ArgType.INT, self.ArgType.INT, self.ArgType.INT_OR_STR,#cid, sfx_delay, button
-                self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,#evidence, flip, ding
-                self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.INT, #color, showname, charid_pair
-                self.ArgType.INT, self.ArgType.INT): #offset_pair, nonint_pre
-            # 2.6+ validation monstrosity.
+            looping_sfx = 0
+            screenshake = 0
+            frame_screenshake = ""
+            frame_realization = ""
+            frame_sfx = ""
+        elif self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
+                                   self.ArgType.STR,
+                                   self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
+                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
+                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR_OR_EMPTY):
+            # 1.3.0 validation monstrosity.
+            msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname = args
+            charid_pair = -1
+            offset_pair = 0
+            nonint_pre = 0
+            looping_sfx = 0
+            screenshake = 0
+            frame_screenshake = ""
+            frame_realization = ""
+            frame_sfx = ""
+            if len(showname) > 0 and not self.client.area.showname_changes_allowed:
+                self.client.send_host_message("Showname changes are forbidden in this area!")
+                return
+        elif self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
+                                   self.ArgType.STR,
+                                   self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
+                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
+                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR_OR_EMPTY,
+                                   self.ArgType.INT, self.ArgType.INT):
+            # 1.3.5 validation monstrosity.
+            msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair = args
+            nonint_pre = 0
+            looping_sfx = 0
+            screenshake = 0
+            frame_screenshake = ""
+            frame_realization = ""
+            frame_sfx = ""
+            if len(showname) > 0 and not self.client.area.showname_changes_allowed:
+                self.client.send_host_message("Showname changes are forbidden in this area!")
+                return
+        elif self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
+                                   self.ArgType.STR,
+                                   self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
+                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
+                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR_OR_EMPTY,
+                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT):
+            # 1.4.0 validation monstrosity.
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre = args
-            if len(showname
-                   ) > 0 and not self.client.area.showname_changes_allowed:
-                self.client.send_ooc(
-                    "Showname changes are forbidden in this area!")
+            looping_sfx = 0
+            screenshake = 0
+            frame_screenshake = ""
+            frame_realization = ""
+            frame_sfx = ""
+            if len(showname) > 0 and not self.client.area.showname_changes_allowed:
+                self.client.send_host_message("Showname changes are forbidden in this area!")
+                return
+        elif self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
+                                   self.ArgType.STR,
+                                   self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
+                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
+                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR_OR_EMPTY,
+                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.STR_OR_EMPTY, self.ArgType.STR_OR_EMPTY):
+            # 2.7.0 validation monstrosity
+            msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre, looping_sfx, screenshake, frame_screenshake, frame_realization, frame_sfx = args
+            if len(showname) > 0 and not self.client.area.showname_changes_allowed:
+                self.client.send_host_message("Showname changes are forbidden in this area!")
                 return
         else:
             return
-        if self.client.area.is_iniswap(self.client, pre, anim,
-                folder, sfx):
-            self.client.send_ooc("Iniswap/custom emotes are blocked in this area")
+        print("looping sfx is")
+        print(looping_sfx)
+        if self.client.area.is_iniswap(self.client, pre, anim, folder) and folder != self.client.get_char_name():
+            self.client.send_host_message("Iniswap is blocked in this area")
             return
         if len(self.client.charcurse) > 0 and \
             folder != self.client.char_name:
@@ -516,6 +601,8 @@ class AOProtocol(asyncio.Protocol):
         msg = self.dezalgo(text)[:256]
         if self.client.shaken:
             msg = self.client.shake_message(msg)
+        if self.client.gimp:  # If you're gimped, gimp message.
+            msg = self.client.gimp_message(msg)
         if self.client.disemvowel:
             msg = self.client.disemvowel_message(msg)
         self.client.pos = pos
@@ -564,18 +651,24 @@ class AOProtocol(asyncio.Protocol):
                                       other_folder, other_emote, offset_pair,
                                       other_offset, other_flip, nonint_pre)
 
-        self.client.area.send_owner_command(
-            'MS', msg_type, pre, folder, anim,
-            '[' + self.client.area.abbreviation + ']' + msg, pos, sfx,
-            anim_type, cid, sfx_delay, button, self.client.evi_list[evidence],
-            flip, ding, color, showname, charid_pair, other_folder,
-            other_emote, offset_pair, other_offset, other_flip, nonint_pre)
+        self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
+                                      sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
+                                      charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
+                                      nonint_pre, looping_sfx, screenshake, frame_screenshake, frame_realization, frame_sfx)
 
-        self.server.area_manager.send_remote_command(
-            target_area, 'MS', msg_type, pre, folder, anim, msg, pos, sfx,
-            anim_type, cid, sfx_delay, button, self.client.evi_list[evidence],
-            flip, ding, color, showname, charid_pair, other_folder,
-            other_emote, offset_pair, other_offset, other_flip, nonint_pre)
+        self.client.area.send_owner_command('MS', msg_type, pre, folder, anim,
+                                            '[' + self.client.area.abbreviation + ']' + msg, pos, sfx, anim_type, cid,
+                                            sfx_delay, button, self.client.evi_list[evidence], flip, ding, color,
+                                            showname,
+                                            charid_pair, other_folder, other_emote, offset_pair, other_offset,
+                                            other_flip, nonint_pre, looping_sfx, screenshake, frame_screenshake, frame_realization, frame_sfx)
+
+        self.server.area_manager.send_remote_command(target_area, 'MS', msg_type, pre, folder, anim, msg, pos, sfx,
+                                                     anim_type, cid,
+                                                     sfx_delay, button, self.client.evi_list[evidence], flip, ding,
+                                                     color, showname,
+                                                     charid_pair, other_folder, other_emote, offset_pair, other_offset,
+                                                     other_flip, nonint_pre, looping_sfx, screenshake, frame_screenshake, frame_realization, frame_sfx)
 
         self.client.area.set_next_msg_delay(len(msg))
         database.log_ic(self.client, self.client.area, showname, msg)
@@ -620,6 +713,63 @@ class AOProtocol(asyncio.Protocol):
                     '<dollar>G') or self.client.name.startswith('<dollar>M'):
             self.client.send_ooc('That name is reserved!')
             return
+        if self.client.voting == 2:
+            polls = self.client.server.serverpoll_manager.show_poll_list()
+            choices = self.client.server.serverpoll_manager.get_poll_choices(polls[self.client.voting_at])
+            multi = self.client.server.serverpoll_manager.returnmulti(polls[self.client.voting_at])
+            if multi:
+                if args[1].lower() in [x.lower() for x in choices]:
+                    self.client.server.serverpoll_manager.add_vote(polls[self.client.voting_at], args[1].lower(),
+                                                                   self.client)
+                    self.client.send_host_message(
+                        'Voted {}. Choose another item to vote or type \'exit\' to stop voting.'.args[1])
+                elif args[1].lower() == "exit":
+                    self.client.send_host_message(
+                        'Thank you for voting. God bless and have a nice day.')
+                    self.client.voting_at = 0
+                    self.client.voting = 0
+                else:
+                    self.client.send_host_message(
+                        'Input Error, expected input is one of the choices, type "exit" to exit voting.')
+            else:
+                if args[1].lower() in [x.lower() for x in choices]:
+                    self.client.server.serverpoll_manager.add_vote(polls[self.client.voting_at], args[1].lower(),
+                                                                   self.client)
+                else:
+                    self.client.send_host_message(
+                        'Input Error, expected input is one of the choices, voting cancelled.')
+                self.client.voting_at = 0
+                self.client.voting = 0
+            return
+        if self.client.voting == 1:
+            num = -1
+            try:
+                num = int(args[1])
+            except:
+                self.client.send_host_message(
+                    'Input Error, expected integer. \n Choose which poll to vote, enter 0 to cancel.')
+                return
+            if num in range(1, self.client.server.serverpoll_manager.poll_number() + 1):
+                self.client.voting += 1
+                self.client.voting_at = num - 1
+                polls = self.client.server.serverpoll_manager.show_poll_list()
+                polldetail = self.client.server.serverpoll_manager.returndetail(polls[self.client.voting_at])
+                choices = self.client.server.serverpoll_manager.get_poll_choices(polls[self.client.voting_at])
+                if polldetail is None:
+                    self.client.send_host_message(
+                        'Now voting for {}.) {}.\n Choices: \n{}\nType \'exit\' to cancel voting.'.format(num, polls[
+                            self.client.voting_at], "\n ".join(choices)))
+                else:
+                    self.client.send_host_message(
+                        'Now voting for {}.) {}.\n Details: {}.\n Choices: \n{}. Type \'exit\' to cancel voting'.format(
+                            num, polls[self.client.voting_at], polldetail, "\n ".join(choices)))
+            elif num == 0:
+                self.client.voting = 0
+                self.client.send_host_message('Voting cancelled.')
+            else:
+                self.client.send_host_message(
+                    'Input Error, out of range/invalid poll number.\n Choose which poll to vote, enter 0 to cancel. ')
+            return
         if args[1].startswith(' /'):
             self.client.send_ooc(
                 'Your message was not sent for safety reasons: you left a space before that slash.'
@@ -650,6 +800,8 @@ class AOProtocol(asyncio.Protocol):
                 args[1] = self.client.shake_message(args[1])
             if self.client.disemvowel:
                 args[1] = self.client.disemvowel_message(args[1])
+            if self.client.gimp:
+                args[1] = self.client.gimp_message(args[1])
             self.client.area.send_command('CT', self.client.name, args[1])
             self.client.area.send_owner_command(
                 'CT',

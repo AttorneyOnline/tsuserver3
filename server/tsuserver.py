@@ -36,11 +36,20 @@ from server.exceptions import ServerError
 from server.network.aoprotocol import AOProtocol
 from server.network.aoprotocol_ws import new_websocket_client
 from server.network.masterserverclient import MasterServerClient
-import server.logger
+from server.serverpoll_manager import ServerpollManager
+from server.database import Database
 
 class TsuServer3:
     """The main class for tsuserver3 server software."""
     def __init__(self):
+        self.config = None
+        self.allowed_iniswaps = None
+        self.load_config()
+        self.load_iniswaps()
+        self.client_manager = ClientManager(self)
+        self.area_manager = AreaManager(self)
+        self.ban_manager = BanManager()
+        self.serverpoll_manager = ServerpollManager(self)
         self.software = 'tsuserver3'
         self.release = 3
         self.major_version = 3
@@ -55,9 +64,18 @@ class TsuServer3:
         self.music_list_ao2 = None
         self.music_pages_ao1 = None
         self.backgrounds = None
-        self.zalgo_tolerance = None
-
+        self.load_characters()
+        self.load_music()
+        self.load_backgrounds()
+        self.load_ids()
+        self.load_gimps()
+        self.district_client = None
         self.ms_client = None
+        self.rp_mode = False
+        self.runner = False
+        self.runtime = 0
+        logger.setup_logger(debug=self.config['debug'])
+        self.stats_manager = Database(self)
 
         try:
             self.load_config()
@@ -81,7 +99,6 @@ class TsuServer3:
     def start(self):
         """Start the server."""
         loop = asyncio.get_event_loop()
-
         bound_ip = '0.0.0.0'
         if self.config['local']:
             bound_ip = '127.0.0.1'
@@ -113,17 +130,16 @@ class TsuServer3:
             loop.run_forever()
         except KeyboardInterrupt:
             pass
-
-        database.log_misc('stop')
-
+        self.stats_manager.save_alldata()
+        print("Saved all data.")
+        logger.log_debug('Server shutting down.')
+        self.runner = False
         ao_server.close()
         loop.run_until_complete(ao_server.wait_closed())
         loop.close()
-
-    async def schedule_unbans(self):
-        while True:
-            database.schedule_unbans()
-            await asyncio.sleep(3600 * 12)
+        
+    def get_version_string(self):
+        return str(self.release) + '.' + str(self.major_version) + '.' + str(self.minor_version)
 
     @property
     def version(self):
@@ -197,6 +213,10 @@ class TsuServer3:
             self.music_list = yaml.safe_load(music)
         self.build_music_pages_ao1()
         self.build_music_list_ao2()
+        
+    def load_gimps(self):
+        with open('config/gimp.yaml', 'r', encoding='utf-8') as cfg:
+            self.gimp_list = yaml.load(cfg)
 
     def load_backgrounds(self):
         """Load the backgrounds list from a YAML file."""

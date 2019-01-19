@@ -53,7 +53,6 @@ class AreaManager:
             self.background = background
             self.bg_lock = bg_lock
             self.server = server
-            self.music_looper = None
             self.next_message_time = 0
             self.hp_def = 10
             self.hp_pro = 10
