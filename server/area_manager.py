@@ -224,10 +224,10 @@ class AreaManager:
                     current_vote.chance += 1
 
         def play_music(self, name, cid, length=-1):
-            self.send_command('MC', name, cid)
+            self.send_command('MC', name, cid, "", length)
 
         def play_music_shownamed(self, name, cid, showname, length=-1):
-            self.send_command('MC', name, cid, showname)
+            self.send_command('MC', name, cid, showname, length)
 
         def can_send_message(self, client):
             if self.cannot_ic_interact(client):

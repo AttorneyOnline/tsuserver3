@@ -69,7 +69,7 @@ class AOProtocol(asyncio.Protocol):
         else:
             self.buffer = buf
 
-        if len(self.buffer) > 8192:
+        if len(self.buffer) > 16384:
             self.client.disconnect()
         for msg in self.get_messages():
             if len(msg) < 2:
@@ -728,7 +728,11 @@ class AOProtocol(asyncio.Protocol):
                         int(self.client.change_music_cd())))
                 return
             try:
-                name, length = self.server.get_song_data(args[0])
+                name, length, mod = self.server.get_song_data(args[0])
+                if not mod == -1:
+                    if not self.client.is_mod:
+                        self.client.send_host_message("This song is reserved for moderators.")
+                        return
 
                 if self.client.area.jukebox:
                     showname = ''

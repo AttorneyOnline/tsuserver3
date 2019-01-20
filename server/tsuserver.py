@@ -216,10 +216,21 @@ class TsuServer3:
         for area in self.area_manager.areas:
             self.music_list_ao2.append(area.name)
             # then add music
+        self.music_list_ao2.append("===MUSIC START===.mp3") #>lol lets just have the music and area lists be the same fucking thing, the mp3 is there for older clients who aren't looking for this to determine the start of the music list
         for item in self.music_list:
             self.music_list_ao2.append(item['category'])
-            for song in item['songs']:
-                self.music_list_ao2.append(song['name'])
+            try:
+                if not item['mod'] == 1:
+                    for song in item['songs']:
+                        if not song['mod'] == 1:
+                            self.music_list_ao2.append(song['name'])
+            except KeyError:
+                for song in item['songs']:
+                    try:
+                        if not song['mod'] == 1:
+                            self.music_list_ao2.append(song['name'])
+                    except KeyError:
+                        self.music_list_ao2.append(song['name'])
 
     def is_valid_char_id(self, char_id):
         return len(self.char_list) > char_id >= 0
@@ -233,13 +244,16 @@ class TsuServer3:
     def get_song_data(self, music):
         for item in self.music_list:
             if item['category'] == music:
-                return item['category'], -1
+                return item['category'], -1, -1
             for song in item['songs']:
                 if song['name'] == music:
                     try:
-                        return song['name'], song['length']
+                        return song['name'], song['length'], song['mod']
                     except KeyError:
-                        return song['name'], -1
+                        try:
+                            return song['name'], song['length'], -1
+                        except KeyError:
+                            return song['name'], -1, -1
         raise ServerError('Music not found.')
 
     def send_all_cmd_pred(self, cmd, *args, pred=lambda x: True):

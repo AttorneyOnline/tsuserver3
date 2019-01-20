@@ -352,6 +352,7 @@ class ClientManager:
             if password == self.server.config['modpass']:
                 self.is_mod = True
             else:
+                self.send_command("FAILEDLOGIN");
                 raise ClientError('Invalid password.')
 
         def get_ip(self):

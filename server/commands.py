@@ -542,6 +542,12 @@ def ooc_cmd_login(client, arg):
         raise
     if client.area.evidence_mod == 'HiddenCM':
         client.area.broadcast_evidence_list()
+    mod_music_list = []
+    for item in client.server.music_list:
+        mod_music_list.append(item['category'])
+        for song in item['songs']:
+            mod_music_list.append(song['name'])
+    client.send_command('REFMUSIC', mod_music_list)
     client.send_host_message('Logged in as a moderator.')
     logger.log_server('Logged in as moderator.', client)
     logger.log_mod('Logged in as moderator.', client)
