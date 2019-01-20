@@ -477,6 +477,7 @@ class ClientManager:
                 self.mod_profile_name = matches[0]
                 return self.mod_profile_name
             else:
+                self.send_command("FAILEDLOGIN");
                 raise ClientError('Invalid password.')
 
         @property

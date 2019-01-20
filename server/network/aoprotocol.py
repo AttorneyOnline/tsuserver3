@@ -848,7 +848,11 @@ class AOProtocol(asyncio.Protocol):
                     .format(int(self.client.change_music_cd())))
                 return
             try:
-                name, length = self.server.get_song_data(args[0])
+                name, length, mod = self.server.get_song_data(args[0])
+                if not mod == -1:
+                    if not self.client.is_mod:
+                        self.client.send_host_message("This song is reserved for moderators.")
+                        return
 
                 if self.client.area.jukebox:
                     showname = ''
