@@ -467,6 +467,18 @@ class AreaManager:
             if len(msg) > 2:
                 msg = msg[:-2]
             return msg
+        def get_mods(self):
+            mods = []
+            for client in self.clients:
+                if client.is_mod:
+                    mods.append(client)
+            return mods
+            
+        def mods_online(self):
+            num = 0
+            for area in self.areas:
+                num += len(area.get_mods())
+            return num
 
         class JukeboxVote:
             """Represents a single vote cast for the jukebox."""
@@ -588,16 +600,3 @@ class AreaManager:
         for area in self.areas:
             lock_list.append(area.is_locked.name)
         self.server.send_arup(lock_list)
-
-    def get_mods(self):
-        mods = []
-        for client in self.clients:
-            if client.is_mod:
-                mods.append(client)
-        return mods
-        
-    def mods_online(self):
-        num = 0
-        for area in self.areas:
-            num += len(area.get_mods())
-        return num
