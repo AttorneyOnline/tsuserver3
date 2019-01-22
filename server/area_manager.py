@@ -401,3 +401,16 @@ class AreaManager:
         for area in self.areas:
             lock_list.append(area.is_locked.name)
         self.server.send_arup(lock_list)
+
+    def get_mods(self):
+        mods = []
+        for client in self.clients:
+            if client.is_mod:
+                mods.append(client)
+        return mods
+        
+    def mods_online(self):
+        num = 0
+        for area in self.areas:
+            num += len(area.get_mods())
+        return num

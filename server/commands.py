@@ -1595,3 +1595,25 @@ def ooc_cmd_lastchar(client, arg):
         client.send_host_message('Last person on {}: IPID: {}, HDID: {}.'.format(arg, ex[0], ex[1]))
     else:
         return
+        
+def ooc_cmd_update(client, arg):
+    try:
+        client.send_host_message('Latest Update: {}'.format(client.server.data['update']))
+    except ServerError:
+        client.send_host_message('Update not set!')
+
+
+def ooc_cmd_setthread(client, arg):
+    if client.is_mod:
+        client.server.data['thread'] = arg
+        client.server.save_data()
+        client.send_host_message('Thread set!')
+        logger.log_mod('[{}][{}] set the thread to {}.'.format(client.area.id, client.get_char_name(),
+                        arg), client)
+
+
+def ooc_cmd_thread(client, arg):
+    try:
+        client.send_host_message('Curent Thread: {}'.format(client.server.data['thread']))
+    except Exception as n:
+        client.send_host_message(n)

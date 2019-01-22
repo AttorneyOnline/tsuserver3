@@ -61,6 +61,7 @@ class TsuServer3:
         self.load_backgrounds()
         self.load_ids()
         self.load_gimps()
+        self.load_data()
         self.district_client = None
         self.ms_client = None
         self.rp_mode = False
@@ -335,3 +336,11 @@ class TsuServer3:
         self.build_music_list_ao2()
         with open('config/backgrounds.yaml', 'r') as bgs:
             self.backgrounds = yaml.load(bgs)
+
+    def load_data(self):
+        with open('config/data.yaml', 'r') as data:
+            self.data = yaml.load(data)
+
+    def save_data(self):
+        with open('config/data.yaml', 'w') as data:
+            json.dump(self.data, data)
