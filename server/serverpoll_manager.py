@@ -277,11 +277,11 @@ class ServerpollManager:
                                       "Times voted: {}, Times spoken in casing: {}, Times used doc: {}".format( data_c.data["times_voted"],data_c.data["times_talked_casing"]
                                                                                                                 , data_c.data["times_doc"])],)
                 self.write_votelist(poll_voting)
+                client.send_host_message('You have already voted in this poll.')
                 logger.log_serverpoll(
                     'Vote in poll {} \'{}\' failed by {} ({}) in {}, with IP {} and HDID {}, at {}. Reason: Already voted.'.format(
                         poll[0], vote, client.name, client.get_char_name(), client.area.name, client.real_ip, client.hdid,
                         tmp))
-                client.send_host_message('You have already voted in this poll.')
             elif (ipid_voted or hdid_voted) and [item for item in log if item[3].lower() == vote.lower()]:
                 self.vote['faillog'] += (['FAILED VOTE', tmp, client.real_ip, client.hdid, vote,
                                       "{} ({}) at area {}".format(client.name, client.get_char_name(),
@@ -289,11 +289,11 @@ class ServerpollManager:
                                       "Times voted: {}, Times spoken in casing: {}, Times used doc: {}".format( data_c.data["times_voted"],data_c.data["times_talked_casing"]
                                                                                                                 , data_c.data["times_doc"])],)
                 self.write_votelist(poll_voting)
+                client.send_host_message('You have chosen this choice already.')
                 logger.log_serverpoll(
                     'Vote in poll {} \'{}\' failed by {} ({}) in {}, with IP {} and HDID {}, at {}. Reason: Already voted.'.format(
                         poll[0], vote, client.name, client.get_char_name(), client.area.name, client.real_ip, client.hdid,
                         tmp))
-                client.send_host_message('You have chosen this choice already.')
             else:
                 # If they aren't a filthy rigger, they should get to this point
                 if vote.lower() in [x.lower() for x in self.vote['choices']]:
@@ -306,17 +306,17 @@ class ServerpollManager:
                                                                                                                 , data_c.data["times_doc"])],)
                 self.write_votelist(poll_voting)
                 self.server.stats_manager.user_voted(client.real_ip)
+                client.send_host_message('You have successfully voted! Congratulations.')
                 logger.log_serverpoll(
                     'Vote in poll {} \'{}\' added succesfully by {} ({}) in {}, with IP {} and HDID {}, at {}.'.format(
                         poll[0], vote, client.name, client.get_char_name(), client.area.name, client.real_ip, client.hdid,
                         tmp))
-                client.send_host_message('You have successfully voted! Congratulations.')
         except FileNotFoundError:
+            client.send_host_message('Voting Error - Poll does not exist.')
             logger.log_serverpoll(
                 'Vote in poll {} \'{}\' failed by {} ({}) in {}, with IP {} and HDID {}, at {}. Reason:FileNotFound error.'.format(
                     poll[0], vote, client.name, client.get_char_name(), client.area.name, client.real_ip, client.hdid,
                     tmp))
-            client.send_host_message('Voting Error - Poll does not exist.')
             raise ServerError('The specified poll does not have a file associated with it.')
         except IndexError:
             # todo: A bit redundant. There's probably a better way.
@@ -328,10 +328,9 @@ class ServerpollManager:
                                       "Times voted: {}, Times spoken in casing: {}, Times used doc: {}".format( data_c.data["times_voted"],data_c.data["times_talked_casing"]
                                                                                                                 , data_c.data["times_doc"])],)
             self.write_votelist(poll_voting)
+            client.send_host_message('You have successfully voted! Congratulations.')
             self.server.stats_manager.user_voted(client.ipid)
             logger.log_serverpoll('Vote \'{}\' added successfully by {}'.format(vote, client.get_ip()))
-            self.server.stats_manager.user_voted(client.ipid)
-            client.send_host_message('You have successfully voted! Congratulations.')
 
     def write_votelist(self, poll):
         with open('storage/poll/{} \'{}\'.yaml'.format(poll[1], poll[0]), 'w+') as votelist_file:

@@ -1617,3 +1617,14 @@ def ooc_cmd_thread(client, arg):
         client.send_host_message('Curent Thread: {}'.format(client.server.data['thread']))
     except Exception as n:
         client.send_host_message(n)
+        
+def ooc_cmd_kms(client, arg):
+    ooc_cmd_ghostchar(client, arg)
+    
+def ooc_cmd_ghostchar(client, arg):
+    targets = client.server.client_manager.get_targets(client, TargetType.IPID, client.ipid, False)
+    for target in targets:
+        if target != client:
+            target.disconnect()
+    client.send_host_message('Kicked other instances of client.')
+
