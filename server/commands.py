@@ -547,7 +547,7 @@ def ooc_cmd_login(client, arg):
         mod_music_list.append(item['category'])
         for song in item['songs']:
             mod_music_list.append(song['name'])
-    client.send_command('REFMUSIC', mod_music_list)
+    client.send_command('REFMUSIC', *mod_music_list)
     client.send_host_message('Logged in as a moderator.')
     logger.log_server('Logged in as moderator.', client)
     logger.log_mod('Logged in as moderator.', client)
