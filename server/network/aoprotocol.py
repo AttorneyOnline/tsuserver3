@@ -203,9 +203,7 @@ class AOProtocol(asyncio.Protocol):
                 self.client.disconnect()
                 return
         logger.log_server('Connected. HDID: {}.'.format(self.client.hdid), self.client)
-        print("before")
         self.server.stats_manager.connect_data(self.client.ipid, self.client.hdid)
-        print("after")
         self.client.send_command('ID', self.client.id, self.server.software, self.server.get_version_string())
         self.client.send_command('PN', self.server.get_player_count() - 1, self.server.config['playerlimit'])
 
@@ -477,8 +475,6 @@ class AOProtocol(asyncio.Protocol):
                 return
         else:
             return
-        print("looping sfx is")
-        print(looping_sfx)
         if self.client.area.is_iniswap(self.client, pre, anim, folder) and folder != self.client.get_char_name():
             self.client.send_host_message("Iniswap is blocked in this area")
             return

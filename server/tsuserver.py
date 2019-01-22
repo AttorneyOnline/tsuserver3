@@ -75,7 +75,8 @@ class TsuServer3:
         self.rp_mode = False
         self.runner = False
         self.runtime = 0
-        logger.setup_logger(debug=self.config['debug'])
+        logger.setup_logger(debug=self.config['debug'], log_size=self.config['log_size'],
+                            log_backups=self.config['log_backups'], areas=self.area_manager.areas)
         self.stats_manager = Database(self)
 
         try:

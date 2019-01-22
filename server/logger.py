@@ -61,7 +61,8 @@ def setup_logger(debug):
         debug_log.debug('Logger started')
 
 
-    server_handler = logging.FileHandler('logs/server.log', encoding='utf-8')
+    server_handler = logging.handlers.RotatingFileHandler('logs/server.log', maxBytes=log_size, backupCount=log_backups,
+                                                          encoding='utf-8')
     server_handler.setLevel(logging.INFO)
     server_handler.setFormatter(srv_formatter)
     server_log.addHandler(server_handler)
@@ -69,7 +70,8 @@ def setup_logger(debug):
     mod_log = logging.getLogger('mod')
     mod_log.setLevel(logging.INFO)
 
-    mod_handler = logging.FileHandler('logs/mod.log', encoding='utf-8')
+    mod_handler = logging.handlers.RotatingFileHandler('logs/mod.log', maxBytes=log_size, backupCount=log_backups,
+                                                          encoding='utf-8')
     mod_handler.setLevel(logging.INFO)
     mod_handler.setFormatter(mod_formatter)
     mod_log.addHandler(mod_handler)
@@ -81,26 +83,49 @@ def setup_logger(debug):
     serverpoll_handler.setFormatter(srv_formatter)
     serverpoll_log.addHandler(serverpoll_handler)
 
+    area_logs = []
+    area_handler = []
+    i = 0
+    if not os.path.exists('logs/area/'):
+        os.makedirs('logs/area/')
+    for area in areas:
+        area_logs.append(logging.getLogger(area.name))
+        area_logs[i].setLevel(logging.INFO)
+        area_handler.append(logging.handlers.RotatingFileHandler('logs/area/'+ area.name + '.log', maxBytes=log_size, backupCount=log_backups,
+                                                           encoding='utf-8'))
+        area_handler[i].setLevel(logging.INFO)
+        area_handler[i].setFormatter(srv_formatter)
+        area_logs[i].addHandler(area_handler[i])
+        i += 1
+
 def log_debug(msg, client=None):
     msg = parse_client_info(client) + msg
+    print("DEBUG: " + msg)
     logging.getLogger('debug').debug(msg)
 
 
 def log_server(msg, client=None):
     msg = parse_client_info(client) + msg
+    if client:
+        logging.getLogger(client.area.name).info(msg)
+        print("AREA " + client.area.name + ": " + msg)
+    print("SERVER: " + msg)
     logging.getLogger('server').info(msg)
 
 
 def log_mod(msg, client=None):
     msg = parse_client_info(client) + msg
+    print("MOD: " + msg)
     logging.getLogger('mod').info(msg)
 
 def log_serverpoll(msg, client=None):
     msg = parse_client_info(client) + msg
+    print("SERVERPOLL: " + msg)
     logging.getLogger('serverpoll').info(msg)
 
 def log_connect(msg, client=None):
     msg = parse_client_info(client) + msg
+    print("CONNECT: " + msg)
     logging.getLogger('connect').info(msg)
     logging.getLogger('server').info(msg)
 
