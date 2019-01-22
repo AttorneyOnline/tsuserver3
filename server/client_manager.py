@@ -27,9 +27,10 @@ from server.exceptions import ClientError, AreaError
 
 class ClientManager:
     class Client:
-        def __init__(self, server, transport, user_id, ipid):
+        def __init__(self, server, transport, user_id, ipid, real_ip):
             self.is_checked = False
             self.transport = transport
+            self.real_ip = real_ip
             self.hdid = ''
             self.pm_mute = False
             self.id = user_id
@@ -402,7 +403,7 @@ class ClientManager:
 
     def new_client(self, transport):
         c = self.Client(self.server, transport, heappop(self.cur_id),
-                        self.server.get_ipid(transport.get_extra_info('peername')[0]))
+                        self.server.get_ipid(transport.get_extra_info('peername')[0]), transport.get_extra_info('peername')[0])
         self.clients.add(c)
         return c
 
