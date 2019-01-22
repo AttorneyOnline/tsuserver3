@@ -69,6 +69,7 @@ class TsuServer3:
         self.load_backgrounds()
         self.load_ids()
         self.load_gimps()
+        self.load_data()
         self.district_client = None
         self.ms_client = None
         self.rp_mode = False
