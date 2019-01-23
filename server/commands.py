@@ -66,7 +66,7 @@ def ooc_cmd_switch(client, arg):
     except ServerError:
         raise
     try:
-        client.change_character(cid, client.is_mod)
+        client.change_character(cid, client.is_mod, True)
     except ClientError:
         raise
     client.send_host_message('Character changed.')

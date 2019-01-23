@@ -828,14 +828,13 @@ class AOProtocol(asyncio.Protocol):
         Note: Though all but the first arguments are ints, they technically behave as bools of 0 and 1 value.
 
         """
-        if self.client in self.client.area.owners:
+        if self.client in self.client.area.owners or self.client.area.evidence_mod == 'FFA':
             if not self.client.can_call_case():
                 raise ClientError('Please wait 60 seconds between case announcements!')
 
             if not args[1] == "1" and not args[2] == "1" and not args[3] == "1" and not args[4] == "1" and not args[5] == "1":
                 raise ArgumentError('You should probably announce the case to at least one person.')
-            msg = '=== Case Announcement ===\r\n{} [{}] is hosting {}, looking for '.format(self.client.get_char_name(),
-                                                                                            self.client.id, args[0])
+            msg = '=== Case Announcement ===\r\n{} is hosting {}, looking for '.format(self.client.get_char_name(), args[0])
 
             lookingfor = []
 
@@ -849,15 +848,17 @@ class AOProtocol(asyncio.Protocol):
                 lookingfor.append("juror")
             if args[5] == "1":
                 lookingfor.append("stenographer")
+            if args[6] == "1":
+                lookingfor.append("witnesses")
 
             msg = msg + ', '.join(lookingfor) + '.\r\n=================='
 
-            self.client.server.send_all_cmd_pred('CASEA', msg, args[1], args[2], args[3], args[4], args[5], '1')
+            self.client.server.send_all_cmd_pred('CASEA', msg, args[1], args[2], args[3], args[4], args[5], args[6], '1')
 
             self.client.set_case_call_delay()
 
-            logger.log_server('[{}][{}][CASE_ANNOUNCEMENT]{}, DEF: {}, PRO: {}, JUD: {}, JUR: {}, STENO: {}.'.format(
-                self.client.area.abbreviation, self.client.get_char_name(), args[0], args[1], args[2], args[3], args[4], args[5]),
+            logger.log_server('[{}][{}][CASE_ANNOUNCEMENT]{}, DEF: {}, PRO: {}, JUD: {}, JUR: {}, STENO: {}, WIT: {}.'.format(
+                self.client.area.abbreviation, self.client.get_char_name(), args[0], args[1], args[2], args[3], args[4], args[5], args[6]),
                 self.client)
         else:
             raise ClientError('You cannot announce a case in an area where you are not a CM!')

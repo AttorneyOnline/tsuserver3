@@ -125,7 +125,7 @@ class ClientManager:
         def disconnect(self):
             self.transport.close()
 
-        def change_character(self, char_id, force=False):
+        def change_character(self, char_id, force=False, switch=False):
             if not self.server.is_valid_char_id(char_id):
                 raise ClientError('Invalid Character ID.')
             if len(self.charcurse) > 0:
@@ -142,7 +142,7 @@ class ClientManager:
             old_char = self.get_char_name()
             self.char_id = char_id
             self.pos = ''
-            self.send_command('PV', self.id, 'CID', self.char_id)
+            self.send_command('PV', self.id, 'CID', self.char_id, switch)
             self.area.send_command('CharsCheck', *self.get_available_char_list())
             logger.log_server('[{}]Changed character from {} to {}.'
                               .format(self.area.abbreviation, old_char, self.get_char_name()), self)
