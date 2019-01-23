@@ -966,30 +966,38 @@ class AOProtocol(asyncio.Protocol):
                     'Please wait 60 seconds between case announcements!')
                 return
 
-            if not args[1] == "1" and not args[2] == "1" and not args[
-                    3] == "1" and not args[4] == "1" and not args[5] == "1":
-                self.client.send_ooc(
-                    'You should probably announce the case to at least one person.'
-                )
-                return
-            msg = '=== Case Announcement ===\r\n{} [{}] is hosting {}, looking for '.format(
-                self.client.char_name, self.client.id, args[0])
+            if not args[1] == "1" and not args[2] == "1" and not args[3] == "1" and not args[4] == "1" and not args[5] == "1":
+                raise ArgumentError('You should probably announce the case to at least one person.')
+            msg = '=== Case Announcement ===\r\n{} is hosting {}, looking for '.format(self.client.get_char_name(), args[0])
 
             lookingfor = [p for p, q in \
                 zip(['defense', 'prosecutor', 'judge', 'juror', 'stenographer'], args[1:])
                 if q == '1']
 
-            msg += ', '.join(lookingfor) + '.\r\n=================='
+            if args[1] == "1":
+                lookingfor.append("defence")
+            if args[2] == "1":
+                lookingfor.append("prosecutor")
+            if args[3] == "1":
+                lookingfor.append("judge")
+            if args[4] == "1":
+                lookingfor.append("juror")
+            if args[5] == "1":
+                lookingfor.append("stenographer")
+            if args[6] == "1":
+                lookingfor.append("witnesses")
 
             self.client.server.send_all_cmd_pred('CASEA', msg, args[1],
                                                  args[2], args[3], args[4],
                                                  args[5], '1')
 
+            self.client.server.send_all_cmd_pred('CASEA', msg, args[1], args[2], args[3], args[4], args[5], args[6], '1')
+
             self.client.set_case_call_delay()
 
-            log_data = {k: v for k, v in \
-                zip(('message', 'def', 'pro', 'jud', 'jur', 'steno'), args)}
-            database.log_room('case', self.client, self.client.area, message=log_data)
+            logger.log_server('[{}][{}][CASE_ANNOUNCEMENT]{}, DEF: {}, PRO: {}, JUD: {}, JUR: {}, STENO: {}, WIT: {}.'.format(
+                self.client.area.abbreviation, self.client.get_char_name(), args[0], args[1], args[2], args[3], args[4], args[5], args[6]),
+                self.client)
         else:
             self.client.send_ooc(
                 'You cannot announce a case in an area where you are not a CM!'
