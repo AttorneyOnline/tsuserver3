@@ -17,7 +17,7 @@
 
 import asyncio
 import json
-
+import hashlib
 import websockets
 import yaml
 
@@ -175,6 +175,11 @@ class TsuServer3:
             json.dump(self.hdid_list, whole_list)
 
     def get_ipid(self, ip):
+        if 'server_number' in self.config:
+            x = ip + str(self.config['server_number'])
+            hash_object = hashlib.sha256(x.encode('utf-8'))
+            hash = hash_object.hexdigest()[:12]
+            return hash
         if not (ip in self.ipid_list):
             self.ipid_list[ip] = len(self.ipid_list)
             self.dump_ipids()
