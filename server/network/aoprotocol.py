@@ -833,22 +833,22 @@ class AOProtocol(asyncio.Protocol):
             if not self.client.can_call_case():
                 raise ClientError('Please wait 60 seconds between case announcements!')
 
-            if not args[1] == "1" and not args[2] == "1" and not args[3] == "1" and not args[4] == "1" and not args[5] == "1":
+            if not args[1] == "1" and not args[2] == "1" and not args[3] == "1" and not args[4] == "1" and not args[5] == "1" and not args[6] == "1":
                 raise ArgumentError('You should probably announce the case to at least one person.')
             msg = '=== Case Announcement ===\r\n{} is hosting {}, looking for '.format(self.client.get_char_name(), args[0])
 
             lookingfor = []
 
             if args[1] == "1":
-                lookingfor.append("defence")
+                lookingfor.append("defence attorneys")
             if args[2] == "1":
-                lookingfor.append("prosecutor")
+                lookingfor.append("prosecutors")
             if args[3] == "1":
-                lookingfor.append("judge")
+                lookingfor.append("a judge")
             if args[4] == "1":
-                lookingfor.append("juror")
+                lookingfor.append("jurors")
             if args[5] == "1":
-                lookingfor.append("stenographer")
+                lookingfor.append("a stenographer")
             if args[6] == "1":
                 lookingfor.append("witnesses")
 

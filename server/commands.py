@@ -892,8 +892,7 @@ def ooc_cmd_anncase(client, arg):
         elif len(args) == 1:
             raise ArgumentError('You should probably announce the case to at least one person.')
         else:
-            if not args[1] == "1" and not args[2] == "1" and not args[3] == "1" and not args[4] == "1" and not args[
-                                                                                                                   5] == "1":
+            if not args[1] == "1" and not args[2] == "1" and not args[3] == "1" and not args[4] == "1" and not args[5] == "1" and not args[6] == "1":
                 raise ArgumentError('You should probably announce the case to at least one person.')
             msg = '=== Case Announcement ===\r\n{} [{}] is hosting {}, looking for '.format(client.get_char_name(),
                                                                                             client.id, args[0])
@@ -910,6 +909,8 @@ def ooc_cmd_anncase(client, arg):
                 lookingfor.append("juror")
             if args[5] == "1":
                 lookingfor.append("stenographer")
+            if args[6] == "1":
+                lookingfor.append("witness")
 
             msg = msg + ', '.join(lookingfor) + '.\r\n=================='
 
