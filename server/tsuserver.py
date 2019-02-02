@@ -136,6 +136,9 @@ class TsuServer3:
         self.stats_manager.save_alldata()
         print("Saved all data.")
         logger.log_debug('Server shutting down.')
+        for c in self.client_manager.clients:
+            c.send_command('KK', 'Server shutting down')
+            c.disconnect()
         self.runner = False
         ao_server.close()
         loop.run_until_complete(ao_server.wait_closed())
