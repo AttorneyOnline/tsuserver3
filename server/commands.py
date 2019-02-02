@@ -398,10 +398,13 @@ def ooc_cmd_kick(client, arg):
         raise ArgumentError('You must specify a target. Use /kick <ipid> [reason]')
     args = list(arg.split(' '))
     raw_ipid = args[0]
-    try:
-        ipid = int(raw_ipid)
-    except:
-        raise ClientError('{} does not look like a valid IPID.'.format(raw_ipid))
+    if not 'server_number' in client.server.config:
+        try:
+            ipid = int(raw_ipid)
+        except:
+            raise ClientError('{} does not look like a valid IPID.'.format(raw_ipid))
+    else:
+        ipid = raw_ipid
     targets = client.server.client_manager.get_targets(client, TargetType.IPID, ipid, False)
     if targets:
         reason = ' '.join(args[1:])
@@ -430,10 +433,13 @@ def ooc_cmd_ban(client, arg):
     if reason == '':
         reason = 'N/A'
 
-    try:
-        ipid = int(raw_ipid)
-    except:
-        raise ClientError('{} does not look like a valid IPID.'.format(raw_ipid))
+    if not 'server_number' in client.server.config:
+        try:
+            ipid = int(raw_ipid)
+        except:
+            raise ClientError('{} does not look like a valid IPID.'.format(raw_ipid))
+    else:
+        ipid = raw_ipid
     try:
         client.server.ban_manager.add_ban(ipid, reason)
     except ServerError:
