@@ -57,6 +57,7 @@ class AreaManager:
             self.shouts_allowed = shouts_allowed
             self.abbreviation = abbreviation
             self.cards = dict()
+            self.shadow_status = {}
 
             """
             #debug

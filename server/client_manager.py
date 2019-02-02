@@ -142,6 +142,7 @@ class ClientManager:
             old_char = self.get_char_name()
             self.char_id = char_id
             self.pos = ''
+            self.area.shadow_status[self.char_id] = [self.ipid, self.hdid]
             self.send_command('PV', self.id, 'CID', self.char_id, switch)
             self.area.send_command('CharsCheck', *self.get_available_char_list())
             logger.log_server('[{}]Changed character from {} to {}.'
@@ -221,6 +222,7 @@ class ClientManager:
                 '[{}]Changed area from {} ({}) to {} ({}).'.format(self.get_char_name(), old_area.name, old_area.id,
                                                                    self.area.name, self.area.id), self)
             self.area.send_command('CharsCheck', *self.get_available_char_list())
+            self.area.shadow_status[self.char_id] = [self.ipid, self.hdid]
             self.send_command('HP', 1, self.area.hp_def)
             self.send_command('HP', 2, self.area.hp_pro)
             self.send_command('BN', self.area.background)
