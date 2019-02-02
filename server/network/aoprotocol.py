@@ -937,7 +937,7 @@ class AOProtocol(asyncio.Protocol):
     def net_cmd_setcase(self, args):
         """Sets the casing preferences of the given client.
 
-        SETCASE#<cases:string>#<will_cm:int>#<will_def:int>#<will_pro:int>#<will_judge:int>#<will_jury:int>#<will_steno:int>#%
+        SETCASE#<cases:string>#<will_cm:int>#<will_def:int>#<will_pro:int>#<will_judge:int>#<will_jury:int>#<will_steno:int>#<will_witness:int>#%
 
         Note: Though all but the first arguments are ints, they technically behave as bools of 0 and 1 value.
 
@@ -949,6 +949,7 @@ class AOProtocol(asyncio.Protocol):
         self.client.casing_jud = args[4] == "1"
         self.client.casing_jur = args[5] == "1"
         self.client.casing_steno = args[6] == "1"
+        self.client.casing_wit = args[7] == "1"
 
     def net_cmd_casea(self, args):
         """Announces a case with a title, and specific set of people to look for.

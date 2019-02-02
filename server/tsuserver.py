@@ -23,6 +23,7 @@ import asyncio
 import websockets
 
 import json
+import hashlib
 import yaml
 
 import logging
