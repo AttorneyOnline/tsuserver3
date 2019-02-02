@@ -682,8 +682,6 @@ class AOProtocol(asyncio.Protocol):
                 args[1] = self.client.shake_message(args[1])
             if self.client.disemvowel:
                 args[1] = self.client.disemvowel_message(args[1])
-            if self.client.gimp:
-                args[1] = self.client.gimp_message(args[1])
             self.client.area.send_command('CT', self.client.name, args[1])
             self.client.area.send_owner_command('CT', '[' + self.client.area.abbreviation + ']' + self.client.name,
                                                 args[1])
