@@ -913,8 +913,8 @@ def ooc_cmd_anncase(client, arg):
         else:
             if not args[1] == "1" and not args[2] == "1" and not args[3] == "1" and not args[4] == "1" and not args[5] == "1" and not args[6] == "1":
                 raise ArgumentError('You should probably announce the case to at least one person.')
-            msg = '=== Case Announcement ===\r\n{} [{}] is hosting {}, looking for '.format(client.get_char_name(),
-                                                                                            client.id, args[0])
+            msg = '=== Case Announcement ===\r\n{} [{}] is hosting {} in {}, looking for '.format(client.get_char_name(),
+                                                                                            client.id, args[0], client.area.name)
 
             lookingfor = []
 
