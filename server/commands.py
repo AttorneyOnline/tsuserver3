@@ -465,10 +465,17 @@ def ooc_cmd_unban(client, arg):
     args = list(arg.split(' '))
     client.send_host_message('Attempting to unban {} IPIDs.'.format(len(args)))
     for raw_ipid in args:
+        if not 'server_number' in client.server.config:
+            try:
+                ipid = int(raw_ipid)
+            except:
+                raise ClientError('{} does not look like a valid IPID.'.format(raw_ipid))
+        else:
+            ipid = raw_ipid
         try:
-            client.server.ban_manager.remove_ban(int(raw_ipid))
+            client.server.ban_manager.remove_ban(ipid)
         except:
-            raise ClientError('{} does not look like a valid IPID.'.format(raw_ipid))
+            raise ClientError('Unable to remove ban on {}. Verify that is it indeed banned, and is a valid IPID.'.format(raw_ipid))
         logger.log_server('Unbanned {}.'.format(raw_ipid), client)
         logger.log_mod('Unbanned {}.'.format(raw_ipid), client)
         client.send_host_message('Unbanned {}'.format(raw_ipid))
@@ -493,23 +500,26 @@ def ooc_cmd_mute(client, arg):
     args = list(arg.split(' '))
     client.send_host_message('Attempting to mute {} IPIDs.'.format(len(args)))
     for raw_ipid in args:
-        if raw_ipid.isdigit():
-            ipid = int(raw_ipid)
-            clients = client.server.client_manager.get_targets(client, TargetType.IPID, ipid, False)
-            if (clients):
-                msg = 'Muted the IPID ' + str(ipid) + '\'s following clients:'
-                for c in clients:
-                    c.is_muted = True
-                    logger.log_server('Muted {} [{}]({}).'.format(c.get_char_name(), c.id, c.ipid), client)
-                    logger.log_mod('Muted {} [{}]({}).'.format(c.get_char_name(), c.id, c.ipid), client)
-                    msg += ' ' + c.get_char_name() + ' [' + str(c.id) + '],'
-                msg = msg[:-1]
-                msg += '.'
-                client.send_host_message('{}'.format(msg))
-            else:
-                client.send_host_message("No targets found. Use /mute <ipid> <ipid> ... for mute.")
+        if not 'server_number' in client.server.config:
+            try:
+                ipid = int(raw_ipid)
+            except:
+                raise ClientError('{} does not look like a valid IPID.'.format(raw_ipid))
         else:
-            client.send_host_message('{} does not look like a valid IPID.'.format(raw_ipid))
+            ipid = raw_ipid
+        clients = client.server.client_manager.get_targets(client, TargetType.IPID, ipid, False)
+        if (clients):
+            msg = 'Muted the IPID ' + str(ipid) + '\'s following clients:'
+            for c in clients:
+                c.is_muted = True
+                logger.log_server('Muted {} [{}]({}).'.format(c.get_char_name(), c.id, c.ipid), client)
+                logger.log_mod('Muted {} [{}]({}).'.format(c.get_char_name(), c.id, c.ipid), client)
+                msg += ' ' + c.get_char_name() + ' [' + str(c.id) + '],'
+            msg = msg[:-1]
+            msg += '.'
+            client.send_host_message('{}'.format(msg))
+        else:
+            client.send_host_message("No targets found. Use /mute <ipid> <ipid> ... for mute.")
 
 
 def ooc_cmd_unmute(client, arg):
@@ -520,23 +530,26 @@ def ooc_cmd_unmute(client, arg):
     args = list(arg.split(' '))
     client.send_host_message('Attempting to unmute {} IPIDs.'.format(len(args)))
     for raw_ipid in args:
-        if raw_ipid.isdigit():
-            ipid = int(raw_ipid)
-            clients = client.server.client_manager.get_targets(client, TargetType.IPID, ipid, False)
-            if (clients):
-                msg = 'Unmuted the IPID ' + str(ipid) + '\'s following clients::'
-                for c in clients:
-                    c.is_muted = False
-                    logger.log_server('Unmuted {} [{}]({}).'.format(c.get_char_name(), c.id, c.ipid), client)
-                    logger.log_mod('Unmuted {} [{}]({}).'.format(c.get_char_name(), c.id, c.ipid), client)
-                    msg += ' ' + c.get_char_name() + ' [' + str(c.id) + '],'
-                msg = msg[:-1]
-                msg += '.'
-                client.send_host_message('{}'.format(msg))
-            else:
-                client.send_host_message("No targets found. Use /unmute <ipid> <ipid> ... for unmute.")
+        if not 'server_number' in client.server.config:
+            try:
+                ipid = int(raw_ipid)
+            except:
+                raise ClientError('{} does not look like a valid IPID.'.format(raw_ipid))
         else:
-            client.send_host_message('{} does not look like a valid IPID.'.format(raw_ipid))
+            ipid = raw_ipid
+        clients = client.server.client_manager.get_targets(client, TargetType.IPID, ipid, False)
+        if (clients):
+            msg = 'Unmuted the IPID ' + str(ipid) + '\'s following clients::'
+            for c in clients:
+                c.is_muted = False
+                logger.log_server('Unmuted {} [{}]({}).'.format(c.get_char_name(), c.id, c.ipid), client)
+                logger.log_mod('Unmuted {} [{}]({}).'.format(c.get_char_name(), c.id, c.ipid), client)
+                msg += ' ' + c.get_char_name() + ' [' + str(c.id) + '],'
+            msg = msg[:-1]
+            msg += '.'
+            client.send_host_message('{}'.format(msg))
+        else:
+            client.send_host_message("No targets found. Use /unmute <ipid> <ipid> ... for unmute.")
 
 
 def ooc_cmd_login(client, arg):
