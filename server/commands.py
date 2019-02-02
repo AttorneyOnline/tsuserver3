@@ -693,43 +693,50 @@ def ooc_cmd_area(client, arg):
 
 def ooc_cmd_pm(client, arg):
     args = arg.split()
-    key = ''
-    msg = None
+    ooc_name = 1
     if len(args) < 2:
-        raise ArgumentError(
-            'Not enough arguments. use /pm <target> <message>. Target should be ID, OOC-name or char-name. Use /getarea for getting info like "[ID] char-name".')
-    targets = client.server.client_manager.get_targets(client, TargetType.CHAR_NAME, arg, True)
-    key = TargetType.CHAR_NAME
-    if len(targets) == 0 and args[0].isdigit():
-        targets = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), False)
-        key = TargetType.ID
-    if len(targets) == 0:
-        targets = client.server.client_manager.get_targets(client, TargetType.OOC_NAME, arg, True)
-        key = TargetType.OOC_NAME
-    if len(targets) == 0:
-        raise ArgumentError('No targets found.')
-    try:
-        if key == TargetType.ID:
-            msg = ' '.join(args[1:])
+        raise ArgumentError('Not enough arguments. Use /pm <target>: <message>.')
+    target_clients = []
+    for word in args:
+        if word.lower().endswith(':'):
+            break
         else:
-            if key == TargetType.CHAR_NAME:
-                msg = arg[len(targets[0].get_char_name()) + 1:]
-            if key == TargetType.OOC_NAME:
-                msg = arg[len(targets[0].name) + 1:]
-    except:
-        raise ArgumentError('Not enough arguments. Use /pm <target> <message>.')
-    c = targets[0]
-    if c.pm_mute:
-        raise ClientError('This user muted all pm conversation')
+            ooc_name += 1
+    if ooc_name == len(args) + 1:
+        raise ArgumentError('Invalid syntax. Add \':\' in the end of target.')
+    namedrop = ' '.join(args[:ooc_name])
+    namedrop = namedrop[:len(namedrop) - 1]
+    msg = ' '.join(args[ooc_name:])
+    if not msg:
+        raise ArgumentError('Not enough arguments. Use /pm <target>: <message>.')
+    for char_name in client.server.char_list:
+        if namedrop.lower() == char_name.lower():
+            try:
+                c = client.server.client_manager.get_targets(client, TargetType.CHAR_NAME, char_name, True)
+            except Exception as n:
+                client.send_host_message('{}'.format(n))
+            if c:
+                target_clients += c
+    if not target_clients:
+        try:
+            target_clients = client.server.client_manager.get_targets(client, TargetType.OOC_NAME, namedrop, False)
+        except Exception as n:
+            client.send_host_message('{}'.format(n))
+    if not target_clients:
+        client.send_host_message('No targets {} found.'.format(namedrop))
     else:
-        if c.is_mod:
-            c.send_host_message(
-                'PM from {} (ID: {}, IPID: {}) in {} ({}): {}'.format(client.name, client.id, client.ipid,
-                                                                      client.area.name, client.get_char_name(), msg))
+        sent_num = 0
+        for c in target_clients:
+            if not c.pm_mute:
+                c.send_host_message(
+                    'PM from {} in {} ({}): {}'.format(client.name, client.area.name, client.get_char_name(), msg))
+                sent_num += 1
+        if sent_num == 0:
+            client.send_host_message('Target(s) not receiving PMs because of mute.')
         else:
-            c.send_host_message('PM from {} (ID: {}) in {} ({}): {}'.format(client.name, client.id, client.area.name,
-                                                                            client.get_char_name(), msg))
-        client.send_host_message('PM sent to {}. Message: {}'.format(args[0], msg))
+            client.send_host_message('PM sent to {}, {} user(s). Message: {}'.format(namedrop, sent_num, msg))
+            logger.log_server('[{}][{}] sent a PM to {}: {}.'.format(client.area.id, client.get_char_name(), namedrop, msg)
+                              , client)
 
 
 def ooc_cmd_mutepm(client, arg):
