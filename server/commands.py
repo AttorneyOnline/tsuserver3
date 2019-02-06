@@ -429,6 +429,8 @@ def ooc_cmd_ban(client, arg):
     if reason == '':
         reason = 'N/A'
 
+    logger.log_server('Banning {}.'.format(raw_ipid), client)
+
     try:
         ipid = int(raw_ipid)
     except:
