@@ -20,6 +20,10 @@ import random
 import time
 import yaml
 
+import re
+import string
+
+from server.constants import TargetType
 from server.exceptions import AreaError
 from server.evidence import EvidenceList
 
@@ -52,6 +56,7 @@ class HubManager:
 				self.judgelog = []
 				self.current_music = ''
 				self.current_music_player = ''
+				self.current_music_player_ipid = ''
 				self.evi_list = EvidenceList()
 				self.is_recording = False
 				self.record_start = 0
@@ -75,24 +80,31 @@ class HubManager:
 					self.id, self.name.replace(';', ''), desc.replace(';', ''), self.background, self.pos_lock, accessible, self.is_locked)
 
 			def load(self, arg):
-				# try:
 				args = arg.split(';')
-				#print(args)
-				self.name = str(args[1])
-				self.desc = str(args[2])
-				self.change_background(str(args[3]))
-				if str(args[4]).lower() in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
-					self.pos_lock = str(args[4]).lower()
-				else:
-					self.pos_lock = None
-
-				if args[5] == 'None':
-					self.accessible = []
-				else:
-					self.accessible = [int(s) for s in str(args[5]).split(',')]
-				self.is_locked = str(args[6]).lower() == 'true'
-				# except:
-				# 	return AreaError('Bad save file!')
+				if str(args[1]) != "*":
+					print("Attempting to set name")
+					self.name = str(args[1])
+				if str(args[2]) != "*":
+					print("Attempting to set desc")
+					self.desc = str(args[2])
+				if str(args[3]) != "*":
+					print("Attempting to set bg")
+					self.change_background(str(args[3]))
+				if str(args[4]) != "*":
+					print("Attempting to set poslock")
+					if str(args[4]).lower() in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
+						self.pos_lock = str(args[4]).lower()
+					else:
+						self.pos_lock = None
+				if str(args[5]) != "*":
+					print("Attempting to set access")
+					if args[5] == 'None':
+						self.accessible = []
+					else:
+						self.accessible = [int(s) for s in str(args[5]).split(',')]
+				if str(args[6]) != "*":
+					print("Attempting to set lock")
+					self.is_locked = str(args[6]).lower() == 'true'
 
 			def new_client(self, client):
 				self.clients.add(client)
@@ -157,6 +169,13 @@ class HubManager:
 				self.next_message_time = round(time.time() * 1000.0 + delay)
 
 			def play_music(self, name, cid, length=-1):
+				for client in self.server.client_manager.clients:
+					if client.char_id == cid:
+						self.current_music_player = client.get_char_name()
+						self.current_music_player_ipid = client.ipid
+						break
+
+				self.current_music = name
 				self.send_command('MC', name, cid)
 				if self.music_looper:
 					self.music_looper.cancel()
@@ -165,6 +184,13 @@ class HubManager:
 																			lambda: self.play_music(name, -1, length))
 
 			def play_music_shownamed(self, name, cid, showname, length=-1):
+				for client in self.server.client_manager.clients:
+					if client.char_id == cid:
+						self.current_music_player = client.get_char_name()
+						self.current_music_player_ipid = client.ipid
+						break
+
+				self.current_music = name
 				self.send_command('MC', name, cid, showname)
 				if self.music_looper:
 					self.music_looper.cancel()
@@ -260,18 +286,24 @@ class HubManager:
 
 		def load(self, arg):
 			args = arg.split('\n')
+			print(args)
 			try:
-				while len(self.areas) <= len(args):
-					self.create_area('Area {}'.format(self.cur_id), True,
-											self.server.backgrounds[0], False, None, 'FFA', True, True, [], '')
-				i = 1
 				for a in args:
+					aid = int(a.split(';')[0])
 					print(a)
 					if(len(a) < 7):
 						continue
-					self.areas[i].load(a)
-					i += 1
+					i = 0
+					while len(self.areas) <= aid:
+						self.create_area('Area {}'.format(self.cur_id), True,
+												self.server.backgrounds[0], False, None, 'FFA', True, True, [], '')
+						i += 1
+					print("Created {} new areas".format(i))
+					self.areas[aid].load(a)
+					print("Loaded", aid)
+				print("Donezo")
 			except:
+				print("Bad area save file!")
 				raise AreaError('Bad save file!')
 
 		def create_area(self, name, can_rename, bg, bglock, poslock, evimod, lockallow, removable, accessible, desc):

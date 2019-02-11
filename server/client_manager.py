@@ -127,7 +127,8 @@ class ClientManager:
                 self.server.config['playerlimit']))
 
         def is_valid_name(self, name):
-            printset = set(string.ascii_letters + string.digits + "~ -_.")
+            print(string.punctuation)
+            printset = set(string.ascii_letters + string.digits + "~ -_.',")
             name_ws = name.replace(' ', '')
             if not name_ws or name_ws.isdigit():
                 return False

@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # tsuserver3, an Attorney Online server
 #
 # Copyright (C) 2016 argoneus <argoneuscze@gmail.com>

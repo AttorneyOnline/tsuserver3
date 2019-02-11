@@ -682,11 +682,35 @@ class AOProtocol(asyncio.Protocol):
                     if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
                         self.client.send_host_message("Showname changes are forbidden in this hub!")
                         return
-                    self.client.area.play_music_shownamed(name, self.client.char_id, showname, length)
+
+                    if self.client.is_cm and len(self.client.broadcast_ic) > 0:
+                        i = 0
+                        for b in self.client.broadcast_ic:
+                            area = self.client.hub.get_area_by_id(b)
+                            if area:
+                                area.play_music_shownamed(
+                                    name, self.client.char_id, showname, length)
+                                i += 1
+                        self.client.send_host_message(
+                            'Broadcasting music to {} areas.'.format(len(self.client.broadcast_ic)))
+                    else:
+                        self.client.area.play_music_shownamed(name, self.client.char_id, showname, length)
                     # self.client.area.add_music_playing_shownamed(self.client, showname, name)
                 else:
-                    self.client.area.play_music(name, self.client.char_id, length)
+                    if self.client.is_cm and len(self.client.broadcast_ic) > 0:
+                        i = 0
+                        for b in self.client.broadcast_ic:
+                            area = self.client.hub.get_area_by_id(b)
+                            if area:
+                                area.play_music(
+                                    name, self.client.char_id, length)
+                                i += 1
+                        self.client.send_host_message(
+                            'Broadcasting music to {} areas.'.format(len(self.client.broadcast_ic)))
+                    else:
+                        self.client.area.play_music(name, self.client.char_id, length)
                     # self.client.area.add_music_playing(self.client, name)
+
                 logger.log_server('[{}][{}]Changed music to {}.'
                                     .format(self.client.hub.abbreviation, self.client.get_char_name(), name),
                                     self.client)
@@ -878,6 +902,12 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_host_message(
                     "Could not load hub save data! Try pressing the [X] and make sure if your save data is correct.")
 
+    def make_valid_string(self, name):
+        printable = string.ascii_letters + string.digits + string.punctuation
+        print(printable)
+        if not set(name).issubset(set(printable)):
+            name = re.sub('[{}]'.format(printable), '', name)
+        return name
 
     def net_cmd_zz(self, args):
         """ Sent on mod call.
