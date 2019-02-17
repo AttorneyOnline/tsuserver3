@@ -273,9 +273,9 @@ class ClientManager:
                         c.send_host_message(
                             'Following [{}] {} to {}. [HUB: {}]'.format(self.id, self.get_char_name(True), area.name, area.hub.name))
 
-            if self.announce_movement and not hidden:
-                old_area.send_host_message('{} leaves to [{}] {}. [HUB: {}]'.format(self.get_char_name(True), area.id, area.name, area.hub.name))
-                area.send_host_message('{} enters from [{}] {}. [HUB: {}]'.format(self.get_char_name(True), old_area.id, old_area.name, old_area.hub.name))
+            if self.announce_movement and not hidden and not self.get_char_name() == "Spectator":
+                old_area.send_host_message('[{}]{} leaves to [{}] {}. [HUB: {}]'.format(self.id, self.get_char_name(True), area.id, area.name, area.hub.name))
+                area.send_host_message('[{}]{} enters from [{}] {}. [HUB: {}]'.format(self.id, self.get_char_name(True), old_area.id, old_area.name, old_area.hub.name))
             else:
                 self.send_host_message('Changed area to {}. [HUB: {}]'.format(area.name, area.hub.name))
 

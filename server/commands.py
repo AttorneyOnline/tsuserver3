@@ -89,7 +89,7 @@ def ooc_cmd_bg(client, arg):
         client.area.change_background(arg, client.is_mod)
     except AreaError:
         raise
-    client.area.send_host_message('{} changed the background to {}.'.format(client.get_char_name(True), arg))
+    client.area.send_host_message('[{}]{} changed the background to {}.'.format(client.id, client.get_char_name(True), arg))
     logger.log_server('[{}][{}]Changed background to {}'.format(client.hub.abbreviation, client.get_char_name(), arg),
                       client)
 
@@ -279,8 +279,10 @@ def rtd(arg):
 def ooc_cmd_roll(client, arg):
     roll, num_dice, chosen_max, modifiers = rtd(arg)
 
-    client.area.send_host_message('{} rolled {} out of {}.'.format(client.get_char_name(True), roll, chosen_max))
-    client.hub.send_to_cm('RollLog', '[{}][{}]Used /roll and got {} out of {}.'.format(client.area.id, client.get_char_name(True), roll, chosen_max))
+    client.area.send_host_message('[{}]{} rolled {} out of {}.'.format(
+        client.id, client.get_char_name(True), roll, chosen_max))
+    client.hub.send_to_cm('RollLog', '[{}][{}]{} used /roll and got {} out of {}.'.format(
+        client.area.id, client.id, client.get_char_name(True), roll, chosen_max))
     logger.log_server(
         '[{}][{}]Used /roll and got {} out of {}.'.format(client.area.id, client.get_char_name(True), roll, chosen_max), client)
     
@@ -288,7 +290,7 @@ def ooc_cmd_rollp(client, arg):
     roll, num_dice, chosen_max, modifiers = rtd(arg)
 
     client.send_host_message('[Hidden] You rolled {} out of {}.'.format(roll, chosen_max))
-    client.hub.send_to_cm('RollLog', '[{}][{}]Used /rollp and got {} out of {}.'.format(client.area.id, client.get_char_name(True), roll, chosen_max))
+    client.hub.send_to_cm('RollLog', '[A{}][ID{}]{} used /rollp and got {} out of {}.'.format(client.area.id, client.id, client.get_char_name(True), roll, chosen_max))
     logger.log_server(
         '[{}][{}]Used /rollp and got {} out of {}.'.format(client.area.id, client.get_char_name(True), roll, chosen_max), client)
 
@@ -311,9 +313,9 @@ def ooc_cmd_coinflip(client, arg):
     coin = ['heads', 'tails']
     flip = random.choice(coin)
     client.area.send_host_message(
-        '{} flipped a coin and got {}.'.format(client.get_char_name(True), flip))
-    client.hub.send_to_cm('RollLog', '[{}][{}]Used /coinflip and got {}.'.format(
-        client.area.id, client.get_char_name(True), flip))
+        '[{}]{} flipped a coin and got {}.'.format(client.id, client.get_char_name(True), flip))
+    client.hub.send_to_cm('RollLog', '[A{}][ID{}]{} used /coinflip and got {}.'.format(
+        client.area.id, client.id, client.get_char_name(True), flip))
     logger.log_server(
         '[{}][{}]Used /coinflip and got {}.'.format(client.hub.abbreviation, client.get_char_name(True), flip), client)
 
@@ -740,7 +742,7 @@ def ooc_cmd_doc(client, arg):
             raise AreaError(
                 'Hub is {} - only the CM can change /doc.'.format(client.hub.status))
         client.hub.change_doc(arg)
-        client.hub.send_host_message('{} changed the doc link.'.format(client.get_char_name(True)))
+        client.hub.send_host_message('[{}]{} changed the doc link.'.format(client.id, client.get_char_name(True)))
         logger.log_server('[{}][{}]Changed document to: {}'.format(client.hub.id, client.get_char_name(), arg))
 
 def ooc_cmd_desc(client, arg):
@@ -753,7 +755,7 @@ def ooc_cmd_desc(client, arg):
             raise AreaError(
                 'Hub is {} - only the CM can change /desc for this area.'.format(client.hub.status))
         client.area.desc = arg
-        client.area.send_host_message('{} changed the area description.'.format(client.get_char_name(True)))
+        client.area.send_host_message('[{}]{} changed the area description.'.format(client.id, client.get_char_name(True)))
         logger.log_server('[{}][{}]Changed document to: {}'.format(client.area.id, client.get_char_name(), arg))
 
 def ooc_cmd_descadd(client, arg):
@@ -764,13 +766,15 @@ def ooc_cmd_descadd(client, arg):
         raise AreaError(
             'Hub is {} - only the CM can change /descadd for this area.'.format(client.hub.status))
     client.area.desc += arg
-    client.area.send_host_message('{} added to the area description.'.format(client.get_char_name(True)))
+    client.area.send_host_message('[{}]{} added to the area description.'.format(
+        client.id, client.get_char_name(True)))
     logger.log_server('[{}][{}]Changed document to: {}'.format(client.area.id, client.get_char_name(), arg))
 
 def ooc_cmd_cleardoc(client, arg):
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
-    client.area.send_host_message('{} cleared the doc link.'.format(client.get_char_name(True)))
+    client.area.send_host_message('[{}]{} cleared the doc link.'.format(
+        client.id, client.get_char_name(True)))
     logger.log_server('[{}][{}]Cleared document. Old link: {}'
                       .format(client.hub.abbreviation, client.get_char_name(), client.area.doc), client)
     client.hub.change_doc()
@@ -1551,8 +1555,8 @@ def ooc_cmd_akick(client, arg):
                         output[0] = arg[1]
                     except AreaError:
                         raise
-                client.send_host_message("Attempting to kick {} to area {} [Hub {}].".format(
-                    c.get_char_name(True), output[0], output[1]))
+                client.send_host_message("Attempting to kick [{}]{} to area {} [Hub {}].".format(
+                    c.id, c.get_char_name(True), output[0], output[1]))
                 if c.area.is_locked:
                     c.area.invite_list.pop(c.ipid)
                 if area.is_locked:
