@@ -145,7 +145,7 @@ class ClientManager:
         def change_character(self, char_id):
             if not self.server.is_valid_char_id(char_id):
                 raise ClientError('Invalid Character ID.')
-            allowed = self.is_cm or self.is_mod or self.get_char_name() == "Spectator"
+            allowed = self.is_cm or self.is_mod or self.get_char_name() == "Spectator" or self.server.char_list[char_id] == "Spectator"
             if len(self.charcurse) > 0:
                 if not char_id in self.charcurse:
                     raise ClientError('Character not available.')
