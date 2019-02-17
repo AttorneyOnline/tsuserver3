@@ -163,8 +163,7 @@ class ClientManager:
             self.pos = ''
             self.send_command('PV', self.id, 'CID', self.char_id)
             self.area.send_command('CharsCheck', *self.get_available_char_list())
-            logger.log_server('[{}]Changed character from {} to {}.'
-                              .format(self.hub.abbreviation, old_char, self.get_char_name()), self)
+            logger.log_server('Changed character from {} to {}.'.format(old_char, self.get_char_name()), self)
             self.hub.send_to_cm('CharLog', '[{}][{}]Changed character from {} to {}.'
                                 .format(self.char_id, self.name, old_char, self.get_char_name()), self)
 
@@ -279,9 +278,7 @@ class ClientManager:
             else:
                 self.send_host_message('Changed area to {}. [HUB: {}]'.format(area.name, area.hub.name))
 
-            logger.log_server(
-                '[{}]Changed area from {} ({} {}) to {} ({} {}).'.format(self.get_char_name(), old_area.name, old_area.id, old_area.hub.name,
-                                                                   self.area.name, self.area.id, self.area.hub.name), self)
+            logger.log_server('Changed area from {} (A{} H{}) to {} (A{} H{}).'.format(old_area.name, old_area.id, old_area.hub.id, self.area.name, self.area.id, self.area.hub.id), self)
             self.area.send_command('CharsCheck', *self.get_available_char_list())
             self.send_command('HP', 1, self.area.hp_def)
             self.send_command('HP', 2, self.area.hp_pro)

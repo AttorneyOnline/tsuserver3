@@ -529,6 +529,11 @@ class AOProtocol(asyncio.Protocol):
                                         charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
                                         nonint_pre)
                     area.set_next_msg_delay(len(msg))
+                    
+                    logger.log_demo('[IC][' + ', '.join(str(s) for s in ['broadcast', pre, folder, anim, pos, sfx, anim_type, cid,
+                                        sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
+                                        charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
+                                        nonint_pre, self.client.area.background]) + ']{}'.format(msg), self.client)
                     if (area.is_recording):
                             current_time = strftime("%H:%M:%S UTC", gmtime())
                             area.recorded_messages.append('[{}][Broadcast][{}] {}: {}'.format(
@@ -545,6 +550,12 @@ class AOProtocol(asyncio.Protocol):
                                         charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
                                         nonint_pre)
             self.client.area.set_next_msg_delay(len(msg))
+            
+            logger.log_demo('[IC][' + ', '.join(str(s) for s in [msg_type, pre, folder, anim, pos, sfx, anim_type, cid,
+                                sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
+                                charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
+                                nonint_pre, self.client.area.background]) + ']{}'.format(msg), self.client)
+
             if (self.client.area.is_recording):
                 current_time = strftime("%H:%M:%S UTC", gmtime())
                 self.client.area.recorded_messages.append('[{}][{}] {}: {}'.format(
@@ -552,8 +563,7 @@ class AOProtocol(asyncio.Protocol):
 
         self.client.last_showname = showname
 
-        logger.log_server('[IC][{}][{}]{}'.format(self.client.hub.abbreviation, self.client.area.id, self.client.get_char_name(), msg),
-                          self.client)
+        logger.log_server('[IC] "{}"'.format(msg), self.client)
 
         if (self.client.area.is_recording):
             current_time = strftime("%H:%M:%S UTC", gmtime())
@@ -618,9 +628,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.area.send_command('CT', self.client.name, args[1])
             # self.client.area.send_owner_command('CT', '[' + self.client.hub.abbreviation + ']' + self.client.name,
             #                                     args[1])
-            logger.log_server(
-                '[OOC][{}][{}]{}'.format(self.client.hub.abbreviation, self.client.get_char_name(),
-                                         args[1]), self.client)
+            logger.log_server('[OOC] "{}"'.format(args[1]), self.client)
 
     def net_cmd_mc(self, args):
         """ Play music.
@@ -664,9 +672,8 @@ class AOProtocol(asyncio.Protocol):
                         self.client.area.play_music_shownamed('Stop', self.client.char_id, showname, 0)
                     else:
                         self.client.area.play_music('Stop', self.client.char_id, 0)
-                    logger.log_server('[{}][{}]Stopped music.'
-                                        .format(self.client.hub.abbreviation, self.client.get_char_name()),
-                                        self.client)
+                    logger.log_server('[MUS]Stopped music.', self.client)
+                    logger.log_demo('[MUS]Stop', self.client)
                     return
                 name, length = self.server.get_song_data(args[0])
 
@@ -716,9 +723,8 @@ class AOProtocol(asyncio.Protocol):
                         self.client.area.play_music(name, self.client.char_id, length)
                     # self.client.area.add_music_playing(self.client, name)
 
-                logger.log_server('[{}][{}]Changed music to {}.'
-                                    .format(self.client.hub.abbreviation, self.client.get_char_name(), name),
-                                    self.client)
+                logger.log_server('[MUS]Changed music to {}.'.format(name), self.client)
+                logger.log_demo('[MUS]{}'.format(name), self.client)
             except ServerError:
                 self.client.send_host_message('Error: song {} isn\'t recognized by server!'.format(args[0]))
         except ClientError as ex:
@@ -761,11 +767,13 @@ class AOProtocol(asyncio.Protocol):
             return
         if len(args) == 1:
             self.client.area.send_command('RT', args[0])
+            logger.log_demo('[WTCE][{}]'.format(args[0]), self.client)
         elif len(args) == 2:
             self.client.area.send_command('RT', args[0], args[1])
+            logger.log_demo('[WTCE][{} {}]'.format(
+                args[0], args[1]), self.client)
         self.client.area.add_to_judgelog(self.client, 'used {}'.format(sign))
-        logger.log_server("[{}]{} Used WT/CE".format(self.client.hub.abbreviation, self.client.get_char_name()),
-                          self.client)
+        logger.log_server('[WTCE]Used WT/CE.', self.client)
 
     def net_cmd_setcase(self, args):
         """ Sets the casing preferences of the given client.
@@ -820,8 +828,8 @@ class AOProtocol(asyncio.Protocol):
 
             self.client.set_case_call_delay()
 
-            logger.log_server('[{}][{}][CASE_ANNOUNCEMENT]{}, DEF: {}, PRO: {}, JUD: {}, JUR: {}, STENO: {}.'.format(
-                self.client.hub.abbreviation, self.client.get_char_name(), args[0], args[1], args[2], args[3], args[4], args[5]),
+            logger.log_server('[CASE_ANNOUNCEMENT]{}, DEF: {}, PRO: {}, JUD: {}, JUR: {}, STENO: {}.'.format(
+                args[0], args[1], args[2], args[3], args[4], args[5]),
                 self.client)
         else:
             raise ClientError('You cannot announce a case in an area where you are not a CM!')
@@ -845,9 +853,9 @@ class AOProtocol(asyncio.Protocol):
         try:
             self.client.area.change_hp(args[0], args[1])
             self.client.area.add_to_judgelog(self.client, 'changed the penalties')
-            logger.log_server('[{}]{} changed HP ({}) to {}'
-                              .format(self.client.hub.abbreviation, self.client.get_char_name(), args[0], args[1]),
-                              self.client)
+            logger.log_server('[HP]Changed HP ({}) to {}'.format(args[0], args[1]), self.client)
+            logger.log_demo('[HP][{} {}]'.format(
+                args[0], args[1]), self.client)
         except AreaError:
             return
 
@@ -933,17 +941,15 @@ class AOProtocol(asyncio.Protocol):
                                           .format(current_time, self.client.get_char_name(), self.client.get_ip(),
                                                   self.client.area.name), pred=lambda c: c.is_mod)
             self.client.set_mod_call_delay()
-            logger.log_server(
-                '[{}]{} called a moderator.'.format(self.client.hub.abbreviation, self.client.get_char_name()),
-                self.client)
+            logger.log_server('Called a moderator.', self.client)
+            logger.log_mod('Called a moderator.', self.client)
         else:
             self.server.send_all_cmd_pred('ZZ', '[{}] {} ({}) in {} with reason: {}'
                                           .format(current_time, self.client.get_char_name(), self.client.get_ip(),
                                                   self.client.area.name, args[0][:100]), pred=lambda c: c.is_mod)
             self.client.set_mod_call_delay()
-            logger.log_server(
-                '[{}]{} called a moderator: {}.'.format(self.client.hub.abbreviation, self.client.get_char_name(),
-                                                        args[0]), self.client)
+            logger.log_server('Called a moderator: {}.'.format(args[0]), self.client)
+            logger.log_mod('Called a moderator: {}.'.format(args[0]), self.client)
 
     def net_cmd_opKICK(self, args):
         self.net_cmd_ct(['opkick', '/kick {}'.format(args[0])])

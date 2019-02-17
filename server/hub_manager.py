@@ -573,13 +573,11 @@ class HubManager:
 		self.server.send_arup(status_list)
 
 	def send_arup_cms(self):
-		cms_list = [2]
 		for hub in self.hubs:
 			cm = 'FREE'
-			if len(hub.get_cm_list()) > 0:
-				cm = hub.get_cm_list()
-			cms_list.append(cm)
-		self.server.send_arup(cms_list)
+			if hub.master != None:
+				cm = hub.master
+		self.server.send_arup(cm)
 
 	def send_arup_lock(self):
 		lock_list = [3]

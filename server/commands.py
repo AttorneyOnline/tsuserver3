@@ -90,8 +90,7 @@ def ooc_cmd_bg(client, arg):
     except AreaError:
         raise
     client.area.send_host_message('[{}]{} changed the background to {}.'.format(client.id, client.get_char_name(True), arg))
-    logger.log_server('[{}][{}]Changed background to {}'.format(client.hub.abbreviation, client.get_char_name(), arg),
-                      client)
+    logger.log_server('Changed background to {}'.format(arg), client)
 
 def ooc_cmd_bglock(client,arg):
     if not client.is_mod and not client.is_cm:
@@ -103,7 +102,7 @@ def ooc_cmd_bglock(client,arg):
     else:
         client.area.bg_lock = True
     client.area.send_host_message('A mod has set the background lock to {}.'.format(client.area.bg_lock))
-    logger.log_server('[{}][{}]Changed bglock to {}'.format(client.area.id, client.get_char_name(), client.area.bg_lock), client)
+    logger.log_server('Changed bglock to {}'.format(client.area.bg_lock), client)
 
 def ooc_cmd_evidence_mod(client, arg):
     if not client.is_mod and not client.is_cm:
@@ -283,16 +282,14 @@ def ooc_cmd_roll(client, arg):
         client.id, client.get_char_name(True), roll, chosen_max))
     client.hub.send_to_cm('RollLog', '[{}][{}]{} used /roll and got {} out of {}.'.format(
         client.area.id, client.id, client.get_char_name(True), roll, chosen_max))
-    logger.log_server(
-        '[{}][{}]Used /roll and got {} out of {}.'.format(client.area.id, client.get_char_name(True), roll, chosen_max), client)
+    logger.log_server('Used /roll and got {} out of {}.'.format(roll, chosen_max), client)
     
 def ooc_cmd_rollp(client, arg):
     roll, num_dice, chosen_max, modifiers = rtd(arg)
 
     client.send_host_message('[Hidden] You rolled {} out of {}.'.format(roll, chosen_max))
     client.hub.send_to_cm('RollLog', '[A{}][ID{}]{} used /rollp and got {} out of {}.'.format(client.area.id, client.id, client.get_char_name(True), roll, chosen_max))
-    logger.log_server(
-        '[{}][{}]Used /rollp and got {} out of {}.'.format(client.area.id, client.get_char_name(True), roll, chosen_max), client)
+    logger.log_server('Used /rollp and got {} out of {}.'.format(roll, chosen_max), client)
 
 def ooc_cmd_currentmusic(client, arg):
     if len(arg) != 0:
@@ -316,8 +313,7 @@ def ooc_cmd_coinflip(client, arg):
         '[{}]{} flipped a coin and got {}.'.format(client.id, client.get_char_name(True), flip))
     client.hub.send_to_cm('RollLog', '[A{}][ID{}]{} used /coinflip and got {}.'.format(
         client.area.id, client.id, client.get_char_name(True), flip))
-    logger.log_server(
-        '[{}][{}]Used /coinflip and got {}.'.format(client.hub.abbreviation, client.get_char_name(True), flip), client)
+    logger.log_server('Used /coinflip and got {}.'.format(flip), client)
 
 
 def ooc_cmd_motd(client, arg):
@@ -397,9 +393,7 @@ def ooc_cmd_forcepos(client, arg):
 
     client.area.send_host_message(
         '{} forced {} client(s) into /pos {}.'.format(client.name, len(targets), pos))
-    logger.log_server(
-        '[{}][{}]Used /forcepos {} for {} client(s).'.format(client.hub.abbreviation, client.name, pos,
-                                                             len(targets)), client)
+    logger.log_server('Used /forcepos {} for {} client(s).'.format(pos, len(targets)), client)
 
 
 def ooc_cmd_help(client, arg):
@@ -497,8 +491,7 @@ def ooc_cmd_play(client, arg):
         raise ArgumentError('You must specify a song.')
     client.area.play_music(arg, client.char_id, -1)
     # client.area.add_music_playing(client, arg)
-    logger.log_server('[{}][{}]Changed music to {}.'.format(client.hub.abbreviation, client.get_char_name(True), arg),
-                      client)
+    logger.log_server('Changed music to {}.'.format(arg), client)
 
 
 def ooc_cmd_mute(client, arg):
@@ -625,7 +618,7 @@ def ooc_cmd_g(client, arg):
     if len(arg) == 0:
         raise ArgumentError("You can't send an empty message.")
     client.server.broadcast_global(client, arg)
-    logger.log_server('[{}][{}][GLOBAL]{}.'.format(client.hub.id, client.name, arg), client)
+    logger.log_server('[GLOBAL] "{}"'.format(arg), client)
 
 def ooc_cmd_h(client, arg):
     if len(arg) == 0:
@@ -647,8 +640,7 @@ def ooc_cmd_h(client, arg):
     #     cm = ''
 
     client.hub.send_command('CT', '~H{}[{}]'.format(cm, client.name), arg)
-    logger.log_server(
-        '[HOOC][{}][{}][{}][{}]{}'.format(client.hub.name, client.area.id, client.get_char_name(), client.name, arg), client)
+    logger.log_server('[HUB] "{}"'.format(arg), client)
 
 def ooc_cmd_gm(client, arg):
     if not client.is_mod:
@@ -658,8 +650,8 @@ def ooc_cmd_gm(client, arg):
     if len(arg) == 0:
         raise ArgumentError("Can't send an empty message.")
     client.server.broadcast_global(client, arg, True)
-    logger.log_server('[{}][{}][GLOBAL-MOD]{}.'.format(client.hub.abbreviation, client.get_char_name(), arg), client)
-    logger.log_mod('[{}][{}][GLOBAL-MOD]{}.'.format(client.hub.abbreviation, client.get_char_name(), arg), client)
+    logger.log_server('[GLOBAL-MOD] "{}"'.format(arg), client)
+    logger.log_mod('[GLOBAL-MOD] "{}"'.format(arg), client)
 
 
 def ooc_cmd_m(client, arg):
@@ -668,8 +660,8 @@ def ooc_cmd_m(client, arg):
     if len(arg) == 0:
         raise ArgumentError("You can't send an empty message.")
     client.server.send_modchat(client, arg)
-    logger.log_server('[{}][{}][MODCHAT]{}.'.format(client.hub.abbreviation, client.get_char_name(), arg), client)
-    logger.log_mod('[{}][{}][MODCHAT]{}.'.format(client.hub.abbreviation, client.get_char_name(), arg), client)
+    logger.log_server('[MODCHAT] "{}"'.format(arg), client)
+    logger.log_mod('[MODCHAT] "{}"'.format(arg), client)
 
 
 def ooc_cmd_lm(client, arg):
@@ -679,8 +671,8 @@ def ooc_cmd_lm(client, arg):
         raise ArgumentError("Can't send an empty message.")
     client.area.send_command('CT', '{}[MOD][{}]'
                              .format(client.server.config['hostname'], client.get_char_name()), arg)
-    logger.log_server('[{}][{}][LOCAL-MOD]{}.'.format(client.hub.abbreviation, client.get_char_name(), arg), client)
-    logger.log_mod('[{}][{}][LOCAL-MOD]{}.'.format(client.hub.abbreviation, client.get_char_name(), arg), client)
+    logger.log_server('[LOCAL-MOD] "{}"'.format(arg), client)
+    logger.log_mod('[LOCAL-MOD] "{}"'.format(arg), client)
 
 
 def ooc_cmd_announce(client, arg):
@@ -690,8 +682,8 @@ def ooc_cmd_announce(client, arg):
         raise ArgumentError("Can't send an empty message.")
     client.server.send_all_cmd_pred('CT', '{}'.format(client.server.config['hostname']),
                                     '=== Announcement ===\r\n{}\r\n=================='.format(arg), '1')
-    logger.log_server('[{}][{}][ANNOUNCEMENT]{}.'.format(client.hub.abbreviation, client.get_char_name(), arg), client)
-    logger.log_mod('[{}][{}][ANNOUNCEMENT]{}.'.format(client.hub.abbreviation, client.get_char_name(), arg), client)
+    logger.log_server('[ANNOUNCEMENT] "{}"'.format(arg), client)
+    logger.log_mod('[ANNOUNCEMENT] "{}"'.format(arg), client)
 
 
 def ooc_cmd_toggleglobal(client, arg):
@@ -720,7 +712,7 @@ def ooc_cmd_need(client, arg):
     if len(arg) == 0:
         raise ArgumentError("You must specify what you need.")
     client.server.broadcast_need(client, arg)
-    logger.log_server('[{}][{}][NEED]{}.'.format(client.hub.id, client.get_char_name(), arg), client)
+    logger.log_server('[NEED]{}.'.format(arg), client)
     
 def ooc_cmd_toggleadverts(client, arg):
     if len(arg) != 0:
@@ -735,28 +727,26 @@ def ooc_cmd_toggleadverts(client, arg):
 def ooc_cmd_doc(client, arg):
     if len(arg) == 0:
         client.send_host_message('Document: {}'.format(client.hub.doc))
-        logger.log_server(
-            '[{}][{}]Requested document. Link: {}'.format(client.area.id, client.get_char_name(), client.hub.doc))
+        logger.log_server('Requested document. Link: {}'.format(client.hub.doc))
     else:
         if client.hub.status.lower().startswith('rp-strict') and not client.is_cm:
             raise AreaError(
                 'Hub is {} - only the CM can change /doc.'.format(client.hub.status))
         client.hub.change_doc(arg)
         client.hub.send_host_message('[{}]{} changed the doc link.'.format(client.id, client.get_char_name(True)))
-        logger.log_server('[{}][{}]Changed document to: {}'.format(client.hub.id, client.get_char_name(), arg))
+        logger.log_server('Changed document to: {}'.format(arg))
 
 def ooc_cmd_desc(client, arg):
     if len(arg) == 0:
         client.send_host_message('Area Description: {}'.format(client.area.desc))
-        logger.log_server(
-            '[{}][{}]Requested description: {}'.format(client.area.id, client.get_char_name(), client.area.desc))
+        logger.log_server('Requested description: {}'.format(client.area.desc))
     else:
         if client.hub.status.lower().startswith('rp-strict') and not client.is_cm:
             raise AreaError(
                 'Hub is {} - only the CM can change /desc for this area.'.format(client.hub.status))
         client.area.desc = arg
         client.area.send_host_message('[{}]{} changed the area description.'.format(client.id, client.get_char_name(True)))
-        logger.log_server('[{}][{}]Changed document to: {}'.format(client.area.id, client.get_char_name(), arg))
+        logger.log_server('Changed document to: {}'.format(arg))
 
 def ooc_cmd_descadd(client, arg):
     if len(arg) == 0:
@@ -768,15 +758,14 @@ def ooc_cmd_descadd(client, arg):
     client.area.desc += arg
     client.area.send_host_message('[{}]{} added to the area description.'.format(
         client.id, client.get_char_name(True)))
-    logger.log_server('[{}][{}]Changed document to: {}'.format(client.area.id, client.get_char_name(), arg))
+    logger.log_server('Changed document to: {}'.format(arg))
 
 def ooc_cmd_cleardoc(client, arg):
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
     client.area.send_host_message('[{}]{} cleared the doc link.'.format(
         client.id, client.get_char_name(True)))
-    logger.log_server('[{}][{}]Cleared document. Old link: {}'
-                      .format(client.hub.abbreviation, client.get_char_name(), client.area.doc), client)
+    logger.log_server('Cleared document. Old link: {}'.format(client.hub.doc), client)
     client.hub.change_doc()
 
 
@@ -789,8 +778,7 @@ def ooc_cmd_status(client, arg):
         try:
             client.hub.change_status(arg)
             client.hub.send_host_message('{} changed status to {}.'.format(client.name, client.hub.status))
-            logger.log_server(
-                '[{}][{}]Changed status to {}'.format(client.hub.id, client.name, client.hub.status))
+            logger.log_server('Changed status to {}'.format(client.hub.status))
         except AreaError:
             raise
 

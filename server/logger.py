@@ -16,43 +16,73 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging
+from logging.handlers import TimedRotatingFileHandler
 
 import time
+import datetime as dt
 
+class MyFormatter(logging.Formatter):
+    converter = dt.datetime.utcfromtimestamp
+
+    def formatTime(self, record, datefmt=None):
+        ct = self.converter(record.created)
+        if datefmt:
+            s = ct.strftime(datefmt)
+        else:
+            t = ct.strftime("%H:%M:%S")
+            s = "%s.%03d" % (t, record.msecs)
+        return s
 
 def setup_logger(debug):
     logging.Formatter.converter = time.gmtime
-    debug_formatter = logging.Formatter('[%(asctime)s UTC]%(message)s')
-    srv_formatter = logging.Formatter('[%(asctime)s UTC]%(message)s')
-    mod_formatter = logging.Formatter('[%(asctime)s UTC]%(message)s')
+    base_formatter = logging.Formatter('[%(asctime)s UTC]%(message)s')
+    suffix = time.strftime("%A, %B %d, %Y", time.gmtime())
 
     debug_log = logging.getLogger('debug')
     debug_log.setLevel(logging.DEBUG)
 
-    debug_handler = logging.FileHandler('logs/debug.log', encoding='utf-8')
+    debug_handler = TimedRotatingFileHandler(
+        'logs/debug/{}.log'.format(suffix), when='midnight', encoding='utf-8')
+    debug_handler.suffix = '{}.log'.format(suffix)
     debug_handler.setLevel(logging.DEBUG)
-    debug_handler.setFormatter(debug_formatter)
+    debug_handler.setFormatter(base_formatter)
     debug_log.addHandler(debug_handler)
 
     if not debug:
         debug_log.disabled = True
 
-    server_log = logging.getLogger('server')
-    server_log.setLevel(logging.INFO)
-
-    server_handler = logging.FileHandler('logs/server.log', encoding='utf-8')
-    server_handler.setLevel(logging.INFO)
-    server_handler.setFormatter(srv_formatter)
-    server_log.addHandler(server_handler)
-
     mod_log = logging.getLogger('mod')
     mod_log.setLevel(logging.INFO)
 
-    mod_handler = logging.FileHandler('logs/mod.log', encoding='utf-8')
+    mod_handler = TimedRotatingFileHandler(
+        'logs/mod/{}.log'.format(suffix), when='midnight', encoding='utf-8')
+    mod_handler.suffix = '{}.log'.format(suffix)
     mod_handler.setLevel(logging.INFO)
-    mod_handler.setFormatter(mod_formatter)
+    mod_handler.setFormatter(base_formatter)
     mod_log.addHandler(mod_handler)
 
+    server_log = logging.getLogger('server')
+    server_log.setLevel(logging.INFO)
+
+    server_handler = TimedRotatingFileHandler(
+        'logs/server/{}.log'.format(suffix), when='midnight', encoding='utf-8')
+    server_handler.suffix = '{}.log'.format(suffix)
+    server_handler.setLevel(logging.INFO)
+    server_handler.setFormatter(base_formatter)
+    server_log.addHandler(server_handler)
+
+    #Extreme logging for future demo playback
+    demo_log = logging.getLogger('demo')
+    demo_log.setLevel(logging.INFO)
+
+    demo_formatter = MyFormatter('[%(asctime)s]%(message)s')
+
+    demo_handler = TimedRotatingFileHandler(
+        'logs/demo/{}.log'.format(suffix), when='midnight', encoding='utf-8')
+    demo_handler.suffix = '{}.log'.format(suffix)
+    demo_handler.setLevel(logging.INFO)
+    demo_handler.setFormatter(demo_formatter)
+    demo_log.addHandler(demo_handler)
 
 def log_debug(msg, client=None):
     msg = parse_client_info(client) + msg
@@ -69,10 +99,25 @@ def log_mod(msg, client=None):
     logging.getLogger('mod').info(msg)
 
 
+def log_demo(msg, client=None):
+    msg = parse_client_demo_info(client) + msg
+    logging.getLogger('demo').info(msg)
+
+
 def parse_client_info(client):
     if client is None:
         return ''
     info = client.get_ip()
+    extra = ''
     if client.is_mod:
-        return '[{:<15}][{:<3}][{}][MOD]'.format(info, client.id, client.name)
-    return '[{:<15}][{:<3}][{}]'.format(info, client.id, client.name)
+        extra = '[MOD]'
+    if client.is_cm:
+        extra = '[CM]'
+
+    return '[{} {} {} H{} A{}][{}]{}'.format(info, client.id, client.name, client.hub.id, client.area.id, client.get_char_name(True), extra)
+
+def parse_client_demo_info(client):
+    if client is None:
+        return ''
+
+    return '[H{} A{} C{}]'.format(client.hub.id, client.area.id, client.id)
