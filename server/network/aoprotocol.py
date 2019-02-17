@@ -378,6 +378,9 @@ class AOProtocol(asyncio.Protocol):
         if len(self.client.charcurse) > 0 and folder != self.client.get_char_name():
             self.client.send_host_message("You may not iniswap while you are charcursed!")
             return
+        if self.client.get_char_name() == "Spectator":
+            self.client.send_host_message("You may not use ic chat when you are a Spectator!")
+            return
         if not self.client.hub.blankposting_allowed:
             if text == ' ':
                 self.client.send_host_message("Blankposting is forbidden in this hub!")
@@ -460,7 +463,7 @@ class AOProtocol(asyncio.Protocol):
             button = 0
             # Turn off the ding.
             ding = 0
-        if color == 2 and not (self.client.is_mod):
+        if color == 2 and not (self.client.is_mod or self.client.is_cm):
             color = 0
         if color == 6:
             text = re.sub(r'[^\x00-\x7F]+', ' ', text)  # remove all unicode to prevent redtext abuse
@@ -546,6 +549,8 @@ class AOProtocol(asyncio.Protocol):
                 current_time = strftime("%H:%M:%S UTC", gmtime())
                 self.client.area.recorded_messages.append('[{}][{}] {}: {}'.format(
                     current_time, self.client.id, self.client.get_char_name(), msg))
+
+        self.client.last_showname = showname
 
         logger.log_server('[IC][{}][{}]{}'.format(self.client.hub.abbreviation, self.client.area.id, self.client.get_char_name(), msg),
                           self.client)

@@ -112,7 +112,7 @@ class HubManager:
 				if client.hidden:
 					hidden = ' [HIDDEN]'
 				self.hub.send_to_cm('MoveLog', '[{}] {} has entered area [{}] {}.{}'.format(
-					client.id, client.get_char_name(), self.id, self.name, hidden), [client])
+					client.id, client.get_char_name(True), self.id, self.name, hidden), client)
 				self.server.hub_manager.send_arup_players()
 
 			def remove_client(self, client):
@@ -123,7 +123,7 @@ class HubManager:
 				if client.hidden:
 					hidden = ' [HIDDEN]'
 				self.hub.send_to_cm('MoveLog', '[{}] {} has left area [{}] {}.{}'.format(
-					client.id, client.get_char_name(), self.id, self.name, hidden), [client])
+					client.id, client.get_char_name(True), self.id, self.name, hidden), client)
 				self.server.hub_manager.send_arup_players()
 
 			def lock(self):
@@ -186,7 +186,7 @@ class HubManager:
 			def play_music_shownamed(self, name, cid, showname, length=-1):
 				for client in self.server.client_manager.clients:
 					if client.char_id == cid:
-						self.current_music_player = client.get_char_name()
+						self.current_music_player = client.get_char_name(True)
 						self.current_music_player_ipid = client.ipid
 						break
 
@@ -225,14 +225,14 @@ class HubManager:
 				self.background = bg
 				self.send_command('BN', self.background)
 
-			def change_doc(self, doc='No document.'):
-				self.doc = doc
+			# def change_desc(self, desc=''):
+			# 	self.desc = desc
 
 			def add_to_judgelog(self, client, msg):
 				if len(self.judgelog) >= 10:
 					self.judgelog = self.judgelog[1:]
 				self.judgelog.append('{} ({}) {}.'.format(
-					client.get_char_name(), client.get_ip(), msg))
+					client.get_char_name(True), client.get_ip(), msg))
 
 			def get_evidence_list(self, client):
 				client.evi_list, evi_list = self.evi_list.create_evi_list(client)
@@ -382,7 +382,7 @@ class HubManager:
 			else:
 				self.stop_recording(True)
 				self.rpmode = False
-			self.send_arup_status()
+			self.server.hub_manager.send_arup_status()
 
 		def is_iniswap(self, client, anim1, anim2, char):
 			if self.iniswap_allowed:
@@ -431,7 +431,9 @@ class HubManager:
 			for area in self.areas:
 				area.send_host_message(msg)
 
-		def send_to_cm(self, T, msg, exceptions=[]):
+		def send_to_cm(self, T, msg, exceptions):
+			if type(exceptions) != list:
+				exceptions = [exceptions]
 			for area in self.areas:
 				for client in area.clients:
 					if not (client in exceptions) and client.is_cm and T in client.cm_log_type:

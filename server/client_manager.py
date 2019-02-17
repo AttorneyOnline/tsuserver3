@@ -56,10 +56,11 @@ class ClientManager:
             self.command_time = 0
             self.in_rp = False
             self.ipid = ipid
+            self.last_showname = ''
 
             #CMing stuff
             self.is_cm = False
-            self.cm_log_type = ['MoveLog', 'RollLog', 'PMLog'] # If we're CM, we'll receive CM-related shenanigans
+            self.cm_log_type = ['MoveLog', 'RollLog', 'PMLog', 'CharLog'] # If we're CM, we'll receive CM-related shenanigans
             self.broadcast_ic = []
             self.hidden = False
             self.blinded = False
@@ -127,7 +128,6 @@ class ClientManager:
                 self.server.config['playerlimit']))
 
         def is_valid_name(self, name):
-            print(string.punctuation)
             printset = set(string.ascii_letters + string.digits + "~ -_.',")
             name_ws = name.replace(' ', '')
             if not name_ws or name_ws.isdigit():
@@ -142,20 +142,22 @@ class ClientManager:
         def disconnect(self):
             self.transport.close()
 
-        def change_character(self, char_id, force=False):
+        def change_character(self, char_id):
             if not self.server.is_valid_char_id(char_id):
                 raise ClientError('Invalid Character ID.')
+            allowed = self.is_cm or self.is_mod or self.get_char_name() == "Spectator"
             if len(self.charcurse) > 0:
                 if not char_id in self.charcurse:
                     raise ClientError('Character not available.')
-                force = True
-            if not self.area.is_char_available(char_id):
-                if force:
-                    for client in self.area.clients:
-                        if client.char_id == char_id:
-                            client.char_select()
-                else:
-                    raise ClientError('Character not available.')
+                # force = True
+                allowed = True
+            if not allowed and not self.area.is_char_available(char_id):
+                # if force:
+                #     for client in self.area.clients:
+                #         if client.char_id == char_id:
+                #             client.char_select()
+                # else:
+                raise ClientError('Character not available.')
             old_char = self.get_char_name()
             self.char_id = char_id
             self.pos = ''
@@ -163,6 +165,18 @@ class ClientManager:
             self.area.send_command('CharsCheck', *self.get_available_char_list())
             logger.log_server('[{}]Changed character from {} to {}.'
                               .format(self.hub.abbreviation, old_char, self.get_char_name()), self)
+            self.hub.send_to_cm('CharLog', '[{}][{}]Changed character from {} to {}.'
+                                .format(self.char_id, self.name, old_char, self.get_char_name()), self)
+
+            if self.following != None:
+                try:
+                    c = self.server.client_manager.get_targets(
+                        self, TargetType.ID, int(self.following), False)[0]
+                    self.send_host_message(
+                        'You are no longer following [{}] {}.'.format(c.id, c.get_char_name(True)))
+                    self.following = None
+                except:
+                    self.following = None
 
         def change_music_cd(self):
             if self.is_mod or self.is_cm:
@@ -218,7 +232,7 @@ class ClientManager:
 
         def reload_character(self):
             try:
-                self.change_character(self.char_id, True)
+                self.change_character(self.char_id)
             except ClientError:
                 raise
 
@@ -235,7 +249,8 @@ class ClientManager:
             #     self.area.remove_jukebox_vote(self, True)
 
             old_area = self.area
-            if not area.is_char_available(self.char_id):
+            allowed = self.is_cm or self.is_mod or self.get_char_name() == "Spectator"
+            if not allowed and not area.is_char_available(self.char_id):
                 try:
                     new_char_id = area.get_rand_avail_char_id()
                 except AreaError:
@@ -256,11 +271,11 @@ class ClientManager:
                     if c.following == self.id:
                         c.change_area(area)
                         c.send_host_message(
-                            'Following [{}] {} to {}. [HUB: {}]'.format(self.id, self.get_char_name(), area.name, area.hub.name))
+                            'Following [{}] {} to {}. [HUB: {}]'.format(self.id, self.get_char_name(True), area.name, area.hub.name))
 
             if self.announce_movement and not hidden:
-                old_area.send_host_message('{} leaves to [{}] {}. [HUB: {}]'.format(self.get_char_name(), area.id, area.name, area.hub.name))
-                area.send_host_message('{} enters from [{}] {}. [HUB: {}]'.format(self.get_char_name(), old_area.id, old_area.name, old_area.hub.name))
+                old_area.send_host_message('{} leaves to [{}] {}. [HUB: {}]'.format(self.get_char_name(True), area.id, area.name, area.hub.name))
+                area.send_host_message('{} enters from [{}] {}. [HUB: {}]'.format(self.get_char_name(True), old_area.id, old_area.name, old_area.hub.name))
             else:
                 self.send_host_message('Changed area to {}. [HUB: {}]'.format(area.name, area.hub.name))
 
@@ -309,14 +324,14 @@ class ClientManager:
             for i, hub in enumerate(self.server.hub_manager.hubs):
                 owner = 'FREE'
                 if hub.master:
-                    owner = 'MASTER: {}'.format(hub.master.get_char_name())
+                    owner = 'MASTER: {}'.format(hub.master.name)
                 msg += '\r\nHub {}: {} (users: {}) [{}][{}]'.format(
                     i, hub.name, len(hub.clients()), hub.status, owner)
                 if self.hub == hub:
                     msg += ' [*]'
             self.send_host_message(msg)
 
-        def get_area_info(self, area_id, mods):
+        def get_area_info(self, area_id):
             try:
                 area = self.hub.get_area_by_id(area_id)
             except AreaError:
@@ -325,15 +340,16 @@ class ClientManager:
             
             sorted_clients = []
             for client in area.clients:
-                if (not mods) or client.is_mod:
-                    if not client.hidden or self.is_cm or self.is_mod:
-                        sorted_clients.append(client)
-            sorted_clients = sorted(sorted_clients, key=lambda x: x.get_char_name())
+                if (not client.hidden and client.get_char_name() != "Spectator") or self.is_cm or self.is_mod or self.get_char_name() == "Spectator":
+                    sorted_clients.append(client)
+            sorted_clients = sorted(sorted_clients, key=lambda x: x.get_char_name(True))
             for c in sorted_clients:
                 info += '\r\n'
+                if c == self:
+                    info += '[*]'
                 if c.is_cm:
                     info += '[CM]'
-                info += '[{}] {}'.format(c.id, c.get_char_name())
+                info += '[{}] {}'.format(c.id, c.get_char_name(True))
                 if self.is_mod:
                     info += ' ({})'.format(c.ipid)
                 if c.hidden:
@@ -342,8 +358,8 @@ class ClientManager:
                     info += ' [B]'
             return info
 
-        def send_area_info(self, area_id, mods, hidden=False): 
-            #if area_id is -1 then return all areas. If mods is True then return only mods
+        def send_area_info(self, area_id, hidden=False): 
+            #if area_id is -1 then return all areas.
             info = ''
             if area_id == -1:
                 # all areas info
@@ -352,7 +368,7 @@ class ClientManager:
                 for i in range(len(self.hub.areas)):
                     if len(self.hub.areas[i].clients) > 0:
                         cnt += len(self.hub.areas[i].clients)
-                        info += '\r\n{}'.format(self.get_area_info(i, mods))
+                        info += '\r\n{}'.format(self.get_area_info(i))
                 if not hidden:
                     info = 'Current online: {}'.format(cnt) + info
             else:
@@ -360,7 +376,7 @@ class ClientManager:
                     info = ''
                     if not hidden:
                         info = 'People in this area: {}\n'.format(len(self.hub.clients()))
-                    info += self.get_area_info(area_id, mods)
+                    info += self.get_area_info(area_id)
                 except AreaError:
                     raise
             self.send_host_message(info)
@@ -426,9 +442,11 @@ class ClientManager:
         def get_ip(self):
             return self.ipid
 
-        def get_char_name(self):
+        def get_char_name(self, custom=False):
             if self.char_id == -1:
                 return 'CHAR_SELECT'
+            if custom and self.last_showname != '':
+                return self.last_showname
             return self.server.char_list[self.char_id]
 
         def change_position(self, pos=''):
@@ -503,7 +521,7 @@ class ClientManager:
                     if value.lower().startswith(client.name.lower()) and client.name:
                         targets.append(client)
                 elif key == TargetType.CHAR_NAME:
-                    if value.lower().startswith(client.get_char_name().lower()):
+                    if value.lower().startswith(client.get_char_name(True).lower()):
                         targets.append(client)
                 elif key == TargetType.ID:
                     if client.id == value:

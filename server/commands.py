@@ -71,7 +71,7 @@ def ooc_cmd_switch(client, arg):
     except ServerError:
         raise
     try:
-        client.change_character(cid, client.is_mod or client.is_cm)
+        client.change_character(cid)
     except ClientError:
         raise
     client.send_host_message('Character changed.')
@@ -89,7 +89,7 @@ def ooc_cmd_bg(client, arg):
         client.area.change_background(arg, client.is_mod)
     except AreaError:
         raise
-    client.area.send_host_message('{} changed the background to {}.'.format(client.get_char_name(), arg))
+    client.area.send_host_message('{} changed the background to {}.'.format(client.get_char_name(True), arg))
     logger.log_server('[{}][{}]Changed background to {}'.format(client.hub.abbreviation, client.get_char_name(), arg),
                       client)
 
@@ -139,7 +139,7 @@ def ooc_cmd_allow_blankposting(client, arg):
     client.hub.blankposting_allowed = not client.hub.blankposting_allowed
     answer = {True: 'allowed', False: 'forbidden'}
     client.hub.send_host_message(
-        '{} [{}] has set blankposting in the hub to {}.'.format(client.get_char_name(), client.id,
+        '{} [{}] has set blankposting in the hub to {}.'.format(client.name, client.id,
                                                                  answer[client.hub.blankposting_allowed]))
     return
 
@@ -149,7 +149,7 @@ def ooc_cmd_allow_shownames(client, arg):
     client.hub.showname_changes_allowed = not client.hub.showname_changes_allowed
     answer = {True: 'allowed', False: 'forbidden'}
     client.hub.send_host_message(
-        '{} [{}] has set showname changing in the hub to {}.'.format(client.get_char_name(), client.id,
+        '{} [{}] has set showname changing in the hub to {}.'.format(client.name, client.id,
                                                                  answer[client.hub.showname_changes_allowed]))
     return
 
@@ -158,7 +158,7 @@ def ooc_cmd_allow_shouts(client, arg):
         raise ClientError('You must be authorized to do that.')
     client.hub.shouts_allowed = not client.hub.shouts_allowed
     answer = {True: 'allowed', False: 'forbidden'}
-    client.hub.send_host_message('{} [{}] has set interjections in the hub to {}.'.format(client.get_char_name(), client.id,
+    client.hub.send_host_message('{} [{}] has set interjections in the hub to {}.'.format(client.name, client.id,
                                                                                 answer[client.hub.non_int_pres_only]))
     return
 
@@ -167,7 +167,7 @@ def ooc_cmd_force_nonint_pres(client, arg):
         raise ClientError('You must be authorized to do that.')
     client.hub.non_int_pres_only = not client.hub.non_int_pres_only
     answer = {True: 'non-interrupting only', False: 'non-interrupting or interrupting as you choose'}
-    client.hub.send_host_message('{} [{}] has set pres in the hub to be {}.'.format(client.get_char_name(), client.id,
+    client.hub.send_host_message('{} [{}] has set pres in the hub to be {}.'.format(client.name, client.id,
                                                                                       answer[
                                                                                           client.hub.non_int_pres_only]))
     return
@@ -279,18 +279,18 @@ def rtd(arg):
 def ooc_cmd_roll(client, arg):
     roll, num_dice, chosen_max, modifiers = rtd(arg)
 
-    client.area.send_host_message('{} rolled {} out of {}.'.format(client.get_char_name(), roll, chosen_max))
-    client.hub.send_to_cm('RollLog', '[{}][{}]Used /roll and got {} out of {}.'.format(client.area.id, client.get_char_name(), roll, chosen_max))
+    client.area.send_host_message('{} rolled {} out of {}.'.format(client.get_char_name(True), roll, chosen_max))
+    client.hub.send_to_cm('RollLog', '[{}][{}]Used /roll and got {} out of {}.'.format(client.area.id, client.get_char_name(True), roll, chosen_max))
     logger.log_server(
-        '[{}][{}]Used /roll and got {} out of {}.'.format(client.area.id, client.get_char_name(), roll, chosen_max), client)
+        '[{}][{}]Used /roll and got {} out of {}.'.format(client.area.id, client.get_char_name(True), roll, chosen_max), client)
     
 def ooc_cmd_rollp(client, arg):
     roll, num_dice, chosen_max, modifiers = rtd(arg)
 
     client.send_host_message('[Hidden] You rolled {} out of {}.'.format(roll, chosen_max))
-    client.hub.send_to_cm('RollLog', '[{}][{}]Used /rollp and got {} out of {}.'.format(client.area.id, client.get_char_name(), roll, chosen_max))
+    client.hub.send_to_cm('RollLog', '[{}][{}]Used /rollp and got {} out of {}.'.format(client.area.id, client.get_char_name(True), roll, chosen_max))
     logger.log_server(
-        '[{}][{}]Used /rollp and got {} out of {}.'.format(client.area.id, client.get_char_name(), roll, chosen_max), client)
+        '[{}][{}]Used /rollp and got {} out of {}.'.format(client.area.id, client.get_char_name(True), roll, chosen_max), client)
 
 def ooc_cmd_currentmusic(client, arg):
     if len(arg) != 0:
@@ -310,9 +310,12 @@ def ooc_cmd_coinflip(client, arg):
         raise ArgumentError('This command has no arguments.')
     coin = ['heads', 'tails']
     flip = random.choice(coin)
-    client.area.send_host_message('{} flipped a coin and got {}.'.format(client.get_char_name(), flip))
+    client.area.send_host_message(
+        '{} flipped a coin and got {}.'.format(client.get_char_name(True), flip))
+    client.hub.send_to_cm('RollLog', '[{}][{}]Used /coinflip and got {}.'.format(
+        client.area.id, client.get_char_name(True), flip))
     logger.log_server(
-        '[{}][{}]Used /coinflip and got {}.'.format(client.hub.abbreviation, client.get_char_name(), flip), client)
+        '[{}][{}]Used /coinflip and got {}.'.format(client.hub.abbreviation, client.get_char_name(True), flip), client)
 
 
 def ooc_cmd_motd(client, arg):
@@ -391,9 +394,9 @@ def ooc_cmd_forcepos(client, arg):
             raise
 
     client.area.send_host_message(
-        '{} forced {} client(s) into /pos {}.'.format(client.get_char_name(), len(targets), pos))
+        '{} forced {} client(s) into /pos {}.'.format(client.name, len(targets), pos))
     logger.log_server(
-        '[{}][{}]Used /forcepos {} for {} client(s).'.format(client.hub.abbreviation, client.get_char_name(), pos,
+        '[{}][{}]Used /forcepos {} for {} client(s).'.format(client.hub.abbreviation, client.name, pos,
                                                              len(targets)), client)
 
 
@@ -492,7 +495,7 @@ def ooc_cmd_play(client, arg):
         raise ArgumentError('You must specify a song.')
     client.area.play_music(arg, client.char_id, -1)
     # client.area.add_music_playing(client, arg)
-    logger.log_server('[{}][{}]Changed music to {}.'.format(client.hub.abbreviation, client.get_char_name(), arg),
+    logger.log_server('[{}][{}]Changed music to {}.'.format(client.hub.abbreviation, client.get_char_name(True), arg),
                       client)
 
 
@@ -737,7 +740,7 @@ def ooc_cmd_doc(client, arg):
             raise AreaError(
                 'Hub is {} - only the CM can change /doc.'.format(client.hub.status))
         client.hub.change_doc(arg)
-        client.hub.send_host_message('{} changed the doc link.'.format(client.get_char_name()))
+        client.hub.send_host_message('{} changed the doc link.'.format(client.get_char_name(True)))
         logger.log_server('[{}][{}]Changed document to: {}'.format(client.hub.id, client.get_char_name(), arg))
 
 def ooc_cmd_desc(client, arg):
@@ -750,7 +753,7 @@ def ooc_cmd_desc(client, arg):
             raise AreaError(
                 'Hub is {} - only the CM can change /desc for this area.'.format(client.hub.status))
         client.area.desc = arg
-        client.area.send_host_message('{} changed the area description.'.format(client.get_char_name()))
+        client.area.send_host_message('{} changed the area description.'.format(client.get_char_name(True)))
         logger.log_server('[{}][{}]Changed document to: {}'.format(client.area.id, client.get_char_name(), arg))
 
 def ooc_cmd_descadd(client, arg):
@@ -761,16 +764,16 @@ def ooc_cmd_descadd(client, arg):
         raise AreaError(
             'Hub is {} - only the CM can change /descadd for this area.'.format(client.hub.status))
     client.area.desc += arg
-    client.area.send_host_message('{} added to the area description.'.format(client.get_char_name()))
+    client.area.send_host_message('{} added to the area description.'.format(client.get_char_name(True)))
     logger.log_server('[{}][{}]Changed document to: {}'.format(client.area.id, client.get_char_name(), arg))
 
 def ooc_cmd_cleardoc(client, arg):
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
-    client.area.send_host_message('{} cleared the doc link.'.format(client.get_char_name()))
+    client.area.send_host_message('{} cleared the doc link.'.format(client.get_char_name(True)))
     logger.log_server('[{}][{}]Cleared document. Old link: {}'
                       .format(client.hub.abbreviation, client.get_char_name(), client.area.doc), client)
-    client.area.change_doc()
+    client.hub.change_doc()
 
 
 def ooc_cmd_status(client, arg):
@@ -781,9 +784,9 @@ def ooc_cmd_status(client, arg):
             raise ClientError('Only CM or mods can change status.')
         try:
             client.hub.change_status(arg)
-            client.hub.send_host_message('{} changed status to {}.'.format(client.get_char_name(), client.hub.status))
+            client.hub.send_host_message('{} changed status to {}.'.format(client.name, client.hub.status))
             logger.log_server(
-                '[{}][{}]Changed status to {}'.format(client.hub.id, client.get_char_name(), client.hub.status))
+                '[{}][{}]Changed status to {}'.format(client.hub.id, client.name, client.hub.status))
         except AreaError:
             raise
 
@@ -807,13 +810,14 @@ def ooc_cmd_hub(client, arg):
         
 
 def ooc_cmd_follow(client, arg):
-    if not client.is_cm and not client.is_mod:
+    allowed = client.is_cm or client.is_mod or client.get_char_name() == "Spectator"
+    if not allowed:
         raise ClientError('You must be authorized to do that.')
     elif len(arg) == 0:
         try:
             c = client.server.client_manager.get_targets(client, TargetType.ID, int(client.following), False)[0]
             client.send_host_message(
-                'You are currently following [{}] {}.'.format(c.id, c.get_char_name()))
+                'You are currently following [{}] {}.'.format(c.id, c.get_char_name(True)))
         except:
             raise ArgumentError('You must specify a target. Use /follow <id>.')
         return
@@ -828,23 +832,20 @@ def ooc_cmd_follow(client, arg):
             raise ClientError('Can\'t follow yourself!')
         if client.following == c.id:
             raise ClientError(
-                'Already following [{}] {}!'.format(c.id, c.get_char_name()))
+                'Already following [{}] {}!'.format(c.id, c.get_char_name(True)))
         client.following = c.id
         client.send_host_message(
-            'You are now following [{}] {}.'.format(c.id, c.get_char_name()))
+            'You are now following [{}] {}.'.format(c.id, c.get_char_name(True)))
         client.change_area(c.area)
     else:
         client.send_host_message('No targets found.')
 
 def ooc_cmd_unfollow(client, arg):
-    if not client.is_cm and not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
-
     try:
         c = client.server.client_manager.get_targets(
             client, TargetType.ID, int(client.following), False)[0]
         client.send_host_message(
-            'You are no longer following [{}] {}.'.format(c.id, c.get_char_name()))
+            'You are no longer following [{}] {}.'.format(c.id, c.get_char_name(True)))
         client.following = None
     except:
         client.following = None
@@ -852,7 +853,8 @@ def ooc_cmd_unfollow(client, arg):
 
 def ooc_cmd_area(client, arg):
     args = arg.split()
-    rpmode = not client.is_mod and not client.is_cm and client.hub.rpmode
+    allowed = client.is_cm or client.is_mod or client.get_char_name() == "Spectator"
+    rpmode = not allowed and client.hub.rpmode
     if arg.lower() in ('accessible', 'visible', 'player'):
         rpmode = True
         args.clear()
@@ -863,9 +865,9 @@ def ooc_cmd_area(client, arg):
     try:
         area = client.hub.get_area_by_id_or_name(' '.join(args[0:]))
 
-        if area.is_locked and not client.is_mod and not client.is_cm and not client.ipid in area.invite_list:
+        if area.is_locked and not allowed:
             raise ClientError("That area is locked!")
-        if area != client.area and rpmode and len(client.area.accessible) > 0 and area.id not in client.area.accessible and not client.is_cm and not client.is_mod:
+        if area != client.area and rpmode and len(client.area.accessible) > 0 and area.id not in client.area.accessible and not allowed:
             raise AreaError(
                 'Area ID not accessible from your current area!')
 
@@ -875,7 +877,7 @@ def ooc_cmd_area(client, arg):
                 c = client.server.client_manager.get_targets(
                     client, TargetType.ID, int(client.following), False)[0]
                 client.send_host_message(
-                    'You are no longer following [{}] {}.'.format(c.id, c.get_char_name()))
+                    'You are no longer following [{}] {}.'.format(c.id, c.get_char_name(True)))
                 client.following = None
             except:
                 client.following = None
@@ -978,8 +980,8 @@ def ooc_cmd_pm(client, arg):
         if c.pm_mute:
             raise ClientError('User {} muted all pm conversation'.format(c.name))
         else:
-            c.send_host_message('PM from [{}] {} in {} ({}): {}'.format(client.id, client.name, client.hub.name, client.get_char_name(), msg))
-            c.hub.send_to_cm('PMLog', 'PM from [{}] {} ({}) to [{}] {} in {}: {}'.format(client.id, client.name, client.get_char_name(), c.id, c.name, client.hub.name, msg), targets)
+            c.send_host_message('PM from [{}] {} in {} ({}): {}'.format(client.id, client.name, client.hub.name, client.get_char_name(True), msg))
+            c.hub.send_to_cm('PMLog', 'PM from [{}] {} ({}) to [{}] {} in {}: {}'.format(client.id, client.name, client.get_char_name(True), c.id, c.name, client.hub.name, msg), targets)
             client.send_host_message('PM sent to [{}] {}. Message: {}'.format(c.id, c.name, msg))
  
 def ooc_cmd_mutepm(client, arg):
@@ -1032,12 +1034,13 @@ def ooc_cmd_getarea(client, arg):
     #     raise AreaError('Hub is {} - /getarea functionality disabled.'.format(client.hub.status))
     if client.blinded:
         raise ArgumentError('You are blinded - you cannot use this command!')
+    allowed = client.is_cm or client.is_mod or client.get_char_name() == "Spectator"
     id = client.area.id
     if len(arg) > 0:
-        if not client.is_cm and not client.is_mod:
+        if not allowed:
             raise ClientError('You must be authorized to /getarea <id>.')
         id = int(arg)
-    client.send_area_info(id, False, client.hub.rpmode and not client.is_cm and not client.is_mod)
+    client.send_area_info(id, client.hub.rpmode and not allowed)
 
 def ooc_cmd_hide(client, arg):
     if not client.is_cm and not client.is_mod:
@@ -1053,10 +1056,10 @@ def ooc_cmd_hide(client, arg):
         c = targets[0]
         if c.hidden:
             raise ClientError(
-                'Client [{}] {} already hidden!'.format(c.id, c.get_char_name()))
+                'Client [{}] {} already hidden!'.format(c.id, c.get_char_name(True)))
         c.hide(True)
         client.send_host_message(
-            'You have hidden [{}] {} from /getarea.'.format(c.id, c.get_char_name()))
+            'You have hidden [{}] {} from /getarea.'.format(c.id, c.get_char_name(True)))
     else:
         client.send_host_message('No targets found.')
 
@@ -1074,9 +1077,9 @@ def ooc_cmd_unhide(client, arg):
         c = targets[0]
         if not c.hidden:
             raise ClientError(
-                'Client [{}] {} already revealed!'.format(c.id, c.get_char_name()))
+                'Client [{}] {} already revealed!'.format(c.id, c.get_char_name(True)))
         c.hide(False)
-        client.send_host_message('You have revealed [{}] {} for /getarea.'.format(c.id, c.get_char_name()))
+        client.send_host_message('You have revealed [{}] {} for /getarea.'.format(c.id, c.get_char_name(True)))
     else:
         client.send_host_message('No targets found.')
 
@@ -1094,10 +1097,10 @@ def ooc_cmd_blind(client, arg):
         c = targets[0]
         if c.blinded:
             raise ClientError(
-                'Client [{}] {} already blinded!'.format(c.id, c.get_char_name()))
+                'Client [{}] {} already blinded!'.format(c.id, c.get_char_name(True)))
         c.blind(True)
         client.send_host_message(
-            'You have blinded [{}] {} from using /getarea and seeing non-broadcasted IC messages.'.format(c.id, c.get_char_name()))
+            'You have blinded [{}] {} from using /getarea and seeing non-broadcasted IC messages.'.format(c.id, c.get_char_name(True)))
     else:
         client.send_host_message('No targets found.')
 
@@ -1115,25 +1118,25 @@ def ooc_cmd_unblind(client, arg):
         c = targets[0]
         if not c.blinded:
             raise ClientError(
-                'Client [{}] {} already unblinded!'.format(c.id, c.get_char_name()))
+                'Client [{}] {} already unblinded!'.format(c.id, c.get_char_name(True)))
         c.blind(False)
         client.send_host_message(
-            'You have revealed [{}] {} for using /getarea and seeing non-broadcasted IC messages.'.format(c.id, c.get_char_name()))
+            'You have revealed [{}] {} for using /getarea and seeing non-broadcasted IC messages.'.format(c.id, c.get_char_name(True)))
     else:
         client.send_host_message('No targets found.')
 
 def ooc_cmd_getareas(client, arg):
     if client.blinded:
         raise ArgumentError('You are blinded - you cannot use this command!')
-    if client.hub.rpmode and not client.is_cm:
+    allowed = client.is_cm or client.is_mod or client.get_char_name() == "Spectator"
+    if client.hub.rpmode and not allowed:
         raise AreaError('Hub is {} - /getareas functionality disabled.'.format(client.hub.status))
-    client.send_area_info(-1, False)
+    client.send_area_info(-1)
 
 
 def ooc_cmd_mods(client, arg):
-    if client.hub.rpmode and not client.is_cm:
-        raise AreaError('Hub is {} - /getarea functionality disabled.'.format(client.hub.status))
-    client.send_area_info(-1, True)  
+    #LMAO make it *actually* send mods in *hubs*
+    return
 
 def ooc_cmd_evi_swap(client, arg):
     args = arg.split(' ')
@@ -1196,15 +1199,15 @@ def ooc_cmd_cm(client, arg):
                     c.hub.master = None
                 c.is_cm = False
                 client.hub.send_host_message(
-                    '{} is no longer a co-CM.'.format(c.get_char_name()))
+                    '{} is no longer a co-CM.'.format(c.name))
                 c.send_host_message(
                     'You are no longer a co-CM of hub {}.'.format(client.hub.name))
             else:
                 c.is_cm = True
                 client.hub.send_host_message(
-                    '{} has been made a co-CM.'.format(c.get_char_name()))
+                    '{} has been made a co-CM.'.format(c.name))
                 c.send_host_message(
-                    'You have been made a co-CM of hub {} by {}.'.format(client.hub.name, client.get_char_name()))
+                    'You have been made a co-CM of hub {} by {}.'.format(client.hub.name, client.name))
         except:
             raise ClientError('You must specify a target. Use /cm <id>')
     else:
@@ -1215,7 +1218,7 @@ def ooc_cmd_cm(client, arg):
             client.is_cm = True
             if client.area.evidence_mod == 'HiddenCM':
                 client.area.broadcast_evidence_list()
-            client.hub.send_host_message('{} is master CM in this hub now.'.format(client.get_char_name()))
+            client.hub.send_host_message('{} is master CM in this hub now.'.format(client.name))
         else:
             raise ClientError('Master CM exists. Use /cm <id>')
 
@@ -1225,7 +1228,7 @@ def ooc_cmd_cms(client, arg):
         m = 'co-'
         if client.hub.master == cm:
             m = 'Master '
-        client.send_host_message('=>{}CM [{}] {}'.format(m, cm.id, cm.get_char_name()))
+        client.send_host_message('=>{}CM [{}] {}'.format(m, cm.id, cm.get_char_name(True)))
 
 def ooc_cmd_uncm(client, arg):
     if client.is_cm:
@@ -1236,24 +1239,29 @@ def ooc_cmd_uncm(client, arg):
             'You are no longer a CM of hub {}.'.format(client.hub.name))
 
 def ooc_cmd_cmlogs(client, arg):
-    if len(arg.split()) > 1:
-        raise ArgumentError("This command can only take one argument ('on' or 'off') or no arguments at all!")
-    if arg:
-        if arg == 'on':
-            client.cm_log_type = ['MoveLog', 'RollLog', 'PMLog']
-        elif arg == 'off':
-            client.cm_log_type = []
-        else:
-            raise ArgumentError("Invalid argument: {}".format(arg))
+    logtypes = ['MoveLog', 'RollLog', 'PMLog', 'CharLog']
+    args = arg.split()
+    if len(args) <= 0:
+        raise ArgumentError("Current logs: {}. Available log types: {}.".format(client.cm_log_type, logtypes))
+
+    if arg == 'on':
+        client.cm_log_type = ['MoveLog', 'RollLog', 'PMLog', 'CharLog']
+    elif arg == 'off':
+        client.cm_log_type = []
     else:
-        if len(client.cm_log_type) > 0:
-            client.cm_log_type = []
-        else:
-            client.cm_log_type = ['MoveLog', 'RollLog', 'PMLog']
-    stat = 'off'
-    if len(client.cm_log_type) > 0:
-        stat = 'on'
-    client.send_host_message('CM-related logging features turned {}.'.format(stat))
+        try:
+            for a in args:
+                if not a in logtypes:
+                    raise
+                if a in client.cm_log_type:
+                    client.cm_log_type.remove(a)
+                else:
+                    client.cm_log_type.append(a)
+        except:
+            raise ArgumentError("Invalid argument: {}".format(arg))
+
+    client.send_host_message(
+        'You will now see cm logs for: {}.'.format(client.cm_log_type))
 
 def ooc_cmd_broadcast_ic(client, arg):
     if not client.is_cm and not client.is_mod:
@@ -1544,7 +1552,7 @@ def ooc_cmd_akick(client, arg):
                     except AreaError:
                         raise
                 client.send_host_message("Attempting to kick {} to area {} [Hub {}].".format(
-                    c.get_char_name(), output[0], output[1]))
+                    c.get_char_name(True), output[0], output[1]))
                 if c.area.is_locked:
                     c.area.invite_list.pop(c.ipid)
                 if area.is_locked:
