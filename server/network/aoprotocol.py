@@ -599,9 +599,15 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_host_message('You cannot use format characters in your name!')
                 return
         if self.client.name.startswith(self.server.config['hostname']) or self.client.name.startswith(
-                '<dollar>G') or self.client.name.startswith('CM') or self.client.name.startswith('GM'):
+                '<dollar>G') or self.client.name.startswith('CM') or self.client.name.startswith('GM') or self.client.name.startswith('MOD'):
             self.client.send_host_message('That name is reserved!')
             return
+        prefix = ''
+        if self.client.is_cm:
+            prefix = '[CM]'
+        if self.client.is_mod:
+            prefix = '[MOD]'
+        self.client.name = prefix + self.client.name
         if args[1].startswith(' /'):
             self.client.send_host_message(
                 'Your message was not sent for safety reasons: you left a space before that slash.')
@@ -917,7 +923,6 @@ class AOProtocol(asyncio.Protocol):
 
     def make_valid_string(self, name):
         printable = string.ascii_letters + string.digits + string.punctuation
-        print(printable)
         if not set(name).issubset(set(printable)):
             name = re.sub('[{}]'.format(printable), '', name)
         return name

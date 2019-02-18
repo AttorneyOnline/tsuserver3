@@ -281,14 +281,14 @@ def ooc_cmd_roll(client, arg):
     client.area.send_host_message('[{}]{} rolled {} out of {}.'.format(
         client.id, client.get_char_name(True), roll, chosen_max))
     client.hub.send_to_cm('RollLog', '[{}][{}]{} used /roll and got {} out of {}.'.format(
-        client.area.id, client.id, client.get_char_name(True), roll, chosen_max))
+        client.area.id, client.id, client.get_char_name(True), roll, chosen_max), client)
     logger.log_server('Used /roll and got {} out of {}.'.format(roll, chosen_max), client)
     
 def ooc_cmd_rollp(client, arg):
     roll, num_dice, chosen_max, modifiers = rtd(arg)
 
     client.send_host_message('[Hidden] You rolled {} out of {}.'.format(roll, chosen_max))
-    client.hub.send_to_cm('RollLog', '[A{}][ID{}]{} used /rollp and got {} out of {}.'.format(client.area.id, client.id, client.get_char_name(True), roll, chosen_max))
+    client.hub.send_to_cm('RollLog', '[A{}][ID{}]{} used /rollp and got {} out of {}.'.format(client.area.id, client.id, client.get_char_name(True), roll, chosen_max), client)
     logger.log_server('Used /rollp and got {} out of {}.'.format(roll, chosen_max), client)
 
 def ooc_cmd_currentmusic(client, arg):
@@ -312,7 +312,7 @@ def ooc_cmd_coinflip(client, arg):
     client.area.send_host_message(
         '[{}]{} flipped a coin and got {}.'.format(client.id, client.get_char_name(True), flip))
     client.hub.send_to_cm('RollLog', '[A{}][ID{}]{} used /coinflip and got {}.'.format(
-        client.area.id, client.id, client.get_char_name(True), flip))
+        client.area.id, client.id, client.get_char_name(True), flip), client)
     logger.log_server('Used /coinflip and got {}.'.format(flip), client)
 
 

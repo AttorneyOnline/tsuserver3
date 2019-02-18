@@ -165,7 +165,7 @@ class ClientManager:
             self.area.send_command('CharsCheck', *self.get_available_char_list())
             logger.log_server('Changed character from {} to {}.'.format(old_char, self.get_char_name()), self)
             self.hub.send_to_cm('CharLog', '[{}][{}]Changed character from {} to {}.'
-                                .format(self.char_id, self.name, old_char, self.get_char_name()), self)
+                                .format(self.id, self.name, old_char, self.get_char_name()), self)
 
             if self.following != None:
                 try:
@@ -270,13 +270,13 @@ class ClientManager:
                     if c.following == self.id:
                         c.change_area(area)
                         c.send_host_message(
-                            'Following [{}] {} to {}. [HUB: {}]'.format(self.id, self.get_char_name(True), area.name, area.hub.name))
+                            'Following [{}] {} to {}. [HUB: {}]'.format(self.id, self.get_char_name(True), area.name, area.hub.abbreviation))
 
             if self.announce_movement and not hidden and not self.get_char_name() == "Spectator":
-                old_area.send_host_message('[{}]{} leaves to [{}] {}. [HUB: {}]'.format(self.id, self.get_char_name(True), area.id, area.name, area.hub.name))
-                area.send_host_message('[{}]{} enters from [{}] {}. [HUB: {}]'.format(self.id, self.get_char_name(True), old_area.id, old_area.name, old_area.hub.name))
+                old_area.send_host_message('[{}]{} leaves to [{}] {}. [HUB: {}]'.format(self.id, self.get_char_name(True), area.id, area.name, area.hub.abbreviation))
+                area.send_host_message('[{}]{} enters from [{}] {}. [HUB: {}]'.format(self.id, self.get_char_name(True), old_area.id, old_area.name, old_area.hub.abbreviation))
             else:
-                self.send_host_message('Changed area to {}. [HUB: {}]'.format(area.name, area.hub.name))
+                self.send_host_message('You moved to [{}] {} unannounced. [HUB: {}]'.format(area.id, area.name, area.hub.abbreviation))
 
             logger.log_server('Changed area from {} (A{} H{}) to {} (A{} H{}).'.format(old_area.name, old_area.id, old_area.hub.id, self.area.name, self.area.id, self.area.hub.id), self)
             self.area.send_command('CharsCheck', *self.get_available_char_list())
