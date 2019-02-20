@@ -302,7 +302,28 @@ class TsuServer3:
 
     def refresh(self):
         with open('config/config.yaml', 'r') as cfg:
-            self.config['motd'] = yaml.load(cfg)['motd'].replace('\\n', ' \n')
+            cfg_yaml = yaml.load(cfg)
+            self.config['motd'] = cfg_yaml['motd'].replace('\\n', ' \n')
+
+            # Reload moderator passwords list and unmod any moderator affected by
+            # credential changes or removals
+            if isinstance(self.config['modpass'], str):
+                self.config['modpass'] = {'default': self.config['modpass']}
+            if isinstance(cfg_yaml['modpass'], str):
+                cfg_yaml['modpass'] = {'default': cfg_yaml['modpass']}
+
+            for profile in self.config['modpass']:
+                if profile not in cfg_yaml['modpass'] or \
+                   self.config['modpass'][profile] != cfg_yaml['modpass'][profile]:
+                    for client in filter(lambda c: c.mod_profile_name == profile,
+                                         self.client_manager.clients):
+                        client.is_mod = False
+                        client.mod_profile_name = None
+                        logger.log_server('Unmodded due to credential changes.', client)
+                        logger.log_mod('Unmodded due to credential changes.', client)
+                        client.send_host_message('Your moderator credentials were changed.')
+            self.config['modpass'] = cfg_yaml['modpass']
+
         with open('config/characters.yaml', 'r') as chars:
             self.char_list = yaml.load(chars)
         with open('config/music.yaml', 'r') as music:

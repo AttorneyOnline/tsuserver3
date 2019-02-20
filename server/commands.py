@@ -534,15 +534,17 @@ def ooc_cmd_unmute(client, arg):
 def ooc_cmd_login(client, arg):
     if len(arg) == 0:
         raise ArgumentError('You must specify the password.')
+    login_name = None
     try:
-        client.auth_mod(arg)
+        login_name = client.auth_mod(arg)
     except ClientError:
+        logger.log_server('Invalid login attempt.', client)
         raise
     if client.area.evidence_mod == 'HiddenCM':
         client.area.broadcast_evidence_list()
     client.send_host_message('Logged in as a moderator.')
-    logger.log_server('Logged in as moderator.', client)
-    logger.log_mod('Logged in as moderator.', client)
+    logger.log_server('Logged in as moderator ({}).'.format(login_name), client)
+    logger.log_mod('Logged in as moderator ({}).'.format(login_name), client)
 
 
 def ooc_cmd_g(client, arg):
@@ -906,6 +908,7 @@ def ooc_cmd_anncase(client, arg):
 
 def ooc_cmd_unmod(client, arg):
     client.is_mod = False
+    client.mod_profile_name = None
     if client.area.evidence_mod == 'HiddenCM':
         client.area.broadcast_evidence_list()
     client.send_host_message('you\'re not a mod now')
@@ -1351,6 +1354,8 @@ def ooc_cmd_refresh(client, arg):
     else:
         try:
             client.server.refresh()
+            logger.log_server('Reloaded server.', client)
+            logger.log_mod('Reloaded server.', client)
             client.send_host_message('You have reloaded the server.')
         except ServerError:
             raise

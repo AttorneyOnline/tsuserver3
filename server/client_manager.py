@@ -38,6 +38,7 @@ class ClientManager:
             self.name = ''
             self.fake_name = ''
             self.is_mod = False
+            self.mod_profile_name = None
             self.is_dj = True
             self.can_wtce = True
             self.pos = ''
@@ -343,10 +344,18 @@ class ClientManager:
             return char_list
 
         def auth_mod(self, password):
+            modpasses = self.server.config['modpass']
+            if isinstance(modpasses, dict):
+                matches = list(filter(lambda k: modpasses[k]['password'] == password, modpasses))
+            elif modpasses == password:
+                matches = ['default']
+
             if self.is_mod:
                 raise ClientError('Already logged in.')
-            if password == self.server.config['modpass']:
+            elif len(matches) > 0:
                 self.is_mod = True
+                self.mod_profile_name = matches[0]
+                return self.mod_profile_name
             else:
                 raise ClientError('Invalid password.')
 

@@ -158,6 +158,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.server.dump_hdids()
         for ipid in self.client.server.hdid_list[self.client.hdid]:
             if self.server.ban_manager.is_banned(ipid):
+                logger.log_server('Banned user attempted to connect. HDID: {}.'.format(self.client.hdid), self.client)
                 self.client.send_command('BD', self.server.ban_manager.get_ban_reason(ipid))
                 self.client.disconnect()
                 return
@@ -841,7 +842,7 @@ class AOProtocol(asyncio.Protocol):
         current_time = strftime("%H:%M", localtime())
 
         if len(args) < 1:
-            self.server.send_all_cmd_pred('ZZ', '[{}] {} ({}) in {} without reason (not using the Case Café client?)'
+            self.server.send_all_cmd_pred('ZZ', '[{}] {} ({}) in {} without reason (not using 2.6?)'
                                           .format(current_time, self.client.get_char_name(), self.client.get_ip(),
                                                   self.client.area.name), pred=lambda c: c.is_mod)
             self.client.set_mod_call_delay()
