@@ -581,13 +581,13 @@ class AOProtocol(asyncio.Protocol):
             return
         if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR):
             return
-        ooc_name = re.sub('\s+', ' ', args[0]).strip() #Strip the ooc_name of any excess whitespace
         if self.client.name != args[0] and self.client.fake_name != args[0]:
             if self.client.is_valid_name(args[0]):
                 self.client.name = args[0]
                 self.client.fake_name = args[0]
             else:
                 self.client.fake_name = args[0]
+        self.client.name = re.sub('\s+', ' ', self.client.name).strip() #Strip the name of any excess whitespace
         if self.client.name == '':
             self.client.send_host_message('You must insert a name with at least one letter')
             return
@@ -602,12 +602,13 @@ class AOProtocol(asyncio.Protocol):
                 '<dollar>G') or self.client.name.startswith('CM') or self.client.name.startswith('GM') or self.client.name.startswith('MOD'):
             self.client.send_host_message('That name is reserved!')
             return
+        ooc_name = self.client.name
         prefix = ''
         if self.client.is_cm:
             prefix = '[CM]'
         if self.client.is_mod:
             prefix = '[MOD]'
-        self.client.name = prefix + self.client.name
+        ooc_name = prefix + ooc_name
         if args[1].startswith(' /'):
             self.client.send_host_message(
                 'Your message was not sent for safety reasons: you left a space before that slash.')
@@ -631,8 +632,8 @@ class AOProtocol(asyncio.Protocol):
                 args[1] = self.client.shake_message(args[1])
             if self.client.disemvowel:
                 args[1] = self.client.disemvowel_message(args[1])
-            self.client.area.send_command('CT', self.client.name, args[1])
-            # self.client.area.send_owner_command('CT', '[' + self.client.hub.abbreviation + ']' + self.client.name,
+            self.client.area.send_command('CT', ooc_name, args[1])
+            # self.client.area.send_owner_command('CT', '[' + self.client.hub.abbreviation + ']' + ooc_name,
             #                                     args[1])
             logger.log_server('[OOC] "{}"'.format(args[1]), self.client)
 

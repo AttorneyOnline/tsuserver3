@@ -36,14 +36,14 @@ class MyFormatter(logging.Formatter):
 def setup_logger(debug):
     logging.Formatter.converter = time.gmtime
     base_formatter = logging.Formatter('[%(asctime)s UTC]%(message)s')
-    suffix = time.strftime("%A, %B %d, %Y", time.gmtime())
+    # suffix = time.strftime("%A, %B %d, %Y", time.gmtime())
 
     debug_log = logging.getLogger('debug')
     debug_log.setLevel(logging.DEBUG)
 
     debug_handler = TimedRotatingFileHandler(
-        'logs/debug/{}.log'.format(suffix), when='midnight', encoding='utf-8')
-    debug_handler.suffix = '{}.log'.format(suffix)
+        'logs/debug/debug.log', when='midnight', interval=1, encoding='utf-8')
+    # debug_handler.suffix = '{}.log'.format(suffix)
     debug_handler.setLevel(logging.DEBUG)
     debug_handler.setFormatter(base_formatter)
     debug_log.addHandler(debug_handler)
@@ -55,8 +55,8 @@ def setup_logger(debug):
     mod_log.setLevel(logging.INFO)
 
     mod_handler = TimedRotatingFileHandler(
-        'logs/mod/{}.log'.format(suffix), when='midnight', encoding='utf-8')
-    mod_handler.suffix = '{}.log'.format(suffix)
+        'logs/mod/mod.log', when='midnight', interval=1, encoding='utf-8')
+    # mod_handler.suffix = '{}.log'.format(suffix)
     mod_handler.setLevel(logging.INFO)
     mod_handler.setFormatter(base_formatter)
     mod_log.addHandler(mod_handler)
@@ -65,8 +65,8 @@ def setup_logger(debug):
     server_log.setLevel(logging.INFO)
 
     server_handler = TimedRotatingFileHandler(
-        'logs/server/{}.log'.format(suffix), when='midnight', encoding='utf-8')
-    server_handler.suffix = '{}.log'.format(suffix)
+        'logs/server/server.log', when='midnight', interval=1, encoding='utf-8')
+    # server_handler.suffix = '{}.log'.format(suffix)
     server_handler.setLevel(logging.INFO)
     server_handler.setFormatter(base_formatter)
     server_log.addHandler(server_handler)
@@ -78,8 +78,8 @@ def setup_logger(debug):
     demo_formatter = MyFormatter('[%(asctime)s]%(message)s')
 
     demo_handler = TimedRotatingFileHandler(
-        'logs/demo/{}.log'.format(suffix), when='midnight', encoding='utf-8')
-    demo_handler.suffix = '{}.log'.format(suffix)
+        'logs/demo/demo.log', when='midnight', interval=1, encoding='utf-8')
+    # demo_handler.suffix = '{}.log'.format(suffix)
     demo_handler.setLevel(logging.INFO)
     demo_handler.setFormatter(demo_formatter)
     demo_log.addHandler(demo_handler)

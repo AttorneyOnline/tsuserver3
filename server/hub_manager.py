@@ -30,22 +30,11 @@ from server.evidence import EvidenceList
 class HubManager:
 	class Hub:
 		class Area:
-			def __init__(self, area_id, server, hub, name, can_rename, background, bg_lock, pos_lock, evidence_mod = 'FFA',
-						locking_allowed = False, can_remove = False, accessible = [], desc = ''):
+			def __init__(self, area_id, server, hub, name, can_rename=True, background='default', bg_lock=False, pos_lock=None, evidence_mod = 'FFA',
+						locking_allowed = False, can_remove = False, accessible = [], desc = '', locked=False, hidden=False):
 				self.id = area_id
 				self.server = server
 				self.hub = hub
-				self.name = name
-				self.can_rename = can_rename
-				self.background = background
-				self.bg_lock = bg_lock
-				self.pos_lock = pos_lock in (
-					'def', 'pro', 'hld', 'hlp', 'jud', 'wit') or None
-				self.evidence_mod = evidence_mod
-				self.locking_allowed = locking_allowed
-				self.can_remove = can_remove
-				self.accessible = accessible
-				self.desc = desc
 
 				self.clients = set()
 				self.invite_list = {}
@@ -57,16 +46,79 @@ class HubManager:
 				self.current_music = ''
 				self.current_music_player = ''
 				self.current_music_player_ipid = ''
-				self.evi_list = EvidenceList()
 				self.is_recording = False
 				self.record_start = 0
 				self.recorded_messages = []
 				self.mute_ic = False
-				self.is_locked = False
-				self.is_hidden = False
+
+				self.evi_list = EvidenceList()
+
+				self.update(name, can_rename, background, bg_lock, pos_lock, evidence_mod, locking_allowed, can_remove, accessible, desc, locked, hidden)
+
+			def update(self, name, can_rename=True, background='default', bg_lock=False, pos_lock=None, evidence_mod = 'FFA',
+						locking_allowed = False, can_remove = False, accessible = [], desc = '', locked=False, hidden=False):
+				self.name = name
+				self.can_rename = can_rename
+				self.background = background
+				self.bg_lock = bg_lock
+				self.pos_lock = pos_lock in (
+					'def', 'pro', 'hld', 'hlp', 'jud', 'wit') or None
+				self.evidence_mod = evidence_mod
+				self.locking_allowed = locking_allowed
+				self.can_remove = can_remove
+				self.accessible = accessible
+				self.desc = desc
+				self.is_locked = locked
+				self.is_hidden = hidden
+
+				# self.evi_list = EvidenceList()
 
 			def set_desc(self, dsc):
 				desc = dsc[:512]
+
+			def yaml_save(self):
+				data = {}
+				data['area'] = self.name
+				data['background'] = self.background
+				data['can_rename'] = self.can_rename
+				data['bglock'] = self.bg_lock
+				data['poslock'] = self.pos_lock
+				data['evidence_mod'] = self.evidence_mod
+				data['locking_allowed'] = self.locking_allowed
+				data['can_remove'] = self.can_remove
+				acs = ' '.join(map(str, self.accessible))
+				if len(acs) > 0:
+					data['accessible'] = acs
+				data['desc'] = self.desc
+				return data
+				
+			def update_from_yaml(self, area):
+				if 'can_rename' not in area:
+					area['can_rename'] = False
+				if 'bglock' not in area:
+					area['bglock'] = False
+				if 'poslock' not in area:
+					area['poslock'] = None
+				if 'evidence_mod' not in area:
+					area['evidence_mod'] = 'FFA'
+				if 'locking_allowed' not in area:
+					area['locking_allowed'] = False
+				if 'can_remove' not in area:
+					area['can_remove'] = False
+				if 'accessible' not in area:
+					area['accessible'] = []
+				else:
+					area['accessible'] = [int(s) for s in str(area['accessible']).split(' ')]
+				if 'desc' not in area:
+					area['desc'] = ''
+				if 'locked' not in area:
+					area['locked'] = False
+				if 'hidden' not in area:
+					area['hidden'] = False
+
+				self.update(area['area'], area['can_rename'], area['background'], area['bglock'],
+								area['poslock'], area['evidence_mod'], area['locking_allowed'],
+								area['can_remove'], area['accessible'], area['desc'], area['locked'], area['hidden'])
 
 			def save(self):
 				desc = self.desc
@@ -258,6 +310,17 @@ class HubManager:
 					 shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation=''):
 			self.server = server
 			self.id = hub_id
+
+			self.rpmode = False
+			self.master = None
+			self.is_ooc_muted = False
+			self.areas = []
+			self.cur_id = 0
+			self.update(name, allow_cm, max_areas, doc, status, showname_changes_allowed,
+                            shouts_allowed, non_int_pres_only, iniswap_allowed, blankposting_allowed, abbreviation)
+
+		def update(self, name, allow_cm=False, max_areas=1, doc='No document.', status='IDLE', showname_changes_allowed=False,
+					 shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation=''):
 			self.name = name
 			self.allow_cm = allow_cm
 			self.max_areas = max_areas
@@ -269,13 +332,73 @@ class HubManager:
 			self.iniswap_allowed = iniswap_allowed
 			self.blankposting_allowed = blankposting_allowed
 			self.abbreviation = abbreviation
+
+		def yaml_save(self, stream=''):
+			data = {}
+			data['hub'] = self.name
+			data['allow_cm'] = self.allow_cm
+			data['max_areas'] = self.max_areas
+			data['doc'] = self.doc
+			data['status'] = self.status
+			data['showname_changes_allowed'] = self.showname_changes_allowed
+			data['shouts_allowed'] = self.shouts_allowed
+			data['noninterrupting_pres'] = self.non_int_pres_only
+			data['iniswap_allowed'] = self.iniswap_allowed
+			data['blankposting_allowed'] = self.blankposting_allowed
+			data['abbreviation'] = self.abbreviation
+			areas = []
+			for area in self.areas:
+				areas.append(area.yaml_save())
+			data['areas'] = areas
+
+			return data
+
+		def yaml_dump(self, name=''):
+			if name == '':
+				return
+
+			with open('storage/hubs/{}.yaml'.format(name), 'w') as stream:
+				yaml.dump(self.yaml_save(), stream, default_flow_style=False)
+
+		def yaml_load(self, name=''):
+			with open('storage/hubs/{}.yaml'.format(name), 'r') as stream:
+				hub = yaml.load(stream)
 			
-			self.rpmode = False
-			self.master = None
-			self.is_ooc_muted = False			
-			self.areas = []
-			self.cur_id = 0
-			
+			self.update_from_yaml(hub)
+
+		def update_from_yaml(self, hub):
+			if 'allow_cm' not in hub:
+				hub['allow_cm'] = False
+			if 'max_areas' not in hub:
+				hub['max_areas'] = 1
+			if 'doc' not in hub:
+				hub['doc'] = 'No document.'
+			if 'status' not in hub:
+				hub['status'] = 'IDLE'
+			if 'showname_changes_allowed' not in hub:
+				hub['showname_changes_allowed'] = False
+			if 'shouts_allowed' not in hub:
+				hub['shouts_allowed'] = True
+			if 'noninterrupting_pres' not in hub:
+				hub['noninterrupting_pres'] = False
+			if 'iniswap_allowed' not in hub:
+				hub['iniswap_allowed'] = True
+			if 'blankposting_allowed' not in hub:
+				hub['blankposting_allowed'] = True
+			if 'abbreviation' not in hub or hub['abbreviation'] == '':
+				hub['abbreviation'] = self.get_generated_abbreviation()
+
+			self.update(hub['hub'], hub['allow_cm'],hub['max_areas'], hub['doc'], hub['status'], hub['showname_changes_allowed'],
+							hub['shouts_allowed'], hub['noninterrupting_pres'], hub['iniswap_allowed'],
+							hub['blankposting_allowed'], hub['abbreviation'])
+
+			while len(self.areas) < len(hub['areas']):
+				self.create_area('Area {}'.format(self.cur_id))
+			aid = 0
+			for area in hub['areas']:
+				self.areas[aid].update_from_yaml(area)
+				aid += 1
+
 		def save(self):
 			s = ''
 			for area in self.areas:
@@ -295,8 +418,7 @@ class HubManager:
 						continue
 					i = 0
 					while len(self.areas) <= aid:
-						self.create_area('Area {}'.format(self.cur_id), True,
-												self.server.backgrounds[0], False, None, 'FFA', True, True, [], '')
+						self.create_area('Area {}'.format(self.cur_id))
 						i += 1
 					print("Created {} new areas".format(i))
 					self.areas[aid].load(a)
@@ -306,9 +428,9 @@ class HubManager:
 				print("Bad area save file!")
 				raise AreaError('Bad save file!')
 
-		def create_area(self, name, can_rename, bg, bglock, poslock, evimod, lockallow, removable, accessible, desc):
+		def create_area(self, name, can_rename=True, bg='default', bglock=False, poslock=None, evimod='FFA', lockallow=True, removable=True, accessible=[], desc='', locked=False, hidden=False):
 			self.areas.append(
-				self.Area(self.cur_id, self.server, self, name, can_rename, bg, bglock, poslock, evimod, lockallow, removable, accessible, desc))
+				self.Area(self.cur_id, self.server, self, name, can_rename, bg, bglock, poslock, evimod, lockallow, removable, accessible, desc, locked, hidden))
 			self.cur_id += 1
 
 		def remove_area(self, area):
@@ -463,6 +585,19 @@ class HubManager:
 					clients.add(client)
 			return clients
 
+		def get_generated_abbreviation(self):
+			name = self.name
+			if name.lower().startswith("courtroom"):
+				return "CR" + name.split()[-1]
+			elif name.lower().startswith("area"):
+				return "A" + name.split()[-1]
+			elif len(name.split()) > 1:
+				return "".join(item[0].upper() for item in name.split())
+			elif len(name) > 3:
+				return name[:3].upper()
+			else:
+				return name.upper()
+
 	def __init__(self, server):
 		self.server = server
 		self.cur_id = 0
@@ -474,55 +609,14 @@ class HubManager:
 			hubs = yaml.load(chars)
 
 		for hub in hubs:
-			if 'allow_cm' not in hub:
-				hub['allow_cm'] = False
-			if 'max_areas' not in hub:
-				hub['max_areas'] = 1
-			if 'doc' not in hub:
-				hub['doc'] = 'No document.'
-			if 'status' not in hub:
-				hub['status'] = 'IDLE'
-			if 'showname_changes_allowed' not in hub:
-				hub['showname_changes_allowed'] = False
-			if 'shouts_allowed' not in hub:
-				hub['shouts_allowed'] = True
-			if 'noninterrupting_pres' not in hub:
-				hub['noninterrupting_pres'] = False
-			if 'iniswap_allowed' not in hub:
-				hub['iniswap_allowed'] = True
-			if 'blankposting_allowed' not in hub:
-				hub['blankposting_allowed'] = True
-			if 'abbreviation' not in hub:
-				hub['abbreviation'] = self.get_generated_abbreviation(hub['hub'])
-			_hub = self.Hub(self.cur_id, self.server, hub['hub'], hub['allow_cm'],
-							hub['max_areas'], hub['doc'], hub['status'], hub['showname_changes_allowed'],
-							hub['shouts_allowed'], hub['noninterrupting_pres'], hub['iniswap_allowed'],
-							hub['blankposting_allowed'], hub['abbreviation'])
+			print(self.cur_id, hub['hub'])
+			#create new hub
+			#update it with data
+			#append it to hubs list and increase cur_id
+			_hub = self.Hub(self.cur_id, self.server, 'Hub {}'.format(self.cur_id))
+			_hub.update_from_yaml(hub)
 			self.hubs.append(_hub)
 			self.cur_id += 1
-			for area in hub['areas']:
-				if 'can_rename' not in area:
-					area['can_rename'] = False
-				if 'bglock' not in area:
-					area['bglock'] = False
-				if 'poslock' not in area:
-					area['poslock'] = None
-				if 'evidence_mod' not in area:
-					area['evidence_mod'] = 'FFA'
-				if 'locking_allowed' not in area:
-					area['locking_allowed'] = False
-				if 'can_remove' not in area:
-					area['can_remove'] = False
-				if 'accessible' not in area:
-					area['accessible'] = []
-				else:		
-					area['accessible'] = [int(s) for s in str(area['accessible']).split(' ')]
-				if 'desc' not in area:
-					area['desc'] = ''
-
-				_hub.create_area(area['area'], area['can_rename'], area['background'], area['bglock'],
-								area['poslock'], area['evidence_mod'], area['locking_allowed'],
-								area['can_remove'], area['accessible'], area['desc'])
 
 	def default_hub(self):
 		return self.hubs[0]
@@ -547,18 +641,6 @@ class HubManager:
 				return self.get_hub_by_id(int(args))
 			except:
 				raise AreaError('Hub not found.')
-
-	def get_generated_abbreviation(self, name):
-		if name.lower().startswith("courtroom"):
-			return "CR" + name.split()[-1]
-		elif name.lower().startswith("area"):
-			return "A" + name.split()[-1]
-		elif len(name.split()) > 1:
-			return "".join(item[0].upper() for item in name.split())
-		elif len(name) > 3:
-			return name[:3].upper()
-		else:
-			return name.upper()
 
 	def send_arup_players(self):
 		players_list = [0]

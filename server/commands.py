@@ -1506,7 +1506,7 @@ def ooc_cmd_area_unhide(client, arg):
             i += 1
     client.send_host_message('Unhid {} areas.'.format(i))
 
-def ooc_cmd_savehub(client, arg):
+def ooc_cmd_savehub_legacy(client, arg):
     if not client.is_cm and not client.is_mod:
         raise ClientError('Only CM or mods can save the hub.')
     area = client.hub.default_area()
@@ -1514,8 +1514,21 @@ def ooc_cmd_savehub(client, arg):
     area.broadcast_evidence_list()
     client.send_host_message('The hub data has been saved in an evidence file in area [{}] {}.'.format(area.id, area.name))
 
+def ooc_cmd_savehub(client, arg):
+    if not client.is_mod:
+        raise ClientError('Only mods can save the hub.')
+    if arg == '':
+        raise ClientError('No save name provided!')
+
+    client.hub.yaml_dump(arg)
+
 def ooc_cmd_loadhub(client, arg):
-    client.send_host_message('Due to the character limit tied to the OOC commands, to load hub save data you must:\n1: Create a piece of evidence\n2: Set its description to the save data\n3: Change its name to /loadhub, press enter\n4: Press the [X] button to upload it\n5:???\n6: Profit!')
+    if not client.is_mod:
+        raise ClientError('Only mods can save the hub.')
+    if arg == '':
+        raise ClientError('No save name provided!')
+
+    client.hub.yaml_load(arg)
 
 def ooc_cmd_akick(client, arg):
     if not client.is_mod and not client.is_cm:
