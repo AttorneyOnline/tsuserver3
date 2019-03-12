@@ -1532,8 +1532,8 @@ def ooc_cmd_savehub(client, arg):
     if arg == '':
         raise ClientError('No save name provided!')
 
-    client.send_host_message('The hub data has been saved on the server in a file named \'{}.yaml\'.'.format(arg))
     client.hub.yaml_dump(arg)
+    client.send_host_message('The hub data has been saved on the server in a file named \'{}.yaml\'.'.format(arg))
 
 def ooc_cmd_loadhub(client, arg):
     if not client.is_cm and not client.is_mod:

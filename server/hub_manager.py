@@ -18,10 +18,12 @@ import asyncio
 import random
 
 import time
-import yaml
+import oyaml as yaml #ordered yaml
 
 import re
 import string
+
+from collections import OrderedDict
 
 from server.constants import TargetType
 from server.exceptions import AreaError
@@ -74,7 +76,7 @@ class HubManager:
 				desc = dsc[:512]
 
 			def yaml_save(self):
-				data = {}
+				data = OrderedDict()
 				data['area'] = self.name
 				data['background'] = self.background
 				data['can_rename'] = self.can_rename
@@ -109,7 +111,7 @@ class HubManager:
 					area['locking_allowed'] = False
 				if 'can_remove' not in area:
 					area['can_remove'] = False
-				if 'accessible' not in area:
+				if 'accessible' not in area or len(area['accessible']) <= 0:
 					area['accessible'] = []
 				else:
 					area['accessible'] = [int(s) for s in str(area['accessible']).split(' ')]
@@ -124,10 +126,11 @@ class HubManager:
 								area['poslock'], area['evidence_mod'], area['locking_allowed'],
 								area['can_remove'], area['accessible'], area['desc'], area['locked'], area['hidden'])
 
-				if 'evidence' not in area:
+				if 'evidence' not in area or len(area['evidence']) <= 0:
 					area['evidence'] = []
 
 				if len(area['evidence']) > 0:
+					self.evi_list.evidences.clear()
 					self.evi_list.import_evidence(area['evidence'])
 					self.broadcast_evidence_list()
 
@@ -344,11 +347,13 @@ class HubManager:
 			self.blankposting_allowed = blankposting_allowed
 			self.abbreviation = abbreviation
 
-		def yaml_save(self, stream=''):
-			data = {}
-			data['hub'] = self.name
-			data['allow_cm'] = self.allow_cm
-			data['max_areas'] = self.max_areas
+		def yaml_save(self, stream='', limited=True):
+			data = OrderedDict()
+			if not limited:
+				data['hub'] = self.name
+				data['allow_cm'] = self.allow_cm
+				data['max_areas'] = self.max_areas
+				data['abbreviation'] = self.abbreviation
 			data['doc'] = self.doc
 			data['status'] = self.status
 			data['showname_changes_allowed'] = self.showname_changes_allowed
@@ -356,12 +361,10 @@ class HubManager:
 			data['noninterrupting_pres'] = self.non_int_pres_only
 			data['iniswap_allowed'] = self.iniswap_allowed
 			data['blankposting_allowed'] = self.blankposting_allowed
-			data['abbreviation'] = self.abbreviation
 			areas = []
 			for area in self.areas:
 				areas.append(area.yaml_save())
 			data['areas'] = areas
-
 			return data
 
 		def yaml_dump(self, name=''):
@@ -378,30 +381,28 @@ class HubManager:
 			self.update_from_yaml(hub)
 
 		def update_from_yaml(self, hub):
-			if 'allow_cm' not in hub:
-				hub['allow_cm'] = False
-			if 'max_areas' not in hub:
-				hub['max_areas'] = 1
-			if 'doc' not in hub:
-				hub['doc'] = 'No document.'
-			if 'status' not in hub:
-				hub['status'] = 'IDLE'
-			if 'showname_changes_allowed' not in hub:
-				hub['showname_changes_allowed'] = False
-			if 'shouts_allowed' not in hub:
-				hub['shouts_allowed'] = True
-			if 'noninterrupting_pres' not in hub:
-				hub['noninterrupting_pres'] = False
-			if 'iniswap_allowed' not in hub:
-				hub['iniswap_allowed'] = True
-			if 'blankposting_allowed' not in hub:
-				hub['blankposting_allowed'] = True
-			if 'abbreviation' not in hub or hub['abbreviation'] == '':
-				hub['abbreviation'] = self.get_generated_abbreviation()
-
-			self.update(hub['hub'], hub['allow_cm'],hub['max_areas'], hub['doc'], hub['status'], hub['showname_changes_allowed'],
-							hub['shouts_allowed'], hub['noninterrupting_pres'], hub['iniswap_allowed'],
-							hub['blankposting_allowed'], hub['abbreviation'])
+			if 'hub' in hub:
+				self.name = hub['hub']
+			if 'allow_cm' in hub:
+				self.allow_cm = hub['allow_cm']
+			if 'max_areas' in hub:
+				self.max_areas = hub['max_areas']
+			if 'doc' in hub:
+				self.doc = hub['doc']
+			if 'status' in hub:
+				self.status = hub['status']
+			if 'showname_changes_allowed' in hub:
+				self.showname_changes_allowed = hub['showname_changes_allowed']
+			if 'shouts_allowed' in hub:
+				self.shouts_allowed = hub['shouts_allowed']
+			if 'noninterrupting_pres' in hub:
+				self.non_int_pres_only = hub['noninterrupting_pres']
+			if 'iniswap_allowed' in hub:
+				self.iniswap_allowed = hub['iniswap_allowed']
+			if 'blankposting_allowed' in hub:
+				self.blankposting_allowed = hub['blankposting_allowed']
+			if 'abbreviation' in hub:
+				self.abbreviation = hub['abbreviation']
 
 			while len(self.areas) < len(hub['areas']):
 				self.create_area('Area {}'.format(self.cur_id))
