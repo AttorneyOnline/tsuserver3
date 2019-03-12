@@ -61,8 +61,7 @@ class HubManager:
 				self.can_rename = can_rename
 				self.background = background
 				self.bg_lock = bg_lock
-				self.pos_lock = pos_lock in (
-					'def', 'pro', 'hld', 'hlp', 'jud', 'wit') or None
+				self.pos_lock = pos_lock
 				self.evidence_mod = evidence_mod
 				self.locking_allowed = locking_allowed
 				self.can_remove = can_remove
@@ -70,8 +69,6 @@ class HubManager:
 				self.desc = desc
 				self.is_locked = locked
 				self.is_hidden = hidden
-
-				# self.evi_list = EvidenceList()
 
 			def set_desc(self, dsc):
 				desc = dsc[:512]
@@ -90,6 +87,8 @@ class HubManager:
 				if len(acs) > 0:
 					data['accessible'] = acs
 				data['desc'] = self.desc
+				if len(self.evi_list.evidences) > 0:
+					data['evidence'] = [e.to_dict() for e in self.evi_list.evidences]
 				return data
 				
 			def update_from_yaml(self, area):
@@ -99,6 +98,11 @@ class HubManager:
 					area['bglock'] = False
 				if 'poslock' not in area:
 					area['poslock'] = None
+				else:
+					if str(area['poslock']).lower() in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
+						area['poslock'] = area['poslock'].lower()
+					else:
+						area['poslock'] = None
 				if 'evidence_mod' not in area:
 					area['evidence_mod'] = 'FFA'
 				if 'locking_allowed' not in area:
@@ -119,6 +123,13 @@ class HubManager:
 				self.update(area['area'], area['can_rename'], area['background'], area['bglock'],
 								area['poslock'], area['evidence_mod'], area['locking_allowed'],
 								area['can_remove'], area['accessible'], area['desc'], area['locked'], area['hidden'])
+
+				if 'evidence' not in area:
+					area['evidence'] = []
+
+				if len(area['evidence']) > 0:
+					self.evi_list.import_evidence(area['evidence'])
+					self.broadcast_evidence_list()
 
 			def save(self):
 				desc = self.desc
@@ -363,7 +374,7 @@ class HubManager:
 		def yaml_load(self, name=''):
 			with open('storage/hubs/{}.yaml'.format(name), 'r') as stream:
 				hub = yaml.load(stream)
-			
+
 			self.update_from_yaml(hub)
 
 		def update_from_yaml(self, hub):

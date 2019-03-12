@@ -39,6 +39,9 @@ class EvidenceList:
             sequence = (self.name, self.desc, self.image)
             return '&'.join(sequence)
 
+        def to_dict(self):
+            return {'name': self.name, 'desc': self.desc, 'image': self.image, 'pos': self.pos}
+
     def __init__(self):
         self.evidences = []
         self.poses = {'def': ['def', 'hld'],
@@ -101,6 +104,11 @@ class EvidenceList:
                 nums_list.append(i + 1)
                 evi_list.append(self.evidences[i].to_string())
         return nums_list, evi_list
+
+    def import_evidence(self, data):
+        for evi in data:
+            name, description, image, pos = evi['name'], evi['desc'], evi['image'], evi['pos']
+            self.evidences.append(self.Evidence(name, description, image, pos))
 
     def del_evidence(self, client, id):
         if self.login(client):

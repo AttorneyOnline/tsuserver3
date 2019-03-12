@@ -22,6 +22,7 @@ import time
 
 from server.constants import TargetType
 import re
+import os
 
 from server import logger
 from server.constants import TargetType
@@ -1514,21 +1515,37 @@ def ooc_cmd_savehub_legacy(client, arg):
     area.broadcast_evidence_list()
     client.send_host_message('The hub data has been saved in an evidence file in area [{}] {}.'.format(area.id, area.name))
 
+def ooc_cmd_listhubs(client, arg):
+    if not client.is_mod:
+        raise ClientError('Only mods can view available hub saves.')
+    
+    text = 'Available hubs:'
+    for F in os.listdir('storage/hubs/'):
+        if F.lower().endswith('.yaml'):
+            text += '\n- {}'.format(F[:-5])
+
+    client.send_host_message(text)
+
 def ooc_cmd_savehub(client, arg):
     if not client.is_mod:
         raise ClientError('Only mods can save the hub.')
     if arg == '':
         raise ClientError('No save name provided!')
 
+    client.send_host_message('The hub data has been saved on the server in a file named \'{}.yaml\'.'.format(arg))
     client.hub.yaml_dump(arg)
 
 def ooc_cmd_loadhub(client, arg):
-    if not client.is_mod:
-        raise ClientError('Only mods can save the hub.')
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can load the hub.')
     if arg == '':
         raise ClientError('No save name provided!')
 
-    client.hub.yaml_load(arg)
+    try:
+        client.hub.yaml_load(arg)
+        client.send_host_message("Loading hub save data \'{}.yaml\'...".format(arg))
+    except:
+        raise ClientError('No save of that name exists!')
 
 def ooc_cmd_akick(client, arg):
     if not client.is_mod and not client.is_cm:

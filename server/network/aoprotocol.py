@@ -913,8 +913,7 @@ class AOProtocol(asyncio.Protocol):
                 return
             try:
                 self.client.hub.load(desc.strip())
-                self.client.hub.send_host_message(
-                    "Loading hub save data...")
+                self.client.send_host_message("Loading hub save data...")
                 self.client.area.evi_list.del_evidence(
                     self.client, self.client.evi_list[int(args[0])])
                 self.client.area.broadcast_evidence_list()
