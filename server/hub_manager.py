@@ -39,7 +39,6 @@ class HubManager:
 				self.hub = hub
 
 				self.clients = set()
-				self.invite_list = {}
 				self.music_looper = None
 				self.next_message_time = 0
 				self.hp_def = 10
@@ -54,6 +53,7 @@ class HubManager:
 				self.mute_ic = False
 
 				self.evi_list = EvidenceList()
+				self.locked_by = None
 
 				self.update(name, can_rename, background, bg_lock, pos_lock, evidence_mod, locking_allowed, can_remove, accessible, desc, locked, hidden)
 
@@ -182,8 +182,8 @@ class HubManager:
 				self.server.hub_manager.send_arup_players()
 
 			def remove_client(self, client):
-				if self.is_locked and client.ipid in self.invite_list:
-					self.invite_list.pop(client.ipid)
+				if self.locked_by == client:  # /lockin was used. Unlock the room.
+					self.unlock()
 				self.clients.remove(client)
 				hidden = ''
 				if client.hidden:
@@ -192,27 +192,26 @@ class HubManager:
 					client.id, client.get_char_name(True), self.id, self.name, hidden), client)
 				self.server.hub_manager.send_arup_players()
 
-			def lock(self):
+			def lock(self, client=None):
 				self.is_locked = True
-				for c in self.clients:
-					self.invite_list[c.ipid] = None
-				self.send_host_message('This area is locked now.')
+				self.locked_by = client
+				by = ''
+				if self.locked_by != None:
+					by = ' by {}'.format(client.get_char_name())
+				self.send_host_message('This area is now locked{}.'.format(by))
 
 			def unlock(self):
 				self.is_locked = False
-				self.invite_list = {}
-				self.send_host_message('This area is open now.')
+				self.locked_by = None
+				self.send_host_message('This area is now open.')
 
 			def hide(self):
 				self.is_hidden = True
-				for c in self.clients:
-					self.invite_list[c.ipid] = None
-				self.send_host_message('This area is hidden now.')
+				self.send_host_message('This area is now hidden.')
 
 			def unhide(self):
 				self.is_hidden = False
-				self.invite_list = {}
-				self.send_host_message('This area is unhidden now.')
+				self.send_host_message('This area is now unhidden.')
 
 			def is_char_available(self, char_id):
 				return char_id not in [x.char_id for x in self.clients]
@@ -272,7 +271,6 @@ class HubManager:
 
 			def cannot_ic_interact(self, client):
 				return False
-				# return self.is_locked != self.Locked.FREE and not client.is_mod and not client.id in self.invite_list
 
 			def change_hp(self, side, val):
 				if not 0 <= val <= 10:
@@ -345,7 +343,8 @@ class HubManager:
 			self.non_int_pres_only = non_int_pres_only
 			self.iniswap_allowed = iniswap_allowed
 			self.blankposting_allowed = blankposting_allowed
-			self.abbreviation = abbreviation
+			if abbreviation == '':
+				self.abbreviation = self.get_generated_abbreviation()
 
 		def yaml_save(self, stream='', limited=True):
 			data = OrderedDict()
@@ -601,8 +600,8 @@ class HubManager:
 			name = self.name
 			if name.lower().startswith("courtroom"):
 				return "CR" + name.split()[-1]
-			elif name.lower().startswith("area"):
-				return "A" + name.split()[-1]
+			elif name.lower().startswith("hub"):
+				return "H" + name.split()[-1]
 			elif len(name.split()) > 1:
 				return "".join(item[0].upper() for item in name.split())
 			elif len(name) > 3:

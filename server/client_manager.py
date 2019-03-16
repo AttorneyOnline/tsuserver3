@@ -65,7 +65,7 @@ class ClientManager:
             self.hidden = False
             self.blinded = False
             self.following = None
-            self.announce_movement = True
+            self.sneak = False
 
             # Pairing stuff
             self.charid_pair = -1
@@ -272,7 +272,7 @@ class ClientManager:
                         c.send_host_message(
                             'Following [{}] {} to {}. [HUB: {}]'.format(self.id, self.get_char_name(True), area.name, area.hub.abbreviation))
 
-            if self.announce_movement and not hidden and not self.get_char_name() == "Spectator":
+            if not self.sneak and not hidden and not self.get_char_name() == "Spectator":
                 old_area.send_host_message('[{}]{} leaves to [{}] {}. [HUB: {}]'.format(self.id, self.get_char_name(True), area.id, area.name, area.hub.abbreviation))
                 area.send_host_message('[{}]{} enters from [{}] {}. [HUB: {}]'.format(self.id, self.get_char_name(True), old_area.id, old_area.name, old_area.hub.abbreviation))
             else:
@@ -297,6 +297,7 @@ class ClientManager:
                 lo = ''
                 hi = ''
                 acc = ''
+                me = ''
                 if self.area != area and len(self.area.accessible) > 0 and not (area.id in self.area.accessible):
                     if not accessible:
                         acc = '<X>'
@@ -309,11 +310,14 @@ class ClientManager:
                     hi = hide[area.is_hidden]
                 elif self.area != area and area.is_hidden:
                     continue
-
-                msg += '\r\nArea {}: {}{} {}{}{}'.format(
-                    area.id, acc, area.name, users, lo, hi)
+                
                 if self.area == area:
-                    msg += ' [*]'
+                    lo = lock[area.is_locked]
+                    hi = hide[area.is_hidden]
+                    me = '[*]'
+
+                msg += '\r\n{}Area {}: {}{} {}{}{}'.format(
+                    me, area.id, acc, area.name, users, lo, hi)
             self.send_host_message(msg)
 
         def send_hub_list(self):

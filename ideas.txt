@@ -1,0 +1,18 @@
+CaseyMayCazy#5850's idea for area locking/unlocking:
+Area tags. Example being, you can tag areas and anyone inside the area when said tag changed can only move to areas with the same tag. Example:
+[?] = tag name
+@ = player
+
+@ [W]Hallway -> [W]Bedroom -> [W]Bathroom
+
+Player can move to bedroom from hallway and to bathroom from bedroom without issue.
+
+[W]Hallway ->[R] @ Bedroom -> [R]Bathroom
+
+Player can only move between Bedroom and Bathroom, not the hallway.
+
+[W]Hallway ->[R] Bedroom -> [B] @ Bathroom
+
+Player can only stay in the bathroom. He can't move to bedroom nor hallway.
+
+This represents the fact that you can lock your bedroom and additionally lock yourself in the bathroom.

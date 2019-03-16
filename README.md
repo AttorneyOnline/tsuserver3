@@ -82,7 +82,7 @@ Requires Python 3.6+ and PyYAML.
     - Swaps <id1> and <id2> evidence.
 * **evi_edit** <id: int> <name: string> <description: string> <image: string>
     - A command emulating the in-client editing interface. Replace string with . (period) if you wish to keep original data.
-* **announce_movement** <on/off or blank>
+* **sneak** <on/off or blank>
     - Toggles whether or not you transfering areas will be announced in local area chat, e.g. "Gym: Phoenix leaves to Hallway." "Hallway: Phoenix enters from Gym."
 
 ### CM Commands

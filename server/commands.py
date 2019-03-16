@@ -860,6 +860,8 @@ def ooc_cmd_area(client, arg):
 
         if area.is_locked and not allowed:
             raise ClientError("That area is locked!")
+        if client.area.is_locked and client.area.locked_by != client and not allowed:
+            raise ClientError("The area you are in is locked!")
         if area != client.area and rpmode and len(client.area.accessible) > 0 and area.id not in client.area.accessible and not allowed:
             raise AreaError(
                 'Area ID not accessible from your current area!')
@@ -1363,27 +1365,64 @@ def ooc_cmd_area_unlink(client, arg):
         'Areas that can now be accessed from and to area [{}] {}: {}.'.format(area_from.id, area_from.name, area_from.accessible))
 
 def ooc_cmd_announce_movement(client, arg):
+    raise ArgumentError("/announce_movement has now been renamed to /sneak. Please get used to that version.")
+
+def ooc_cmd_sneak(client, arg):
     if len(arg.split()) > 1:
         raise ArgumentError("This command can only take one argument ('on' or 'off') or no arguments at all!")
     if arg:
         if arg == 'on':
-            client.announce_movement = True
+            client.sneak = True
         elif arg == 'off':
-            client.announce_movement = False
+            client.sneak = False
         else:
             raise ArgumentError("Invalid argument: {}".format(arg))
     else:
-        client.announce_movement = not client.announce_movement
-    stat = 'off'
-    if client.announce_movement:
-        stat = 'on'
-    client.send_host_message('Area transfer announcements turned {}.'.format(stat))
+        client.sneak = not client.sneak
+    stat = 'no longer'
+    if client.sneak:
+        stat = 'now'
+    client.send_host_message('You are {} sneaking.'.format(stat))
 
 def ooc_cmd_unmod(client, arg):
     client.is_mod = False
     if client.area.evidence_mod == 'HiddenCM':
         client.area.broadcast_evidence_list()
     client.send_host_message('you\'re not a mod now')
+
+def ooc_cmd_cleanup(client, arg):
+    if not client.is_mod and not client.is_cm:
+        raise ClientError('You must be authorized to do that.')
+
+    if arg != 'yes':
+        raise ArgumentError('Are you *SURE* you want to clean up the hub!? You can potentially lose all of your data! Please do /cleanup yes if you wish to do so.')
+
+    removed = 0
+    for area in reversed(client.hub.areas):
+        if not area.can_remove:
+            continue
+        client.hub.remove_area(area)
+        removed += 1
+    client.hub.send_host_message('{} areas removed! ({}/{})'.format(
+        removed, client.hub.cur_id-1, client.hub.max_areas))
+    ooc_cmd_status(client, 'idle')
+
+def ooc_cmd_lockin(client, arg):
+    if client.hub.status.lower().startswith('rp-strict') and not client.is_mod and not client.is_cm:
+        raise AreaError(
+            'Hub is {} - /lockin is disabled.'.format(client.hub.status))
+
+    if len(arg) != 0:
+        raise ArgumentError("This command doesn't take any arguments")
+
+    if not client.area.locking_allowed:
+        raise AreaError(
+            'Area locking is disabled in area {}.'.format(client.area.id))
+    if client.area.is_locked:
+        client.area.unlock()
+    else:
+        client.area.lock(client)
+    client.send_host_message('This area will be unlocked when you leave.')
 
 def ooc_cmd_lock(client, arg):
     if not client.is_cm and not client.is_mod:
@@ -1575,11 +1614,11 @@ def ooc_cmd_akick(client, arg):
                         raise
                 client.send_host_message("Attempting to kick [{}]{} to area {} [Hub {}].".format(
                     c.id, c.get_char_name(True), output[0], output[1]))
-                if c.area.is_locked:
-                    c.area.invite_list.pop(c.ipid)
-                if area.is_locked:
-                    area.invite_list[c.ipid] = None
-                c.change_area(area, True) #hidden change area regardless of announce_movement
+                # if c.area.is_locked:
+                #     c.area.invite_list.pop(c.ipid)
+                # if area.is_locked:
+                #     area.invite_list[c.ipid] = None
+                c.change_area(area, True) #hidden change area regardless of sneak
                 c.send_host_message("You were kicked from the area to area {} [Hub {}].".format(output[0], output[1]))
         except AreaError:
             raise
