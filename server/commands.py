@@ -993,7 +993,15 @@ def ooc_cmd_peek(client, arg): #peek into a room to see if there's people in it 
         for c in area.clients:
             if not c.hidden and c.get_char_name() != "Spectator" and not c.is_cm and not c.is_mod: #pure IC
                 sorted_clients.append(c)
-        sorted_clients = ', '.join([c.get_char_name(True) for c in sorted(sorted_clients, key=lambda x: x.get_char_name(True))])
+        _sort = [c.get_char_name(True) for c in sorted(sorted_clients, key=lambda x: x.get_char_name(True))]
+        if len(_sort) == 2:
+            sorted_clients = ' and '.join(_sort)
+        elif len(_sort) > 2:
+            sorted_clients = ', '.join(_sort[:-1])
+            sorted_clients = "{} and {}".format(sorted_clients, _sort[-1])
+        elif len(_sort) == 1:
+            sorted_clients = _sort[0]
+
         if len(sorted_clients) <= 0:
             sorted_clients = 'nobody'
         client.send_host_message("There's {} in [{}] {}.".format(sorted_clients, area.id, area.name))
