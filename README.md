@@ -42,7 +42,7 @@ Requires Python 3.6+ and PyYAML.
     - Toggles adverts on and off
 * **hub** "hub number" OR "hub name"
     - Displays all hubs when blank, swaps to hub with number/name
-* **area** "area number" OR "area name"
+* **area** <number> OR <name>
     - Displays all areas when blank, swaps to area with number/name
 * **getarea** 
     - Shows the current characters in your area
@@ -84,6 +84,8 @@ Requires Python 3.6+ and PyYAML.
     - A command emulating the in-client editing interface. Replace string with . (period) if you wish to keep original data.
 * **sneak** <on/off or blank>
     - Toggles whether or not you transfering areas will be announced in local area chat, e.g. "Gym: Phoenix leaves to Hallway." "Hallway: Phoenix enters from Gym."
+* **peek** <number> OR <name>
+    - Peek inside the target area to see characters inside of it. Must be accessible from your current area. If the area is locked, people will be alerted of your attempt to see inside. CM's, mods and spectators are ignored.
 
 ### CM Commands
 * **cm** <id1>
@@ -131,6 +133,9 @@ Requires Python 3.6+ and PyYAML.
     - Sets the movement delay in seconds for the hub you're in. <delay> must be a value from 0 to 1800 in seconds. Leave blank to check current value.
 * **maxplayers** (<num>)
     - Sets the amount of maximum possible player characters for the area. CM's, mods, spectators are ignored. <num> must be from -1 to 99, where -1 is infinite while 0 is allow only CM's, mods, spectators. Leave blank to check current value.
+* **toggleooc**
+    - Turn hub chat on/off.
+   
 ### Area Commands
 * **bg** "background" 
     - Changes the current background
@@ -148,6 +153,21 @@ Requires Python 3.6+ and PyYAML.
     - Set up a two-way accessibility from and to your area for listed ID's.
 * **area_unlink** <id1> <id2> <idx>
     - Unlink specified areas from the area you're in.
+* **evidence_mod** <MOD>
+    - Changes evidence_mod in this area. Possible values: FFA, CM, HiddenCM, Mods
+        * **FFA**
+            - Everyone can add, edit and remove evidence.
+        * **Mods**
+            - Only moderators can add, edit or remove evidence.
+        * **CM**
+            - Only CM (case-maker, look at /cm for more info) or moderators can add, edit or remove evidence.
+        * **HiddenCM**
+            - Same as CM, but every evidence has a preset "owner's position" which can be set by a CM or moderator, such that only one side/position of the court may see the evidence. After presenting the evidence, the position of the evidence changes to "all." Possible positions include def (defense), pro (prosecutor), wit (witness), jud (judge), pos (hidden from everyone), and all (everyone can see the evidence).
+* **allow_iniswap**
+    - Toggle allow_iniswap var in this area. 
+    - Even if iniswap at all is forbidden you can configure all-time allowed iniswaps in *iniswaps.yaml*
+* **akick** <id> <area#> (<hub#>)
+    - Kicks target and all of their multi-accs from your area to area 0 or specified <area#> in same hub (or specified <hub#> if you're a mod)
 
 ### Mod Commands
 * **login** "Password"
@@ -165,8 +185,6 @@ Requires Python 3.6+ and PyYAML.
     - Kicks a player back to the character select screen. If no ID was entered then target yourself.
 * **kick** "IPID" 
     - Kicks the targets with this IPID.
-* **akick** <id> <area#> (<hub#>)
-    - Kicks target and all of their multi-accs from your area to area 0 or specified <area#> in same hub (or specified <hub#> if you're a mod)
 * **ban** "IPID" 
     - Bans the IPID (hdid is linked to ipid so all bans happens in a same time).
 * **unban** "IPID" 
@@ -189,22 +207,6 @@ Requires Python 3.6+ and PyYAML.
     - Mutes the target from changing music. 
 * **unblockdj** "target"
     - Undo previous command.
-* **evidence_mod** <MOD>
-    - Changes evidence_mod in this area. Possible values: FFA, CM, HiddenCM, Mods
-        * **FFA**
-            - Everyone can add, edit and remove evidence.
-        * **Mods**
-            - Only moderators can add, edit or remove evidence.
-        * **CM**
-            - Only CM (case-maker, look at /cm for more info) or moderators can add, edit or remove evidence.
-        * **HiddenCM**
-            - Same as CM, but every evidence has a preset "owner's position" which can be set by a CM or moderator, such that only one side/position of the court may see the evidence. After presenting the evidence, the position of the evidence changes to "all." Possible positions include def (defense), pro (prosecutor), wit (witness), jud (judge), pos (hidden from everyone), and all (everyone can see the evidence).
-* **allow_iniswap**
-    - Toggle allow_iniswap var in this area. 
-    - Even if iniswap at all is forbidden you can configure all-time allowed iniswaps in *iniswaps.yaml*
-
-
-
 
 ## License
 

@@ -926,13 +926,14 @@ def ooc_cmd_area(client, arg):
                 return
             if area.is_locked:
                 area.send_host_message("Someone tried to enter from [{}] {} but it is locked!".format(client.area.id, client.area.name))
-                raise ClientError("That area is locked!")
+                raise ClientError(
+                    "That area is locked and anyone inside was alerted someone tried to enter!")
             
             if area.max_players > 0:
                 players = len([x for x in area.clients if (not x.is_cm and not x.is_mod and client.get_char_name() != "Spectator")])
                 if players + 1 > area.max_players:
                     area.send_host_message("Someone tried to enter from [{}] {} but it is full!".format(client.area.id, client.area.name))
-                    raise ClientError("That area is full!")
+                raise ClientError("That area is full and anyone inside was alerted someone tried to enter!")
             elif area.max_players == 0:
                 raise ClientError("That area cannot be accessed by normal means!")
 
@@ -969,8 +970,37 @@ def ooc_cmd_p(client, arg): #p for "pass"
 def ooc_cmd_pass(client, arg): #p for "pass"
     return ooc_cmd_area(client, arg)
 
-# def ooc_cmd_glance(client, arg): #glance into a room to see if there's people in it or if it's locked.
-    
+def ooc_cmd_peek(client, arg): #peek into a room to see if there's people in it or if it's locked.
+    args = arg.split()
+    if len(args) == 0:
+        raise ArgumentError('You need to input an accessible area name or ID to peek into it!')
+
+    try:
+        area = client.hub.get_area_by_id_or_name(' '.join(args[0:]))
+
+        if area != client.area and len(client.area.accessible) > 0 and area.id not in client.area.accessible:
+            raise AreaError(
+                'Area ID not accessible from your current area!')
+        if client.area.is_locked:
+            raise ClientError("You are in a locked area, glancing impossible.")
+        if area.is_locked:
+            area.send_host_message("Someone tried to enter from [{}] {} but it is locked!".format(
+                client.area.id, client.area.name))
+            raise ClientError(
+                "That area is locked and anyone inside was alerted someone tried to enter!")
+
+        sorted_clients = []
+        for c in area.clients:
+            if not c.hidden and c.get_char_name() != "Spectator" and not c.is_cm and not c.is_mod: #pure IC
+                sorted_clients.append(c)
+        sorted_clients = ', '.join([c.get_char_name(True) for c in sorted(sorted_clients, key=lambda x: x.get_char_name(True))])
+        if len(sorted_clients) <= 0:
+            sorted_clients = 'nobody'
+        client.send_host_message("There's {} in [{}] {}.".format(sorted_clients, area.id, area.name))
+    except ValueError:
+        raise ArgumentError('Area ID must be a number or name.')
+    except (AreaError, ClientError):
+        raise
 
 def ooc_cmd_area_add(client, arg):
     if not client.is_mod and not client.is_cm:
