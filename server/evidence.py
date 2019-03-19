@@ -128,49 +128,20 @@ class EvidenceList:
             self.evidences.append(self.Evidence(name, description, image, pos))
 
     def del_evidence(self, client, id):
-        if self.login(client, client.hub.status.lower().startswith('rp-strict')):
-            if not self.login(client) and client.area.evidence_mod == 'HiddenCM':
-                # The true index in the evidence list we're trying to modify.
-                true_indexes = {}
-                vis = -1
-                for i in range(len(self.evidences)):
-                    # Only care about the visible indexes to us.
-                    if self.can_see(self.evidences[i], client.pos):
-                        vis += 1
-                        # Associate the "visible" index with the true index.
-                        true_indexes[vis] = i
-                print(id, true_indexes[id], true_indexes)
-                # delet the ACTUAL evidence we're trying to bamboozle.
-                self.evidences.pop(true_indexes[id])
-                print("Lax login for evidence deleting. Attacking {} locally ({} true)".format(
-                    id, true_indexes[id]))
-            else:
-                print("Strict login for evidence deleting. Attacking {}".format(id))
-                self.evidences.pop(id)
+        if self.login(client):
+            self.evidences.pop(id)
 
     def edit_evidence(self, client, id, arg):
-        if self.login(client, client.hub.status.lower().startswith('rp-strict')):
+        if self.login(client):
             if client.area.evidence_mod == 'HiddenCM':
-                if self.login(client): #strict login
-                    print("Strict login for evidence editing. Attacking {}".format(id))
-                    if self.correct_format(client, arg[1]):
-                        lines = arg[1].split('\n')
-                        cmd = lines[0].strip(' ')  # remove all whitespace
-                        poses = cmd[7:-1]
-                        self.evidences[id] = self.Evidence(arg[0], '\n'.join(lines[1:]), arg[2], poses)
-                    else:
-                        client.send_host_message('You entered a bad pos.')
-                        return
-                else: #lax login - time to do some hacks
-                    true_indexes = {} #The true index in the evidence list we're trying to modify.
-                    vis = -1
-                    for i in range(len(self.evidences)):
-                        if self.can_see(self.evidences[i], client.pos): #Only care about the visible indexes to us.
-                            vis += 1
-                            true_indexes[vis] = i #Associate the "visible" index with the true index.
-                    self.evidences[true_indexes[id]] = self.Evidence(
-                        arg[0], arg[1], arg[2], self.evidences[true_indexes[id]].pos)
-                    print("Lax login for evidence editing. Attacking {} locally ({} true)".format(
-                        id, true_indexes[id]))
+                # if self.login(client): #strict login
+                if self.correct_format(client, arg[1]):
+                    lines = arg[1].split('\n')
+                    cmd = lines[0].strip(' ')  # remove all whitespace
+                    poses = cmd[7:-1]
+                    self.evidences[id] = self.Evidence(arg[0], '\n'.join(lines[1:]), arg[2], poses)
+                else:
+                    client.send_host_message('You entered a bad pos.')
+                    return
             else:
                 self.evidences[id] = self.Evidence(arg[0], arg[1], arg[2], arg[3])
