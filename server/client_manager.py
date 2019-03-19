@@ -93,6 +93,9 @@ class ClientManager:
             self.wtce_mute_time = 0
             self.wtce_time = [x * self.server.config['wtce_floodguard']['interval_length'] for x in
                               range(self.server.config['wtce_floodguard']['times_per_interval'])]
+            
+            self.last_move_time = 0
+            self.move_delay = 0
 
         def send_raw_message(self, msg):
             self.transport.write(msg.encode('utf-8'))

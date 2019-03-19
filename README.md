@@ -123,7 +123,14 @@ Requires Python 3.6+ and PyYAML.
     - Display instructions on how to load area save data using the evidence system.
 * **akick** <id> <area#> (<hub#>)
     - Kicks target and all of their multi-accs from your area to area 0 or specified <area#> in same hub (or specified <hub#> if you're a mod)
-
+* **player_move_delay** <id> (<delay>)
+    - Sets the movement delay in seconds for the player. <delay> must be a value from 0 to 1800 in seconds. Leave blank to check current value.
+* **area_move_delay** (<delay>)
+    - Sets the movement delay in seconds for the area you're in. <delay> must be a value from 0 to 1800 in seconds. Leave blank to check current value.
+* **hub_move_delay** (<delay>)
+    - Sets the movement delay in seconds for the hub you're in. <delay> must be a value from 0 to 1800 in seconds. Leave blank to check current value.
+* **maxplayers** (<num>)
+    - Sets the amount of maximum possible player characters for the area. CM's, mods, spectators are ignored. <num> must be from -1 to 99, where -1 is infinite while 0 is allow only CM's, mods, spectators. Leave blank to check current value.
 ### Area Commands
 * **bg** "background" 
     - Changes the current background

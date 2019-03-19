@@ -483,10 +483,13 @@ class AOProtocol(asyncio.Protocol):
         if self.client.disemvowel:
             msg = self.client.disemvowel_message(msg)
         self.client.pos = pos
-        if evidence:
-            if self.client.area.evi_list.evidences[self.client.evi_list[evidence] - 1].pos != 'all':
-                self.client.area.evi_list.evidences[self.client.evi_list[evidence] - 1].pos = 'all'
-                self.client.area.broadcast_evidence_list()
+        #FUCK YOU
+        #I SPENT AN HOUR TRYING TO DEBUG WHY HIDDEN EVIDENCE BECAME UNHIDDEN YOU FUCK
+        #WHY DID YOU DO THIS TO ME
+        # if evidence:
+        #     if self.client.area.evi_list.evidences[self.client.evi_list[evidence] - 1].pos != 'all':
+        #         self.client.area.evi_list.evidences[self.client.evi_list[evidence] - 1].pos = 'all'
+        #         self.client.area.broadcast_evidence_list()
 
         # Here, we check the pair stuff, and save info about it to the client.
         # Notably, while we only get a charid_pair and an offset, we send back a chair_pair, an emote, a talker offset
@@ -555,11 +558,6 @@ class AOProtocol(asyncio.Protocol):
                                 sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
                                 charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
                                 nonint_pre, self.client.area.background]) + ']{}'.format(msg), self.client)
-
-            if (self.client.area.is_recording):
-                current_time = strftime("%H:%M:%S UTC", gmtime())
-                self.client.area.recorded_messages.append('[{}][{}] {}: {}'.format(
-                    current_time, self.client.id, self.client.get_char_name(), msg))
 
         self.client.last_showname = showname
 

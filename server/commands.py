@@ -19,6 +19,7 @@ import random
 import hashlib
 import string
 import time
+import math
 
 from server.constants import TargetType
 import re
@@ -844,6 +845,63 @@ def ooc_cmd_unfollow(client, arg):
         client.following = None
         raise ClientError('You\'re not following anyone!')
 
+def ooc_cmd_player_move_delay(client, arg):
+    if not client.is_mod and not client.is_cm:
+        raise ClientError('You must be authorized to do that.')
+
+    try:
+        args = arg.split()
+        targets = client.server.client_manager.get_targets(
+            client, TargetType.ID, int(args[0]), False)
+    except:
+        raise ArgumentError(
+            'You must specify a target. Use /player_move_delay <id> [delay from 0 to 1800 in seconds or empty to check]')
+
+    try:
+        if len(args) > 1:
+            move_delay = int(args[1])
+            if move_delay < 0 or move_delay > 1800:
+                raise
+            for c in targets:
+                c.move_delay = move_delay
+            client.send_host_message('Set {} client(s) movement delay to {}.'.format(len(targets), move_delay))
+        else:
+            for c in targets:
+                client.send_host_message('Current move delay for [{}]{} is {}.'.format(c.id, c.get_char_name(True), move_delay))
+    except:
+        raise ArgumentError(
+            'You must specify a target. Use /player_move_delay <id> [delay from 0 to 1800 in seconds or empty to check]')
+
+def ooc_cmd_area_move_delay(client, arg):
+    if not client.is_mod and not client.is_cm:
+        raise ClientError('You must be authorized to do that.')
+
+    try:
+        arg = int(arg)
+        if arg < 0 or arg > 1800:
+            raise
+        client.area.move_delay = arg
+        client.send_host_message(
+            'Set area\'s movement delay to {} seconds.'.format(arg))
+    except:
+        raise ArgumentError(
+            'Current movement delay is {}. Use /area_move_delay [delay from 0 to 1800 in seconds or empty to check]'.format(client.area.move_delay))
+
+def ooc_cmd_hub_move_delay(client, arg):
+    if not client.is_mod and not client.is_cm:
+        raise ClientError('You must be authorized to do that.')
+
+    try:
+        arg = int(arg)
+        if arg < 0 or arg > 1800:
+            raise
+        client.hub.move_delay = arg
+        client.send_host_message(
+            'Set hub\'s movement delay to {} seconds.'.format(arg))
+    except:
+        raise ArgumentError(
+            'Current movement delay is {}. Use /hub_move_delay [delay from 0 to 1800 in seconds or empty to check]'.format(client.hub.move_delay))
+
 def ooc_cmd_area(client, arg):
     args = arg.split()
     allowed = client.is_cm or client.is_mod or client.get_char_name() == "Spectator"
@@ -858,13 +916,32 @@ def ooc_cmd_area(client, arg):
     try:
         area = client.hub.get_area_by_id_or_name(' '.join(args[0:]))
 
-        if area.is_locked and not allowed:
-            raise ClientError("That area is locked!")
-        if client.area.is_locked and client.area.locked_by != client and not allowed:
-            raise ClientError("The area you are in is locked!")
-        if area != client.area and rpmode and len(client.area.accessible) > 0 and area.id not in client.area.accessible and not allowed:
-            raise AreaError(
-                'Area ID not accessible from your current area!')
+        if not allowed:
+            if area != client.area and rpmode and len(client.area.accessible) > 0 and area.id not in client.area.accessible:
+                raise AreaError(
+                    'Area ID not accessible from your current area!')
+            if client.area.is_locked and client.area.locked_by != client:
+                client.area.send_host_message("[{}] {} tried to leave to [{}] {} but it is locked!".format(
+                    client.id, client.get_char_name(), area.id, area.name))
+                return
+            if area.is_locked:
+                area.send_host_message("Someone tried to enter from [{}] {} but it is locked!".format(client.area.id, client.area.name))
+                raise ClientError("That area is locked!")
+            
+            if area.max_players > 0:
+                players = len([x for x in area.clients if (not x.is_cm and not x.is_mod and client.get_char_name() != "Spectator")])
+                if players + 1 > area.max_players:
+                    area.send_host_message("Someone tried to enter from [{}] {} but it is full!".format(client.area.id, client.area.name))
+                    raise ClientError("That area is full!")
+            elif area.max_players == 0:
+                raise ClientError("That area cannot be accessed by normal means!")
+
+            delay = client.area.time_until_move(client)
+            if delay > 0:
+                sec = int(math.ceil(delay * 0.001))
+                raise ClientError("You need to wait {} seconds until you can move again.".format(sec))
+
+            client.last_move_time = round(time.time() * 1000.0)
 
         #Changing area of your own accord should stop following as well
         if client.following != None:
@@ -891,6 +968,9 @@ def ooc_cmd_p(client, arg): #p for "pass"
 
 def ooc_cmd_pass(client, arg): #p for "pass"
     return ooc_cmd_area(client, arg)
+
+# def ooc_cmd_glance(client, arg): #glance into a room to see if there's people in it or if it's locked.
+    
 
 def ooc_cmd_area_add(client, arg):
     if not client.is_mod and not client.is_cm:
@@ -1216,6 +1296,8 @@ def ooc_cmd_cm(client, arg):
             client.hub.send_host_message('{} is master CM in this hub now.'.format(client.name))
         else:
             raise ClientError('Master CM exists. Use /cm <id>')
+    #If we got past the errors we're going to tell the server to update itself.
+    client.server.hub_manager.send_arup_cms()
 
 def ooc_cmd_cms(client, arg):
     client.send_host_message('=CM\'s in this hub:=')
@@ -1232,6 +1314,7 @@ def ooc_cmd_uncm(client, arg):
         client.is_cm = False
         client.send_host_message(
             'You are no longer a CM of hub {}.'.format(client.hub.name))
+        client.server.hub_manager.send_arup_cms()
 
 def ooc_cmd_cmlogs(client, arg):
     logtypes = ['MoveLog', 'RollLog', 'PMLog', 'CharLog']
@@ -1419,6 +1502,8 @@ def ooc_cmd_lockin(client, arg):
         raise AreaError(
             'Area locking is disabled in area {}.'.format(client.area.id))
     if client.area.is_locked:
+        if client.area.locked_by != client:
+            raise AreaError('You are unable to unlock this area!')
         client.area.unlock()
     else:
         client.area.lock(client)
@@ -1454,7 +1539,7 @@ def ooc_cmd_lock(client, arg):
             area.lock()
             i += 1
     client.send_host_message('Locked {} areas.'.format(i))
-        
+
 def ooc_cmd_unlock(client, arg):
     if not client.is_cm and not client.is_mod:
         raise ClientError('Only CM or mods can unlock the area.')
@@ -1485,6 +1570,27 @@ def ooc_cmd_unlock(client, arg):
             area.unlock()
             i += 1
     client.send_host_message('Unlocked {} areas.'.format(i))
+
+def ooc_cmd_maxplayers(client, arg):
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can change max players for the area.')
+    if arg == '':
+        client.send_host_message('Max amount of players for the area is {}.'.format(client.area.max_players))
+        return
+
+    if not client.area.locking_allowed:
+        raise ClientError('You cannot modify this area.')
+
+    try:
+        arg = int(arg)
+        if arg < -1:
+            raise
+        if arg > 99: #what the fuck
+            raise
+        client.area.max_players = arg
+        client.send_host_message('New max amount of players for the area is now {}.'.format(client.area.max_players))
+    except:
+        raise ArgumentError('Invalid argument! Use /maxplayers and a number from -1 to 99 (-1 makes it unlimited. 0 only allows CMs, spectators and mods in the area).')
 
 def ooc_cmd_area_hide(client, arg):
     if not client.is_cm and not client.is_mod:

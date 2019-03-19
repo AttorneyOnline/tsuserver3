@@ -33,7 +33,7 @@ class HubManager:
 	class Hub:
 		class Area:
 			def __init__(self, area_id, server, hub, name, can_rename=True, background='default', bg_lock=False, pos_lock=None, evidence_mod = 'FFA',
-						locking_allowed = False, can_remove = False, accessible = [], desc = '', locked=False, hidden=False):
+						locking_allowed = False, can_remove = False, accessible = [], desc = '', locked=False, hidden=False, max_players=-1, move_delay=0):
 				self.id = area_id
 				self.server = server
 				self.hub = hub
@@ -55,10 +55,10 @@ class HubManager:
 				self.evi_list = EvidenceList()
 				self.locked_by = None
 
-				self.update(name, can_rename, background, bg_lock, pos_lock, evidence_mod, locking_allowed, can_remove, accessible, desc, locked, hidden)
+				self.update(name, can_rename, background, bg_lock, pos_lock, evidence_mod, locking_allowed, can_remove, accessible, desc, locked, hidden, max_players, move_delay)
 
 			def update(self, name, can_rename=True, background='default', bg_lock=False, pos_lock=None, evidence_mod = 'FFA',
-						locking_allowed = False, can_remove = False, accessible = [], desc = '', locked=False, hidden=False):
+						locking_allowed = False, can_remove = False, accessible = [], desc = '', locked=False, hidden=False, max_players=-1, move_delay=0):
 				self.name = name
 				self.can_rename = can_rename
 				self.background = background
@@ -71,6 +71,8 @@ class HubManager:
 				self.desc = desc
 				self.is_locked = locked
 				self.is_hidden = hidden
+				self.max_players = -1
+				self.move_delay = 0
 
 			def set_desc(self, dsc):
 				desc = dsc[:512]
@@ -85,6 +87,10 @@ class HubManager:
 				data['evidence_mod'] = self.evidence_mod
 				data['locking_allowed'] = self.locking_allowed
 				data['can_remove'] = self.can_remove
+				data['locked'] = self.is_locked
+				data['hidden'] = self.is_hidden
+				data['max_players'] = self.max_players
+				data['move_delay'] = self.move_delay
 				acs = ' '.join(map(str, self.accessible))
 				if len(acs) > 0:
 					data['accessible'] = acs
@@ -121,10 +127,17 @@ class HubManager:
 					area['locked'] = False
 				if 'hidden' not in area:
 					area['hidden'] = False
+				if 'max_players' not in area:
+					area['max_players'] = -1
+				if 'move_delay' not in area:
+					area['move_delay'] = 0
 
 				self.update(area['area'], area['can_rename'], area['background'], area['bglock'],
 								area['poslock'], area['evidence_mod'], area['locking_allowed'],
-								area['can_remove'], area['accessible'], area['desc'], area['locked'], area['hidden'])
+								area['can_remove'], area['accessible'], area['desc'], area['locked'],
+								area['hidden'], area['max_players'], area['move_delay'])
+
+				self.send_command('BN', self.background) #make sure everyone in the area gets the background update
 
 				if 'evidence' not in area or len(area['evidence']) <= 0:
 					area['evidence'] = []
@@ -269,6 +282,14 @@ class HubManager:
 					return False
 				return (time.time() * 1000.0 - self.next_message_time) > 0
 
+			def time_until_move(self, client):
+				secs = round(time.time() * 1000.0 - client.last_move_time)
+				highest = max(client.move_delay, self.move_delay, self.hub.move_delay)
+				test = highest * 1000.0 - secs
+				if test > 0:
+					return test
+				return 0
+
 			def cannot_ic_interact(self, client):
 				return False
 
@@ -319,7 +340,7 @@ class HubManager:
 			# 	return msg
 
 		def __init__(self, hub_id, server, name, allow_cm=False, max_areas=1, doc='No document.', status='IDLE', showname_changes_allowed=False,
-					 shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation=''):
+                        shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation='', move_delay=0):
 			self.server = server
 			self.id = hub_id
 
@@ -329,10 +350,10 @@ class HubManager:
 			self.areas = []
 			self.cur_id = 0
 			self.update(name, allow_cm, max_areas, doc, status, showname_changes_allowed,
-                            shouts_allowed, non_int_pres_only, iniswap_allowed, blankposting_allowed, abbreviation)
+                            shouts_allowed, non_int_pres_only, iniswap_allowed, blankposting_allowed, abbreviation, move_delay)
 
 		def update(self, name, allow_cm=False, max_areas=1, doc='No document.', status='IDLE', showname_changes_allowed=False,
-					 shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation=''):
+					 shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation='', move_delay=0):
 			self.name = name
 			self.allow_cm = allow_cm
 			self.max_areas = max_areas
@@ -343,6 +364,7 @@ class HubManager:
 			self.non_int_pres_only = non_int_pres_only
 			self.iniswap_allowed = iniswap_allowed
 			self.blankposting_allowed = blankposting_allowed
+			self.move_delay = move_delay
 			if abbreviation == '':
 				self.abbreviation = self.get_generated_abbreviation()
 
@@ -360,6 +382,7 @@ class HubManager:
 			data['noninterrupting_pres'] = self.non_int_pres_only
 			data['iniswap_allowed'] = self.iniswap_allowed
 			data['blankposting_allowed'] = self.blankposting_allowed
+			data['move_delay'] = self.move_delay
 			areas = []
 			for area in self.areas:
 				areas.append(area.yaml_save())
@@ -387,9 +410,9 @@ class HubManager:
 			if 'max_areas' in hub:
 				self.max_areas = hub['max_areas']
 			if 'doc' in hub:
-				self.doc = hub['doc']
+				self.change_doc(hub['doc'])
 			if 'status' in hub:
-				self.status = hub['status']
+				self.change_status(hub['status'])
 			if 'showname_changes_allowed' in hub:
 				self.showname_changes_allowed = hub['showname_changes_allowed']
 			if 'shouts_allowed' in hub:
@@ -402,6 +425,8 @@ class HubManager:
 				self.blankposting_allowed = hub['blankposting_allowed']
 			if 'abbreviation' in hub:
 				self.abbreviation = hub['abbreviation']
+			if 'move_delay' in hub:
+				self.move_delay = hub['move_delay']
 
 			while len(self.areas) < len(hub['areas']):
 				self.create_area('Area {}'.format(self.cur_id))
@@ -666,11 +691,13 @@ class HubManager:
 		self.server.send_arup(status_list)
 
 	def send_arup_cms(self):
+		cms_list = [2]
 		for hub in self.hubs:
 			cm = 'FREE'
 			if hub.master != None:
-				cm = hub.master
-		self.server.send_arup(cm)
+				cm = hub.master.name
+			cms_list.append(cm)
+		self.server.send_arup(cms_list)
 
 	def send_arup_lock(self):
 		lock_list = [3]
