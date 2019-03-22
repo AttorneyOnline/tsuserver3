@@ -381,6 +381,9 @@ class AOProtocol(asyncio.Protocol):
         if self.client.get_char_name() == "Spectator":
             self.client.send_host_message("You may not use ic chat when you are a Spectator!")
             return
+        if self.client.blinded:
+            self.client.send_host_message("You may not use ic chat when you are blinded!")
+            return
         if not self.client.hub.blankposting_allowed:
             if text == ' ':
                 self.client.send_host_message("Blankposting is forbidden in this hub!")
@@ -525,8 +528,8 @@ class AOProtocol(asyncio.Protocol):
             for b in self.client.broadcast_ic:
                 area = self.client.hub.get_area_by_id(b)
                 if area:
-                    if area.pos_lock in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
-                        pos = area.pos_lock
+                    if len(area.pos_lock) > 0 and pos not in area.pos_lock:
+                        pos = area.pos_lock[0]
                     area.send_command('MS', 'broadcast', pre, folder, anim, msg, pos, sfx, anim_type, cid,
                                         sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
                                         charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
@@ -546,8 +549,8 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_host_message(
                 'Broadcasting message to {} areas.'.format(len(self.client.broadcast_ic)))
         else:
-            if self.client.area.pos_lock in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
-                pos = self.client.area.pos_lock
+            if len(self.client.area.pos_lock) > 0 and pos not in self.client.area.pos_lock:
+                pos = self.client.area.pos_lock[0]
             self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
                                         sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
                                         charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,

@@ -32,7 +32,7 @@ from server.evidence import EvidenceList
 class HubManager:
 	class Hub:
 		class Area:
-			def __init__(self, area_id, server, hub, name, can_rename=True, background='default', bg_lock=False, pos_lock=None, evidence_mod = 'FFA',
+			def __init__(self, area_id, server, hub, name, can_rename=True, background='default', bg_lock=False, pos_lock=[], evidence_mod = 'FFA',
 						locking_allowed = False, can_remove = False, accessible = [], desc = '', locked=False, hidden=False, max_players=-1, move_delay=0):
 				self.id = area_id
 				self.server = server
@@ -57,7 +57,7 @@ class HubManager:
 
 				self.update(name, can_rename, background, bg_lock, pos_lock, evidence_mod, locking_allowed, can_remove, accessible, desc, locked, hidden, max_players, move_delay)
 
-			def update(self, name, can_rename=True, background='default', bg_lock=False, pos_lock=None, evidence_mod = 'FFA',
+			def update(self, name, can_rename=True, background='default', bg_lock=False, pos_lock=[], evidence_mod = 'FFA',
 						locking_allowed = False, can_remove = False, accessible = [], desc = '', locked=False, hidden=False, max_players=-1, move_delay=0):
 				self.name = name
 				self.can_rename = can_rename
@@ -83,7 +83,9 @@ class HubManager:
 				data['background'] = self.background
 				data['can_rename'] = self.can_rename
 				data['bglock'] = self.bg_lock
-				data['poslock'] = self.pos_lock
+				plock = ' '.join(map(str, self.poslock))
+				if len(plock) > 0:
+					data['poslock'] = plock
 				data['evidence_mod'] = self.evidence_mod
 				data['locking_allowed'] = self.locking_allowed
 				data['can_remove'] = self.can_remove
@@ -104,13 +106,14 @@ class HubManager:
 					area['can_rename'] = False
 				if 'bglock' not in area:
 					area['bglock'] = False
-				if 'poslock' not in area:
-					area['poslock'] = None
+				if 'poslock' not in area or len(area['poslock']) <= 0 or area['poslock'].lower() == "none":
+					area['poslock'] = []
 				else:
-					if str(area['poslock']).lower() in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
-						area['poslock'] = area['poslock'].lower()
-					else:
-						area['poslock'] = None
+					area['poslock'] = area['poslock'].split()
+					for pos in area['poslock']:
+						pos = pos.lower()
+						if pos in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'sea', 'jur') and not (pos in area['poslock']):
+							area['poslock'].append(pos)
 				if 'evidence_mod' not in area:
 					area['evidence_mod'] = 'FFA'
 				if 'locking_allowed' not in area:
@@ -174,7 +177,7 @@ class HubManager:
 					if str(args[4]).lower() in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
 						self.pos_lock = str(args[4]).lower()
 					else:
-						self.pos_lock = None
+						self.pos_lock = []
 				if str(args[5]) != "*":
 					print("Attempting to set access")
 					if args[5] == 'None':
@@ -321,6 +324,8 @@ class HubManager:
 
 			def get_evidence_list(self, client):
 				client.evi_list, evi_list = self.evi_list.create_evi_list(client)
+				if client.blinded: #oops
+					return [0]
 				return evi_list
 
 			def broadcast_evidence_list(self):
@@ -464,7 +469,7 @@ class HubManager:
 				print("Bad area save file!")
 				raise AreaError('Bad save file!')
 
-		def create_area(self, name, can_rename=True, bg='default', bglock=False, poslock=None, evimod='FFA', lockallow=True, removable=True, accessible=[], desc='', locked=False, hidden=False):
+		def create_area(self, name, can_rename=True, bg='default', bglock=False, poslock=[], evimod='FFA', lockallow=True, removable=True, accessible=[], desc='', locked=False, hidden=False):
 			self.areas.append(
 				self.Area(self.cur_id, self.server, self, name, can_rename, bg, bglock, poslock, evimod, lockallow, removable, accessible, desc, locked, hidden))
 			self.cur_id += 1

@@ -114,17 +114,16 @@ def ooc_cmd_evidence_mod(client, arg):
         return
     if arg in ['FFA', 'Mods', 'CM', 'HiddenCM']:
         if arg == client.area.evidence_mod:
-            client.send_host_message('current evidence mod: {}'.format(client.area.evidence_mod))
+            client.send_host_message('Current evidence mod is already {}.'.format(client.area.evidence_mod))
             return
         if client.area.evidence_mod == 'HiddenCM':
             for i in range(len(client.area.evi_list.evidences)):
                 client.area.evi_list.evidences[i].pos = 'all'
         client.area.evidence_mod = arg
-        client.send_host_message('current evidence mod: {}'.format(client.area.evidence_mod))
+        client.send_host_message('Set current evidence mod to {}.'.format(client.area.evidence_mod))
         return
     else:
         raise ArgumentError('Wrong Argument. Use /evidence_mod <MOD>. Possible values: FFA, CM, Mods, HiddenCM')
-        return
 
 def ooc_cmd_allow_iniswap(client, arg):
     if not client.is_mod and not client.is_cm:
@@ -325,10 +324,11 @@ def ooc_cmd_motd(client, arg):
 
 
 def ooc_cmd_pos(client, arg):
-    if client.area.pos_lock:
-        raise ClientError('Positions are locked in this area.')
+    if len(client.area.pos_lock) > 0 and arg.lower() not in client.area.pos_lock:
+        raise ClientError('Intended position is locked.')
     if len(arg) == 0:
         client.change_position()
+        client.area.broadcast_evidence_list()
         client.send_host_message('Position reset.')
     else:
         try:
@@ -347,19 +347,21 @@ def ooc_cmd_poslock(client, arg):
             'Poslock is currently {}.'.format(client.area.pos_lock))
         return
     if arg == 'clear':
-        client.area.pos_lock = None
+        client.area.pos_lock.clear()
         client.area.send_host_message('Position lock cleared.')
         return
-    if arg not in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
-        raise ClientError('Invalid pos.')
-    client.area.pos_lock = arg
+
+    positions = list(set(arg.split())) #remove duplicates
+    for pos in positions:
+        if pos not in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'sea', 'jur'):
+            raise ClientError('Invalid pos.')
+       
+    client.area.pos_lock = positions
     client.area.send_host_message('Locked pos into {}.'.format(arg))
 
 def ooc_cmd_forcepos(client, arg):
     if not client.is_cm and not client.is_mod:
         raise ClientError('You must be authorized to do that.')
-    if client.area.pos_lock:
-        raise ClientError('Positions are locked in this area.')
 
     args = arg.split()
 
@@ -739,6 +741,8 @@ def ooc_cmd_doc(client, arg):
         logger.log_server('Changed document to: {}'.format(arg))
 
 def ooc_cmd_desc(client, arg):
+    if client.blinded:
+        raise ClientError('You can\'t use /desc while blinded!')
     if len(arg) == 0:
         client.send_host_message('Area Description: {}'.format(client.area.desc))
         logger.log_server('Requested description: {}'.format(client.area.desc))
@@ -903,6 +907,9 @@ def ooc_cmd_hub_move_delay(client, arg):
             'Current movement delay is {}. Use /hub_move_delay [delay from 0 to 1800 in seconds or empty to check]'.format(client.hub.move_delay))
 
 def ooc_cmd_area(client, arg):
+    if client.blinded:
+        raise ClientError('You can\'t use /area while blinded!')
+
     args = arg.split()
     allowed = client.is_cm or client.is_mod or client.get_char_name() == "Spectator"
     rpmode = not allowed and client.hub.rpmode
@@ -915,6 +922,9 @@ def ooc_cmd_area(client, arg):
 
     try:
         area = client.hub.get_area_by_id_or_name(' '.join(args[0:]))
+
+        if area == client.area:
+            raise ClientError("You are already in specified area!")
 
         if not allowed:
             if area != client.area and rpmode and len(client.area.accessible) > 0 and area.id not in client.area.accessible:
@@ -930,10 +940,10 @@ def ooc_cmd_area(client, arg):
                     "That area is locked and anyone inside was alerted someone tried to enter!")
             
             if area.max_players > 0:
-                players = len([x for x in area.clients if (not x.is_cm and not x.is_mod and client.get_char_name() != "Spectator")])
-                if players + 1 > area.max_players:
+                players = len([x for x in area.clients if (not x.is_cm and not x.is_mod and x.get_char_name() != "Spectator")])
+                if players >= area.max_players:
                     area.send_host_message("Someone tried to enter from [{}] {} but it is full!".format(client.area.id, client.area.name))
-                raise ClientError("That area is full and anyone inside was alerted someone tried to enter!")
+                    raise ClientError("That area is full and anyone inside was alerted someone tried to enter!")
             elif area.max_players == 0:
                 raise ClientError("That area cannot be accessed by normal means!")
 
@@ -1015,8 +1025,7 @@ def ooc_cmd_area_add(client, arg):
         raise ClientError('You must be authorized to do that.')
 
     if client.hub.cur_id < client.hub.max_areas:
-        client.hub.create_area('Area {}'.format(client.hub.cur_id), True,
-                           client.server.backgrounds[0], False, None, 'FFA', True, True, [], '')
+        client.hub.create_area('Area {}'.format(client.hub.cur_id))
         client.hub.send_host_message(
             'New area created! ({}/{})'.format(client.hub.cur_id, client.hub.max_areas))
     else:
@@ -1195,6 +1204,16 @@ def ooc_cmd_unhide(client, arg):
         client.send_host_message('You have revealed [{}] {} for /getarea.'.format(c.id, c.get_char_name(True)))
     else:
         client.send_host_message('No targets found.')
+
+def ooc_cmd_sleep(client, arg):
+    if len(arg) != 0:
+        raise ArgumentError("This command doesn't take any arguments")
+
+    if not client.blinded or client.blinded_by == client:
+        client.blind(not client.blinded)
+        client.blinded_by = client
+    else:
+        raise ClientError('You are unable to use this command!')
 
 def ooc_cmd_blind(client, arg):
     if not client.is_cm and not client.is_mod:

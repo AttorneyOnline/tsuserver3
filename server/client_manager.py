@@ -64,6 +64,7 @@ class ClientManager:
             self.broadcast_ic = []
             self.hidden = False
             self.blinded = False
+            self.blinded_by = None
             self.following = None
             self.sneak = False
 
@@ -109,7 +110,7 @@ class ClientManager:
                         lst = list(args)
                         lst[0] = '0'
                         args = tuple(lst)
-                    for evi_num in range(len(self.evi_list)):
+                    for evi_num in range(len(self.evi_list)): #i sure would like to know what this does exactly
                         if self.evi_list[evi_num] == args[11]:
                             lst = list(args)
                             lst[11] = evi_num
@@ -213,6 +214,7 @@ class ClientManager:
                 msg = 'now'
             self.send_host_message(
                 'You are {} blinded from /getarea and seeing non-broadcasted IC messages.'.format(msg))
+            self.send_command('LE', *self.area.get_evidence_list(self))
 
         def wtce_mute(self):
             if self.is_mod or self.is_cm:
@@ -359,7 +361,7 @@ class ClientManager:
                 if c.hidden:
                     info += ' [H]'
                 if c.blinded:
-                    info += ' [B]'
+                    info += ' [Z]' #for "catching some Z's"
             return info
 
         def send_area_info(self, area_id, hidden=False): 

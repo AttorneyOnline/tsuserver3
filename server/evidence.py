@@ -67,7 +67,7 @@ class EvidenceList:
                 return True
         return False
 
-    def login(self, client, strict=True):
+    def login(self, client):
         if client.area.evidence_mod == 'FFA':
             return True
         if client.area.evidence_mod == 'Mods':
@@ -77,7 +77,7 @@ class EvidenceList:
             if client.is_cm or client.is_mod:
                 return True
         if client.area.evidence_mod == 'HiddenCM':
-            if client.is_cm or client.is_mod or not strict:
+            if client.is_cm or client.is_mod:
                 return True
         return False
 
@@ -89,20 +89,28 @@ class EvidenceList:
             lines = desc.split('\n')
             cmd = lines[0].strip(' ') #remove all whitespace
             if cmd[:7] == '<owner=' and cmd.endswith('>'):
+                poses = cmd[7:-1]
+                for pos in poses.strip(' ').split(','):
+                    if not (pos in self.poses['all']) and pos != 'pos':
+                        return False
                 return True
             return False
 
     def add_evidence(self, client, name, description, image, pos='all'):
-        if self.login(client, client.hub.status.lower().startswith('rp-strict')):
+        if len(self.evidences) >= self.limit:
+            client.send_host_message(
+                'You can\'t have more than {} evidence items at a time.'.format(self.limit))
+            return
+        if self.login(client):
             if client.area.evidence_mod == 'HiddenCM':
-                if self.login(client): #This is a CM/mod, so hide the evidence.
-                    pos = 'pos'
-                else: #This is a normal player. Add the evidence at their pos.
-                    pos = client.pos
-            if len(self.evidences) >= self.limit:
-                client.send_host_message('You can\'t have more than {} evidence items at a time.'.format(self.limit))
-            else:
-                self.evidences.append(self.Evidence(name, description, image, pos))
+                pos = 'pos'
+            self.evidences.append(self.Evidence(
+                name, description, image, pos))
+        elif client.area.evidence_mod == 'HiddenCM':
+            if not client.hub.status.lower().startswith('rp-strict'):
+                pos = client.pos
+                self.evidences.append(self.Evidence(
+                    name, description, image, pos))
 
     def evidence_swap(self, client, id1, id2):
         if self.login(client):
@@ -122,6 +130,16 @@ class EvidenceList:
                 evi_list.append(self.evidences[i].to_string())
         return nums_list, evi_list
 
+    def get_nums_visible(self, client):
+        evi_list = []
+        true_nums = {}
+        visible = 0
+        for i in range(len(self.evidences)):
+            if self.can_see(self.evidences[i], client.pos):
+                true_nums[visible] = i
+                visible += 1
+        return true_nums
+
     def import_evidence(self, data):
         for evi in data:
             name, description, image, pos = evi['name'], evi['desc'], evi['image'], evi['pos']
@@ -130,11 +148,14 @@ class EvidenceList:
     def del_evidence(self, client, id):
         if self.login(client):
             self.evidences.pop(id)
+        # elif client.area.evidence_mod == 'HiddenCM':
+        #     if not client.hub.status.lower().startswith('rp-strict'):
+        #         print("DELETING EBDNS", id, self.get_nums_visible(client)[id])
+        #         self.evidences[self.get_nums_visible(client)[id]].pos = 'pos' #simply hide it lo
 
     def edit_evidence(self, client, id, arg):
         if self.login(client):
             if client.area.evidence_mod == 'HiddenCM':
-                # if self.login(client): #strict login
                 if self.correct_format(client, arg[1]):
                     lines = arg[1].split('\n')
                     cmd = lines[0].strip(' ')  # remove all whitespace
@@ -145,3 +166,8 @@ class EvidenceList:
                     return
             else:
                 self.evidences[id] = self.Evidence(arg[0], arg[1], arg[2], arg[3])
+        # elif client.area.evidence_mod == 'HiddenCM':
+        #     if not client.hub.status.lower().startswith('rp-strict'):
+        #         print("EDITING EBDNS", id, self.get_nums_visible(client)[id])
+        #         self.evidences[self.get_nums_visible(client)[id]] = self.Evidence(
+        #             arg[0], arg[1], arg[2], self.evidences[self.get_nums_visible(client)[id]].pos)
