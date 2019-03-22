@@ -90,9 +90,10 @@ class EvidenceList:
             cmd = lines[0].strip(' ') #remove all whitespace
             if cmd[:7] == '<owner=' and cmd.endswith('>'):
                 poses = cmd[7:-1]
-                for pos in poses.strip(' ').split(','):
-                    if not (pos in self.poses['all']) and pos != 'pos':
-                        return False
+                #broken with extra shorthands
+                # for pos in poses.strip(' ').split(','):
+                #     if not (pos in self.poses['all']) and pos != 'pos':
+                #         return False
                 return True
             return False
 
@@ -121,24 +122,14 @@ class EvidenceList:
         nums_list = [0]
         for i in range(len(self.evidences)):
             if client.area.evidence_mod == 'HiddenCM' and self.login(client):
-                nums_list.append(i + 1)
+                nums_list.append(i+1)
                 evi = self.evidences[i]
                 evi_list.append(self.Evidence(evi.name, '<owner={}>\n{}'.format(evi.pos, evi.desc), evi.image,
                                               evi.pos).to_string())
             elif self.can_see(self.evidences[i], client.pos):
-                nums_list.append(i + 1)
+                nums_list.append(i+1)
                 evi_list.append(self.evidences[i].to_string())
         return nums_list, evi_list
-
-    def get_nums_visible(self, client):
-        evi_list = []
-        true_nums = {}
-        visible = 0
-        for i in range(len(self.evidences)):
-            if self.can_see(self.evidences[i], client.pos):
-                true_nums[visible] = i
-                visible += 1
-        return true_nums
 
     def import_evidence(self, data):
         for evi in data:
@@ -148,13 +139,34 @@ class EvidenceList:
     def del_evidence(self, client, id):
         if self.login(client):
             self.evidences.pop(id)
-        # elif client.area.evidence_mod == 'HiddenCM':
-        #     if not client.hub.status.lower().startswith('rp-strict'):
-        #         print("DELETING EBDNS", id, self.get_nums_visible(client)[id])
-        #         self.evidences[self.get_nums_visible(client)[id]].pos = 'pos' #simply hide it lo
+        elif client.area.evidence_mod == 'HiddenCM':
+            if not client.hub.status.lower().startswith('rp-strict'):
+                # Are you serious? This is absolutely fucking mental.
+                # Server sends evidence to client in an indexed list starting from 1.
+                # Client sends evidence updates to server using an index starting from 0.
+                # This needs a complete overhaul.
+                idx = client.evi_list[id+1]-1
+                # self.evidences[idx].pos = 'pos' #simply hide it lo
+                self.evidences.pop(idx)
 
     def edit_evidence(self, client, id, arg):
         if self.login(client):
+            #evidence-based hub loading support, may be discontinued in the future.
+            if(arg[0] == '/loadhub'):
+                if not self.client.is_mod and not self.client.is_cm:
+                    self.client.send_host_message(
+                        "You must be authorized to do that.")
+                    return
+                try:
+                    self.client.hub.load(arg[1].strip())
+                    self.client.send_host_message("Loading hub save data...")
+                    self.evidences.pop[id]
+                except:
+                    self.client.send_host_message(
+                        "Could not load hub save data! Try pressing the [X] and make sure if your save data is correct.")
+                return
+            #END evidence-based hub loading support
+
             if client.area.evidence_mod == 'HiddenCM':
                 if self.correct_format(client, arg[1]):
                     lines = arg[1].split('\n')
@@ -166,8 +178,12 @@ class EvidenceList:
                     return
             else:
                 self.evidences[id] = self.Evidence(arg[0], arg[1], arg[2], arg[3])
-        # elif client.area.evidence_mod == 'HiddenCM':
-        #     if not client.hub.status.lower().startswith('rp-strict'):
-        #         print("EDITING EBDNS", id, self.get_nums_visible(client)[id])
-        #         self.evidences[self.get_nums_visible(client)[id]] = self.Evidence(
-        #             arg[0], arg[1], arg[2], self.evidences[self.get_nums_visible(client)[id]].pos)
+        elif client.area.evidence_mod == 'HiddenCM':
+            if not client.hub.status.lower().startswith('rp-strict'):
+                # Are you serious? This is absolutely fucking mental.
+                # Server sends evidence to client in an indexed list starting from 1.
+                # Client sends evidence updates to server using an index starting from 0.
+                # This needs a complete overhaul.
+                idx = client.evi_list[id+1]-1
+                self.evidences[idx] = self.Evidence(
+                    arg[0], arg[1], arg[2], self.evidences[idx].pos)

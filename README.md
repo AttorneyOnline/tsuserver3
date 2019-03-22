@@ -81,7 +81,7 @@ Requires Python 3.6+ and PyYAML.
 * **evi_swap** <id1> <id2>
     - Swaps <id1> and <id2> evidence.
 * **evi_edit** <id: int> <name: string> <description: string> <image: string>
-    - A command emulating the in-client editing interface. Replace string with . (period) if you wish to keep original data.
+    - [DEPRECATED] A command emulating the in-client editing interface. Replace string with . (period) if you wish to keep original data.
 * **sneak** <on/off or blank>
     - Toggles whether or not you transfering areas will be announced in local area chat, e.g. "Gym: Phoenix leaves to Hallway." "Hallway: Phoenix enters from Gym."
 * **peek** <number> OR <name>
@@ -96,6 +96,8 @@ Requires Python 3.6+ and PyYAML.
     - Removes your CM status
 * **cmlogs** <on/off or blank>
     - Changes whether or not you can see CM-related logging features. Useful for alt. clients which you want to keep clean of OOC logging or if you don't need to meticulously track everyone down in the first place.
+* **cleanup** <yes>
+    - Cleans up the hub completely, restoring it to a pristine state. Use this to clean up after RP's. Warning: all unsaved data will be lost!
 * **lock** <id1> <id2> <idx>
     - Locks your area (or list of areas if you provide <id1> <id2> <idx>), preventing anyone outside of the invite list from speaking IC.
 * **unlock** <id1> <id2> <idx>

@@ -265,6 +265,9 @@ class ClientManager:
 
             self.area.remove_client(self)
             self.area = area
+            if len(area.pos_lock) > 0:
+                #We're going to change to the "default" poslock no matter what for the sake of puzzle rooms or the like having a "starting position".
+                self.change_position(area.pos_lock[0])
             area.new_client(self)
 
             if old_area.hub != self.area.hub:
@@ -459,6 +462,7 @@ class ClientManager:
             if pos not in ('', 'def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'jur', 'sea'):
                 raise ClientError('Invalid position. Possible values: def, pro, hld, hlp, jud, wit, jur, sea.')
             self.pos = pos
+            self.send_host_message('Position set to {}.'.format(pos))
 
         def set_mod_call_delay(self):
             self.mod_call_time = round(time.time() * 1000.0 + 30000)

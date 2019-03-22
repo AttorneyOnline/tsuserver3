@@ -530,6 +530,9 @@ class AOProtocol(asyncio.Protocol):
                 if area:
                     if len(area.pos_lock) > 0 and pos not in area.pos_lock:
                         pos = area.pos_lock[0]
+                        self.client.change_position(pos)
+                    if self.client.pos == '' and pos != None:
+                        self.client.change_position(pos)
                     area.send_command('MS', 'broadcast', pre, folder, anim, msg, pos, sfx, anim_type, cid,
                                         sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
                                         charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
@@ -551,6 +554,9 @@ class AOProtocol(asyncio.Protocol):
         else:
             if len(self.client.area.pos_lock) > 0 and pos not in self.client.area.pos_lock:
                 pos = self.client.area.pos_lock[0]
+                self.client.change_position(pos)
+            if self.client.pos == '' and pos != None:
+                self.client.change_position(pos)
             self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
                                         sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
                                         charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
@@ -885,8 +891,8 @@ class AOProtocol(asyncio.Protocol):
         DE#<id: int>#%
 
         """
-
-        self.client.area.evi_list.del_evidence(self.client, self.client.evi_list[int(args[0])])
+        idx = int(args[0])
+        self.client.area.evi_list.del_evidence(self.client, idx)
         self.client.area.broadcast_evidence_list()
 
     def net_cmd_ee(self, args):
@@ -898,29 +904,11 @@ class AOProtocol(asyncio.Protocol):
 
         if len(args) < 4:
             return
-
+        idx = int(args[0])
         evi = (args[1], args[2], args[3], 'all')
 
-        self.client.area.evi_list.edit_evidence(self.client, self.client.evi_list[int(args[0])], evi)
+        self.client.area.evi_list.edit_evidence(self.client, idx, evi)
         self.client.area.broadcast_evidence_list()
-
-        desc = self.client.area.evi_list.evidences[self.client.evi_list[int(
-            args[0])]].desc
-
-        if(args[1] == '/loadhub'):
-            if not self.client.is_mod and not self.client.is_cm:
-                self.client.send_host_message(
-                    "You must be authorized to do that.")
-                return
-            try:
-                self.client.hub.load(desc.strip())
-                self.client.send_host_message("Loading hub save data...")
-                self.client.area.evi_list.del_evidence(
-                    self.client, self.client.evi_list[int(args[0])])
-                self.client.area.broadcast_evidence_list()
-            except:
-                self.client.send_host_message(
-                    "Could not load hub save data! Try pressing the [X] and make sure if your save data is correct.")
 
     def make_valid_string(self, name):
         printable = string.ascii_letters + string.digits + string.punctuation

@@ -329,35 +329,34 @@ def ooc_cmd_pos(client, arg):
     if len(arg) == 0:
         client.change_position()
         client.area.broadcast_evidence_list()
-        client.send_host_message('Position reset.')
     else:
         try:
             client.change_position(arg)
         except ClientError:
             raise
         client.area.broadcast_evidence_list()
-        client.send_host_message('Position changed.')
 
 
 def ooc_cmd_poslock(client, arg):
-    if not client.is_mod and not client.is_cm:
-        raise ClientError('You must be authorized to do that.')
     if not arg:
         client.send_host_message(
             'Poslock is currently {}.'.format(client.area.pos_lock))
         return
+    if not client.is_mod and not client.is_cm:
+        raise ClientError('You must be authorized to do that.')
     if arg == 'clear':
         client.area.pos_lock.clear()
         client.area.send_host_message('Position lock cleared.')
         return
 
-    positions = list(set(arg.split())) #remove duplicates
+    args = arg.split()
+    positions = sorted(set(args),key=args.index) #remove duplicates while preserving order
     for pos in positions:
         if pos not in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'sea', 'jur'):
             raise ClientError('Invalid pos.')
        
     client.area.pos_lock = positions
-    client.area.send_host_message('Locked pos into {}.'.format(arg))
+    client.area.send_host_message('Locked pos into {}.'.format(positions))
 
 def ooc_cmd_forcepos(client, arg):
     if not client.is_cm and not client.is_mod:
@@ -1280,42 +1279,42 @@ def ooc_cmd_evi_swap(client, arg):
     except:
         raise ClientError("You must specify 2 numbers.")
 
-def ooc_cmd_evi_edit(client, arg):
-    #<id: int>#<name: string>#<description: string>#<image: string>#%
-    args = arg.split(' ')
-    if len(args) < 2:
-        raise ClientError("Usage: <id: int> <name: string> <description: string> <image: string>. Replace string with . (period) if you wish to keep original data.")
+# def ooc_cmd_evi_edit(client, arg):
+#     #<id: int>#<name: string>#<description: string>#<image: string>#%
+#     args = arg.split(' ')
+#     if len(args) < 2:
+#         raise ClientError("Usage: <id: int> <name: string> <description: string> <image: string>. Replace string with . (period) if you wish to keep original data.")
 
-    try:
-        ID = int(args[0])
+#     try:
+#         ID = int(args[0])
 
-        name = args[1]
+#         name = args[1]
 
-        if len(args) >= 3:
-            desc = args[2]
-        else:
-            desc = '.'
+#         if len(args) >= 3:
+#             desc = args[2]
+#         else:
+#             desc = '.'
 
-        if len(args) >= 4:
-            image = args[3]
-        else:
-            image = '.'
+#         if len(args) >= 4:
+#             image = args[3]
+#         else:
+#             image = '.'
 
-        ebdns = client.area.evi_list.evidences[client.evi_list[ID]]
-        if ebdns:
-            if name == '.':
-                name = ebdns.name
-            if desc == '.':
-                desc = ebdns.desc
-            if image == '.':
-                image = ebdns.image
+#         ebdns = client.area.evi_list.evidences[client.evi_list[ID]]
+#         if ebdns:
+#             if name == '.':
+#                 name = ebdns.name
+#             if desc == '.':
+#                 desc = ebdns.desc
+#             if image == '.':
+#                 image = ebdns.image
 
-        evi = (name, desc, image, 'all')
+#         evi = (name, desc, image, 'all')
 
-        client.area.evi_list.edit_evidence(client, client.evi_list[ID], evi)
-        client.area.broadcast_evidence_list()
-    except:
-        raise ArgumentError("Error: One or more arguments invalid. Usage: <id: int> <name: string> <description: string> <image: string>. Replace string with . if you wish to keep original data.")
+#         client.area.evi_list.edit_evidence(client, client.evi_list[ID], evi)
+#         client.area.broadcast_evidence_list()
+#     except:
+#         raise ArgumentError("Error: One or more arguments invalid. Usage: <id: int> <name: string> <description: string> <image: string>. Replace string with . if you wish to keep original data.")
 
 def ooc_cmd_cm(client, arg):
     if len(arg) > 0:
@@ -1340,6 +1339,8 @@ def ooc_cmd_cm(client, arg):
                     '{} has been made a co-CM.'.format(c.name))
                 c.send_host_message(
                     'You have been made a co-CM of hub {} by {}.'.format(client.hub.name, client.name))
+            if client.area.evidence_mod == 'HiddenCM':
+                client.area.broadcast_evidence_list()
         except:
             raise ClientError('You must specify a target. Use /cm <id>')
     else:
@@ -1372,6 +1373,8 @@ def ooc_cmd_uncm(client, arg):
         client.send_host_message(
             'You are no longer a CM of hub {}.'.format(client.hub.name))
         client.server.hub_manager.send_arup_cms()
+        if client.area.evidence_mod == 'HiddenCM':
+            client.area.broadcast_evidence_list()
 
 def ooc_cmd_cmlogs(client, arg):
     logtypes = ['MoveLog', 'RollLog', 'PMLog', 'CharLog']
@@ -1743,11 +1746,11 @@ def ooc_cmd_loadhub(client, arg):
     if arg == '':
         raise ClientError('No save name provided!')
 
-    try:
-        client.hub.yaml_load(arg)
-        client.send_host_message("Loading hub save data \'{}.yaml\'...".format(arg))
-    except:
-        raise ClientError('No save of that name exists!')
+    # try:
+    client.hub.yaml_load(arg)
+    client.send_host_message("Loading hub save data \'{}.yaml\'...".format(arg))
+    # except:
+    #     raise ClientError('No save of that name exists or the file is corrupted!')
 
 def ooc_cmd_akick(client, arg):
     if not client.is_mod and not client.is_cm:

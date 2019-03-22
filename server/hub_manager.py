@@ -83,7 +83,7 @@ class HubManager:
 				data['background'] = self.background
 				data['can_rename'] = self.can_rename
 				data['bglock'] = self.bg_lock
-				plock = ' '.join(map(str, self.poslock))
+				plock = ' '.join(map(str, self.pos_lock))
 				if len(plock) > 0:
 					data['poslock'] = plock
 				data['evidence_mod'] = self.evidence_mod
@@ -106,13 +106,14 @@ class HubManager:
 					area['can_rename'] = False
 				if 'bglock' not in area:
 					area['bglock'] = False
-				if 'poslock' not in area or len(area['poslock']) <= 0 or area['poslock'].lower() == "none":
+				if 'poslock' not in area or not area['poslock'] or len(area['poslock']) <= 0:
 					area['poslock'] = []
 				else:
-					area['poslock'] = area['poslock'].split()
-					for pos in area['poslock']:
+					_poslock = area['poslock'].split()
+					area['poslock'] = []
+					for pos in _poslock:
 						pos = pos.lower()
-						if pos in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'sea', 'jur') and not (pos in area['poslock']):
+						if pos in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'sea', 'jur') and not (pos in _poslock):
 							area['poslock'].append(pos)
 				if 'evidence_mod' not in area:
 					area['evidence_mod'] = 'FFA'
