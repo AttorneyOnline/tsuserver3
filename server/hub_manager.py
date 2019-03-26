@@ -32,8 +32,8 @@ from server.evidence import EvidenceList
 class HubManager:
 	class Hub:
 		class Area:
-			def __init__(self, area_id, server, hub, name, can_rename=True, background='default', bg_lock=False, pos_lock=[], evidence_mod = 'FFA',
-						locking_allowed = False, can_remove = False, accessible = [], desc = '', locked=False, hidden=False, max_players=-1, move_delay=0):
+			def __init__(self, area_id, server, hub, name, can_rename=True, background='default', bg_lock=False, pos_lock=None, evidence_mod = 'FFA',
+						locking_allowed = False, can_remove = False, accessible = None, desc = '', locked=False, hidden=False, max_players=-1, move_delay=0):
 				self.id = area_id
 				self.server = server
 				self.hub = hub
@@ -57,17 +57,23 @@ class HubManager:
 
 				self.update(name, can_rename, background, bg_lock, pos_lock, evidence_mod, locking_allowed, can_remove, accessible, desc, locked, hidden, max_players, move_delay)
 
-			def update(self, name, can_rename=True, background='default', bg_lock=False, pos_lock=[], evidence_mod = 'FFA',
-						locking_allowed = False, can_remove = False, accessible = [], desc = '', locked=False, hidden=False, max_players=-1, move_delay=0):
+			def update(self, name, can_rename=True, background='default', bg_lock=False, pos_lock=None, evidence_mod = 'FFA',
+						locking_allowed = False, can_remove = False, accessible = None, desc = '', locked=False, hidden=False, max_players=-1, move_delay=0):
 				self.name = name
 				self.can_rename = can_rename
 				self.background = background
 				self.bg_lock = bg_lock
-				self.pos_lock = pos_lock
+				if pos_lock is None:
+					self.pos_lock = []
+				else:
+					self.pos_lock = pos_lock
 				self.evidence_mod = evidence_mod
 				self.locking_allowed = locking_allowed
 				self.can_remove = can_remove
-				self.accessible = accessible
+				if accessible is None:
+					self.accessible = []
+				else:
+					self.accessible = accessible
 				self.desc = desc
 				self.is_locked = locked
 				self.is_hidden = hidden
@@ -470,7 +476,7 @@ class HubManager:
 				print("Bad area save file!")
 				raise AreaError('Bad save file!')
 
-		def create_area(self, name, can_rename=True, bg='default', bglock=False, poslock=[], evimod='FFA', lockallow=True, removable=True, accessible=[], desc='', locked=False, hidden=False):
+		def create_area(self, name, can_rename=True, bg='default', bglock=False, poslock=None, evimod='FFA', lockallow=True, removable=True, accessible=None, desc='', locked=False, hidden=False):
 			self.areas.append(
 				self.Area(self.cur_id, self.server, self, name, can_rename, bg, bglock, poslock, evimod, lockallow, removable, accessible, desc, locked, hidden))
 			self.cur_id += 1

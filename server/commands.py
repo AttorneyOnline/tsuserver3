@@ -1456,11 +1456,8 @@ def ooc_cmd_area_link(client, arg):
     if len(args) == 0:
         raise ArgumentError('At least one arg must be provided! Command usage: /area_link <id1> (id2) (idx)')
 
-    # if args[0].lower() == "self":
-    #     args[0] = client.area.id
-
     try:
-        area_from = client.hub.get_area_by_id(client.area.id) #client.hub.get_area_by_id(int(args[0]))
+        area_from = client.area #client.hub.get_area_by_id(int(args[0]))
         for a in args: #args[1:]:
             a = int(a)
             area_to = client.hub.get_area_by_id(a)
@@ -1491,7 +1488,7 @@ def ooc_cmd_area_unlink(client, arg):
     #     args[0] = client.area.id
 
     try:
-        area_from = client.hub.get_area_by_id(client.area.id) #client.hub.get_area_by_id(int(args[0]))
+        area_from = client.area #client.hub.get_area_by_id(int(args[0]))
         for a in args: #args[1:]:
             a = int(a)
             area_to = client.hub.get_area_by_id(a)
