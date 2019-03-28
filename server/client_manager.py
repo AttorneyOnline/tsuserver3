@@ -95,6 +95,8 @@ class ClientManager:
             self.wtce_time = [x * self.server.config['wtce_floodguard']['interval_length'] for x in
                               range(self.server.config['wtce_floodguard']['times_per_interval'])]
             
+            self.cm_save_time = 0
+
             self.last_move_time = 0
             self.move_delay = 0
 

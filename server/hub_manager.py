@@ -23,6 +23,8 @@ import oyaml as yaml #ordered yaml
 import re
 import string
 
+import os.path
+
 from collections import OrderedDict
 
 from server.constants import TargetType
@@ -112,14 +114,14 @@ class HubManager:
 					area['can_rename'] = False
 				if 'bglock' not in area:
 					area['bglock'] = False
-				if 'poslock' not in area or not area['poslock'] or len(area['poslock']) <= 0:
+				if 'poslock' not in area:
 					area['poslock'] = []
 				else:
-					_poslock = area['poslock'].split()
+					_poslock = area['poslock'].split(' ')
 					area['poslock'] = []
 					for pos in _poslock:
 						pos = pos.lower()
-						if pos in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'sea', 'jur') and not (pos in _poslock):
+						if pos in ['def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'sea', 'jur'] and not (pos in area['poslock']):
 							area['poslock'].append(pos)
 				if 'evidence_mod' not in area:
 					area['evidence_mod'] = 'FFA'
@@ -403,13 +405,19 @@ class HubManager:
 
 		def yaml_dump(self, name=''):
 			if name == '':
-				return
+				raise AreaError('Invalid name.')
 
-			with open('storage/hubs/{}.yaml'.format(name), 'w') as stream:
+			path = 'storage/hubs'
+			num_files = len([f for f in os.listdir(
+				path) if os.path.isfile(os.path.join(path, f))])
+			if (num_files >= 100): #yikes
+				raise AreaError('Server storage full! Please contact the server host to resolve this issue.')
+			with open('{}/{}.yaml'.format(path, name), 'w') as stream:
 				yaml.dump(self.yaml_save(), stream, default_flow_style=False)
 
 		def yaml_load(self, name=''):
-			with open('storage/hubs/{}.yaml'.format(name), 'r') as stream:
+			path = 'storage/hubs'
+			with open('{}/{}.yaml'.format(path, name), 'r') as stream:
 				hub = yaml.load(stream)
 
 			self.update_from_yaml(hub)

@@ -1728,14 +1728,23 @@ def ooc_cmd_listhubs(client, arg):
 
     client.send_host_message(text)
 
+
 def ooc_cmd_savehub(client, arg):
-    if not client.is_mod:
-        raise ClientError('Only mods can save the hub.')
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can save the hub.')
     if arg == '':
         raise ClientError('No save name provided!')
+    mute_length = 60 #one minute
+    if not client.is_mod and time.time() - client.cm_save_time < mute_length:
+        raise ClientError('You need to wait {} seconds to save the hub again.'.format(mute_length - int(time.time() - client.cm_save_time)))
 
-    client.hub.yaml_dump(arg)
-    client.send_host_message('The hub data has been saved on the server in a file named \'{}.yaml\'.'.format(arg))
+    try:
+        client.hub.yaml_dump(arg)
+        client.cm_save_time = time.time()
+        client.send_host_message('The hub data has been saved on the server in a file named \'{}.yaml\'.'.format(arg))
+        logger.log_server('Saving hub [{}] {} as {}.yaml.'.format(client.hub.id, client.hub.name, arg), client)
+    except AreaError:
+        raise
 
 def ooc_cmd_loadhub(client, arg):
     if not client.is_cm and not client.is_mod:
