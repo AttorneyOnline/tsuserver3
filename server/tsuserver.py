@@ -3,31 +3,34 @@
 # Copyright (C) 2016 argoneus <argoneuscze@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# GNU Affero General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import asyncio
-
-import yaml
 import json
 
+import websockets
+import yaml
+
 from server import logger
-from server.aoprotocol import AOProtocol
 from server.area_manager import AreaManager
 from server.ban_manager import BanManager
 from server.client_manager import ClientManager
-from server.districtclient import DistrictClient
 from server.exceptions import ServerError
-from server.masterserverclient import MasterServerClient
+from server.network.aoprotocol import AOProtocol
+from server.network.aoprotocol_ws import new_websocket_client
+from server.network.districtclient import DistrictClient
+from server.network.masterserverclient import MasterServerClient
+
 
 class TsuServer3:
     def __init__(self):
@@ -39,10 +42,10 @@ class TsuServer3:
         self.area_manager = AreaManager(self)
         self.ban_manager = BanManager()
         self.software = 'tsuserver3'
-        self.version = 'tsuserver3dev'
+        self.version = 'vanilla'
         self.release = 3
-        self.major_version = 1
-        self.minor_version = 1
+        self.major_version = 2
+        self.minor_version = 0
         self.ipid_list = {}
         self.hdid_list = {}
         self.char_list = None
@@ -70,6 +73,10 @@ class TsuServer3:
         ao_server_crt = loop.create_server(lambda: AOProtocol(self), bound_ip, self.config['port'])
         ao_server = loop.run_until_complete(ao_server_crt)
 
+        if self.config['use_websockets']:
+            ao_server_ws = websockets.serve(new_websocket_client(self), bound_ip, self.config['websocket_port'])
+            asyncio.ensure_future(ao_server_ws)
+
         if self.config['use_district']:
             self.district_client = DistrictClient(self)
             asyncio.ensure_future(self.district_client.connect(), loop=loop)
@@ -79,6 +86,7 @@ class TsuServer3:
             asyncio.ensure_future(self.ms_client.connect(), loop=loop)
 
         logger.log_debug('Server started.')
+        print('Server started and is listening on port {}'.format(self.config['port']))
 
         try:
             loop.run_forever()
@@ -111,64 +119,65 @@ class TsuServer3:
         return len(self.client_manager.clients)
 
     def load_config(self):
-        with open('config/config.yaml', 'r', encoding = 'utf-8') as cfg:
+        with open('config/config.yaml', 'r', encoding='utf-8') as cfg:
             self.config = yaml.load(cfg)
-            self.config['motd'] = self.config['motd'].replace('\\n', ' \n') 
+            self.config['motd'] = self.config['motd'].replace('\\n', ' \n')
         if 'music_change_floodguard' not in self.config:
-            self.config['music_change_floodguard'] = {'times_per_interval': 1,  'interval_length': 0, 'mute_length': 0}
+            self.config['music_change_floodguard'] = {'times_per_interval': 1, 'interval_length': 0, 'mute_length': 0}
+        if 'wtce_floodguard' not in self.config:
+            self.config['wtce_floodguard'] = {'times_per_interval': 1, 'interval_length': 0, 'mute_length': 0}
 
     def load_characters(self):
-        with open('config/characters.yaml', 'r', encoding = 'utf-8') as chars:
+        with open('config/characters.yaml', 'r', encoding='utf-8') as chars:
             self.char_list = yaml.load(chars)
         self.build_char_pages_ao1()
 
     def load_music(self):
-        with open('config/music.yaml', 'r', encoding = 'utf-8') as music:
+        with open('config/music.yaml', 'r', encoding='utf-8') as music:
             self.music_list = yaml.load(music)
         self.build_music_pages_ao1()
         self.build_music_list_ao2()
-        
+
     def load_ids(self):
         self.ipid_list = {}
         self.hdid_list = {}
-        #load ipids
+        # load ipids
         try:
-            with open('storage/ip_ids.json', 'r', encoding = 'utf-8') as whole_list:
+            with open('storage/ip_ids.json', 'r', encoding='utf-8') as whole_list:
                 self.ipid_list = json.loads(whole_list.read())
         except:
-            logger.log_debug('Failed to load ip_ids.json from ./storage. If ip_ids.json is exist then remove it.')
-        #load hdids
+            logger.log_debug('Failed to load ip_ids.json from ./storage. If ip_ids.json exists then remove it.')
+        # load hdids
         try:
-            with open('storage/hd_ids.json', 'r', encoding = 'utf-8') as whole_list:
+            with open('storage/hd_ids.json', 'r', encoding='utf-8') as whole_list:
                 self.hdid_list = json.loads(whole_list.read())
         except:
-            logger.log_debug('Failed to load hd_ids.json from ./storage. If hd_ids.json is exist then remove it.')
-           
+            logger.log_debug('Failed to load hd_ids.json from ./storage. If hd_ids.json exists then remove it.')
+
     def dump_ipids(self):
         with open('storage/ip_ids.json', 'w') as whole_list:
             json.dump(self.ipid_list, whole_list)
-            
+
     def dump_hdids(self):
         with open('storage/hd_ids.json', 'w') as whole_list:
             json.dump(self.hdid_list, whole_list)
-         
+
     def get_ipid(self, ip):
         if not (ip in self.ipid_list):
             self.ipid_list[ip] = len(self.ipid_list)
             self.dump_ipids()
         return self.ipid_list[ip]
-         
+
     def load_backgrounds(self):
-        with open('config/backgrounds.yaml', 'r', encoding = 'utf-8') as bgs:
+        with open('config/backgrounds.yaml', 'r', encoding='utf-8') as bgs:
             self.backgrounds = yaml.load(bgs)
-            
+
     def load_iniswaps(self):
         try:
-            with open('config/iniswaps.yaml', 'r', encoding = 'utf-8') as iniswaps:
+            with open('config/iniswaps.yaml', 'r', encoding='utf-8') as iniswaps:
                 self.allowed_iniswaps = yaml.load(iniswaps)
         except:
             logger.log_debug('cannot find iniswaps.yaml')
-            
 
     def build_char_pages_ao1(self):
         self.char_pages_ao1 = [self.char_list[x:x + 10] for x in range(0, len(self.char_list), 10)]
@@ -230,7 +239,7 @@ class TsuServer3:
 
     def broadcast_global(self, client, msg, as_mod=False):
         char_name = client.get_char_name()
-        ooc_name = '{}[{}][{}]'.format('<dollar>G', client.area.id, char_name)
+        ooc_name = '{}[{}][{}]'.format('<dollar>G', client.area.abbreviation, char_name)
         if as_mod:
             ooc_name += '[M]'
         self.send_all_cmd_pred('CT', ooc_name, msg, pred=lambda x: not x.muted_global)
@@ -238,12 +247,88 @@ class TsuServer3:
             self.district_client.send_raw_message(
                 'GLOBAL#{}#{}#{}#{}'.format(int(as_mod), client.area.id, char_name, msg))
 
+    def send_modchat(self, client, msg):
+        char_name = client.get_char_name()
+        name = client.name
+        ooc_name = '{}[{}][{}]'.format('<dollar>M', client.area.abbreviation, name)
+        self.send_all_cmd_pred('CT', ooc_name, msg, pred=lambda x: x.is_mod)
+        if self.config['use_district']:
+            self.district_client.send_raw_message(
+                'MODCHAT#{}#{}#{}'.format(client.area.id, char_name, msg))
+
     def broadcast_need(self, client, msg):
         char_name = client.get_char_name()
         area_name = client.area.name
-        area_id = client.area.id
+        area_id = client.area.abbreviation
         self.send_all_cmd_pred('CT', '{}'.format(self.config['hostname']),
                                '=== Advert ===\r\n{} in {} [{}] needs {}\r\n==============='
-                               .format(char_name, area_name, area_id, msg), pred=lambda x: not x.muted_adverts)
+                               .format(char_name, area_name, area_id, msg), '1', pred=lambda x: not x.muted_adverts)
         if self.config['use_district']:
             self.district_client.send_raw_message('NEED#{}#{}#{}#{}'.format(char_name, area_name, area_id, msg))
+
+    def send_arup(self, args):
+        """ Updates the area properties on the Case Café Custom Client.
+
+        Playercount: 
+            ARUP#0#<area1_p: int>#<area2_p: int>#...
+        Status:
+            ARUP#1##<area1_s: string>##<area2_s: string>#...
+        CM:
+            ARUP#2##<area1_cm: string>##<area2_cm: string>#...
+        Lockedness:
+            ARUP#3##<area1_l: string>##<area2_l: string>#...
+
+        """
+        if len(args) < 2:
+            # An argument count smaller than 2 means we only got the identifier of ARUP.
+            return
+        if args[0] not in (0, 1, 2, 3):
+            return
+
+        if args[0] == 0:
+            for part_arg in args[1:]:
+                try:
+                    sanitised = int(part_arg)
+                except:
+                    return
+        elif args[0] in (1, 2, 3):
+            for part_arg in args[1:]:
+                try:
+                    sanitised = str(part_arg)
+                except:
+                    return
+
+        self.send_all_cmd_pred('ARUP', *args, pred=lambda x: True)
+
+    def refresh(self):
+        with open('config/config.yaml', 'r') as cfg:
+            cfg_yaml = yaml.load(cfg)
+            self.config['motd'] = cfg_yaml['motd'].replace('\\n', ' \n')
+
+            # Reload moderator passwords list and unmod any moderator affected by
+            # credential changes or removals
+            if isinstance(self.config['modpass'], str):
+                self.config['modpass'] = {'default': self.config['modpass']}
+            if isinstance(cfg_yaml['modpass'], str):
+                cfg_yaml['modpass'] = {'default': cfg_yaml['modpass']}
+
+            for profile in self.config['modpass']:
+                if profile not in cfg_yaml['modpass'] or \
+                   self.config['modpass'][profile] != cfg_yaml['modpass'][profile]:
+                    for client in filter(lambda c: c.mod_profile_name == profile,
+                                         self.client_manager.clients):
+                        client.is_mod = False
+                        client.mod_profile_name = None
+                        logger.log_server('Unmodded due to credential changes.', client)
+                        logger.log_mod('Unmodded due to credential changes.', client)
+                        client.send_host_message('Your moderator credentials were changed.')
+            self.config['modpass'] = cfg_yaml['modpass']
+
+        with open('config/characters.yaml', 'r') as chars:
+            self.char_list = yaml.load(chars)
+        with open('config/music.yaml', 'r') as music:
+            self.music_list = yaml.load(music)
+        self.build_music_pages_ao1()
+        self.build_music_list_ao2()
+        with open('config/backgrounds.yaml', 'r') as bgs:
+            self.backgrounds = yaml.load(bgs)

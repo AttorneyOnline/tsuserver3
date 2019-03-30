@@ -1,0 +1,38 @@
+hostname: <dollar>H
+playerlimit: 100
+port: 50000
+local: false
+
+modpass: mod
+
+motd: Welcome to my server!
+
+use_websockets: true
+websocket_port: 50001
+
+use_district: false
+district_ip: 127.0.0.1
+district_port: 11037
+district_password: enter_password
+
+use_masterserver: true
+masterserver_ip: master.aceattorneyonline.com
+masterserver_port: 27016
+masterserver_name: My First Server
+masterserver_description: This is my flashy new server
+
+log_size: 1048576
+log_backups: 5
+
+timeout: 250
+debug: false
+
+music_change_floodguard:
+  times_per_interval: 3
+  interval_length: 20
+  mute_length: 180
+
+wtce_floodguard:
+  times_per_interval: 5
+  interval_length: 10
+  mute_length: 1000
