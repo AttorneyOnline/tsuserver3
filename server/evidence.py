@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+
 class EvidenceList:
     limit = 35
 
@@ -41,36 +42,40 @@ class EvidenceList:
 
     def __init__(self):
         self.evidences = []
-        self.poses = {'def': ['def', 'hld'],
-                      'pro': ['pro', 'hlp'],
-                      'wit': ['wit', 'sea'],
-                      'sea': ['sea', 'wit'],
-                      'hlp': ['hlp', 'pro'],
-                      'hld': ['hld', 'def'],
-                      'jud': ['jud', 'jur'],
-                      'jur': ['jur', 'jud'],
-                      'all': ['hlp', 'hld', 'wit', 'jud', 'pro', 'def', 'jur', 'sea', ''],
-                      'pos': []}
+        self.poses = {
+            'def': ['def', 'hld'],
+            'pro': ['pro', 'hlp'],
+            'wit': ['wit', 'sea'],
+            'sea': ['sea', 'wit'],
+            'hlp': ['hlp', 'pro'],
+            'hld': ['hld', 'def'],
+            'jud': ['jud', 'jur'],
+            'jur': ['jur', 'jud'],
+            'all':
+            ['hlp', 'hld', 'wit', 'jud', 'pro', 'def', 'jur', 'sea', ''],
+            'pos': []
+        }
 
     def login(self, client):
         if client.area.evidence_mod == 'FFA':
             return True
         elif client.area.evidence_mod == 'Mods' and \
             not client.is_mod:
-                return False
+            return False
         elif client.area.evidence_mod == 'CM' and \
             not client in client.area.owners and not client.is_mod:
-                return False
+            return False
         elif client.area.evidence_mod == 'HiddenCM' and \
             not client in client.area.owners and not client.is_mod:
-                return False
+            return False
         else:
             return True
 
     def correct_format(self, client, desc):
         if client.area.evidence_mod != 'HiddenCM':
             return True
-        elif desc[:9] == '<owner = ' and desc[9:12] in self.poses and desc[12:14] == '>\n':
+        elif desc[:9] == '<owner = ' and desc[9:12] in self.poses and desc[
+                12:14] == '>\n':
             # correct format: <owner = pos>\ndesc
             return True
         else:
@@ -83,7 +88,9 @@ class EvidenceList:
         if client.area.evidence_mod == 'HiddenCM':
             pos = 'pos'
         if len(self.evidences) >= self.limit:
-            client.send_host_message(f'You can\'t have more than {self.limit} evidence items at a time.')
+            client.send_host_message(
+                f'You can\'t have more than {self.limit} evidence items at a time.'
+            )
         else:
             self.evidences.append(self.Evidence(name, description, image, pos))
 
@@ -91,7 +98,8 @@ class EvidenceList:
         if not self.login(client):
             return
 
-        self.evidences[id1], self.evidences[id2] = self.evidences[id2], self.evidences[id1]
+        self.evidences[id1], self.evidences[id2] = self.evidences[
+            id2], self.evidences[id1]
 
     def create_evi_list(self, client):
         evi_list = []
@@ -100,8 +108,9 @@ class EvidenceList:
             if client.area.evidence_mod == 'HiddenCM' and self.login(client):
                 nums_list.append(i + 1)
                 evi = self.evidences[i]
-                evi_list.append(self.Evidence(evi.name, f'<owner = {evi.pos}>\n{evi.desc}', evi.image,
-                                              evi.pos).to_string())
+                evi_list.append(
+                    self.Evidence(evi.name, f'<owner = {evi.pos}>\n{evi.desc}',
+                                  evi.image, evi.pos).to_string())
             elif client.pos in self.poses[self.evidences[i].pos]:
                 nums_list.append(i + 1)
                 evi_list.append(self.evidences[i].to_string())
@@ -117,8 +126,10 @@ class EvidenceList:
         if not self.login(client):
             return
 
-        if client.area.evidence_mod == 'HiddenCM' and self.correct_format(client, arg[1]):
-            self.evidences[id] = self.Evidence(arg[0], arg[1][14:], arg[2], arg[1][9:12])
+        if client.area.evidence_mod == 'HiddenCM' and self.correct_format(
+                client, arg[1]):
+            self.evidences[id] = self.Evidence(arg[0], arg[1][14:], arg[2],
+                                               arg[1][9:12])
         elif client.area.evidence_mod == 'HiddenCM':
             client.send_host_message('You entered a wrong pos.')
         else:

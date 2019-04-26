@@ -33,9 +33,7 @@ class AOProtocolWS(AOProtocol):
 
         def get_extra_info(self, key):
             """ Returns the remote address. """
-            info = {
-                'peername': self.ws.remote_address
-            }
+            info = {'peername': self.ws.remote_address}
             return info[key]
 
         def write(self, message):

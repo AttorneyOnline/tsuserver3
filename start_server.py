@@ -26,9 +26,14 @@ def check_deps():
         print("Installing dependencies for you...")
         try:
             import sys, subprocess
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "-r", "requirements.txt"])
+            subprocess.check_call([
+                sys.executable, "-m", "pip", "install", "--user", "-r",
+                "requirements.txt"
+            ])
         except CalledProcessError:
-            print("Couldn't install it for you, because you don't have pip, or another error occurred.")
+            print(
+                "Couldn't install it for you, because you don't have pip, or another error occurred."
+            )
 
 
 def main():

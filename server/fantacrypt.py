@@ -40,6 +40,7 @@ def fanta_encrypt(data):
     ret = ''
     for char in data:
         val = ord(char) ^ ((key & 0xffff) >> 8)
-        ret += binascii.hexlify(val.to_bytes(1, byteorder='big')).decode().upper()
+        ret += binascii.hexlify(val.to_bytes(
+            1, byteorder='big')).decode().upper()
         key = ((val + key) * CRYPT_CONST_1) + CRYPT_CONST_2
     return ret

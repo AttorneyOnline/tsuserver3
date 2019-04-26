@@ -28,9 +28,20 @@ from server.exceptions import AreaError
 
 class AreaManager:
     class Area:
-        def __init__(self, area_id, server, name, background, bg_lock, evidence_mod='FFA', locking_allowed=False,
-                     iniswap_allowed=True, showname_changes_allowed=False, shouts_allowed=True, jukebox=False,
-                     abbreviation='', non_int_pres_only=False):
+        def __init__(self,
+                     area_id,
+                     server,
+                     name,
+                     background,
+                     bg_lock,
+                     evidence_mod='FFA',
+                     locking_allowed=False,
+                     iniswap_allowed=True,
+                     showname_changes_allowed=False,
+                     shouts_allowed=True,
+                     jukebox=False,
+                     abbreviation='',
+                     non_int_pres_only=False):
             self.iniswap_allowed = iniswap_allowed
             self.clients = set()
             self.invite_list = {}
@@ -58,7 +69,6 @@ class AreaManager:
             self.shouts_allowed = shouts_allowed
             self.abbreviation = abbreviation
             self.cards = dict()
-
             """
             #debug
             self.evidence_list.append(Evidence("WOW", "desc", "1.png"))
@@ -118,7 +128,9 @@ class AreaManager:
             return char_id not in [x.char_id for x in self.clients]
 
         def get_rand_avail_char_id(self):
-            avail_set = set(range(len(self.server.char_list))) - {x.char_id for x in self.clients}
+            avail_set = set(range(len(
+                self.server.char_list))) - {x.char_id
+                                            for x in self.clients}
             if len(avail_set) == 0:
                 raise AreaError('No available characters.')
             return random.choice(tuple(avail_set))
@@ -134,7 +146,10 @@ class AreaManager:
 
         def send_host_message(self, msg):
             self.send_command('CT', self.server.config['hostname'], msg, '1')
-            self.send_owner_command('CT', '[' + self.abbreviation + ']' + self.server.config['hostname'], msg, '1')
+            self.send_owner_command(
+                'CT',
+                '[' + self.abbreviation + ']' + self.server.config['hostname'],
+                msg, '1')
 
         def set_next_msg_delay(self, msg_length):
             delay = min(3000, 100 + 60 * msg_length)
@@ -157,7 +172,8 @@ class AreaManager:
                 self.remove_jukebox_vote(client, False)
             else:
                 self.remove_jukebox_vote(client, True)
-                self.jukebox_votes.append(self.JukeboxVote(client, music_name, length, showname))
+                self.jukebox_votes.append(
+                    self.JukeboxVote(client, music_name, length, showname))
                 client.send_host_message('Your song was added to the jukebox.')
                 if len(self.jukebox_votes) == 1:
                     self.start_jukebox()
@@ -169,7 +185,8 @@ class AreaManager:
                 if current_vote.client.id == client.id:
                     self.jukebox_votes.remove(current_vote)
             if not silent:
-                client.send_host_message('You removed your song from the jukebox.')
+                client.send_host_message(
+                    'You removed your song from the jukebox.')
 
         def get_jukebox_picked(self):
             if not self.jukebox:
@@ -206,9 +223,12 @@ class AreaManager:
                     self.jukebox_votes) > 1:
                 self.jukebox_prev_char_id = vote_picked.client.char_id
                 if vote_picked.showname == '':
-                    self.send_command('MC', vote_picked.name, vote_picked.client.char_id)
+                    self.send_command('MC', vote_picked.name,
+                                      vote_picked.client.char_id)
                 else:
-                    self.send_command('MC', vote_picked.name, vote_picked.client.char_id, vote_picked.showname)
+                    self.send_command('MC', vote_picked.name,
+                                      vote_picked.client.char_id,
+                                      vote_picked.showname)
             else:
                 self.send_command('MC', vote_picked.name, -1)
 
@@ -226,27 +246,29 @@ class AreaManager:
 
             if self.music_looper:
                 self.music_looper.cancel()
-            self.music_looper = asyncio.get_event_loop().call_later(vote_picked.length, lambda: self.start_jukebox())
+            self.music_looper = asyncio.get_event_loop().call_later(
+                vote_picked.length, lambda: self.start_jukebox())
 
         def play_music(self, name, cid, length=-1):
             self.send_command('MC', name, cid)
             if self.music_looper:
                 self.music_looper.cancel()
             if length > 0:
-                self.music_looper = asyncio.get_event_loop().call_later(length,
-                                                                        lambda: self.play_music(name, -1, length))
+                self.music_looper = asyncio.get_event_loop().call_later(
+                    length, lambda: self.play_music(name, -1, length))
 
         def play_music_shownamed(self, name, cid, showname, length=-1):
             self.send_command('MC', name, cid, showname)
             if self.music_looper:
                 self.music_looper.cancel()
             if length > 0:
-                self.music_looper = asyncio.get_event_loop().call_later(length,
-                                                                        lambda: self.play_music(name, -1, length))
+                self.music_looper = asyncio.get_event_loop().call_later(
+                    length, lambda: self.play_music(name, -1, length))
 
         def can_send_message(self, client):
             if self.cannot_ic_interact(client):
-                client.send_host_message('This is a locked area - ask the CM to speak.')
+                client.send_host_message(
+                    'This is a locked area - ask the CM to speak.')
                 return False
             return (time.time() * 1000.0 - self.next_message_time) > 0
 
@@ -265,15 +287,19 @@ class AreaManager:
             self.send_command('HP', side, val)
 
         def change_background(self, bg):
-            if bg.lower() not in (name.lower() for name in self.server.backgrounds):
+            if bg.lower() not in (name.lower()
+                                  for name in self.server.backgrounds):
                 raise AreaError('Invalid background name.')
             self.background = bg
             self.send_command('BN', self.background)
 
         def change_status(self, value):
-            allowed_values = ('idle', 'rp', 'casing', 'looking-for-players', 'lfp', 'recess', 'gaming')
+            allowed_values = ('idle', 'rp', 'casing', 'looking-for-players',
+                              'lfp', 'recess', 'gaming')
             if value.lower() not in allowed_values:
-                raise AreaError(f'Invalid status. Possible values: {", ".join(allowed_values)}')
+                raise AreaError(
+                    f'Invalid status. Possible values: {", ".join(allowed_values)}'
+                )
             if value.lower() == 'lfp':
                 value = 'looking-for-players'
             self.status = value.upper()
@@ -285,7 +311,8 @@ class AreaManager:
         def add_to_judgelog(self, client, msg):
             if len(self.judgelog) >= 10:
                 self.judgelog = self.judgelog[1:]
-            self.judgelog.append(f'{client.get_char_name()} ({client.get_ip()}) {msg}.')
+            self.judgelog.append(
+                f'{client.get_char_name()} ({client.get_ip()}) {msg}.')
 
         def add_music_playing(self, client, name):
             self.current_music_player = client.get_char_name()
@@ -350,11 +377,15 @@ class AreaManager:
             if 'noninterrupting_pres' not in item:
                 item['noninterrupting_pres'] = False
             if 'abbreviation' not in item:
-                item['abbreviation'] = self.get_generated_abbreviation(item['area'])
+                item['abbreviation'] = self.get_generated_abbreviation(
+                    item['area'])
             self.areas.append(
-                self.Area(self.cur_id, self.server, item['area'], item['background'], item['bglock'],
-                          item['evidence_mod'], item['locking_allowed'], item['iniswap_allowed'],
-                          item['showname_changes_allowed'], item['shouts_allowed'], item['jukebox'],
+                self.Area(self.cur_id, self.server, item['area'],
+                          item['background'], item['bglock'],
+                          item['evidence_mod'], item['locking_allowed'],
+                          item['iniswap_allowed'],
+                          item['showname_changes_allowed'],
+                          item['shouts_allowed'], item['jukebox'],
                           item['abbreviation'], item['noninterrupting_pres']))
             self.cur_id += 1
 

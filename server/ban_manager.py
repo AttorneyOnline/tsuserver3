@@ -22,7 +22,7 @@ from server.exceptions import ServerError
 
 class BanManager:
     def __init__(self):
-        self.bans = {} # "ipid": {"Reason": "reason"}
+        self.bans = {}  # "ipid": {"Reason": "reason"}
         self.load_banlist()
 
     def load_banlist(self):

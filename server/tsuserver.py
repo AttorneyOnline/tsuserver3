@@ -67,11 +67,14 @@ class TsuServer3:
         if self.config['local']:
             bound_ip = '127.0.0.1'
 
-        ao_server_crt = loop.create_server(lambda: AOProtocol(self), bound_ip, self.config['port'])
+        ao_server_crt = loop.create_server(lambda: AOProtocol(self), bound_ip,
+                                           self.config['port'])
         ao_server = loop.run_until_complete(ao_server_crt)
 
         if self.config['use_websockets']:
-            ao_server_ws = websockets.serve(new_websocket_client(self), bound_ip, self.config['websocket_port'])
+            ao_server_ws = websockets.serve(new_websocket_client(self),
+                                            bound_ip,
+                                            self.config['websocket_port'])
             asyncio.ensure_future(ao_server_ws)
 
         if self.config['use_masterserver']:
@@ -79,7 +82,8 @@ class TsuServer3:
             asyncio.ensure_future(self.ms_client.connect(), loop=loop)
 
         logger.log_debug('Server started.')
-        print('Server started and is listening on port {}'.format(self.config['port']))
+        print('Server started and is listening on port {}'.format(
+            self.config['port']))
 
         try:
             loop.run_forever()
@@ -93,7 +97,8 @@ class TsuServer3:
         loop.close()
 
     def get_version_string(self):
-        return str(self.release) + '.' + str(self.major_version) + '.' + str(self.minor_version)
+        return str(self.release) + '.' + str(self.major_version) + '.' + str(
+            self.minor_version)
 
     def new_client(self, transport):
         c = self.client_manager.new_client(transport)
@@ -114,9 +119,17 @@ class TsuServer3:
             self.config = yaml.load(cfg)
             self.config['motd'] = self.config['motd'].replace('\\n', ' \n')
         if 'music_change_floodguard' not in self.config:
-            self.config['music_change_floodguard'] = {'times_per_interval': 1, 'interval_length': 0, 'mute_length': 0}
+            self.config['music_change_floodguard'] = {
+                'times_per_interval': 1,
+                'interval_length': 0,
+                'mute_length': 0
+            }
         if 'wtce_floodguard' not in self.config:
-            self.config['wtce_floodguard'] = {'times_per_interval': 1, 'interval_length': 0, 'mute_length': 0}
+            self.config['wtce_floodguard'] = {
+                'times_per_interval': 1,
+                'interval_length': 0,
+                'mute_length': 0
+            }
 
     def load_characters(self):
         with open('config/characters.yaml', 'r', encoding='utf-8') as chars:
@@ -134,16 +147,22 @@ class TsuServer3:
         self.hdid_list = {}
         # load ipids
         try:
-            with open('storage/ip_ids.json', 'r', encoding='utf-8') as whole_list:
+            with open('storage/ip_ids.json', 'r',
+                      encoding='utf-8') as whole_list:
                 self.ipid_list = json.loads(whole_list.read())
         except:
-            logger.log_debug('Failed to load ip_ids.json from ./storage. If ip_ids.json exists then remove it.')
+            logger.log_debug(
+                'Failed to load ip_ids.json from ./storage. If ip_ids.json exists then remove it.'
+            )
         # load hdids
         try:
-            with open('storage/hd_ids.json', 'r', encoding='utf-8') as whole_list:
+            with open('storage/hd_ids.json', 'r',
+                      encoding='utf-8') as whole_list:
                 self.hdid_list = json.loads(whole_list.read())
         except:
-            logger.log_debug('Failed to load hd_ids.json from ./storage. If hd_ids.json exists then remove it.')
+            logger.log_debug(
+                'Failed to load hd_ids.json from ./storage. If hd_ids.json exists then remove it.'
+            )
 
     def dump_ipids(self):
         with open('storage/ip_ids.json', 'w') as whole_list:
@@ -165,15 +184,19 @@ class TsuServer3:
 
     def load_iniswaps(self):
         try:
-            with open('config/iniswaps.yaml', 'r', encoding='utf-8') as iniswaps:
+            with open('config/iniswaps.yaml', 'r',
+                      encoding='utf-8') as iniswaps:
                 self.allowed_iniswaps = yaml.load(iniswaps)
         except:
             logger.log_debug('cannot find iniswaps.yaml')
 
     def build_char_pages_ao1(self):
-        self.char_pages_ao1 = [self.char_list[x:x + 10] for x in range(0, len(self.char_list), 10)]
+        self.char_pages_ao1 = [
+            self.char_list[x:x + 10] for x in range(0, len(self.char_list), 10)
+        ]
         for i in range(len(self.char_list)):
-            self.char_pages_ao1[i // 10][i % 10] = '{}#{}&&0&&&0&'.format(i, self.char_list[i])
+            self.char_pages_ao1[i // 10][i % 10] = '{}#{}&&0&&&0&'.format(
+                i, self.char_list[i])
 
     def build_music_pages_ao1(self):
         self.music_pages_ao1 = []
@@ -184,12 +207,17 @@ class TsuServer3:
             index += 1
         # then add music
         for item in self.music_list:
-            self.music_pages_ao1.append('{}#{}'.format(index, item['category']))
+            self.music_pages_ao1.append('{}#{}'.format(index,
+                                                       item['category']))
             index += 1
             for song in item['songs']:
-                self.music_pages_ao1.append('{}#{}'.format(index, song['name']))
+                self.music_pages_ao1.append('{}#{}'.format(
+                    index, song['name']))
                 index += 1
-        self.music_pages_ao1 = [self.music_pages_ao1[x:x + 10] for x in range(0, len(self.music_pages_ao1), 10)]
+        self.music_pages_ao1 = [
+            self.music_pages_ao1[x:x + 10]
+            for x in range(0, len(self.music_pages_ao1), 10)
+        ]
 
     def build_music_list_ao2(self):
         self.music_list_ao2 = []
@@ -230,23 +258,32 @@ class TsuServer3:
 
     def broadcast_global(self, client, msg, as_mod=False):
         char_name = client.get_char_name()
-        ooc_name = '{}[{}][{}]'.format('<dollar>G', client.area.abbreviation, char_name)
+        ooc_name = '{}[{}][{}]'.format('<dollar>G', client.area.abbreviation,
+                                       char_name)
         if as_mod:
             ooc_name += '[M]'
-        self.send_all_cmd_pred('CT', ooc_name, msg, pred=lambda x: not x.muted_global)
+        self.send_all_cmd_pred('CT',
+                               ooc_name,
+                               msg,
+                               pred=lambda x: not x.muted_global)
 
     def send_modchat(self, client, msg):
         name = client.name
-        ooc_name = '{}[{}][{}]'.format('<dollar>M', client.area.abbreviation, name)
+        ooc_name = '{}[{}][{}]'.format('<dollar>M', client.area.abbreviation,
+                                       name)
         self.send_all_cmd_pred('CT', ooc_name, msg, pred=lambda x: x.is_mod)
 
     def broadcast_need(self, client, msg):
         char_name = client.get_char_name()
         area_name = client.area.name
         area_id = client.area.abbreviation
-        self.send_all_cmd_pred('CT', '{}'.format(self.config['hostname']),
-                               '=== Advert ===\r\n{} in {} [{}] needs {}\r\n==============='
-                               .format(char_name, area_name, area_id, msg), '1', pred=lambda x: not x.muted_adverts)
+        self.send_all_cmd_pred(
+            'CT',
+            '{}'.format(self.config['hostname']),
+            '=== Advert ===\r\n{} in {} [{}] needs {}\r\n==============='.
+            format(char_name, area_name, area_id, msg),
+            '1',
+            pred=lambda x: not x.muted_adverts)
 
     def send_arup(self, args):
         """ Update the area properties for 2.6 clients.
@@ -297,13 +334,17 @@ class TsuServer3:
             for profile in self.config['modpass']:
                 if profile not in cfg_yaml['modpass'] or \
                    self.config['modpass'][profile] != cfg_yaml['modpass'][profile]:
-                    for client in filter(lambda c: c.mod_profile_name == profile,
-                                         self.client_manager.clients):
+                    for client in filter(
+                            lambda c: c.mod_profile_name == profile,
+                            self.client_manager.clients):
                         client.is_mod = False
                         client.mod_profile_name = None
-                        logger.log_server('Unmodded due to credential changes.', client)
-                        logger.log_mod('Unmodded due to credential changes.', client)
-                        client.send_host_message('Your moderator credentials have been revoked.')
+                        logger.log_server(
+                            'Unmodded due to credential changes.', client)
+                        logger.log_mod('Unmodded due to credential changes.',
+                                       client)
+                        client.send_host_message(
+                            'Your moderator credentials have been revoked.')
             self.config['modpass'] = cfg_yaml['modpass']
 
         with open('config/characters.yaml', 'r') as chars:

@@ -73,12 +73,19 @@ class ClientManager:
             # flood-guard stuff
             self.mus_counter = 0
             self.mus_mute_time = 0
-            self.mus_change_time = [x * self.server.config['music_change_floodguard']['interval_length'] for x in
-                                    range(self.server.config['music_change_floodguard']['times_per_interval'])]
+            self.mus_change_time = [
+                x * self.server.config['music_change_floodguard']
+                ['interval_length']
+                for x in range(self.server.config['music_change_floodguard']
+                               ['times_per_interval'])
+            ]
             self.wtce_counter = 0
             self.wtce_mute_time = 0
-            self.wtce_time = [x * self.server.config['wtce_floodguard']['interval_length'] for x in
-                              range(self.server.config['wtce_floodguard']['times_per_interval'])]
+            self.wtce_time = [
+                x * self.server.config['wtce_floodguard']['interval_length']
+                for x in range(self.server.config['wtce_floodguard']
+                               ['times_per_interval'])
+            ]
 
         def send_raw_message(self, msg):
             self.transport.write(msg.encode('utf-8'))
@@ -92,7 +99,8 @@ class ClientManager:
                             lst[11] = evi_num
                             args = tuple(lst)
                             break
-                self.send_raw_message(f'{command}#{"#".join([str(x) for x in args])}#%')
+                self.send_raw_message(
+                    f'{command}#{"#".join([str(x) for x in args])}#%')
             else:
                 self.send_raw_message(f'{command}#%')
 
@@ -138,27 +146,35 @@ class ClientManager:
             self.char_id = char_id
             self.pos = ''
             self.send_command('PV', self.id, 'CID', self.char_id)
-            self.area.send_command('CharsCheck', *self.get_available_char_list())
+            self.area.send_command('CharsCheck',
+                                   *self.get_available_char_list())
 
             abbrev = self.area.abbreviation
             new_char = self.get_char_name()
-            logger.log_server(f'[{abbrev}]Changed character from {old_char} to {new_char}.', self)
+            logger.log_server(
+                f'[{abbrev}]Changed character from {old_char} to {new_char}.',
+                self)
 
         def change_music_cd(self):
             if self.is_mod or self in self.area.owners:
                 return 0
             if self.mus_mute_time:
-                if time.time() - self.mus_mute_time < self.server.config['music_change_floodguard']['mute_length']:
-                    return self.server.config['music_change_floodguard']['mute_length'] - (
-                            time.time() - self.mus_mute_time)
+                if time.time() - self.mus_mute_time < self.server.config[
+                        'music_change_floodguard']['mute_length']:
+                    return self.server.config['music_change_floodguard'][
+                        'mute_length'] - (time.time() - self.mus_mute_time)
                 else:
                     self.mus_mute_time = 0
-            times_per_interval = self.server.config['music_change_floodguard']['times_per_interval']
-            interval_length = self.server.config['music_change_floodguard']['interval_length']
+            times_per_interval = self.server.config['music_change_floodguard'][
+                'times_per_interval']
+            interval_length = self.server.config['music_change_floodguard'][
+                'interval_length']
             if time.time() - self.mus_change_time[
-                (self.mus_counter - times_per_interval + 1) % times_per_interval] < interval_length:
+                (self.mus_counter - times_per_interval + 1) %
+                    times_per_interval] < interval_length:
                 self.mus_mute_time = time.time()
-                return self.server.config['music_change_floodguard']['mute_length']
+                return self.server.config['music_change_floodguard'][
+                    'mute_length']
             self.mus_counter = (self.mus_counter + 1) % times_per_interval
             self.mus_change_time[self.mus_counter] = time.time()
             return 0
@@ -167,16 +183,22 @@ class ClientManager:
             if self.is_mod or self in self.area.owners:
                 return 0
             if self.wtce_mute_time:
-                if time.time() - self.wtce_mute_time < self.server.config['wtce_floodguard']['mute_length']:
-                    return self.server.config['wtce_floodguard']['mute_length'] - (time.time() - self.wtce_mute_time)
+                if time.time() - self.wtce_mute_time < self.server.config[
+                        'wtce_floodguard']['mute_length']:
+                    return self.server.config['wtce_floodguard'][
+                        'mute_length'] - (time.time() - self.wtce_mute_time)
                 else:
                     self.wtce_mute_time = 0
-            times_per_interval = self.server.config['wtce_floodguard']['times_per_interval']
-            interval_length = self.server.config['wtce_floodguard']['interval_length']
+            times_per_interval = self.server.config['wtce_floodguard'][
+                'times_per_interval']
+            interval_length = self.server.config['wtce_floodguard'][
+                'interval_length']
             if time.time() - self.wtce_time[
-                (self.wtce_counter - times_per_interval + 1) % times_per_interval] < interval_length:
+                (self.wtce_counter - times_per_interval + 1) %
+                    times_per_interval] < interval_length:
                 self.wtce_mute_time = time.time()
-                return self.server.config['music_change_floodguard']['mute_length']
+                return self.server.config['music_change_floodguard'][
+                    'mute_length']
             self.wtce_counter = (self.wtce_counter + 1) % times_per_interval
             self.wtce_time[self.wtce_counter] = time.time()
             return 0
@@ -194,7 +216,8 @@ class ClientManager:
                 raise ClientError('That area is locked!')
             if area.is_locked == area.Locked.SPECTATABLE and not self.is_mod and not self.id in area.invite_list:
                 self.send_host_message(
-                    'This area is spectatable, but not free - you cannot talk in-character unless invited.')
+                    'This area is spectatable, but not free - you cannot talk in-character unless invited.'
+                )
 
             if self.area.jukebox:
                 self.area.remove_jukebox_vote(self, True)
@@ -207,16 +230,20 @@ class ClientManager:
                     raise ClientError('No available characters in that area.')
 
                 self.change_character(new_char_id)
-                self.send_host_message(f'Character taken, switched to {self.get_char_name()}.')
+                self.send_host_message(
+                    f'Character taken, switched to {self.get_char_name()}.')
 
             self.area.remove_client(self)
             self.area = area
             area.new_client(self)
 
-            self.send_host_message(f'Changed area to {area.name} [{self.area.status}].')
+            self.send_host_message(
+                f'Changed area to {area.name} [{self.area.status}].')
             logger.log_server(
-                f'[{self.get_char_name()}] Changed area from {old_area.name} ({old_area.id}) to {self.area.name} ({self.area.id}).', self)
-            self.area.send_command('CharsCheck', *self.get_available_char_list())
+                f'[{self.get_char_name()}] Changed area from {old_area.name} ({old_area.id}) to {self.area.name} ({self.area.id}).',
+                self)
+            self.area.send_command('CharsCheck',
+                                   *self.get_available_char_list())
             self.send_command('HP', 1, self.area.hp_def)
             self.send_command('HP', 2, self.area.hp_pro)
             self.send_command('BN', self.area.background)
@@ -228,7 +255,11 @@ class ClientManager:
                 owner = 'FREE'
                 if len(area.owners) > 0:
                     owner = f'CMs: {area.get_cms()}'
-                lock = {area.Locked.FREE: '', area.Locked.SPECTATABLE: '[SPECTATABLE]', area.Locked.LOCKED: '[LOCKED]'}
+                lock = {
+                    area.Locked.FREE: '',
+                    area.Locked.SPECTATABLE: '[SPECTATABLE]',
+                    area.Locked.LOCKED: '[LOCKED]'
+                }
                 msg += f'\r\nArea {area.abbreviation}: {area.name} (users: {len(area.clients)}) [{area.status}][{owner}]{lock[area.is_locked]}'
                 if self.area == area:
                     msg += ' [*]'
@@ -243,7 +274,11 @@ class ClientManager:
             info += f'=== {area.name} ==='
             info += '\r\n'
 
-            lock = {area.Locked.FREE: '', area.Locked.SPECTATABLE: '[SPECTATABLE]', area.Locked.LOCKED: '[LOCKED]'}
+            lock = {
+                area.Locked.FREE: '',
+                area.Locked.SPECTATABLE: '[SPECTATABLE]',
+                area.Locked.LOCKED: '[LOCKED]'
+            }
             info += f'[{area.abbreviation}]: [{len(area.clients)} users][{area.status}]{lock[area.is_locked]}'
 
             sorted_clients = []
@@ -255,7 +290,8 @@ class ClientManager:
                     sorted_clients.append(owner)
             if not sorted_clients:
                 return ''
-            sorted_clients = sorted(sorted_clients, key=lambda x: x.get_char_name())
+            sorted_clients = sorted(sorted_clients,
+                                    key=lambda x: x.get_char_name())
             for c in sorted_clients:
                 info += '\r\n'
                 if c in area.owners:
@@ -277,14 +313,16 @@ class ClientManager:
                 cnt = 0
                 info = '\n== Area List =='
                 for i in range(len(self.server.area_manager.areas)):
-                    if len(self.server.area_manager.areas[i].clients) > 0 or len(
-                            self.server.area_manager.areas[i].owners) > 0:
+                    if len(self.server.area_manager.areas[i].clients
+                           ) > 0 or len(
+                               self.server.area_manager.areas[i].owners) > 0:
                         cnt += len(self.server.area_manager.areas[i].clients)
                         info += f'{self.get_area_info(i, mods)}'
                 info = f'Current online: {cnt}{info}'
             else:
                 try:
-                    area_client_cnt = len(self.server.area_manager.areas[area_id].clients)
+                    area_client_cnt = len(
+                        self.server.area_manager.areas[area_id].clients)
                     info = f'People in this area: {area_client_cnt}'
                     info += self.get_area_info(area_id, mods)
 
@@ -313,9 +351,13 @@ class ClientManager:
 
         def get_available_char_list(self):
             if len(self.charcurse) > 0:
-                avail_char_ids = set(range(len(self.server.char_list))) and set(self.charcurse)
+                avail_char_ids = set(range(len(
+                    self.server.char_list))) and set(self.charcurse)
             else:
-                avail_char_ids = set(range(len(self.server.char_list))) - {x.char_id for x in self.area.clients}
+                avail_char_ids = set(range(len(self.server.char_list))) - {
+                    x.char_id
+                    for x in self.area.clients
+                }
             char_list = [-1] * len(self.server.char_list)
             for x in avail_char_ids:
                 char_list[x] = 0
@@ -324,7 +366,9 @@ class ClientManager:
         def auth_mod(self, password):
             modpasses = self.server.config['modpass']
             if isinstance(modpasses, dict):
-                matches = list(filter(lambda k: modpasses[k]['password'] == password, modpasses))
+                matches = list(
+                    filter(lambda k: modpasses[k]['password'] == password,
+                           modpasses))
             elif modpasses == password:
                 matches = ['default']
 
@@ -346,8 +390,11 @@ class ClientManager:
             return self.server.char_list[self.char_id]
 
         def change_position(self, pos=''):
-            if pos not in ('', 'def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'jur', 'sea'):
-                raise ClientError('Invalid position. Possible values: def, pro, hld, hlp, jud, wit, jur, sea.')
+            if pos not in ('', 'def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'jur',
+                           'sea'):
+                raise ClientError(
+                    'Invalid position. Possible values: def, pro, hld, hlp, jud, wit, jur, sea.'
+                )
             self.pos = pos
 
         def set_mod_call_delay(self):
@@ -379,8 +426,9 @@ class ClientManager:
         self.clients_list = []
 
     def new_client(self, transport):
-        c = self.Client(self.server, transport, heappop(self.cur_id),
-                        self.server.get_ipid(transport.get_extra_info('peername')[0]))
+        c = self.Client(
+            self.server, transport, heappop(self.cur_id),
+            self.server.get_ipid(transport.get_extra_info('peername')[0]))
         self.clients.add(c)
         return c
 
@@ -414,10 +462,12 @@ class ClientManager:
                     if value.lower().startswith(client.get_ip().lower()):
                         targets.append(client)
                 elif key == TargetType.OOC_NAME:
-                    if value.lower().startswith(client.name.lower()) and client.name:
+                    if value.lower().startswith(
+                            client.name.lower()) and client.name:
                         targets.append(client)
                 elif key == TargetType.CHAR_NAME:
-                    if value.lower().startswith(client.get_char_name().lower()):
+                    if value.lower().startswith(
+                            client.get_char_name().lower()):
                         targets.append(client)
                 elif key == TargetType.ID:
                     if client.id == value:
