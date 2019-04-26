@@ -118,7 +118,7 @@ class AreaManager:
             return char_id not in [x.char_id for x in self.clients]
 
         def get_rand_avail_char_id(self):
-            avail_set = set(range(len(self.server.char_list))) - set([x.char_id for x in self.clients])
+            avail_set = set(range(len(self.server.char_list))) - {x.char_id for x in self.clients}
             if len(avail_set) == 0:
                 raise AreaError('No available characters.')
             return random.choice(tuple(avail_set))
@@ -273,7 +273,7 @@ class AreaManager:
         def change_status(self, value):
             allowed_values = ('idle', 'rp', 'casing', 'looking-for-players', 'lfp', 'recess', 'gaming')
             if value.lower() not in allowed_values:
-                raise AreaError('Invalid status. Possible values: {}'.format(', '.join(allowed_values)))
+                raise AreaError(f'Invalid status. Possible values: {", ".join(allowed_values)}')
             if value.lower() == 'lfp':
                 value = 'looking-for-players'
             self.status = value.upper()
@@ -285,7 +285,7 @@ class AreaManager:
         def add_to_judgelog(self, client, msg):
             if len(self.judgelog) >= 10:
                 self.judgelog = self.judgelog[1:]
-            self.judgelog.append('{} ({}) {}.'.format(client.get_char_name(), client.get_ip(), msg))
+            self.judgelog.append(f'{client.get_char_name()} ({client.get_ip()}) {msg}.')
 
         def add_music_playing(self, client, name):
             self.current_music_player = client.get_char_name()
@@ -293,7 +293,7 @@ class AreaManager:
             self.current_music = name
 
         def add_music_playing_shownamed(self, client, showname, name):
-            self.current_music_player = showname + " (" + client.get_char_name() + ")"
+            self.current_music_player = f'{showname} ({client.get_char_name()})'
             self.current_music_player_ipid = client.ipid
             self.current_music = name
 
@@ -312,7 +312,7 @@ class AreaManager:
         def get_cms(self):
             msg = ''
             for i in self.owners:
-                msg = msg + '[' + str(i.id) + '] ' + i.get_char_name() + ', '
+                msg += f'[{str(i.id)}] {i.get_char_name()}, '
             if len(msg) > 2:
                 msg = msg[:-2]
             return msg

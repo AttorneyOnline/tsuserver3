@@ -30,7 +30,6 @@ class ClientManager:
             self.is_checked = False
             self.transport = transport
             self.hdid = ''
-            self.pm_mute = False
             self.id = user_id
             self.char_id = -1
             self.area = server.area_manager.default_area()
@@ -52,7 +51,6 @@ class ClientManager:
             self.is_ooc_muted = False
             self.pm_mute = False
             self.mod_call_time = 0
-            self.in_rp = False
             self.ipid = ipid
 
             # Pairing stuff
@@ -64,7 +62,7 @@ class ClientManager:
 
             # Casing stuff
             self.casing_cm = False
-            self.casing_cases = ""
+            self.casing_cases = ''
             self.casing_def = False
             self.casing_pro = False
             self.casing_jud = False
@@ -94,20 +92,21 @@ class ClientManager:
                             lst[11] = evi_num
                             args = tuple(lst)
                             break
-                self.send_raw_message('{}#{}#%'.format(command, '#'.join([str(x) for x in args])))
+                self.send_raw_message(f'{command}#{"#".join([str(x) for x in args])}#%')
             else:
-                self.send_raw_message('{}#%'.format(command))
+                self.send_raw_message(f'{command}#%')
 
         def send_host_message(self, msg):
             self.send_command('CT', self.server.config['hostname'], msg, '1')
 
         def send_motd(self):
-            self.send_host_message('=== MOTD ===\r\n{}\r\n============='.format(self.server.config['motd']))
+            motd = self.server.config['motd']
+            self.send_host_message(f'=== MOTD ===\r\n{motd}\r\n=============')
 
         def send_player_count(self):
-            self.send_host_message('{}/{} players online.'.format(
-                self.server.get_player_count(),
-                self.server.config['playerlimit']))
+            players = self.server.get_player_count()
+            limit = self.server.config['playerlimit']
+            self.send_host_message(f'{players}/{limit} players online.')
 
         def is_valid_name(self, name):
             name_ws = name.replace(' ', '')
@@ -123,7 +122,7 @@ class ClientManager:
 
         def change_character(self, char_id, force=False):
             if not self.server.is_valid_char_id(char_id):
-                raise ClientError('Invalid Character ID.')
+                raise ClientError('Invalid character ID.')
             if len(self.charcurse) > 0:
                 if not char_id in self.charcurse:
                     raise ClientError('Character not available.')
@@ -140,8 +139,10 @@ class ClientManager:
             self.pos = ''
             self.send_command('PV', self.id, 'CID', self.char_id)
             self.area.send_command('CharsCheck', *self.get_available_char_list())
-            logger.log_server('[{}]Changed character from {} to {}.'
-                              .format(self.area.abbreviation, old_char, self.get_char_name()), self)
+
+            abbrev = self.area.abbreviation
+            new_char = self.get_char_name()
+            logger.log_server(f'[{abbrev}]Changed character from {old_char} to {new_char}.', self)
 
         def change_music_cd(self):
             if self.is_mod or self in self.area.owners:
@@ -190,10 +191,10 @@ class ClientManager:
             if self.area == area:
                 raise ClientError('User already in specified area.')
             if area.is_locked == area.Locked.LOCKED and not self.is_mod and not self.id in area.invite_list:
-                raise ClientError("That area is locked!")
+                raise ClientError('That area is locked!')
             if area.is_locked == area.Locked.SPECTATABLE and not self.is_mod and not self.id in area.invite_list:
                 self.send_host_message(
-                    'This area is spectatable, but not free - you will be unable to send messages ICly unless invited.')
+                    'This area is spectatable, but not free - you cannot talk in-character unless invited.')
 
             if self.area.jukebox:
                 self.area.remove_jukebox_vote(self, True)
@@ -206,16 +207,15 @@ class ClientManager:
                     raise ClientError('No available characters in that area.')
 
                 self.change_character(new_char_id)
-                self.send_host_message('Character taken, switched to {}.'.format(self.get_char_name()))
+                self.send_host_message(f'Character taken, switched to {self.get_char_name()}.')
 
             self.area.remove_client(self)
             self.area = area
             area.new_client(self)
 
-            self.send_host_message('Changed area to {}.[{}]'.format(area.name, self.area.status))
+            self.send_host_message(f'Changed area to {area.name} [{self.area.status}].')
             logger.log_server(
-                '[{}]Changed area from {} ({}) to {} ({}).'.format(self.get_char_name(), old_area.name, old_area.id,
-                                                                   self.area.name, self.area.id), self)
+                f'[{self.get_char_name()}] Changed area from {old_area.name} ({old_area.id}) to {self.area.name} ({self.area.id}).', self)
             self.area.send_command('CharsCheck', *self.get_available_char_list())
             self.send_command('HP', 1, self.area.hp_def)
             self.send_command('HP', 2, self.area.hp_pro)
@@ -224,13 +224,12 @@ class ClientManager:
 
         def send_area_list(self):
             msg = '=== Areas ==='
-            for i, area in enumerate(self.server.area_manager.areas):
+            for _, area in enumerate(self.server.area_manager.areas):
                 owner = 'FREE'
                 if len(area.owners) > 0:
-                    owner = 'CM: {}'.format(area.get_cms())
+                    owner = f'CMs: {area.get_cms()}'
                 lock = {area.Locked.FREE: '', area.Locked.SPECTATABLE: '[SPECTATABLE]', area.Locked.LOCKED: '[LOCKED]'}
-                msg += '\r\nArea {}: {} (users: {}) [{}][{}]{}'.format(area.abbreviation, area.name, len(area.clients),
-                                                                       area.status, owner, lock[area.is_locked])
+                msg += f'\r\nArea {area.abbreviation}: {area.name} (users: {len(area.clients)}) [{area.status}][{owner}]{lock[area.is_locked]}'
                 if self.area == area:
                     msg += ' [*]'
             self.send_host_message(msg)
@@ -241,12 +240,11 @@ class ClientManager:
                 area = self.server.area_manager.get_area_by_id(area_id)
             except AreaError:
                 raise
-            info += '=== {} ==='.format(area.name)
+            info += f'=== {area.name} ==='
             info += '\r\n'
 
             lock = {area.Locked.FREE: '', area.Locked.SPECTATABLE: '[SPECTATABLE]', area.Locked.LOCKED: '[LOCKED]'}
-            info += '[{}]: [{} users][{}]{}'.format(area.abbreviation, len(area.clients), area.status,
-                                                    lock[area.is_locked])
+            info += f'[{area.abbreviation}]: [{len(area.clients)} users][{area.status}]{lock[area.is_locked]}'
 
             sorted_clients = []
             for client in area.clients:
@@ -265,10 +263,9 @@ class ClientManager:
                         info += '[RCM]'
                     else:
                         info += '[CM]'
-                info += '[{}] {}'.format(c.id, c.get_char_name())
+                info += f'[{c.id}] {c.get_char_name()}'
                 if self.is_mod:
-                    info += ' ({})'.format(c.ipid)
-                    info += ': {}'.format(c.name)
+                    info += f' ({c.ipid}): {c.name}'
 
             return info
 
@@ -283,35 +280,16 @@ class ClientManager:
                     if len(self.server.area_manager.areas[i].clients) > 0 or len(
                             self.server.area_manager.areas[i].owners) > 0:
                         cnt += len(self.server.area_manager.areas[i].clients)
-                        info += '{}'.format(self.get_area_info(i, mods))
-                info = 'Current online: {}'.format(cnt) + info
+                        info += f'{self.get_area_info(i, mods)}'
+                info = f'Current online: {cnt}{info}'
             else:
                 try:
-                    info = 'People in this area: {}'.format(
-                        len(self.server.area_manager.areas[area_id].clients)) + self.get_area_info(area_id, mods)
+                    area_client_cnt = len(self.server.area_manager.areas[area_id].clients)
+                    info = f'People in this area: {area_client_cnt}'
+                    info += self.get_area_info(area_id, mods)
+
                 except AreaError:
                     raise
-            self.send_host_message(info)
-
-        def send_area_hdid(self, area_id):
-            try:
-                info = self.get_area_hdid(area_id)
-            except AreaError:
-                raise
-            self.send_host_message(info)
-
-        def send_all_area_hdid(self):
-            info = '== HDID List =='
-            for i in range(len(self.server.area_manager.areas)):
-                if len(self.server.area_manager.areas[i].clients) > 0:
-                    info += '\r\n{}'.format(self.get_area_hdid(i))
-            self.send_host_message(info)
-
-        def send_all_area_ip(self):
-            info = '== IP List =='
-            for i in range(len(self.server.area_manager.areas)):
-                if len(self.server.area_manager.areas[i].clients) > 0:
-                    info += '\r\n{}'.format(self.get_area_ip(i))
             self.send_host_message(info)
 
         def send_done(self):
@@ -337,7 +315,7 @@ class ClientManager:
             if len(self.charcurse) > 0:
                 avail_char_ids = set(range(len(self.server.char_list))) and set(self.charcurse)
             else:
-                avail_char_ids = set(range(len(self.server.char_list))) - set([x.char_id for x in self.area.clients])
+                avail_char_ids = set(range(len(self.server.char_list))) - {x.char_id for x in self.area.clients}
             char_list = [-1] * len(self.server.char_list)
             for x in avail_char_ids:
                 char_list[x] = 0
@@ -385,8 +363,8 @@ class ClientManager:
             return (time.time() * 1000.0 - self.case_call_time) > 0
 
         def disemvowel_message(self, message):
-            message = re.sub("[aeiou]", "", message, flags=re.IGNORECASE)
-            return re.sub(r"\s+", " ", message)
+            message = re.sub('[aeiou]', '', message, flags=re.IGNORECASE)
+            return re.sub(r'\s+', ' ', message)
 
         def shake_message(self, message):
             import random

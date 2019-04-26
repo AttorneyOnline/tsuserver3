@@ -80,12 +80,12 @@ class AOProtocol(asyncio.Protocol):
                     msg = msg[1:]
                 spl = msg.split('#', 1)
                 msg = '#'.join([fanta_decrypt(spl[0])] + spl[1:])
-                logger.log_debug('[INC][RAW]{}'.format(msg), self.client)
+                logger.log_debug(f'[INC][RAW]{msg}', self.client)
             try:
                 cmd, *args = msg.split('#')
                 self.net_cmd_dispatcher[cmd](self, args)
             except KeyError:
-                logger.log_debug('[INC][UNK]{}'.format(msg), self.client)
+                logger.log_debug(f'[INC][UNK]{msg}', self.client)
 
     def connection_made(self, transport):
         """ Called upon a new client connecting
@@ -158,11 +158,11 @@ class AOProtocol(asyncio.Protocol):
             self.client.server.dump_hdids()
         for ipid in self.client.server.hdid_list[self.client.hdid]:
             if self.server.ban_manager.is_banned(ipid):
-                logger.log_server('Banned user attempted to connect. HDID: {}.'.format(self.client.hdid), self.client)
+                logger.log_server(f'Banned user attempted to connect. HDID: {self.client.hdid}.', self.client)
                 self.client.send_command('BD', self.server.ban_manager.get_ban_reason(ipid))
                 self.client.disconnect()
                 return
-        logger.log_server('Connected. HDID: {}.'.format(self.client.hdid), self.client)
+        logger.log_server(f'Connected. HDID: {self.client.hdid}.', self.client)
         self.client.send_command('ID', self.client.id, self.server.software, self.server.get_version_string())
         self.client.send_command('PN', self.server.get_player_count() - 1, self.server.config['playerlimit'])
 
@@ -579,7 +579,7 @@ class AOProtocol(asyncio.Protocol):
             if len(spl) == 2:
                 arg = spl[1][:256]
             try:
-                called_function = 'ooc_cmd_{}'.format(cmd)
+                called_function = f'ooc_cmd_{cmd}'
                 getattr(commands, called_function)(self.client, arg)
             except AttributeError:
                 print('Attribute error with ' + called_function)
@@ -702,7 +702,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.area.send_command('RT', args[0])
         elif len(args) == 2:
             self.client.area.send_command('RT', args[0], args[1])
-        self.client.area.add_to_judgelog(self.client, 'used {}'.format(sign))
+        self.client.area.add_to_judgelog(self.client, f'used {sign}')
         logger.log_server("[{}]{} Used WT/CE".format(self.client.area.abbreviation, self.client.get_char_name()),
                           self.client)
 

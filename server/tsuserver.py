@@ -28,7 +28,6 @@ from server.client_manager import ClientManager
 from server.exceptions import ServerError
 from server.network.aoprotocol import AOProtocol
 from server.network.aoprotocol_ws import new_websocket_client
-from server.network.districtclient import DistrictClient
 from server.network.masterserverclient import MasterServerClient
 
 
@@ -58,9 +57,7 @@ class TsuServer3:
         self.load_music()
         self.load_backgrounds()
         self.load_ids()
-        self.district_client = None
         self.ms_client = None
-        self.rp_mode = False
         logger.setup_logger(debug=self.config['debug'])
 
     def start(self):
@@ -76,10 +73,6 @@ class TsuServer3:
         if self.config['use_websockets']:
             ao_server_ws = websockets.serve(new_websocket_client(self), bound_ip, self.config['websocket_port'])
             asyncio.ensure_future(ao_server_ws)
-
-        if self.config['use_district']:
-            self.district_client = DistrictClient(self)
-            asyncio.ensure_future(self.district_client.connect(), loop=loop)
 
         if self.config['use_masterserver']:
             self.ms_client = MasterServerClient(self)
@@ -104,8 +97,6 @@ class TsuServer3:
 
     def new_client(self, transport):
         c = self.client_manager.new_client(transport)
-        if self.rp_mode:
-            c.in_rp = True
         c.server = self
         c.area = self.area_manager.default_area()
         c.area.new_client(c)
@@ -189,7 +180,7 @@ class TsuServer3:
         index = 0
         # add areas first
         for area in self.area_manager.areas:
-            self.music_pages_ao1.append('{}#{}'.format(index, area.name))
+            self.music_pages_ao1.append(f'{index}#{area.name}')
             index += 1
         # then add music
         for item in self.music_list:
@@ -243,18 +234,11 @@ class TsuServer3:
         if as_mod:
             ooc_name += '[M]'
         self.send_all_cmd_pred('CT', ooc_name, msg, pred=lambda x: not x.muted_global)
-        if self.config['use_district']:
-            self.district_client.send_raw_message(
-                'GLOBAL#{}#{}#{}#{}'.format(int(as_mod), client.area.id, char_name, msg))
 
     def send_modchat(self, client, msg):
-        char_name = client.get_char_name()
         name = client.name
         ooc_name = '{}[{}][{}]'.format('<dollar>M', client.area.abbreviation, name)
         self.send_all_cmd_pred('CT', ooc_name, msg, pred=lambda x: x.is_mod)
-        if self.config['use_district']:
-            self.district_client.send_raw_message(
-                'MODCHAT#{}#{}#{}'.format(client.area.id, char_name, msg))
 
     def broadcast_need(self, client, msg):
         char_name = client.get_char_name()
@@ -263,11 +247,9 @@ class TsuServer3:
         self.send_all_cmd_pred('CT', '{}'.format(self.config['hostname']),
                                '=== Advert ===\r\n{} in {} [{}] needs {}\r\n==============='
                                .format(char_name, area_name, area_id, msg), '1', pred=lambda x: not x.muted_adverts)
-        if self.config['use_district']:
-            self.district_client.send_raw_message('NEED#{}#{}#{}#{}'.format(char_name, area_name, area_id, msg))
 
     def send_arup(self, args):
-        """ Updates the area properties on the Case Café Custom Client.
+        """ Update the area properties for 2.6 clients.
 
         Playercount: 
             ARUP#0#<area1_p: int>#<area2_p: int>#...
@@ -321,7 +303,7 @@ class TsuServer3:
                         client.mod_profile_name = None
                         logger.log_server('Unmodded due to credential changes.', client)
                         logger.log_mod('Unmodded due to credential changes.', client)
-                        client.send_host_message('Your moderator credentials were changed.')
+                        client.send_host_message('Your moderator credentials have been revoked.')
             self.config['modpass'] = cfg_yaml['modpass']
 
         with open('config/characters.yaml', 'r') as chars:
