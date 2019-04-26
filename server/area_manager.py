@@ -37,7 +37,7 @@ class AreaManager:
                      evidence_mod='FFA',
                      locking_allowed=False,
                      iniswap_allowed=True,
-                     showname_changes_allowed=False,
+                     showname_changes_allowed=True,
                      shouts_allowed=True,
                      jukebox=False,
                      abbreviation='',
@@ -104,7 +104,7 @@ class AreaManager:
             self.blankposting_allowed = True
             self.invite_list = {}
             self.server.area_manager.send_arup_lock()
-            self.send_host_message('This area is open now.')
+            self.broadcast_ooc('This area is open now.')
 
         def spectator(self):
             self.is_locked = self.Locked.SPECTATABLE
@@ -113,7 +113,7 @@ class AreaManager:
             for i in self.owners:
                 self.invite_list[i.id] = None
             self.server.area_manager.send_arup_lock()
-            self.send_host_message('This area is spectatable now.')
+            self.broadcast_ooc('This area is spectatable now.')
 
         def lock(self):
             self.is_locked = self.Locked.LOCKED
@@ -122,7 +122,7 @@ class AreaManager:
             for i in self.owners:
                 self.invite_list[i.id] = None
             self.server.area_manager.send_arup_lock()
-            self.send_host_message('This area is locked now.')
+            self.broadcast_ooc('This area is locked now.')
 
         def is_char_available(self, char_id):
             return char_id not in [x.char_id for x in self.clients]
@@ -141,10 +141,10 @@ class AreaManager:
 
         def send_owner_command(self, cmd, *args):
             for c in self.owners:
-                if not c in self.clients:
+                if c not in self.clients:
                     c.send_command(cmd, *args)
 
-        def send_host_message(self, msg):
+        def broadcast_ooc(self, msg):
             self.send_command('CT', self.server.config['hostname'], msg, '1')
             self.send_owner_command(
                 'CT',
@@ -161,7 +161,7 @@ class AreaManager:
             if '..' in anim1 or '..' in anim2:
                 return True
             for char_link in self.server.allowed_iniswaps:
-                if client.get_char_name() in char_link and char in char_link:
+                if client.char_name in char_link and char in char_link:
                     return False
             return True
 
@@ -174,7 +174,7 @@ class AreaManager:
                 self.remove_jukebox_vote(client, True)
                 self.jukebox_votes.append(
                     self.JukeboxVote(client, music_name, length, showname))
-                client.send_host_message('Your song was added to the jukebox.')
+                client.send_ooc('Your song was added to the jukebox.')
                 if len(self.jukebox_votes) == 1:
                     self.start_jukebox()
 
@@ -185,7 +185,7 @@ class AreaManager:
                 if current_vote.client.id == client.id:
                     self.jukebox_votes.remove(current_vote)
             if not silent:
-                client.send_host_message(
+                client.send_ooc(
                     'You removed your song from the jukebox.')
 
         def get_jukebox_picked(self):
@@ -267,7 +267,7 @@ class AreaManager:
 
         def can_send_message(self, client):
             if self.cannot_ic_interact(client):
-                client.send_host_message(
+                client.send_ooc(
                     'This is a locked area - ask the CM to speak.')
                 return False
             return (time.time() * 1000.0 - self.next_message_time) > 0
@@ -312,15 +312,15 @@ class AreaManager:
             if len(self.judgelog) >= 10:
                 self.judgelog = self.judgelog[1:]
             self.judgelog.append(
-                f'{client.get_char_name()} ({client.get_ip()}) {msg}.')
+                f'{client.char_name} ({client.ip}) {msg}.')
 
         def add_music_playing(self, client, name):
-            self.current_music_player = client.get_char_name()
+            self.current_music_player = client.char_name
             self.current_music_player_ipid = client.ipid
             self.current_music = name
 
         def add_music_playing_shownamed(self, client, showname, name):
-            self.current_music_player = f'{showname} ({client.get_char_name()})'
+            self.current_music_player = f'{showname} ({client.char_name})'
             self.current_music_player_ipid = client.ipid
             self.current_music = name
 
@@ -339,7 +339,7 @@ class AreaManager:
         def get_cms(self):
             msg = ''
             for i in self.owners:
-                msg += f'[{str(i.id)}] {i.get_char_name()}, '
+                msg += f'[{str(i.id)}] {i.char_name}, '
             if len(msg) > 2:
                 msg = msg[:-2]
             return msg
@@ -369,7 +369,7 @@ class AreaManager:
             if 'iniswap_allowed' not in item:
                 item['iniswap_allowed'] = True
             if 'showname_changes_allowed' not in item:
-                item['showname_changes_allowed'] = False
+                item['showname_changes_allowed'] = True
             if 'shouts_allowed' not in item:
                 item['shouts_allowed'] = True
             if 'jukebox' not in item:
@@ -377,7 +377,7 @@ class AreaManager:
             if 'noninterrupting_pres' not in item:
                 item['noninterrupting_pres'] = False
             if 'abbreviation' not in item:
-                item['abbreviation'] = self.get_generated_abbreviation(
+                item['abbreviation'] = self.abbreviate(
                     item['area'])
             self.areas.append(
                 self.Area(self.cur_id, self.server, item['area'],
@@ -404,7 +404,8 @@ class AreaManager:
                 return area
         raise AreaError('Area not found.')
 
-    def get_generated_abbreviation(self, name):
+    def abbreviate(self, name):
+        """Abbreviate the name of a room."""
         if name.lower().startswith("courtroom"):
             return "CR" + name.split()[-1]
         elif name.lower().startswith("area"):

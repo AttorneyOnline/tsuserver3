@@ -88,7 +88,7 @@ class EvidenceList:
         if client.area.evidence_mod == 'HiddenCM':
             pos = 'pos'
         if len(self.evidences) >= self.limit:
-            client.send_host_message(
+            client.send_ooc(
                 f'You can\'t have more than {self.limit} evidence items at a time.'
             )
         else:
@@ -131,6 +131,6 @@ class EvidenceList:
             self.evidences[id] = self.Evidence(arg[0], arg[1][14:], arg[2],
                                                arg[1][9:12])
         elif client.area.evidence_mod == 'HiddenCM':
-            client.send_host_message('You entered a wrong pos.')
+            client.send_ooc('You entered a wrong pos.')
         else:
             self.evidences[id] = self.Evidence(arg[0], arg[1], arg[2], arg[3])

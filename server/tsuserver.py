@@ -257,7 +257,7 @@ class TsuServer3:
                 client.send_command(cmd, *args)
 
     def broadcast_global(self, client, msg, as_mod=False):
-        char_name = client.get_char_name()
+        char_name = client.char_name
         ooc_name = '{}[{}][{}]'.format('<dollar>G', client.area.abbreviation,
                                        char_name)
         if as_mod:
@@ -274,7 +274,7 @@ class TsuServer3:
         self.send_all_cmd_pred('CT', ooc_name, msg, pred=lambda x: x.is_mod)
 
     def broadcast_need(self, client, msg):
-        char_name = client.get_char_name()
+        char_name = client.char_name
         area_name = client.area.name
         area_id = client.area.abbreviation
         self.send_all_cmd_pred(
@@ -343,7 +343,7 @@ class TsuServer3:
                             'Unmodded due to credential changes.', client)
                         logger.log_mod('Unmodded due to credential changes.',
                                        client)
-                        client.send_host_message(
+                        client.send_ooc(
                             'Your moderator credentials have been revoked.')
             self.config['modpass'] = cfg_yaml['modpass']
 

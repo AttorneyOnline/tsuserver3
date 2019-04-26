@@ -104,17 +104,17 @@ class ClientManager:
             else:
                 self.send_raw_message(f'{command}#%')
 
-        def send_host_message(self, msg):
+        def send_ooc(self, msg):
             self.send_command('CT', self.server.config['hostname'], msg, '1')
 
         def send_motd(self):
             motd = self.server.config['motd']
-            self.send_host_message(f'=== MOTD ===\r\n{motd}\r\n=============')
+            self.send_ooc(f'=== MOTD ===\r\n{motd}\r\n=============')
 
         def send_player_count(self):
             players = self.server.get_player_count()
             limit = self.server.config['playerlimit']
-            self.send_host_message(f'{players}/{limit} players online.')
+            self.send_ooc(f'{players}/{limit} players online.')
 
         def is_valid_name(self, name):
             name_ws = name.replace(' ', '')
@@ -142,7 +142,7 @@ class ClientManager:
                             client.char_select()
                 else:
                     raise ClientError('Character not available.')
-            old_char = self.get_char_name()
+            old_char = self.char_name
             self.char_id = char_id
             self.pos = ''
             self.send_command('PV', self.id, 'CID', self.char_id)
@@ -150,7 +150,7 @@ class ClientManager:
                                    *self.get_available_char_list())
 
             abbrev = self.area.abbreviation
-            new_char = self.get_char_name()
+            new_char = self.char_name
             logger.log_server(
                 f'[{abbrev}]Changed character from {old_char} to {new_char}.',
                 self)
@@ -215,7 +215,7 @@ class ClientManager:
             if area.is_locked == area.Locked.LOCKED and not self.is_mod and not self.id in area.invite_list:
                 raise ClientError('That area is locked!')
             if area.is_locked == area.Locked.SPECTATABLE and not self.is_mod and not self.id in area.invite_list:
-                self.send_host_message(
+                self.send_ooc(
                     'This area is spectatable, but not free - you cannot talk in-character unless invited.'
                 )
 
@@ -230,17 +230,17 @@ class ClientManager:
                     raise ClientError('No available characters in that area.')
 
                 self.change_character(new_char_id)
-                self.send_host_message(
-                    f'Character taken, switched to {self.get_char_name()}.')
+                self.send_ooc(
+                    f'Character taken, switched to {self.char_name}.')
 
             self.area.remove_client(self)
             self.area = area
             area.new_client(self)
 
-            self.send_host_message(
+            self.send_ooc(
                 f'Changed area to {area.name} [{self.area.status}].')
             logger.log_server(
-                f'[{self.get_char_name()}] Changed area from {old_area.name} ({old_area.id}) to {self.area.name} ({self.area.id}).',
+                f'[{self.char_name}] Changed area from {old_area.name} ({old_area.id}) to {self.area.name} ({self.area.id}).',
                 self)
             self.area.send_command('CharsCheck',
                                    *self.get_available_char_list())
@@ -263,7 +263,7 @@ class ClientManager:
                 msg += f'\r\nArea {area.abbreviation}: {area.name} (users: {len(area.clients)}) [{area.status}][{owner}]{lock[area.is_locked]}'
                 if self.area == area:
                     msg += ' [*]'
-            self.send_host_message(msg)
+            self.send_ooc(msg)
 
         def get_area_info(self, area_id, mods):
             info = '\r\n'
@@ -291,7 +291,7 @@ class ClientManager:
             if not sorted_clients:
                 return ''
             sorted_clients = sorted(sorted_clients,
-                                    key=lambda x: x.get_char_name())
+                                    key=lambda x: x.char_name)
             for c in sorted_clients:
                 info += '\r\n'
                 if c in area.owners:
@@ -299,7 +299,7 @@ class ClientManager:
                         info += '[RCM]'
                     else:
                         info += '[CM]'
-                info += f'[{c.id}] {c.get_char_name()}'
+                info += f'[{c.id}] {c.char_name}'
                 if self.is_mod:
                     info += f' ({c.ipid}): {c.name}'
 
@@ -328,7 +328,7 @@ class ClientManager:
 
                 except AreaError:
                     raise
-            self.send_host_message(info)
+            self.send_ooc(info)
 
         def send_done(self):
             self.send_command('CharsCheck', *self.get_available_char_list())
@@ -381,10 +381,12 @@ class ClientManager:
             else:
                 raise ClientError('Invalid password.')
 
-        def get_ip(self):
+        @property
+        def ip(self):
             return self.ipid
 
-        def get_char_name(self):
+        @property
+        def char_name(self):
             if self.char_id == -1:
                 return 'CHAR_SELECT'
             return self.server.char_list[self.char_id]
@@ -459,7 +461,7 @@ class ClientManager:
         for area in areas:
             for client in area.clients:
                 if key == TargetType.IP:
-                    if value.lower().startswith(client.get_ip().lower()):
+                    if value.lower().startswith(client.ip.lower()):
                         targets.append(client)
                 elif key == TargetType.OOC_NAME:
                     if value.lower().startswith(
@@ -467,7 +469,7 @@ class ClientManager:
                         targets.append(client)
                 elif key == TargetType.CHAR_NAME:
                     if value.lower().startswith(
-                            client.get_char_name().lower()):
+                            client.char_name.lower()):
                         targets.append(client)
                 elif key == TargetType.ID:
                     if client.id == value:

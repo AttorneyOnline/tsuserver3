@@ -72,7 +72,7 @@ def log_mod(msg, client=None):
 def parse_client_info(client):
     if client is None:
         return ''
-    info = client.get_ip()
+    info = client.ip
     if client.is_mod:
         return f'[{info:<15}][{client.id:<3}][{client.name}][MOD]'
     return f'[{info:<15}][{client.id:<3}][{client.name}]'
