@@ -11,6 +11,10 @@ __all__ = [
 
 
 def ooc_cmd_disemvowel(client, arg):
+    """
+    Remove all vowels from a user's IC chat.
+    Usage: /disemvowel <id>
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     elif len(arg) == 0:
@@ -30,6 +34,10 @@ def ooc_cmd_disemvowel(client, arg):
 
 
 def ooc_cmd_undisemvowel(client, arg):
+    """
+    Give back the freedom of vowels to a user.
+    Usage: /undisemvowel <id>
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     elif len(arg) == 0:
@@ -50,6 +58,10 @@ def ooc_cmd_undisemvowel(client, arg):
 
 
 def ooc_cmd_shake(client, arg):
+    """
+    Scramble the words in a user's IC chat.
+    Usage: /shake <id>
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     elif len(arg) == 0:
@@ -69,6 +81,10 @@ def ooc_cmd_shake(client, arg):
 
 
 def ooc_cmd_unshake(client, arg):
+    """
+    Give back the freedom of coherent grammar to a user.
+    Usage: /unshake <id>
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     elif len(arg) == 0:

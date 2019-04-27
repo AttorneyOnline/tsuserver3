@@ -13,6 +13,10 @@ __all__ = [
 
 
 def ooc_cmd_currentmusic(client, arg):
+    """
+    Show the current music playing.
+    Usage: /currentmusic
+    """
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
     if client.area.current_music == '':
@@ -29,6 +33,11 @@ def ooc_cmd_currentmusic(client, arg):
 
 
 def ooc_cmd_jukebox_toggle(client, arg):
+    """
+    Toggle jukebox mode. While jukebox mode is on, all music changes become
+    votes for the next track, rather than changing the track immediately.
+    Usage: /jukebox_toggle
+    """
     if not client.is_mod and not client in client.area.owners:
         raise ClientError('You must be authorized to do that.')
     if len(arg) != 0:
@@ -40,6 +49,10 @@ def ooc_cmd_jukebox_toggle(client, arg):
 
 
 def ooc_cmd_jukebox_skip(client, arg):
+    """
+    Skip the current track.
+    Usage: /jukebox_skip
+    """
     if not client.is_mod and not client in client.area.owners:
         raise ClientError('You must be authorized to do that.')
     if len(arg) != 0:
@@ -64,6 +77,10 @@ def ooc_cmd_jukebox_skip(client, arg):
 
 
 def ooc_cmd_jukebox(client, arg):
+    """
+    Show information about the jukebox's queue and votes.
+    Usage: /jukebox
+    """
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
     if not client.area.jukebox:
@@ -113,6 +130,10 @@ def ooc_cmd_jukebox(client, arg):
 
 
 def ooc_cmd_play(client, arg):
+    """
+    Play a track.
+    Usage: /play <name>
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
@@ -126,6 +147,10 @@ def ooc_cmd_play(client, arg):
 
 
 def ooc_cmd_blockdj(client, arg):
+    """
+    Prevent a user from changing music.
+    Usage: /blockdj <id>
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
@@ -150,6 +175,10 @@ def ooc_cmd_blockdj(client, arg):
 
 
 def ooc_cmd_unblockdj(client, arg):
+    """
+    Unblock a user from changing music.
+    Usage: /unblockdj <id>
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:

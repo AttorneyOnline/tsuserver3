@@ -18,6 +18,12 @@ __all__ = [
 
 
 def ooc_cmd_switch(client, arg):
+    """
+    Switch to another character. If moderator and the specified character is
+    currently being used, the current user of that character will be
+    automatically reassigned a character.
+    Usage: /switch <name>
+    """
     if len(arg) == 0:
         raise ArgumentError('You must specify a character name.')
     try:
@@ -32,6 +38,10 @@ def ooc_cmd_switch(client, arg):
 
 
 def ooc_cmd_pos(client, arg):
+    """
+    Set the place your character resides in the room.
+    Usage: /pos <name>
+    """
     if len(arg) == 0:
         client.change_position()
         client.send_ooc('Position reset.')
@@ -45,6 +55,10 @@ def ooc_cmd_pos(client, arg):
 
 
 def ooc_cmd_forcepos(client, arg):
+    """
+    Set the place another character resides in the room.
+    Usage: /forcepos <pos> <target>
+    """
     if not client in client.area.owners and not client.is_mod:
         raise ClientError('You must be authorized to do that.')
 
@@ -91,6 +105,11 @@ def ooc_cmd_forcepos(client, arg):
 
 
 def ooc_cmd_charselect(client, arg):
+    """
+    Enter the character select screen, or force another user to select
+    another character.
+    Usage: /charselect [id]
+    """
     if not arg:
         client.char_select()
     elif not client.is_mod:
@@ -106,6 +125,10 @@ def ooc_cmd_charselect(client, arg):
 
 
 def ooc_cmd_randomchar(client, arg):
+    """
+    Select a random character.
+    Usage: /randomchar
+    """
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
     if len(client.charcurse) > 0:
@@ -124,6 +147,10 @@ def ooc_cmd_randomchar(client, arg):
 
 
 def ooc_cmd_charcurse(client, arg):
+    """
+    Lock a user into being able to choose only from a list of characters.
+    Usage: /charcurse <id> [charids...]
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     elif len(arg) == 0:
@@ -166,6 +193,10 @@ def ooc_cmd_charcurse(client, arg):
 
 
 def ooc_cmd_uncharcurse(client, arg):
+    """
+    Remove the character choice restrictions from a user.
+    Usage: /uncharcurse <id>
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     elif len(arg) == 0:
@@ -191,6 +222,10 @@ def ooc_cmd_uncharcurse(client, arg):
 
 
 def ooc_cmd_charids(client, arg):
+    """
+    Show character IDs corresponding to each character name.
+    Usage: /charids
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) != 0:
@@ -202,6 +237,10 @@ def ooc_cmd_charids(client, arg):
 
 
 def ooc_cmd_reload(client, arg):
+    """
+    Reload a character to its default position and state.
+    Usage: /reload
+    """
     if len(arg) != 0:
         raise ArgumentError("This command doesn't take any arguments")
     try:

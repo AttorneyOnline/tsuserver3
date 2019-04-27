@@ -18,6 +18,10 @@ __all__ = [
 
 
 def ooc_cmd_roll(client, arg):
+    """
+    Roll a die. The result is shown publicly.
+    Usage: /roll [max value] [rolls]
+    """
     roll_max = 11037
     if len(arg) != 0:
         try:
@@ -52,6 +56,10 @@ def ooc_cmd_roll(client, arg):
 
 
 def ooc_cmd_rollp(client, arg):
+    """
+    Roll a die privately.
+    Usage: /roll [max value] [rolls]
+    """
     roll_max = 11037
     if len(arg) != 0:
         try:
@@ -93,6 +101,10 @@ def ooc_cmd_rollp(client, arg):
 
 
 def ooc_cmd_notecard(client, arg):
+    """
+    Write a notecard that can only be revealed by a CM.
+    Usage: /notecard <message>
+    """
     if len(arg) == 0:
         raise ArgumentError('You must specify the contents of the note card.')
     client.area.cards[client.char_name] = arg
@@ -101,6 +113,10 @@ def ooc_cmd_notecard(client, arg):
 
 
 def ooc_cmd_notecard_clear(client, arg):
+    """
+    Erase a notecard.
+    Usage: /notecard_clear
+    """
     try:
         del client.area.cards[client.char_name]
         client.area.broadcast_ooc('{} erased their note card.'.format(
@@ -110,6 +126,10 @@ def ooc_cmd_notecard_clear(client, arg):
 
 
 def ooc_cmd_notecard_reveal(client, arg):
+    """
+    Reveal all notecards and their owners.
+    Usage: /notecard_reveal
+    """
     if not client in client.area.owners and not client.is_mod:
         raise ClientError('You must be a CM or moderator to reveal cards.')
     if len(client.area.cards) == 0:
@@ -122,6 +142,10 @@ def ooc_cmd_notecard_reveal(client, arg):
 
 
 def ooc_cmd_rolla_reload(client, arg):
+    """
+    Reload ability dice sets from a configuration file.
+    Usage: /rolla_reload
+    """
     if not client.is_mod:
         raise ClientError(
             'You must be a moderator to load the ability dice configuration.')
@@ -141,6 +165,10 @@ def rolla_reload(area):
 
 
 def ooc_cmd_rolla_set(client, arg):
+    """
+    Choose the set of ability dice to roll.
+    Usage: /rolla_set <name>
+    """
     if not hasattr(client.area, 'ability_dice'):
         rolla_reload(client.area)
     available_sets = ', '.join(client.area.ability_dice.keys())
@@ -158,6 +186,10 @@ def ooc_cmd_rolla_set(client, arg):
 
 
 def ooc_cmd_rolla(client, arg):
+    """
+    Roll a specially labeled set of dice (ability dice).
+    Usage: /rolla
+    """
     if not hasattr(client.area, 'ability_dice'):
         rolla_reload(client.area)
     if not hasattr(client, 'ability_dice_set'):
@@ -172,6 +204,10 @@ def ooc_cmd_rolla(client, arg):
 
 
 def ooc_cmd_coinflip(client, arg):
+    """
+    Flip a coin. The result is shown publicly.
+    Usage: /coinflip
+    """
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
     coin = ['heads', 'tails']

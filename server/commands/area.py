@@ -22,6 +22,10 @@ __all__ = [
 
 
 def ooc_cmd_bg(client, arg):
+    """
+    Set the background of a room.
+    Usage: /bg <background>
+    """
     if len(arg) == 0:
         raise ArgumentError('You must specify a name. Use /bg <background>.')
     if not client.is_mod and client.area.bg_lock == "true":
@@ -39,6 +43,11 @@ def ooc_cmd_bg(client, arg):
 
 
 def ooc_cmd_bglock(client, arg):
+    """
+    Toggle whether or not non-moderators are allowed to change
+    the background of a room.
+    Usage: /bglock
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) != 0:
@@ -57,6 +66,12 @@ def ooc_cmd_bglock(client, arg):
 
 
 def ooc_cmd_allow_iniswap(client, arg):
+    """
+    Toggle whether or not users are allowed to swap INI files in character
+    folders to allow playing as a character other than the one chosen in
+    the character list.
+    Usage: /allow_iniswap
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     client.area.iniswap_allowed = not client.area.iniswap_allowed
@@ -65,6 +80,11 @@ def ooc_cmd_allow_iniswap(client, arg):
 
 
 def ooc_cmd_allow_blankposting(client, arg):
+    """
+    Toggle whether or not in-character messages purely consisting of spaces
+    are allowed.
+    Usage: /allow_blankposting
+    """
     if not client.is_mod and not client in client.area.owners:
         raise ClientError('You must be authorized to do that.')
     client.area.blankposting_allowed = not client.area.blankposting_allowed
@@ -75,6 +95,11 @@ def ooc_cmd_allow_blankposting(client, arg):
 
 
 def ooc_cmd_force_nonint_pres(client, arg):
+    """
+    Toggle whether or not all pre-animations lack a delay before a
+    character begins speaking.
+    Usage: /force_nonint_pres
+    """
     if not client.is_mod and not client in client.area.owners:
         raise ClientError('You must be authorized to do that.')
     client.area.non_int_pres_only = not client.area.non_int_pres_only
@@ -85,6 +110,10 @@ def ooc_cmd_force_nonint_pres(client, arg):
 
 
 def ooc_cmd_status(client, arg):
+    """
+    Show or modify the current status of a room.
+    Usage: /status <idle|rp|casing|looking-for-players|lfp|recess|gaming>
+    """
     if len(arg) == 0:
         client.send_ooc(f'Current status: {client.area.status}')
     else:
@@ -102,6 +131,10 @@ def ooc_cmd_status(client, arg):
 
 
 def ooc_cmd_area(client, arg):
+    """
+    List areas, or go to another area/room.
+    Usage: /area [id]
+    """
     args = arg.split()
     if len(args) == 0:
         client.send_area_list()
@@ -118,14 +151,26 @@ def ooc_cmd_area(client, arg):
 
 
 def ooc_cmd_getarea(client, arg):
+    """
+    Show information about the current area.
+    Usage: /getarea
+    """
     client.send_area_info(client.area.id, False)
 
 
 def ooc_cmd_getareas(client, arg):
+    """
+    Show information about all areas.
+    Usage: /getareas
+    """
     client.send_area_info(-1, False)
 
 
 def ooc_cmd_area_lock(client, arg):
+    """
+    Prevent users from joining the current area.
+    Usage: /area_lock
+    """
     if not client.area.locking_allowed:
         client.send_ooc('Area locking is disabled in this area.')
         return
@@ -139,6 +184,10 @@ def ooc_cmd_area_lock(client, arg):
 
 
 def ooc_cmd_area_spectate(client, arg):
+    """
+    Allow users to join the current area, but only as spectators.
+    Usage: /area_spectate
+    """
     if not client.area.locking_allowed:
         client.send_ooc('Area locking is disabled in this area.')
         return
@@ -152,6 +201,10 @@ def ooc_cmd_area_spectate(client, arg):
 
 
 def ooc_cmd_area_unlock(client, arg):
+    """
+    Allow anyone to freely join the current area.
+    Usage: /area_unlock
+    """
     if client.area.is_locked == client.area.Locked.FREE:
         raise ClientError('Area is already unlocked.')
     if not client in client.area.owners:
@@ -161,6 +214,10 @@ def ooc_cmd_area_unlock(client, arg):
 
 
 def ooc_cmd_invite(client, arg):
+    """
+    Allow a particular user to join a locked or spectator-only area.
+    Usage: /invite <id>
+    """
     if not arg:
         raise ClientError('You must specify a target. Use /invite <id>')
     if client.area.is_locked == client.area.Locked.FREE:
@@ -180,6 +237,10 @@ def ooc_cmd_invite(client, arg):
 
 
 def ooc_cmd_uninvite(client, arg):
+    """
+    Revoke an invitation for a particular user.
+    Usage: /uninvite <id>
+    """
     if not client in client.area.owners and not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if client.area.is_locked == client.area.Locked.FREE:
@@ -208,6 +269,10 @@ def ooc_cmd_uninvite(client, arg):
 
 
 def ooc_cmd_area_kick(client, arg):
+    """
+    Remove a user from the current area and move them to another area.
+    Usage: /area_kick <id> [destination]
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if client.area.is_locked == client.area.Locked.FREE:

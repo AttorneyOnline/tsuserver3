@@ -21,12 +21,20 @@ __all__ = [
 
 
 def ooc_cmd_motd(client, arg):
+    """
+    Show the message of the day.
+    Usage: /motd
+    """
     if len(arg) != 0:
         raise ArgumentError("This command doesn't take any arguments")
     client.send_motd()
 
 
 def ooc_cmd_help(client, arg):
+    """
+    Show help for a command, or show general help.
+    Usage: /help
+    """
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
     help_url = 'https://github.com/AttorneyOnline/tsuserver3'
@@ -35,20 +43,27 @@ def ooc_cmd_help(client, arg):
 
 
 def ooc_cmd_kick(client, arg):
+    """
+    Kick a player.
+    Usage: /kick <ipid|*|**> [reason]
+    Special cases:
+     - "*" kicks everyone in the current area.
+     - "**" kicks everyone in the server.
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     elif len(arg) == 0:
         raise ArgumentError(
             'You must specify a target. Use /kick <ipid> [reason]')
-    elif arg[0] == '*area':
-        targets = client.area.clients
     elif arg[0] == '*':
-        targets = client.server.client_manager.clients
+        targets = [c for c in client.area.clients if c != client]
+    elif arg[0] == '**':
+        targets = [c for c in client.server.client_manager.clients if c != client]
     else:
         targets = None
 
     args = list(arg.split(' '))
-    if targets is not None:
+    if targets is None:
         raw_ipid = args[0]
         try:
             ipid = int(raw_ipid)
@@ -75,6 +90,10 @@ def ooc_cmd_kick(client, arg):
 
 
 def ooc_cmd_ban(client, arg):
+    """
+    Ban a user permanently.
+    Usage: /ban <ipid> <reason>
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) <= 1:
@@ -106,6 +125,10 @@ def ooc_cmd_ban(client, arg):
 
 
 def ooc_cmd_unban(client, arg):
+    """
+    Unban a list of users.
+    Usage: /unban <ipid...>
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
@@ -123,6 +146,10 @@ def ooc_cmd_unban(client, arg):
 
 
 def ooc_cmd_mute(client, arg):
+    """
+    Prevent a user from speaking in-character.
+    Usage: /mute <ipid>
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
@@ -154,6 +181,10 @@ def ooc_cmd_mute(client, arg):
 
 
 def ooc_cmd_unmute(client, arg):
+    """
+    Unmute a user.
+    Usage: /unmute <ipid>
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
@@ -186,6 +217,10 @@ def ooc_cmd_unmute(client, arg):
 
 
 def ooc_cmd_login(client, arg):
+    """
+    Login as a moderator.
+    Usage: /login <password>
+    """
     if len(arg) == 0:
         raise ArgumentError('You must specify the password.')
     login_name = None
@@ -201,6 +236,11 @@ def ooc_cmd_login(client, arg):
 
 
 def ooc_cmd_refresh(client, arg):
+    """
+    Reload all moderator credentials, server options, and commands without
+    restarting the server.
+    Usage: /refresh
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) > 0:
@@ -215,14 +255,26 @@ def ooc_cmd_refresh(client, arg):
 
 
 def ooc_cmd_online(client, _):
+    """
+    Show the number of players online.
+    Usage: /online
+    """
     client.send_player_count()
 
 
 def ooc_cmd_mods(client, arg):
+    """
+    Show a list of moderators online.
+    Usage: /mods
+    """
     client.send_area_info(-1, True)
 
 
 def ooc_cmd_unmod(client, arg):
+    """
+    Log out as a moderator.
+    Usage: /unmod
+    """
     client.is_mod = False
     client.mod_profile_name = None
     if client.area.evidence_mod == 'HiddenCM':
@@ -231,6 +283,10 @@ def ooc_cmd_unmod(client, arg):
 
 
 def ooc_cmd_ooc_mute(client, arg):
+    """
+    Prevent a user from talking out-of-character.
+    Usage: /ooc_mute <ooc-name>
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
@@ -248,6 +304,10 @@ def ooc_cmd_ooc_mute(client, arg):
 
 
 def ooc_cmd_ooc_unmute(client, arg):
+    """
+    Allow an OOC-muted user to talk out-of-character.
+    Usage: /ooc_unmute <ooc-name>
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:

@@ -20,6 +20,10 @@ __all__ = [
 
 
 def ooc_cmd_doc(client, arg):
+    """
+    Show or change the link for the current case document.
+    Usage: /doc [url]
+    """
     if len(arg) == 0:
         client.send_ooc(f'Document: {client.area.doc}')
         logger.log_server(
@@ -37,6 +41,10 @@ def ooc_cmd_doc(client, arg):
 
 
 def ooc_cmd_cleardoc(client, arg):
+    """
+    Clear the link for the current case document.
+    Usage: /cleardoc
+    """
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
     client.area.broadcast_ooc('{} cleared the doc link.'.format(
@@ -49,6 +57,11 @@ def ooc_cmd_cleardoc(client, arg):
 
 
 def ooc_cmd_evidence_mod(client, arg):
+    """
+    Change the evidence privilege mode. Refer to the documentation
+    for more information on the function of each mode.
+    Usage: /evidence_mod <FFA|Mods|CM|HiddenCM>
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     elif not arg or arg == client.area.evidence_mod:
@@ -68,6 +81,10 @@ def ooc_cmd_evidence_mod(client, arg):
 
 
 def ooc_cmd_evi_swap(client, arg):
+    """
+    Swap the positions of two evidence items on the evidence list.
+    Usage: /evi_swap <id> <id>
+    """
     args = list(arg.split(' '))
     if len(args) != 2:
         raise ClientError("you must specify 2 numbers")
@@ -79,6 +96,10 @@ def ooc_cmd_evi_swap(client, arg):
 
 
 def ooc_cmd_cm(client, arg):
+    """
+    Add a case manager for the current room.
+    Usage: /cm <id>
+    """
     if 'CM' not in client.area.evidence_mod:
         raise ClientError('You can\'t become a CM in this area')
     if len(client.area.owners) == 0:
@@ -124,6 +145,10 @@ def ooc_cmd_cm(client, arg):
 
 
 def ooc_cmd_uncm(client, arg):
+    """
+    Remove a case manager from the current area.
+    Usage: /uncm <id>
+    """
     if client in client.area.owners or client.is_mod:
         if len(arg) > 0:
             arg = arg.split(' ')
@@ -153,6 +178,10 @@ def ooc_cmd_uncm(client, arg):
 
 # LEGACY
 def ooc_cmd_setcase(client, arg):
+    """
+    Set the positions you are interested in taking for a case.
+    (This command is used internally by the 2.6 client.)
+    """
     args = re.findall(r'(?:[^\s,"]|"(?:\\.|[^"])*")+', arg)
     if len(args) == 0:
         raise ArgumentError('Please do not call this command manually!')
@@ -168,6 +197,11 @@ def ooc_cmd_setcase(client, arg):
 
 # LEGACY
 def ooc_cmd_anncase(client, arg):
+    """
+    Announce that a case is currently taking place in this area,
+    needing a certain list of positions to be filled up.
+    Usage: /anncase <message> <def> <pro> <jud> <jur> <steno>
+    """
     if client in client.area.owners:
         if not client.can_call_case():
             raise ClientError(
@@ -219,6 +253,11 @@ def ooc_cmd_anncase(client, arg):
 
 
 def ooc_cmd_blockwtce(client, arg):
+    """
+    Prevent a user from using Witness Testimony/Cross Examination buttons
+    as a judge.
+    Usage: /blockwtce <id>
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
@@ -243,6 +282,10 @@ def ooc_cmd_blockwtce(client, arg):
 
 
 def ooc_cmd_unblockwtce(client, arg):
+    """
+    Allow a user to use WT/CE again.
+    Usage: /unblockwtce <id>
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
@@ -268,6 +311,10 @@ def ooc_cmd_unblockwtce(client, arg):
 
 
 def ooc_cmd_judgelog(client, arg):
+    """
+    List the last 10 uses of judge controls in the current area.
+    Usage: /judgelog
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) != 0:

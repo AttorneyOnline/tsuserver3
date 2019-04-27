@@ -19,6 +19,10 @@ __all__ = [
 
 
 def ooc_cmd_a(client, arg):
+    """
+    Send a message to an area that you are a CM in.
+    Usage: /a <area> <message>
+    """
     if len(arg) == 0:
         raise ArgumentError('You must specify an area.')
     arg = arg.split(' ')
@@ -32,6 +36,10 @@ def ooc_cmd_a(client, arg):
 
 
 def ooc_cmd_s(client, arg):
+    """
+    Send a message to all areas that you are a CM in.
+    Usage: /s <message>
+    """
     areas = []
     for a in client.server.area_manager.areas:
         if client in a.owners:
@@ -52,6 +60,10 @@ def message_areas_cm(client, areas, message):
 
 
 def ooc_cmd_g(client, arg):
+    """
+    Broadcast a message to all areas.
+    Usage: /g <message>
+    """
     if client.muted_global:
         raise ClientError('Global chat toggled off.')
     if len(arg) == 0:
@@ -63,6 +75,10 @@ def ooc_cmd_g(client, arg):
 
 
 def ooc_cmd_gm(client, arg):
+    """
+    Broadcast a message to all areas, speaking officially.
+    Usage: /gm <message>
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if client.muted_global:
@@ -76,6 +92,10 @@ def ooc_cmd_gm(client, arg):
 
 
 def ooc_cmd_m(client, arg):
+    """
+    Send a message to all online moderators.
+    Usage: /m <message>
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
@@ -87,6 +107,10 @@ def ooc_cmd_m(client, arg):
 
 
 def ooc_cmd_lm(client, arg):
+    """
+    Send a message to all moderators in the current area.
+    Usage: /lm <message>
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
@@ -100,6 +124,10 @@ def ooc_cmd_lm(client, arg):
 
 
 def ooc_cmd_announce(client, arg):
+    """
+    Make a server-wide announcement.
+    Usage: /announce <message>
+    """
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
@@ -114,6 +142,10 @@ def ooc_cmd_announce(client, arg):
 
 
 def ooc_cmd_toggleglobal(client, arg):
+    """
+    Mute global chat.
+    Usage: /toggleglobal
+    """
     if len(arg) != 0:
         raise ArgumentError("This command doesn't take any arguments")
     client.muted_global = not client.muted_global
@@ -124,6 +156,10 @@ def ooc_cmd_toggleglobal(client, arg):
 
 
 def ooc_cmd_need(client, arg):
+    """
+    Broadcast a need for a specific role in a case.
+    Usage: /need <message>
+    """
     if client.muted_adverts:
         raise ClientError('You have advertisements muted.')
     if len(arg) == 0:
@@ -135,6 +171,10 @@ def ooc_cmd_need(client, arg):
 
 
 def ooc_cmd_toggleadverts(client, arg):
+    """
+    Mute advertisements.
+    Usage: /toggleadverts
+    """
     if len(arg) != 0:
         raise ArgumentError("This command doesn't take any arguments")
     client.muted_adverts = not client.muted_adverts
@@ -145,6 +185,11 @@ def ooc_cmd_toggleadverts(client, arg):
 
 
 def ooc_cmd_pm(client, arg):
+    """
+    Send a private message to another online user. These messages are not
+    logged by the server owner.
+    Usage: /pm <id|ooc-name|char-name> <message>
+    """
     args = arg.split()
     key = ''
     msg = None
@@ -195,6 +240,10 @@ def ooc_cmd_pm(client, arg):
 
 
 def ooc_cmd_mutepm(client, arg):
+    """
+    Mute private messages.
+    Usage: /mutepm
+    """
     if len(arg) != 0:
         raise ArgumentError("This command doesn't take any arguments")
     client.pm_mute = not client.pm_mute
