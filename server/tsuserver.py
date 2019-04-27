@@ -82,7 +82,7 @@ class TsuServer3:
             self.ms_client = MasterServerClient(self)
             asyncio.ensure_future(self.ms_client.connect(), loop=loop)
 
-        logger.log_debug('Server started.')
+        logger.log_server('Server started.')
         print('Server started and is listening on port {}'.format(
             self.config['port']))
 
@@ -91,7 +91,7 @@ class TsuServer3:
         except KeyboardInterrupt:
             pass
 
-        logger.log_debug('Server shutting down.')
+        logger.log_server('Server shutting down.')
 
         ao_server.close()
         loop.run_until_complete(ao_server.wait_closed())
@@ -112,8 +112,10 @@ class TsuServer3:
         client.area.remove_client(client)
         self.client_manager.remove_client(client)
 
-    def get_player_count(self):
-        return len(self.client_manager.clients)
+    @property
+    def player_count(self):
+        return len(filter(lambda client: client.char_id != -1,
+                          self.client_manager.clients))
 
     def load_config(self):
         with open('config/config.yaml', 'r', encoding='utf-8') as cfg:
@@ -340,8 +342,6 @@ class TsuServer3:
                             self.client_manager.clients):
                         client.is_mod = False
                         client.mod_profile_name = None
-                        logger.log_server(
-                            'Unmodded due to credential changes.', client)
                         logger.log_mod('Unmodded due to credential changes.',
                                        client)
                         client.send_ooc(

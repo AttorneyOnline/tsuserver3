@@ -70,9 +70,6 @@ def ooc_cmd_gm(client, arg):
     if len(arg) == 0:
         raise ArgumentError("Can't send an empty message.")
     client.server.broadcast_global(client, arg, True)
-    logger.log_server(
-        '[{}][{}][GLOBAL-MOD]{}.'.format(client.area.abbreviation,
-                                         client.char_name, arg), client)
     logger.log_mod(
         '[{}][{}][GLOBAL-MOD]{}.'.format(client.area.abbreviation,
                                          client.char_name, arg), client)
@@ -84,9 +81,6 @@ def ooc_cmd_m(client, arg):
     if len(arg) == 0:
         raise ArgumentError("You can't send an empty message.")
     client.server.send_modchat(client, arg)
-    logger.log_server(
-        '[{}][{}][MODCHAT]{}.'.format(client.area.abbreviation,
-                                      client.char_name, arg), client)
     logger.log_mod(
         '[{}][{}][MODCHAT]{}.'.format(client.area.abbreviation,
                                       client.char_name, arg), client)
@@ -100,9 +94,6 @@ def ooc_cmd_lm(client, arg):
     client.area.send_command(
         'CT', '{}[MOD][{}]'.format(client.server.config['hostname'],
                                    client.char_name), arg)
-    logger.log_server(
-        '[{}][{}][LOCAL-MOD]{}.'.format(client.area.abbreviation,
-                                        client.char_name, arg), client)
     logger.log_mod(
         '[{}][{}][LOCAL-MOD]{}.'.format(client.area.abbreviation,
                                         client.char_name, arg), client)
@@ -116,10 +107,6 @@ def ooc_cmd_announce(client, arg):
     client.server.send_all_cmd_pred(
         'CT', '{}'.format(client.server.config['hostname']),
         f'=== Announcement ===\r\n{arg}\r\n==================', '1')
-    logger.log_server(
-        '[{}][{}][ANNOUNCEMENT]{}.'.format(client.area.abbreviation,
-                                           client.char_name, arg),
-        client)
     logger.log_mod(
         '[{}][{}][ANNOUNCEMENT]{}.'.format(client.area.abbreviation,
                                            client.char_name, arg),

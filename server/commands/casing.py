@@ -234,10 +234,6 @@ def ooc_cmd_blockwtce(client, arg):
         target.can_wtce = False
         target.send_ooc(
             'A moderator blocked you from using judge signs.')
-        logger.log_server(
-            'BlockWTCE\'d {} [{}]({}).'.format(target.char_name,
-                                               target.id, target.ip),
-            client)
         logger.log_mod(
             'BlockWTCE\'d {} [{}]({}).'.format(target.char_name,
                                                target.id, target.ip),
@@ -263,10 +259,6 @@ def ooc_cmd_unblockwtce(client, arg):
         target.can_wtce = True
         target.send_ooc(
             'A moderator unblocked you from using judge signs.')
-        logger.log_server(
-            'UnblockWTCE\'d {} [{}]({}).'.format(target.char_name,
-                                                 target.id, target.ip),
-            client)
         logger.log_mod(
             'UnblockWTCE\'d {} [{}]({}).'.format(target.char_name,
                                                  target.id, target.ip),

@@ -159,7 +159,6 @@ def ooc_cmd_charcurse(client, arg):
             log_msg = log_msg[:-1]
             log_msg += '.'
             c.char_select()
-            logger.log_server('Charcursing' + log_msg, client)
             logger.log_mod('Charcursing' + log_msg, client)
             client.send_ooc('Charcursed' + part_msg)
     else:
@@ -182,8 +181,6 @@ def ooc_cmd_uncharcurse(client, arg):
         for c in targets:
             if len(c.charcurse) > 0:
                 c.charcurse = []
-                logger.log_server('Uncharcursing {}.'.format(c.ip),
-                                  client)
                 logger.log_mod('Uncharcursing {}.'.format(c.ip), client)
                 client.send_ooc(f'Uncharcursed [{c.id}].')
                 c.char_select()

@@ -95,6 +95,8 @@ class AOProtocol(asyncio.Protocol):
         :param transport: the transport object
         """
         self.client = self.server.new_client(transport)
+        # Client needs to send CHECK#% within the timeout - otherwise,
+        # it will be automatically dropped.
         self.ping_timeout = asyncio.get_event_loop().call_later(
             self.server.config['timeout'], self.client.disconnect)
         asyncio.get_event_loop().call_later(0.25, self.client.send_command,
@@ -118,11 +120,6 @@ class AOProtocol(asyncio.Protocol):
             spl = self.buffer.split('#%', 1)
             self.buffer = spl[1]
             yield spl[0]
-        # exception because bad netcode
-        askchar2 = '#615810BC07D12A5A#'
-        if self.buffer == askchar2:
-            self.buffer = ''
-            yield askchar2
 
     def validate_net_cmd(self, args, *types, needs_auth=True):
         """ Makes sure the net command's arguments match expectations.
@@ -176,7 +173,7 @@ class AOProtocol(asyncio.Protocol):
         self.client.send_command('ID', self.client.id, self.server.software,
                                  self.server.get_version_string())
         self.client.send_command('PN',
-                                 self.server.get_player_count() - 1,
+                                 self.server.player_count - 1,
                                  self.server.config['playerlimit'])
 
     def net_cmd_id(self, args):
@@ -185,41 +182,13 @@ class AOProtocol(asyncio.Protocol):
         ID#<pv:int>#<software:string>#<version:string>#%
 
         """
-
-        self.client.is_ao2 = False
-
-        if len(args) < 2:
-            return
-
-        version_list = args[1].split('.')
-
-        if len(version_list) < 3:
-            return
-
-        release = int(version_list[0])
-        major = int(version_list[1])
-        minor = int(version_list[2])
-
-        if args[0] != 'AO2':
-            return
-        if release < 2:
-            return
-        elif release == 2:
-            if major < 2:
-                return
-            elif major == 2:
-                if minor < 5:
-                    return
-
-        self.client.is_ao2 = True
-
         self.client.send_command('FL', 'yellowtext', 'customobjections',
                                  'flipping', 'fastloading', 'noencryption',
                                  'deskmod', 'evidence', 'modcall_reason',
                                  'cccc_ic_support', 'arup', 'casing_alerts')
 
     def net_cmd_ch(self, _):
-        """ Periodically checks the connection.
+        """ Reset the client drop timeout (keepalive).
 
         CHECK#%
 
@@ -241,7 +210,7 @@ class AOProtocol(asyncio.Protocol):
         self.client.send_command('SI', char_cnt, evi_cnt, music_cnt)
 
     def net_cmd_askchar2(self, _):
-        """ Asks for the character list.
+        """ Asks for the character list. (AO1)
 
         askchar2#%
 
@@ -250,6 +219,7 @@ class AOProtocol(asyncio.Protocol):
 
     def net_cmd_an(self, args):
         """ Asks for specific pages of the character list.
+        (AO1 only; part of askchar2 sequence)
 
         AN#<page:int>#%
 
@@ -264,6 +234,7 @@ class AOProtocol(asyncio.Protocol):
 
     def net_cmd_ae(self, _):
         """ Asks for specific pages of the evidence list.
+        (AO1 only; part of askchar2 sequence)
 
         AE#<page:int>#%
 
@@ -272,6 +243,7 @@ class AOProtocol(asyncio.Protocol):
 
     def net_cmd_am(self, args):
         """ Asks for specific pages of the music list.
+        (AO1 only; part of askchar2 sequence)
 
         AM#<page:int>#%
 
@@ -287,7 +259,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_motd()
 
     def net_cmd_rc(self, _):
-        """ Asks for the whole character list(AO2)
+        """ Asks for the whole character list (AO2)
 
         AC#%
 
@@ -296,7 +268,7 @@ class AOProtocol(asyncio.Protocol):
         self.client.send_command('SC', *self.server.char_list)
 
     def net_cmd_rm(self, _):
-        """ Asks for the whole music list(AO2)
+        """ Asks for the whole music list (AO2)
 
         AM#%
 
@@ -340,7 +312,7 @@ class AOProtocol(asyncio.Protocol):
 
         """
         if self.client.is_muted:  # Checks to see if the client has been muted by a mod
-            self.client.send_ooc("You have been muted by a moderator")
+            self.client.send_ooc('You are muted by a moderator.')
             return
         if not self.client.area.can_send_message(self.client):
             return
@@ -355,7 +327,7 @@ class AOProtocol(asyncio.Protocol):
                                  self.ArgType.INT, self.ArgType.INT,
                                  self.ArgType.INT, self.ArgType.INT,
                                  self.ArgType.INT, self.ArgType.INT):
-            # Vanilla validation monstrosity.
+            # Pre-2.6 validation monstrosity.
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color = args
             showname = ""
             charid_pair = -1
@@ -367,42 +339,9 @@ class AOProtocol(asyncio.Protocol):
                 self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
                 self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
                 self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
-                self.ArgType.INT, self.ArgType.STR_OR_EMPTY):
-            # 1.3.0 validation monstrosity.
-            msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname = args
-            charid_pair = -1
-            offset_pair = 0
-            nonint_pre = 0
-            if len(showname
-                   ) > 0 and not self.client.area.showname_changes_allowed:
-                self.client.send_ooc(
-                    "Showname changes are forbidden in this area!")
-                return
-        elif self.validate_net_cmd(
-                args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,
-                self.ArgType.STR, self.ArgType.STR, self.ArgType.STR,
-                self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
-                self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
-                self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
-                self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.INT,
-                self.ArgType.INT):
-            # 1.3.5 validation monstrosity.
-            msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair = args
-            nonint_pre = 0
-            if len(showname
-                   ) > 0 and not self.client.area.showname_changes_allowed:
-                self.client.send_ooc(
-                    "Showname changes are forbidden in this area!")
-                return
-        elif self.validate_net_cmd(
-                args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,
-                self.ArgType.STR, self.ArgType.STR, self.ArgType.STR,
-                self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
-                self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
-                self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
                 self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.INT,
                 self.ArgType.INT, self.ArgType.INT):
-            # 1.4.0 validation monstrosity.
+            # 2.6+ validation monstrosity.
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre = args
             if len(showname
                    ) > 0 and not self.client.area.showname_changes_allowed:
@@ -441,12 +380,11 @@ class AOProtocol(asyncio.Protocol):
             part = text.split(' ')
             try:
                 aid = int(part[1])
-                if self.client in self.server.area_manager.get_area_by_id(
-                        aid).owners:
+                area = self.server.area_manager.get_area_by_id(aid)
+                if self.client in area.owners:
                     target_area.append(aid)
                 if not target_area:
-                    self.client.send_ooc('You don\'t own {}!'.format(
-                        self.server.area_manager.get_area_by_id(aid).name))
+                    self.client.send_ooc(f'You don\'t own {area.name}!')
                     return
                 text = ' '.join(part[2:])
             except ValueError:
@@ -600,7 +538,7 @@ class AOProtocol(asyncio.Protocol):
 
         """
         if self.client.is_ooc_muted:  # Checks to see if the client has been muted by a mod
-            self.client.send_ooc("You have been muted by a moderator")
+            self.client.send_ooc('You are muted by a moderator.')
             return
         if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR):
             return
@@ -674,7 +612,7 @@ class AOProtocol(asyncio.Protocol):
         except AreaError:
             if self.client.is_muted:  # Checks to see if the client has been muted by a mod
                 self.client.send_ooc(
-                    "You have been muted by a moderator")
+                    'You are muted by a moderator.')
                 return
             if not self.client.is_dj:
                 self.client.send_ooc(
@@ -754,7 +692,7 @@ class AOProtocol(asyncio.Protocol):
                 "You cannot use the testimony buttons here!")
             return
         if self.client.is_muted:  # Checks to see if the client has been muted by a mod
-            self.client.send_ooc("You have been muted by a moderator")
+            self.client.send_ooc('You are muted by a moderator.')
             return
         if not self.client.can_wtce:
             self.client.send_ooc(
@@ -867,7 +805,7 @@ class AOProtocol(asyncio.Protocol):
 
         """
         if self.client.is_muted:  # Checks to see if the client has been muted by a mod
-            self.client.send_ooc("You have been muted by a moderator")
+            self.client.send_ooc('You are muted by a moderator.')
             return
         if self.client.area.cannot_ic_interact(self.client):
             self.client.send_ooc(
@@ -932,7 +870,7 @@ class AOProtocol(asyncio.Protocol):
 
         """
         if self.client.is_muted:  # Checks to see if the client has been muted by a mod
-            self.client.send_ooc("You have been muted by a moderator")
+            self.client.send_ooc('You are muted by a moderator.')
             return
 
         if self.client.char_id is -1:

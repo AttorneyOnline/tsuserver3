@@ -141,9 +141,6 @@ def ooc_cmd_blockdj(client, arg):
         target.is_dj = False
         target.send_ooc(
             'A moderator muted you from changing the music.')
-        logger.log_server(
-            'BlockDJ\'d {} [{}]({}).'.format(target.char_name, target.id,
-                                             target.ip), client)
         logger.log_mod(
             'BlockDJ\'d {} [{}]({}).'.format(target.char_name, target.id,
                                              target.ip), client)
@@ -168,10 +165,6 @@ def ooc_cmd_unblockdj(client, arg):
         target.is_dj = True
         target.send_ooc(
             'A moderator unmuted you from changing the music.')
-        logger.log_server(
-            'UnblockDJ\'d {} [{}]({}).'.format(target.char_name,
-                                               target.id, target.ip),
-            client)
         logger.log_mod(
             'UnblockDJ\'d {} [{}]({}).'.format(target.char_name,
                                                target.id, target.ip),

@@ -67,6 +67,6 @@ class BanManager:
     def get_ban_reason(self, ipid):
         ipid = str(ipid)
         if self.is_banned(ipid):
-            return self.bans[ipid]["Reason"]
+            return f'{self.bans[ipid]["Reason"]} (ID: {ipid})'
         else:
             raise ServerError('This IPID is not banned.')

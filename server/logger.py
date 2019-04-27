@@ -62,17 +62,20 @@ def log_debug(msg, client=None):
 def log_server(msg, client=None):
     msg = parse_client_info(client) + msg
     logging.getLogger('server').info(msg)
+    log_debug(msg, client)
 
 
 def log_mod(msg, client=None):
     msg = parse_client_info(client) + msg
     logging.getLogger('mod').info(msg)
+    log_server(msg, client)
 
 
 def parse_client_info(client):
     if client is None:
         return ''
-    info = client.ip
+    ipid = client.ip
+    prefix = f'[{ipid:<15}][{client.id:<3}][{client.name}]'
     if client.is_mod:
-        return f'[{info:<15}][{client.id:<3}][{client.name}][MOD]'
-    return f'[{info:<15}][{client.id:<3}][{client.name}]'
+        prefix += '[MOD]'
+    return prefix

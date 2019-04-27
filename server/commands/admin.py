@@ -37,25 +37,31 @@ def ooc_cmd_help(client, arg):
 def ooc_cmd_kick(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
-    if len(arg) == 0:
+    elif len(arg) == 0:
         raise ArgumentError(
             'You must specify a target. Use /kick <ipid> [reason]')
+    elif arg[0] == '*area':
+        targets = client.area.clients
+    elif arg[0] == '*':
+        targets = client.server.client_manager.clients
+    else:
+        targets = None
+
     args = list(arg.split(' '))
-    raw_ipid = args[0]
-    try:
-        ipid = int(raw_ipid)
-    except:
-        raise ClientError(f'{raw_ipid} does not look like a valid IPID.')
-    targets = client.server.client_manager.get_targets(client, TargetType.IPID,
-                                                       ipid, False)
+    if targets is not None:
+        raw_ipid = args[0]
+        try:
+            ipid = int(raw_ipid)
+        except:
+            raise ClientError(f'{raw_ipid} does not look like a valid IPID.')
+        targets = client.server.client_manager.get_targets(client, TargetType.IPID,
+                                                        ipid, False)
+
     if targets:
         reason = ' '.join(args[1:])
         if reason == '':
             reason = 'N/A'
         for c in targets:
-            logger.log_server(
-                'Kicked {} [{}]({}) (reason: {}).'.format(
-                    c.char_name, c.id, c.ipid, reason), client)
             logger.log_mod(
                 'Kicked {} [{}]({}) (reason: {}).'.format(
                     c.char_name, c.id, c.ipid, reason), client)
@@ -71,15 +77,13 @@ def ooc_cmd_kick(client, arg):
 def ooc_cmd_ban(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
-    if len(arg) == 0:
+    if len(arg) <= 1:
         raise ArgumentError(
-            'You must specify a target. Use /ban <ipid> [reason]')
+            'You must specify a target and reason. Use /ban <ipid> <reason>')
     args = list(arg.split(' '))
 
     raw_ipid = args[0]
     reason = ' '.join(args[1:])
-    if reason == '':
-        reason = 'N/A'
 
     try:
         ipid = int(raw_ipid)
@@ -98,7 +102,6 @@ def ooc_cmd_ban(client, arg):
                 c.disconnect()
             client.send_ooc(f'{len(targets)} clients were kicked.')
         client.send_ooc(f'{ipid} was banned.')
-        logger.log_server(f'Banned {ipid} (reason: {reason}).', client)
         logger.log_mod(f'Banned {ipid} (reason: {reason}).', client)
 
 
@@ -115,7 +118,6 @@ def ooc_cmd_unban(client, arg):
             client.server.ban_manager.remove_ban(int(raw_ipid))
         except:
             raise ClientError(f'{raw_ipid} does not look like a valid IPID.')
-        logger.log_server(f'Unbanned {raw_ipid}.', client)
         logger.log_mod(f'Unbanned {raw_ipid}.', client)
         client.send_ooc(f'Unbanned {raw_ipid}')
 
@@ -136,9 +138,6 @@ def ooc_cmd_mute(client, arg):
                 msg = 'Muted the IPID ' + str(ipid) + '\'s following clients:'
                 for c in clients:
                     c.is_muted = True
-                    logger.log_server(
-                        'Muted {} [{}]({}).'.format(c.char_name, c.id,
-                                                    c.ipid), client)
                     logger.log_mod(
                         'Muted {} [{}]({}).'.format(c.char_name, c.id,
                                                     c.ipid), client)
@@ -170,9 +169,6 @@ def ooc_cmd_unmute(client, arg):
                 msg = f'Unmuted the IPID ${str(ipid)}\'s following clients:'
                 for c in clients:
                     c.is_muted = False
-                    logger.log_server(
-                        'Unmuted {} [{}]({}).'.format(c.char_name, c.id,
-                                                      c.ipid), client)
                     logger.log_mod(
                         'Unmuted {} [{}]({}).'.format(c.char_name, c.id,
                                                       c.ipid), client)
@@ -201,7 +197,6 @@ def ooc_cmd_login(client, arg):
     if client.area.evidence_mod == 'HiddenCM':
         client.area.broadcast_evidence_list()
     client.send_ooc('Logged in as a moderator.')
-    logger.log_server(f'Logged in as moderator ({login_name}).', client)
     logger.log_mod(f'Logged in as moderator ({login_name}).', client)
 
 
@@ -213,7 +208,6 @@ def ooc_cmd_refresh(client, arg):
     else:
         try:
             client.server.refresh()
-            logger.log_server('Reloaded server.', client)
             logger.log_mod('Reloaded server.', client)
             client.send_ooc('You have reloaded the server.')
         except ServerError:

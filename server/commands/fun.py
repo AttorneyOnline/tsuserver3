@@ -22,7 +22,6 @@ def ooc_cmd_disemvowel(client, arg):
         raise ArgumentError('You must specify a target. Use /disemvowel <id>.')
     if targets:
         for c in targets:
-            logger.log_server(f'Disemvowelling {c.ip}.', client)
             logger.log_mod(f'Disemvowelling {c.ip}.', client)
             c.disemvowel = True
         client.send_ooc(f'Disemvowelled {len(targets)} existing client(s).')
@@ -43,7 +42,6 @@ def ooc_cmd_undisemvowel(client, arg):
             'You must specify a target. Use /undisemvowel <id>.')
     if targets:
         for c in targets:
-            logger.log_server(f'Undisemvowelling {c.ip}.', client)
             logger.log_mod(f'Undisemvowelling {c.ip}.', client)
             c.disemvowel = False
         client.send_ooc(f'Undisemvowelled {len(targets)} existing client(s).')
@@ -63,7 +61,6 @@ def ooc_cmd_shake(client, arg):
         raise ArgumentError('You must specify a target. Use /shake <id>.')
     if targets:
         for c in targets:
-            logger.log_server(f'Shaking {c.ip}.', client)
             logger.log_mod(f'Shaking {c.ip}.', client)
             c.shaken = True
         client.send_ooc(f'Shook {len(targets)} existing client(s).')
@@ -83,7 +80,6 @@ def ooc_cmd_unshake(client, arg):
         raise ArgumentError('You must specify a target. Use /unshake <id>.')
     if targets:
         for c in targets:
-            logger.log_server(f'Unshaking {c.ip}.', client)
             logger.log_mod(f'Unshaking {c.ip}.', client)
             c.shaken = False
         client.send_ooc(f'Unshook {len(targets)} existing client(s).')

@@ -112,7 +112,7 @@ class ClientManager:
             self.send_ooc(f'=== MOTD ===\r\n{motd}\r\n=============')
 
         def send_player_count(self):
-            players = self.server.get_player_count()
+            players = self.server.player_count
             limit = self.server.config['playerlimit']
             self.send_ooc(f'{players}/{limit} players online.')
 
@@ -425,7 +425,6 @@ class ClientManager:
         self.clients = set()
         self.server = server
         self.cur_id = [i for i in range(self.server.config['playerlimit'])]
-        self.clients_list = []
 
     def new_client(self, transport):
         c = self.Client(
