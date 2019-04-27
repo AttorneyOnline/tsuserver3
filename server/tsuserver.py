@@ -21,6 +21,8 @@ import json
 import websockets
 import yaml
 
+import importlib
+
 from server import logger
 from server.area_manager import AreaManager
 from server.ban_manager import BanManager
@@ -29,7 +31,6 @@ from server.exceptions import ServerError
 from server.network.aoprotocol import AOProtocol
 from server.network.aoprotocol_ws import new_websocket_client
 from server.network.masterserverclient import MasterServerClient
-
 
 class TsuServer3:
     def __init__(self):
@@ -355,3 +356,7 @@ class TsuServer3:
         self.build_music_list_ao2()
         with open('config/backgrounds.yaml', 'r') as bgs:
             self.backgrounds = yaml.load(bgs)
+
+        import server.commands
+        importlib.reload(server.commands)
+        server.commands.reload()
