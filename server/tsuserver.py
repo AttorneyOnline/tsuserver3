@@ -33,6 +33,7 @@ from server.network.aoprotocol_ws import new_websocket_client
 from server.network.masterserverclient import MasterServerClient
 
 class TsuServer3:
+    """The main class for tsuserver3 server software."""
     def __init__(self):
         self.config = None
         self.allowed_iniswaps = None
@@ -62,6 +63,7 @@ class TsuServer3:
         logger.setup_logger(debug=self.config['debug'])
 
     def start(self):
+        """Start the server."""
         loop = asyncio.get_event_loop()
 
         bound_ip = '0.0.0.0'
@@ -98,10 +100,17 @@ class TsuServer3:
         loop.close()
 
     def get_version_string(self):
+        """Get the server's current version."""
         return str(self.release) + '.' + str(self.major_version) + '.' + str(
             self.minor_version)
 
     def new_client(self, transport):
+        """
+        Create a new client based on a raw transport by passing
+        it to the client manager.
+        :param transport: asyncio transport
+        :returns: created client object
+        """
         c = self.client_manager.new_client(transport)
         c.server = self
         c.area = self.area_manager.default_area()
@@ -109,15 +118,22 @@ class TsuServer3:
         return c
 
     def remove_client(self, client):
+        """
+        Remove a disconnected client.
+        :param client: client object
+
+        """
         client.area.remove_client(client)
         self.client_manager.remove_client(client)
 
     @property
     def player_count(self):
+        """Get the number of non-spectating clients."""
         return len(filter(lambda client: client.char_id != -1,
                           self.client_manager.clients))
 
     def load_config(self):
+        """Load the main server configuration from a YAML file."""
         with open('config/config.yaml', 'r', encoding='utf-8') as cfg:
             self.config = yaml.load(cfg)
             self.config['motd'] = self.config['motd'].replace('\\n', ' \n')
@@ -135,17 +151,24 @@ class TsuServer3:
             }
 
     def load_characters(self):
+        """Load the character list from a YAML file."""
         with open('config/characters.yaml', 'r', encoding='utf-8') as chars:
             self.char_list = yaml.load(chars)
         self.build_char_pages_ao1()
 
     def load_music(self):
+        """Load the music list from a YAML file."""
         with open('config/music.yaml', 'r', encoding='utf-8') as music:
             self.music_list = yaml.load(music)
         self.build_music_pages_ao1()
         self.build_music_list_ao2()
 
     def load_ids(self):
+        """Load the known client list from persistence.
+        The IPID list is a one-to-one mapping from arbitrary numbers to
+        IP addresses; the HDID list is a one-to-many mapping from
+        client-provided "hard drive IDs" to a list of IPIDs.
+        """
         self.ipid_list = {}
         self.hdid_list = {}
         # load ipids
@@ -168,24 +191,33 @@ class TsuServer3:
             )
 
     def dump_ipids(self):
+        """Persist the IPID list."""
         with open('storage/ip_ids.json', 'w') as whole_list:
             json.dump(self.ipid_list, whole_list)
 
     def dump_hdids(self):
+        """Persist the HDID list."""
         with open('storage/hd_ids.json', 'w') as whole_list:
             json.dump(self.hdid_list, whole_list)
 
     def get_ipid(self, ip):
+        """
+        Gets an IPID from a bare IP address.
+        :param ip: IP address string
+        :returns: IPID
+        """
         if not (ip in self.ipid_list):
             self.ipid_list[ip] = len(self.ipid_list)
             self.dump_ipids()
         return self.ipid_list[ip]
 
     def load_backgrounds(self):
+        """Load the backgrounds list from a YAML file."""
         with open('config/backgrounds.yaml', 'r', encoding='utf-8') as bgs:
             self.backgrounds = yaml.load(bgs)
 
     def load_iniswaps(self):
+        """Load a list of characters for which INI swapping is allowed."""
         try:
             with open('config/iniswaps.yaml', 'r',
                       encoding='utf-8') as iniswaps:
@@ -194,6 +226,10 @@ class TsuServer3:
             logger.log_debug('cannot find iniswaps.yaml')
 
     def build_char_pages_ao1(self):
+        """
+        Cache a list of characters that can be used for the
+        AO1 connection handshake.
+        """
         self.char_pages_ao1 = [
             self.char_list[x:x + 10] for x in range(0, len(self.char_list), 10)
         ]
@@ -202,6 +238,10 @@ class TsuServer3:
                 i, self.char_list[i])
 
     def build_music_pages_ao1(self):
+        """
+        Cache a list of tracks that can be used for the
+        AO1 connection handshake.
+        """
         self.music_pages_ao1 = []
         index = 0
         # add areas first
@@ -223,6 +263,10 @@ class TsuServer3:
         ]
 
     def build_music_list_ao2(self):
+        """
+        Cache a list of tracks that can be used for the
+        AO2 connection handshake.
+        """
         self.music_list_ao2 = []
         # add areas first
         for area in self.area_manager.areas:
@@ -234,15 +278,33 @@ class TsuServer3:
                 self.music_list_ao2.append(song['name'])
 
     def is_valid_char_id(self, char_id):
+        """
+        Check if a character ID is a valid one.
+        :param char_id: character ID
+        :returns: True if within length of character list; False otherwise
+
+        """
         return len(self.char_list) > char_id >= 0
 
     def get_char_id_by_name(self, name):
+        """
+        Get a character ID by the name of the character.
+        :param name: name of character
+        :returns: Character ID
+
+        """
         for i, ch in enumerate(self.char_list):
             if ch.lower() == name.lower():
                 return i
         raise ServerError('Character not found.')
 
     def get_song_data(self, music):
+        """
+        Get information about a track, if exists.
+        :param music: track name
+        :returns: tuple (name, length or -1)
+        :raises: ServerError if track not found
+        """
         for item in self.music_list:
             if item['category'] == music:
                 return item['category'], -1
@@ -255,11 +317,23 @@ class TsuServer3:
         raise ServerError('Music not found.')
 
     def send_all_cmd_pred(self, cmd, *args, pred=lambda x: True):
+        """
+        Broadcast an AO-compatible command to all clients that satisfy
+        a predicate.
+        """
         for client in self.client_manager.clients:
             if pred(client):
                 client.send_command(cmd, *args)
 
     def broadcast_global(self, client, msg, as_mod=False):
+        """
+        Broadcast an OOC message to all clients that do not have
+        global chat muted.
+        :param client: sender
+        :param msg: message
+        :param as_mod: add moderator prefix (Default value = False)
+
+        """
         char_name = client.char_name
         ooc_name = '{}[{}][{}]'.format('<dollar>G', client.area.abbreviation,
                                        char_name)
@@ -271,12 +345,25 @@ class TsuServer3:
                                pred=lambda x: not x.muted_global)
 
     def send_modchat(self, client, msg):
+        """
+        Send an OOC message to all mods.
+        :param client: sender
+        :param msg: message
+
+        """
         name = client.name
         ooc_name = '{}[{}][{}]'.format('<dollar>M', client.area.abbreviation,
                                        name)
         self.send_all_cmd_pred('CT', ooc_name, msg, pred=lambda x: x.is_mod)
 
     def broadcast_need(self, client, msg):
+        """
+        Broadcast an OOC "need" message to all clients who do not
+        have advertisements muted.
+        :param client: sender
+        :param msg: message
+
+        """
         char_name = client.char_name
         area_name = client.area.name
         area_id = client.area.abbreviation
@@ -289,9 +376,9 @@ class TsuServer3:
             pred=lambda x: not x.muted_adverts)
 
     def send_arup(self, args):
-        """ Update the area properties for 2.6 clients.
-
-        Playercount: 
+        """Update the area properties for 2.6 clients.
+        
+        Playercount:
             ARUP#0#<area1_p: int>#<area2_p: int>#...
         Status:
             ARUP#1##<area1_s: string>##<area2_s: string>#...
@@ -299,6 +386,8 @@ class TsuServer3:
             ARUP#2##<area1_cm: string>##<area2_cm: string>#...
         Lockedness:
             ARUP#3##<area1_l: string>##<area2_l: string>#...
+
+        :param args: 
 
         """
         if len(args) < 2:
@@ -323,6 +412,15 @@ class TsuServer3:
         self.send_all_cmd_pred('ARUP', *args, pred=lambda x: True)
 
     def refresh(self):
+        """
+        Refresh as many parts of the server as possible:
+         - MOTD
+         - Mod credentials (unmodding users if necessary)
+         - Characters
+         - Music
+         - Backgrounds
+         - Commands
+        """
         with open('config/config.yaml', 'r') as cfg:
             cfg_yaml = yaml.load(cfg)
             self.config['motd'] = cfg_yaml['motd'].replace('\\n', ' \n')

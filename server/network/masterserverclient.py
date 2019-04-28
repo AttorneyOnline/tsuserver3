@@ -22,6 +22,7 @@ from server import logger
 
 
 class MasterServerClient:
+    """Advertises information about this server to the master server."""
     def __init__(self, server):
         self.server = server
         self.reader = None

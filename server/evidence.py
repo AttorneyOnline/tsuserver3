@@ -17,9 +17,11 @@
 
 
 class EvidenceList:
+    """Contains a list of evidence items."""
     limit = 35
 
     class Evidence:
+        """Represents a single evidence item."""
         def __init__(self, name, desc, image, pos):
             self.name = name
             self.desc = desc
@@ -37,6 +39,7 @@ class EvidenceList:
             self.image = image
 
         def to_string(self):
+            """Serialize data to the AO protocol."""
             sequence = (self.name, self.desc, self.image)
             return '&'.join(sequence)
 
@@ -57,6 +60,11 @@ class EvidenceList:
         }
 
     def login(self, client):
+        """
+        Determine whether or not evidence can be modified.
+        :param client: origin
+
+        """
         if client.area.evidence_mod == 'FFA':
             return True
         elif client.area.evidence_mod == 'Mods' and \
@@ -72,6 +80,13 @@ class EvidenceList:
             return True
 
     def correct_format(self, client, desc):
+        """
+        Check whether or not an evidence item contains a correct
+        `<owner = [pos]>` metadata, if HiddenCM mode is on.
+        :param client: origin
+        :param desc: evidence description
+
+        """
         if client.area.evidence_mod != 'HiddenCM':
             return True
         elif desc[:9] == '<owner = ' and desc[9:12] in self.poses and desc[
@@ -82,6 +97,16 @@ class EvidenceList:
             return False
 
     def add_evidence(self, client, name, description, image, pos='all'):
+        """
+        Add an evidence item.
+        :param client: origin
+        :param name: evidence name
+        :param description: evidence description
+        :param image: evidence image file
+        :param pos: positions for which evidence will be shown
+        (Default value = 'all')
+
+        """
         if not self.login(client):
             return
 
@@ -95,6 +120,13 @@ class EvidenceList:
             self.evidences.append(self.Evidence(name, description, image, pos))
 
     def evidence_swap(self, client, id1, id2):
+        """
+        Swap two evidence items.
+        :param client: origin
+        :param id1: evidence ID 1
+        :param id2: evidence ID 2
+
+        """
         if not self.login(client):
             return
 
@@ -102,6 +134,11 @@ class EvidenceList:
             id2], self.evidences[id1]
 
     def create_evi_list(self, client):
+        """
+        Compose an evidence list to send to a client.
+        :param client: client to send list to
+
+        """
         evi_list = []
         nums_list = [0]
         for i in range(len(self.evidences)):
@@ -117,12 +154,25 @@ class EvidenceList:
         return nums_list, evi_list
 
     def del_evidence(self, client, id):
+        """
+        Delete an evidence item.
+        :param client: origin
+        :param id: evidence ID
+
+        """
         if not self.login(client):
             return
 
         self.evidences.pop(id)
 
     def edit_evidence(self, client, id, arg):
+        """
+        Modify an evidence item.
+        :param client: origin
+        :param id: evidence ID
+        :param arg: evidence information
+
+        """
         if not self.login(client):
             return
 

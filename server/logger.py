@@ -21,6 +21,11 @@ import time
 
 
 def setup_logger(debug):
+    """
+    Set up all loggers.
+    :param debug: whether debug mode should be enabled
+
+    """
     logging.Formatter.converter = time.gmtime
     debug_formatter = logging.Formatter('[%(asctime)s UTC]%(message)s')
     srv_formatter = logging.Formatter('[%(asctime)s UTC]%(message)s')
@@ -55,23 +60,27 @@ def setup_logger(debug):
 
 
 def log_debug(msg, client=None):
+    """Log a debug message that can be used for troubleshooting."""
     msg = parse_client_info(client) + msg
     logging.getLogger('debug').debug(msg)
 
 
 def log_server(msg, client=None):
+    """Log a server event."""
     msg = parse_client_info(client) + msg
     logging.getLogger('server').info(msg)
     log_debug(msg, client)
 
 
 def log_mod(msg, client=None):
+    """Log a moderation event."""
     msg = parse_client_info(client) + msg
     logging.getLogger('mod').info(msg)
     log_server(msg, client)
 
 
 def parse_client_info(client):
+    """Prepend information about a client to a log entry."""
     if client is None:
         return ''
     ipid = client.ip

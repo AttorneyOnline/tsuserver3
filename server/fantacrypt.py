@@ -15,6 +15,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+"""
+An awful encryption scheme from another era.
+"""
+
 # fantacrypt was a mistake, just hardcoding some numbers is good enough
 
 import binascii
@@ -25,6 +29,11 @@ CRYPT_KEY = 5
 
 
 def fanta_decrypt(data):
+    """
+    Decrypt data.
+    :param data: hex string
+
+    """
     data_bytes = [int(data[x:x + 2], 16) for x in range(0, len(data), 2)]
     key = CRYPT_KEY
     ret = ''
@@ -36,6 +45,11 @@ def fanta_decrypt(data):
 
 
 def fanta_encrypt(data):
+    """
+    Encrypt data.
+    :param data: message string
+    :returns: hex-encoded message
+    """
     key = CRYPT_KEY
     ret = ''
     for char in data:

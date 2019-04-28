@@ -21,11 +21,13 @@ from server.exceptions import ServerError
 
 
 class BanManager:
+    """Manages bans."""
     def __init__(self):
         self.bans = {}  # "ipid": {"Reason": "reason"}
         self.load_banlist()
 
     def load_banlist(self):
+        """Load bans from persistence."""
         try:
             with open('storage/banlist.json', 'r') as banlist_file:
                 self.bans = json.load(banlist_file)
@@ -35,16 +37,23 @@ class BanManager:
             return
 
     def convert_to_modern_banlist(self):
+        """Migrate an old ban list to one that supports ban reasons."""
         bantmp = self.bans
         self.bans = {}
         for ipid in bantmp:
             self.add_ban(str(ipid), 'N/A')
 
     def write_banlist(self):
+        """Persist all bans to a file."""
         with open('storage/banlist.json', 'w') as banlist_file:
             json.dump(self.bans, banlist_file)
 
     def add_ban(self, ipid, reason):
+        """
+        Add a ban entry.
+        :param ipid: IPID
+        :param reason: reason for ban
+        """
         ipid = str(ipid)
         if not self.is_banned(ipid):
             self.bans[ipid] = {'Reason': reason}
@@ -53,6 +62,10 @@ class BanManager:
         self.write_banlist()
 
     def remove_ban(self, ipid):
+        """
+        Remove a ban entry/
+        :param ipid: IPID
+        """
         ipid = str(ipid)
         if self.is_banned(ipid):
             del self.bans[ipid]
@@ -61,12 +74,20 @@ class BanManager:
         self.write_banlist()
 
     def is_banned(self, ipid):
+        """
+        Check if a user is banned.
+        :param ipid: IPID
+        """
         ipid = str(ipid)
         return ipid in self.bans
 
     def get_ban_reason(self, ipid):
+        """
+        Get the reason for a ban.
+        :param ipid: IPID
+        """
         ipid = str(ipid)
         if self.is_banned(ipid):
-            return f'{self.bans[ipid]["Reason"]} (ID: {ipid})'
+            return self.bans[ipid]["Reason"]
         else:
             raise ServerError('This IPID is not banned.')

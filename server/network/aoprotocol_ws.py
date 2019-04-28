@@ -23,29 +23,42 @@ from server.network.aoprotocol import AOProtocol
 
 
 class AOProtocolWS(AOProtocol):
-    """ A websocket wrapper around AOProtocol. """
+    """A websocket wrapper around AOProtocol."""
 
     class TransportWrapper:
-        """ A class to wrap asyncio's Transport class. """
+        """A class to wrap asyncio's Transport class."""
 
         def __init__(self, websocket):
             self.ws = websocket
 
         def get_extra_info(self, key):
-            """ Returns the remote address. """
+            """Get extra info about the client.
+            Used for getting the remote address.
+
+            :param key: requested key
+
+            """
             info = {'peername': self.ws.remote_address}
             return info[key]
 
         def write(self, message):
-            """ Writes message to the socket. """
+            """Write message to the socket.
+
+            :param message: message in bytes
+
+            """
             message = message.decode('utf-8')
             asyncio.ensure_future(self.ws_try_writing_message(message))
 
         def close(self):
-            """ Disconnects the client by force. """
+            """Disconnect the client by force."""
             asyncio.ensure_future(self.ws.close())
 
         async def ws_try_writing_message(self, message):
+            """
+            Try writing the message if the client has not already closed
+            the connection.
+            """
             try:
                 await self.ws.send(message)
             except ConnectionClosed:
@@ -59,6 +72,7 @@ class AOProtocolWS(AOProtocol):
         self.ws_on_connect()
 
     def ws_on_connect(self):
+        """Handle a new client connection."""
         self.connection_made(self.TransportWrapper(self.ws))
 
     async def ws_handle(self):
@@ -71,6 +85,11 @@ class AOProtocolWS(AOProtocol):
 
 
 def new_websocket_client(server):
+    """
+    Factory for creating a new WebSocket client.
+    :param server: server object
+
+    """
     async def func(websocket, _):
         client = AOProtocolWS(server, websocket)
         while client.ws_connected:
