@@ -79,7 +79,7 @@ class AOProtocolWS(AOProtocol):
         try:
             data = await self.ws.recv()
             self.data_received(data)
-        except ConnectionClosed as exc:
+        except (ConnectionClosed, ConnectionResetError) as exc:
             self.ws_connected = False
             self.connection_lost(exc)
 
