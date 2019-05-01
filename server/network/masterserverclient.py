@@ -18,7 +18,7 @@
 import asyncio
 import time
 
-from server import logger
+from server import logger, database
 
 
 class MasterServerClient:

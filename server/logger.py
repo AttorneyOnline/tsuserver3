@@ -28,8 +28,6 @@ def setup_logger(debug):
     """
     logging.Formatter.converter = time.gmtime
     debug_formatter = logging.Formatter('[%(asctime)s UTC]%(message)s')
-    srv_formatter = logging.Formatter('[%(asctime)s UTC]%(message)s')
-    mod_formatter = logging.Formatter('[%(asctime)s UTC]%(message)s')
 
     debug_log = logging.getLogger('debug')
     debug_log.setLevel(logging.DEBUG)
@@ -42,41 +40,11 @@ def setup_logger(debug):
     if not debug:
         debug_log.disabled = True
 
-    server_log = logging.getLogger('server')
-    server_log.setLevel(logging.INFO)
-
-    server_handler = logging.FileHandler('logs/server.log', encoding='utf-8')
-    server_handler.setLevel(logging.INFO)
-    server_handler.setFormatter(srv_formatter)
-    server_log.addHandler(server_handler)
-
-    mod_log = logging.getLogger('mod')
-    mod_log.setLevel(logging.INFO)
-
-    mod_handler = logging.FileHandler('logs/mod.log', encoding='utf-8')
-    mod_handler.setLevel(logging.INFO)
-    mod_handler.setFormatter(mod_formatter)
-    mod_log.addHandler(mod_handler)
-
 
 def log_debug(msg, client=None):
     """Log a debug message that can be used for troubleshooting."""
     msg = parse_client_info(client) + msg
     logging.getLogger('debug').debug(msg)
-
-
-def log_server(msg, client=None):
-    """Log a server event."""
-    msg = parse_client_info(client) + msg
-    logging.getLogger('server').info(msg)
-    log_debug(msg, client)
-
-
-def log_mod(msg, client=None):
-    """Log a moderation event."""
-    msg = parse_client_info(client) + msg
-    logging.getLogger('mod').info(msg)
-    log_server(msg, client)
 
 
 def parse_client_info(client):

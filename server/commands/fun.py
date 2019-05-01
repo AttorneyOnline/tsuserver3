@@ -1,4 +1,4 @@
-from server import logger
+from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, ArgumentError
 
@@ -26,7 +26,7 @@ def ooc_cmd_disemvowel(client, arg):
         raise ArgumentError('You must specify a target. Use /disemvowel <id>.')
     if targets:
         for c in targets:
-            logger.log_mod(f'Disemvowelling {c.ip}.', client)
+            database.log_room('disemvowel', client, client.area, target=c)
             c.disemvowel = True
         client.send_ooc(f'Disemvowelled {len(targets)} existing client(s).')
     else:
@@ -50,7 +50,7 @@ def ooc_cmd_undisemvowel(client, arg):
             'You must specify a target. Use /undisemvowel <id>.')
     if targets:
         for c in targets:
-            logger.log_mod(f'Undisemvowelling {c.ip}.', client)
+            database.log_room('undisemvowel', client, client.area, target=c)
             c.disemvowel = False
         client.send_ooc(f'Undisemvowelled {len(targets)} existing client(s).')
     else:
@@ -73,7 +73,7 @@ def ooc_cmd_shake(client, arg):
         raise ArgumentError('You must specify a target. Use /shake <id>.')
     if targets:
         for c in targets:
-            logger.log_mod(f'Shaking {c.ip}.', client)
+            database.log_room('shake', client, client.area, target=c)
             c.shaken = True
         client.send_ooc(f'Shook {len(targets)} existing client(s).')
     else:
@@ -96,7 +96,7 @@ def ooc_cmd_unshake(client, arg):
         raise ArgumentError('You must specify a target. Use /unshake <id>.')
     if targets:
         for c in targets:
-            logger.log_mod(f'Unshaking {c.ip}.', client)
+            database.log_room('unshake', client, client.area, target=c)
             c.shaken = False
         client.send_ooc(f'Unshook {len(targets)} existing client(s).')
     else:

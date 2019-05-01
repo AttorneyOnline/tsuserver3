@@ -1,6 +1,6 @@
 import re
 
-from server import logger
+from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, ServerError, ArgumentError
 
@@ -26,18 +26,12 @@ def ooc_cmd_doc(client, arg):
     """
     if len(arg) == 0:
         client.send_ooc(f'Document: {client.area.doc}')
-        logger.log_server(
-            '[{}][{}]Requested document. Link: {}'.format(
-                client.area.abbreviation, client.char_name,
-                client.area.doc), client)
+        database.log_room('doc.request', client, client.area)
     else:
         client.area.change_doc(arg)
         client.area.broadcast_ooc('{} changed the doc link.'.format(
             client.char_name))
-        logger.log_server(
-            '[{}][{}]Changed document to: {}'.format(client.area.abbreviation,
-                                                     client.char_name,
-                                                     arg), client)
+        database.log_room('doc.change', client, client.area, message=arg)
 
 
 def ooc_cmd_cleardoc(client, arg):
@@ -47,13 +41,10 @@ def ooc_cmd_cleardoc(client, arg):
     """
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
+    client.area.change_doc()
     client.area.broadcast_ooc('{} cleared the doc link.'.format(
         client.char_name))
-    logger.log_server(
-        '[{}][{}]Cleared document. Old link: {}'.format(
-            client.area.abbreviation, client.char_name, client.area.doc),
-        client)
-    client.area.change_doc()
+    database.log_room('doc.clear', client, client.area)
 
 
 def ooc_cmd_evidence_mod(client, arg):
@@ -74,6 +65,7 @@ def ooc_cmd_evidence_mod(client, arg):
         client.area.evidence_mod = arg
         client.send_ooc(
             f'current evidence mod: {client.area.evidence_mod}')
+        database.log_room('evidence_mod', client, client.area, message=arg)
     else:
         raise ArgumentError(
             'Wrong Argument. Use /evidence_mod <MOD>. Possible values: FFA, CM, Mods, HiddenCM'
@@ -113,6 +105,7 @@ def ooc_cmd_cm(client, arg):
         client.server.area_manager.send_arup_cms()
         client.area.broadcast_ooc('{} [{}] is CM in this area now.'.format(
             client.char_name, client.id))
+        database.log_room('cm.add', client, client.area, target=client, message='self-added')
     elif client in client.area.owners:
         if len(arg) > 0:
             arg = arg.split(' ')
@@ -137,6 +130,7 @@ def ooc_cmd_cm(client, arg):
                     client.area.broadcast_ooc(
                         '{} [{}] is CM in this area now.'.format(
                             c.char_name, c.id))
+                    database.log_room('cm.add', client, client.area, target=c)
             except:
                 client.send_ooc(
                     f'{id} does not look like a valid ID.')
@@ -165,6 +159,7 @@ def ooc_cmd_uncm(client, arg):
                     client.area.broadcast_ooc(
                         '{} [{}] is no longer CM in this area.'.format(
                             c.char_name, c.id))
+                    database.log_room('cm.remove', client, client.area, target=c)
                 else:
                     client.send_ooc(
                         'You cannot remove someone from CMing when they aren\'t a CM.'
@@ -202,6 +197,7 @@ def ooc_cmd_anncase(client, arg):
     needing a certain list of positions to be filled up.
     Usage: /anncase <message> <def> <pro> <jud> <jur> <steno>
     """
+    # XXX: Merge with aoprotocol.net_cmd_casea
     if client in client.area.owners:
         if not client.can_call_case():
             raise ClientError(
@@ -222,31 +218,20 @@ def ooc_cmd_anncase(client, arg):
             msg = '=== Case Announcement ===\r\n{} [{}] is hosting {}, looking for '.format(
                 client.char_name, client.id, args[0])
 
-            lookingfor = []
+            lookingfor = [p for p, q in \
+                zip(['defense', 'prosecutor', 'judge', 'juror', 'stenographer'], args[1:])
+                if q == '1']
 
-            if args[1] == "1":
-                lookingfor.append("defence")
-            if args[2] == "1":
-                lookingfor.append("prosecutor")
-            if args[3] == "1":
-                lookingfor.append("judge")
-            if args[4] == "1":
-                lookingfor.append("juror")
-            if args[5] == "1":
-                lookingfor.append("stenographer")
-
-            msg = msg + ', '.join(lookingfor) + '.\r\n=================='
+            msg += ', '.join(lookingfor) + '.\r\n=================='
 
             client.server.send_all_cmd_pred('CASEA', msg, args[1], args[2],
                                             args[3], args[4], args[5], '1')
 
             client.set_case_call_delay()
 
-            logger.log_server(
-                '[{}][{}][CASE_ANNOUNCEMENT]{}, DEF: {}, PRO: {}, JUD: {}, JUR: {}, STENO: {}.'
-                .format(client.area.abbreviation, client.char_name,
-                        args[0], args[1], args[2], args[3], args[4], args[5]),
-                client)
+            log_data = {k: v for k, v in \
+                zip(('message', 'def', 'pro', 'jud', 'jur', 'steno'), args)}
+            database.log_room('case', client, client.area, message=log_data)
     else:
         raise ClientError(
             'You cannot announce a case in an area where you are not a CM!')
@@ -273,10 +258,7 @@ def ooc_cmd_blockwtce(client, arg):
         target.can_wtce = False
         target.send_ooc(
             'A moderator blocked you from using judge signs.')
-        logger.log_mod(
-            'BlockWTCE\'d {} [{}]({}).'.format(target.char_name,
-                                               target.id, target.ip),
-            client)
+        database.log_room('blockwtce', client, client.area, target=target)
     client.send_ooc('blockwtce\'d {}.'.format(
         targets[0].char_name))
 
@@ -302,10 +284,7 @@ def ooc_cmd_unblockwtce(client, arg):
         target.can_wtce = True
         target.send_ooc(
             'A moderator unblocked you from using judge signs.')
-        logger.log_mod(
-            'UnblockWTCE\'d {} [{}]({}).'.format(target.char_name,
-                                                 target.id, target.ip),
-            client)
+        database.log_room('unblockwtce', client, client.area, target=target)
     client.send_ooc('unblockwtce\'d {}.'.format(
         targets[0].char_name))
 

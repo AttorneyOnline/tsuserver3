@@ -1,6 +1,6 @@
 import random
 
-from server import logger
+from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, ServerError, ArgumentError, AreaError
 
@@ -92,16 +92,13 @@ def ooc_cmd_forcepos(client, arg):
             t.change_position(pos)
             t.area.broadcast_evidence_list()
             t.send_ooc(f'Forced into /pos {pos}.')
+            database.log_room('forcepos', client, client.area, target=t, message=pos)
         except ClientError:
             raise
 
     client.area.broadcast_ooc(
         '{} forced {} client(s) into /pos {}.'.format(client.char_name,
                                                       len(targets), pos))
-    logger.log_server(
-        '[{}][{}]Used /forcepos {} for {} client(s).'.format(
-            client.area.abbreviation, client.char_name, pos,
-            len(targets)), client)
 
 
 def ooc_cmd_charselect(client, arg):
@@ -170,7 +167,7 @@ def ooc_cmd_charcurse(client, arg):
             'You must specify a valid target! Make sure it is a valid ID.')
     if targets:
         for c in targets:
-            log_msg = ' ' + str(c.ip) + ' to'
+            log_msg = ''
             part_msg = ' [' + str(c.id) + '] to'
             for raw_cid in args[1:]:
                 try:
@@ -184,9 +181,8 @@ def ooc_cmd_charcurse(client, arg):
             part_msg = part_msg[:-1]
             part_msg += '.'
             log_msg = log_msg[:-1]
-            log_msg += '.'
             c.char_select()
-            logger.log_mod('Charcursing' + log_msg, client)
+            database.log_room('charcurse', client, client.area, target=c, message=log_msg)
             client.send_ooc('Charcursed' + part_msg)
     else:
         client.send_ooc('No targets found.')
@@ -212,7 +208,7 @@ def ooc_cmd_uncharcurse(client, arg):
         for c in targets:
             if len(c.charcurse) > 0:
                 c.charcurse = []
-                logger.log_mod('Uncharcursing {}.'.format(c.ip), client)
+                database.log_room('uncharcurse', client, client.area, target=c)
                 client.send_ooc(f'Uncharcursed [{c.id}].')
                 c.char_select()
             else:

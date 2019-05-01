@@ -23,9 +23,8 @@ import yaml
 
 import importlib
 
-from server import logger
+from server import logger, database
 from server.area_manager import AreaManager
-from server.ban_manager import BanManager
 from server.client_manager import ClientManager
 from server.exceptions import ServerError
 from server.network.aoprotocol import AOProtocol
@@ -41,14 +40,11 @@ class TsuServer3:
         self.load_iniswaps()
         self.client_manager = ClientManager(self)
         self.area_manager = AreaManager(self)
-        self.ban_manager = BanManager()
         self.software = 'tsuserver3'
         self.version = 'vanilla'
         self.release = 3
         self.major_version = 2
         self.minor_version = 0
-        self.ipid_list = {}
-        self.hdid_list = {}
         self.char_list = None
         self.char_pages_ao1 = None
         self.music_list = None
@@ -58,7 +54,6 @@ class TsuServer3:
         self.load_characters()
         self.load_music()
         self.load_backgrounds()
-        self.load_ids()
         self.ms_client = None
         logger.setup_logger(debug=self.config['debug'])
 
@@ -84,7 +79,7 @@ class TsuServer3:
             self.ms_client = MasterServerClient(self)
             asyncio.ensure_future(self.ms_client.connect(), loop=loop)
 
-        logger.log_server('Server started.')
+        database.log_misc('start')
         print('Server started and is listening on port {}'.format(
             self.config['port']))
 
@@ -93,7 +88,7 @@ class TsuServer3:
         except KeyboardInterrupt:
             pass
 
-        logger.log_server('Server shutting down.')
+        database.log_misc('stop')
 
         ao_server.close()
         loop.run_until_complete(ao_server.wait_closed())
@@ -162,54 +157,6 @@ class TsuServer3:
             self.music_list = yaml.load(music)
         self.build_music_pages_ao1()
         self.build_music_list_ao2()
-
-    def load_ids(self):
-        """Load the known client list from persistence.
-        The IPID list is a one-to-one mapping from arbitrary numbers to
-        IP addresses; the HDID list is a one-to-many mapping from
-        client-provided "hard drive IDs" to a list of IPIDs.
-        """
-        self.ipid_list = {}
-        self.hdid_list = {}
-        # load ipids
-        try:
-            with open('storage/ip_ids.json', 'r',
-                      encoding='utf-8') as whole_list:
-                self.ipid_list = json.loads(whole_list.read())
-        except:
-            logger.log_debug(
-                'Failed to load ip_ids.json from ./storage. If ip_ids.json exists then remove it.'
-            )
-        # load hdids
-        try:
-            with open('storage/hd_ids.json', 'r',
-                      encoding='utf-8') as whole_list:
-                self.hdid_list = json.loads(whole_list.read())
-        except:
-            logger.log_debug(
-                'Failed to load hd_ids.json from ./storage. If hd_ids.json exists then remove it.'
-            )
-
-    def dump_ipids(self):
-        """Persist the IPID list."""
-        with open('storage/ip_ids.json', 'w') as whole_list:
-            json.dump(self.ipid_list, whole_list)
-
-    def dump_hdids(self):
-        """Persist the HDID list."""
-        with open('storage/hd_ids.json', 'w') as whole_list:
-            json.dump(self.hdid_list, whole_list)
-
-    def get_ipid(self, ip):
-        """
-        Gets an IPID from a bare IP address.
-        :param ip: IP address string
-        :returns: IPID
-        """
-        if not (ip in self.ipid_list):
-            self.ipid_list[ip] = len(self.ipid_list)
-            self.dump_ipids()
-        return self.ipid_list[ip]
 
     def load_backgrounds(self):
         """Load the backgrounds list from a YAML file."""
@@ -440,8 +387,7 @@ class TsuServer3:
                             self.client_manager.clients):
                         client.is_mod = False
                         client.mod_profile_name = None
-                        logger.log_mod('Unmodded due to credential changes.',
-                                       client)
+                        database.log_misc('unmod.modpass', client})
                         client.send_ooc(
                             'Your moderator credentials have been revoked.')
             self.config['modpass'] = cfg_yaml['modpass']

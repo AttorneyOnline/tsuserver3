@@ -1,4 +1,4 @@
-from server import logger
+from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, ServerError, ArgumentError
 
@@ -77,9 +77,7 @@ def ooc_cmd_kick(client, arg):
         if reason == '':
             reason = 'N/A'
         for c in targets:
-            logger.log_mod(
-                'Kicked {} [{}]({}) (reason: {}).'.format(
-                    c.char_name, c.id, c.ipid, reason), client)
+            database.log_misc('kick', client, target=c, data={'reason': reason})
             client.send_ooc("{} was kicked.".format(
                 c.char_name))
             c.send_command('KK', reason)
@@ -94,6 +92,18 @@ def ooc_cmd_ban(client, arg):
     Ban a user permanently.
     Usage: /ban <ipid> <reason>
     """
+    kickban(client, arg, False)
+
+
+def ooc_cmd_banhdid(client, arg):
+    """
+    Ban both a user's HDID and IPID.
+    Danger: Banning web users by HDID has unintended consequences.
+    Usage: /banhdid <ipid> <reason>
+    """
+    kickban(client, arg, True)
+
+def kickban(client, arg, ban_hdid):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     if len(arg) <= 1:
@@ -108,21 +118,20 @@ def ooc_cmd_ban(client, arg):
         ipid = int(raw_ipid)
     except:
         raise ClientError(f'{raw_ipid} does not look like a valid IPID.')
-    try:
-        client.server.ban_manager.add_ban(ipid, reason)
-    except ServerError:
-        raise
+
+    ban_id = database.ban(ipid, reason, ban_type='ipid', banned_by=client)
     if ipid != None:
         targets = client.server.client_manager.get_targets(
             client, TargetType.IPID, ipid, False)
         if targets:
             for c in targets:
+                if ban_hdid:
+                    database.ban(c.hdid, reason, ban_type='hdid', ban_id=ban_id)
                 c.send_command('KB', reason)
                 c.disconnect()
+                database.log_misc('ban', client, target=c, data={'reason': reason})
             client.send_ooc(f'{len(targets)} clients were kicked.')
-        client.send_ooc(f'{ipid} was banned.')
-        logger.log_mod(f'Banned {ipid} (reason: {reason}).', client)
-
+        client.send_ooc(f'{ipid} was banned. Ban ID: {ban_id}')
 
 def ooc_cmd_unban(client, arg):
     """
@@ -133,16 +142,15 @@ def ooc_cmd_unban(client, arg):
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
         raise ArgumentError(
-            'You must specify a target. Use /unban <ipid> <ipid> ...')
+            'You must specify a target. Use /unban <ban_id> <ban_id> ...')
     args = list(arg.split(' '))
-    client.send_ooc(f'Attempting to unban {len(args)} IPIDs.')
-    for raw_ipid in args:
-        try:
-            client.server.ban_manager.remove_ban(int(raw_ipid))
-        except:
-            raise ClientError(f'{raw_ipid} does not look like a valid IPID.')
-        logger.log_mod(f'Unbanned {raw_ipid}.', client)
-        client.send_ooc(f'Unbanned {raw_ipid}')
+    client.send_ooc(f'Attempting to unban {len(args)} users.')
+    for ban_id in args:
+        if database.unban(ban_id):
+            client.send_ooc(f'Removed ban ID {ban_id}.')
+        else:
+            client.send_ooc(f'{ban_id} is not on the ban list.')
+        database.log_misc('unban', client, data={'id': ban_id})
 
 
 def ooc_cmd_mute(client, arg):
@@ -165,9 +173,7 @@ def ooc_cmd_mute(client, arg):
                 msg = 'Muted the IPID ' + str(ipid) + '\'s following clients:'
                 for c in clients:
                     c.is_muted = True
-                    logger.log_mod(
-                        'Muted {} [{}]({}).'.format(c.char_name, c.id,
-                                                    c.ipid), client)
+                    database.log_misc('mute', client, target=c)
                     msg += ' ' + c.char_name + ' [' + str(c.id) + '],'
                 msg = msg[:-1]
                 msg += '.'
@@ -200,9 +206,7 @@ def ooc_cmd_unmute(client, arg):
                 msg = f'Unmuted the IPID ${str(ipid)}\'s following clients:'
                 for c in clients:
                     c.is_muted = False
-                    logger.log_mod(
-                        'Unmuted {} [{}]({}).'.format(c.char_name, c.id,
-                                                      c.ipid), client)
+                    database.log_misc('unmute', client, target=c)
                     msg += ' ' + c.char_name + ' [' + str(c.id) + '],'
                 msg = msg[:-1]
                 msg += '.'
@@ -227,12 +231,12 @@ def ooc_cmd_login(client, arg):
     try:
         login_name = client.auth_mod(arg)
     except ClientError:
-        logger.log_server('Invalid login attempt.', client)
+        database.log_misc('login.invalid', client)
         raise
     if client.area.evidence_mod == 'HiddenCM':
         client.area.broadcast_evidence_list()
     client.send_ooc('Logged in as a moderator.')
-    logger.log_mod(f'Logged in as moderator ({login_name}).', client)
+    database.log_misc('login', client, data={'profile': login_name})
 
 
 def ooc_cmd_refresh(client, arg):
@@ -248,7 +252,7 @@ def ooc_cmd_refresh(client, arg):
     else:
         try:
             client.server.refresh()
-            logger.log_mod('Reloaded server.', client)
+            database.log_misc('refresh', client)
             client.send_ooc('You have reloaded the server.')
         except ServerError:
             raise
@@ -299,6 +303,7 @@ def ooc_cmd_ooc_mute(client, arg):
         raise ArgumentError('Targets not found. Use /ooc_mute <OOC-name>.')
     for target in targets:
         target.is_ooc_muted = True
+        database.log_room('ooc_mute', client, client.area, target=target)
     client.send_ooc('Muted {} existing client(s).'.format(
         len(targets)))
 
@@ -318,5 +323,6 @@ def ooc_cmd_ooc_unmute(client, arg):
         raise ArgumentError('Targets not found. Use /ooc_unmute <OOC-name>.')
     for target in targets:
         target.is_ooc_muted = False
+        database.log_room('ooc_unmute', client, client.area, target=target)
     client.send_ooc('Unmuted {} existing client(s).'.format(
         len(targets)))

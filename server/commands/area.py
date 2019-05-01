@@ -1,4 +1,4 @@
-from server import logger
+from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, ArgumentError, AreaError
 
@@ -36,10 +36,7 @@ def ooc_cmd_bg(client, arg):
         raise
     client.area.broadcast_ooc(
         f'{client.char_name} changed the background to {arg}.')
-    logger.log_server(
-        '[{}][{}]Changed background to {}'.format(client.area.abbreviation,
-                                                  client.char_name, arg),
-        client)
+    database.log_room('bg', client, client.area, message=arg)
 
 
 def ooc_cmd_bglock(client, arg):
@@ -52,6 +49,7 @@ def ooc_cmd_bglock(client, arg):
         raise ClientError('You must be authorized to do that.')
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
+    # XXX: Okay, what?
     if client.area.bg_lock == "true":
         client.area.bg_lock = "false"
     else:
@@ -59,10 +57,7 @@ def ooc_cmd_bglock(client, arg):
     client.area.broadcast_ooc(
         '{} [{}] has set the background lock to {}.'.format(
             client.char_name, client.id, client.area.bg_lock))
-    logger.log_server(
-        '[{}][{}]Changed bglock to {}'.format(client.area.abbreviation,
-                                              client.char_name,
-                                              client.area.bg_lock), client)
+    database.log_room('bglock', client, client.area, message=client.area.bg_lock)
 
 
 def ooc_cmd_allow_iniswap(client, arg):
@@ -77,6 +72,7 @@ def ooc_cmd_allow_iniswap(client, arg):
     client.area.iniswap_allowed = not client.area.iniswap_allowed
     answer = 'allowed' if client.area.iniswap_allowed else 'forbidden'
     client.send_ooc(f'Iniswap is {answer}.')
+    database.log_room('iniswap', client, client.area, message=client.area.iniswap_allowed)
 
 
 def ooc_cmd_allow_blankposting(client, arg):
@@ -92,6 +88,7 @@ def ooc_cmd_allow_blankposting(client, arg):
     client.area.broadcast_ooc(
         '{} [{}] has set blankposting in the area to {}.'.format(
             client.char_name, client.id, answer))
+    database.log_room('blankposting', client, client.area, message=client.area.blankposting_allowed)
 
 
 def ooc_cmd_force_nonint_pres(client, arg):
@@ -107,6 +104,7 @@ def ooc_cmd_force_nonint_pres(client, arg):
     client.area.broadcast_ooc(
         '{} [{}] has set pres in the area to be {}.'.format(
             client.char_name, client.id, answer))
+    database.log_room('force_nonint_pres', client, client.area, message=client.area.non_int_pres_only)
 
 
 def ooc_cmd_status(client, arg):
@@ -121,11 +119,7 @@ def ooc_cmd_status(client, arg):
             client.area.change_status(arg)
             client.area.broadcast_ooc('{} changed status to {}.'.format(
                 client.char_name, client.area.status))
-            logger.log_server(
-                '[{}][{}]Changed status to {}'.format(client.area.abbreviation,
-                                                      client.char_name,
-                                                      client.area.status),
-                client)
+            database.log_room('status', client, client.area, message=arg)
         except AreaError:
             raise
 
@@ -173,12 +167,10 @@ def ooc_cmd_area_lock(client, arg):
     """
     if not client.area.locking_allowed:
         client.send_ooc('Area locking is disabled in this area.')
-        return
-    if client.area.is_locked == client.area.Locked.LOCKED:
+    elif client.area.is_locked == client.area.Locked.LOCKED:
         client.send_ooc('Area is already locked.')
-    if client in client.area.owners:
+    elif client in client.area.owners:
         client.area.lock()
-        return
     else:
         raise ClientError('Only CM can lock the area.')
 
@@ -190,12 +182,10 @@ def ooc_cmd_area_spectate(client, arg):
     """
     if not client.area.locking_allowed:
         client.send_ooc('Area locking is disabled in this area.')
-        return
-    if client.area.is_locked == client.area.Locked.SPECTATABLE:
+    elif client.area.is_locked == client.area.Locked.SPECTATABLE:
         client.send_ooc('Area is already spectatable.')
-    if client in client.area.owners:
+    elif client in client.area.owners:
         client.area.spectator()
-        return
     else:
         raise ClientError('Only CM can make the area spectatable.')
 
@@ -207,7 +197,7 @@ def ooc_cmd_area_unlock(client, arg):
     """
     if client.area.is_locked == client.area.Locked.FREE:
         raise ClientError('Area is already unlocked.')
-    if not client in client.area.owners:
+    elif not client in client.area.owners:
         raise ClientError('Only CM can unlock area.')
     client.area.unlock()
     client.send_ooc('Area is unlocked.')
@@ -220,9 +210,9 @@ def ooc_cmd_invite(client, arg):
     """
     if not arg:
         raise ClientError('You must specify a target. Use /invite <id>')
-    if client.area.is_locked == client.area.Locked.FREE:
+    elif client.area.is_locked == client.area.Locked.FREE:
         raise ClientError('Area isn\'t locked.')
-    if not client in client.area.owners and not client.is_mod:
+    elif not client in client.area.owners and not client.is_mod:
         raise ClientError('You must be authorized to do that.')
     try:
         c = client.server.client_manager.get_targets(client, TargetType.ID,
@@ -232,6 +222,7 @@ def ooc_cmd_invite(client, arg):
             c.char_name))
         c.send_ooc(
             f'You were invited and given access to {client.area.name}.')
+        database.log_room('invite', client, client.area, target=c)
     except:
         raise ClientError('You must specify a target. Use /invite <id>')
 
@@ -243,9 +234,9 @@ def ooc_cmd_uninvite(client, arg):
     """
     if not client in client.area.owners and not client.is_mod:
         raise ClientError('You must be authorized to do that.')
-    if client.area.is_locked == client.area.Locked.FREE:
+    elif client.area.is_locked == client.area.Locked.FREE:
         raise ClientError('Area isn\'t locked.')
-    if not arg:
+    elif not arg:
         raise ClientError('You must specify a target. Use /uninvite <id>')
     arg = arg.split(' ')
     targets = client.server.client_manager.get_targets(client, TargetType.ID,
@@ -258,6 +249,7 @@ def ooc_cmd_uninvite(client, arg):
                         c.char_name))
                 c.send_ooc(
                     "You were removed from the area whitelist.")
+                database.log_room('uninvite', client, client.area, target=c)
                 if client.area.is_locked != client.area.Locked.FREE:
                     client.area.invite_list.pop(c.id)
         except AreaError:
@@ -302,6 +294,7 @@ def ooc_cmd_area_kick(client, arg):
                 c.change_area(area)
                 c.send_ooc(
                     f"You were kicked from the area to area {output}.")
+                database.log_room('area_kick', client, client.area, target=c, message=output)
                 if client.area.is_locked != client.area.Locked.FREE:
                     client.area.invite_list.pop(c.id)
         except AreaError:

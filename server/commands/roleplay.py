@@ -1,7 +1,7 @@
 import random
 import re
 
-from server import logger
+from server import database
 from server.exceptions import ClientError, ServerError, ArgumentError
 
 __all__ = [
@@ -42,17 +42,14 @@ def ooc_cmd_roll(client, arg):
     if val[1] > 20 or val[1] < 1:
         raise ArgumentError('Num of rolls must be between 1 and 20')
     roll = ''
-    for i in range(val[1]):
+    for _ in range(val[1]):
         roll += str(random.randint(1, val[0])) + ', '
     roll = roll[:-2]
     if val[1] > 1:
         roll = '(' + roll + ')'
     client.area.broadcast_ooc('{} rolled {} out of {}.'.format(
         client.char_name, roll, val[0]))
-    logger.log_server(
-        '[{}][{}]Used /roll and got {} out of {}.'.format(
-            client.area.abbreviation, client.char_name, roll, val[0]),
-        client)
+    database.log_room('roll', client, client.area, message=f'{roll} out of {val[0]}')
 
 
 def ooc_cmd_rollp(client, arg):
@@ -94,10 +91,7 @@ def ooc_cmd_rollp(client, arg):
         c.send_ooc('[{}]{} secretly rolled {} out of {}.'.format(
             client.area.abbreviation, client.char_name, roll, val[0]))
 
-    logger.log_server(
-        '[{}][{}]Used /rollp and got {} out of {}.'.format(
-            client.area.abbreviation, client.char_name, roll, val[0]),
-        client)
+    database.log_room('rollp', client, client.area, message=f'{roll} out of {val[0]}')
 
 
 def ooc_cmd_notecard(client, arg):
@@ -110,6 +104,7 @@ def ooc_cmd_notecard(client, arg):
     client.area.cards[client.char_name] = arg
     client.area.broadcast_ooc('{} wrote a note card.'.format(
         client.char_name))
+    database.log_room('notecard', client, client.area)
 
 
 def ooc_cmd_notecard_clear(client, arg):
@@ -121,6 +116,7 @@ def ooc_cmd_notecard_clear(client, arg):
         del client.area.cards[client.char_name]
         client.area.broadcast_ooc('{} erased their note card.'.format(
             client.char_name))
+        database.log_room('notecard_erase', client, client.area)
     except KeyError:
         raise ClientError('You do not have a note card.')
 
@@ -139,6 +135,7 @@ def ooc_cmd_notecard_reveal(client, arg):
         msg += f'{card_owner}: {card_msg}\n'
     client.area.cards.clear()
     client.area.broadcast_ooc(msg)
+    database.log_room('notecard_reveal', client, client.area)
 
 
 def ooc_cmd_rolla_reload(client, arg):
@@ -151,6 +148,7 @@ def ooc_cmd_rolla_reload(client, arg):
             'You must be a moderator to load the ability dice configuration.')
     rolla_reload(client.area)
     client.send_ooc('Reloaded ability dice configuration.')
+    database.log_room('rolla_reload', client, client.area)
 
 
 def rolla_reload(area):
@@ -176,13 +174,12 @@ def ooc_cmd_rolla_set(client, arg):
         raise ArgumentError(
             f'You must specify the ability set name.\nAvailable sets: {available_sets}'
         )
-    if arg in client.area.ability_dice:
-        client.ability_dice_set = arg
-        client.send_ooc(f"Set ability set to {arg}.")
-    else:
+    elif arg not in client.area.ability_dice:
         raise ArgumentError(
             f'Invalid ability set \'{arg}\'.\nAvailable sets: {available_sets}'
         )
+    client.ability_dice_set = arg
+    client.send_ooc(f"Set ability set to {arg}.")
 
 
 def ooc_cmd_rolla(client, arg):
@@ -201,6 +198,8 @@ def ooc_cmd_rolla(client, arg):
     ability = ability_dice[roll] if roll in ability_dice else "Nothing happens"
     client.area.broadcast_ooc('{} rolled a {} (out of {}): {}.'.format(
         client.char_name, roll, max_roll, ability))
+    database.log_room('rolla', client, client.area,
+        message=f'{roll} out of {max_roll}: {ability}')
 
 
 def ooc_cmd_coinflip(client, arg):
@@ -214,7 +213,4 @@ def ooc_cmd_coinflip(client, arg):
     flip = random.choice(coin)
     client.area.broadcast_ooc('{} flipped a coin and got {}.'.format(
         client.char_name, flip))
-    logger.log_server(
-        '[{}][{}]Used /coinflip and got {}.'.format(client.area.abbreviation,
-                                                    client.char_name,
-                                                    flip), client)
+    database.log_room('coinflip', client, client.area, message=flip)

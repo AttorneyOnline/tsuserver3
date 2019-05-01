@@ -19,7 +19,7 @@ import re
 import time
 from heapq import heappop, heappush
 
-from server import logger
+from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, AreaError
 
@@ -186,11 +186,9 @@ class ClientManager:
             self.area.send_command('CharsCheck',
                                    *self.get_available_char_list())
 
-            abbrev = self.area.abbreviation
             new_char = self.char_name
-            logger.log_server(
-                f'[{abbrev}]Changed character from {old_char} to {new_char}.',
-                self)
+            database.log_room('char.change', self, self.area,
+                message={'from': old_char, 'to': new_char})
 
         def change_music_cd(self):
             """
@@ -289,9 +287,8 @@ class ClientManager:
 
             self.send_ooc(
                 f'Changed area to {area.name} [{self.area.status}].')
-            logger.log_server(
-                f'[{self.char_name}] Changed area from {old_area.name} ({old_area.id}) to {self.area.name} ({self.area.id}).',
-                self)
+            database.log_room('area.leave', self, old_area)
+            database.log_room('area.join', self, self.area)
             self.area.send_command('CharsCheck',
                                    *self.get_available_char_list())
             self.send_command('HP', 1, self.area.hp_def)
@@ -466,7 +463,7 @@ class ClientManager:
         def char_name(self):
             """Get the name of the character that the client is using."""
             if self.char_id == -1:
-                return 'CHAR_SELECT'
+                return '(spectator)'
             return self.server.char_list[self.char_id]
 
         def change_position(self, pos=''):
@@ -474,10 +471,10 @@ class ClientManager:
             Change the character's current position in the area.
             :param pos: position in area (Default value = '')
             """
-            if pos not in ('', 'def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'jur',
-                           'sea'):
+            positions = ('def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'jur', 'sea')
+            if pos not in positions and pos != '':
                 raise ClientError(
-                    'Invalid position. Possible values: def, pro, hld, hlp, jud, wit, jur, sea.'
+                    f'Invalid position. Possible values: {', '.join(positions)}'
                 )
             self.pos = pos
 

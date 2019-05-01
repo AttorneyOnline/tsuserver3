@@ -21,8 +21,7 @@ import unicodedata
 from enum import Enum
 from time import localtime, strftime
 
-from server import commands
-from server import logger
+from server import commands, database
 from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
 from server.fantacrypt import fanta_decrypt
 
@@ -54,10 +53,19 @@ class AOProtocol(asyncio.Protocol):
         """
         buf = data
         ipid = self.client.ipid
+        hdid = self.client.hdid
+        ban = database.find_ban(ipid, hdid)
 
-        if not self.client.is_checked and self.server.ban_manager.is_banned(ipid):
-            self.client.send_command(
-                'BD', self.server.ban_manager.get_ban_reason(ipid)) + f' (ID: {ipid})'
+        if not self.client.is_checked and ban is not None:
+            if ban.unban_date is not None:
+                unban_date = ban.unban_date.date().isoformat()
+            else:
+                unban_date = 'N/A'
+
+            msg = f'{ban.reason}\r\n'
+            msg += f'ID: {ban.id}\r\n'
+            msg += f'Until: {unban_date}'
+            self.client.send_command('BD', msg)
             self.client.transport.close()
         else:
             self.client.is_checked = True
@@ -158,24 +166,14 @@ class AOProtocol(asyncio.Protocol):
         """
         if not self.validate_net_cmd(args, self.ArgType.STR, needs_auth=False):
             return
-        self.client.hdid = args[0]
-        if self.client.hdid not in self.client.server.hdid_list:
-            self.client.server.hdid_list[self.client.hdid] = []
-        if self.client.ipid not in self.client.server.hdid_list[
-                self.client.hdid]:
-            self.client.server.hdid_list[self.client.hdid].append(
-                self.client.ipid)
-            self.client.server.dump_hdids()
-        for ipid in self.client.server.hdid_list[self.client.hdid]:
-            if self.server.ban_manager.is_banned(ipid):
-                logger.log_server(
-                    f'Banned user attempted to connect. HDID: {self.client.hdid}.',
-                    self.client)
-                self.client.send_command(
-                    'BD', self.server.ban_manager.get_ban_reason(ipid))
-                self.client.disconnect()
-                return
-        logger.log_server(f'Connected. HDID: {self.client.hdid}.', self.client)
+        hdid = self.client.hdid = args[0]
+        ban = database.find_ban(ipid, hdid)
+        if ban is not None:
+            database.log_connect(self.client, failed=True)
+            self.client.send_command('BD', ban.reason)
+            self.client.disconnect()
+            return
+        database.log_connect(self.client, failed=False)
         self.client.send_command('ID', self.client.id, self.server.software,
                                  self.server.get_version_string())
         self.client.send_command('PN',
@@ -524,10 +522,7 @@ class AOProtocol(asyncio.Protocol):
             other_emote, offset_pair, other_offset, other_flip, nonint_pre)
 
         self.client.area.set_next_msg_delay(len(msg))
-        logger.log_server(
-            '[IC][{}][{}]{}'.format(self.client.area.abbreviation,
-                                    self.client.char_name, msg),
-            self.client)
+        database.log_ic(self.client, self.client.area, showname, msg)
 
         if (self.client.area.is_recording):
             self.client.area.recorded_messages.append(args)
@@ -596,10 +591,7 @@ class AOProtocol(asyncio.Protocol):
                 'CT',
                 '[' + self.client.area.abbreviation + ']' + self.client.name,
                 args[1])
-            logger.log_server(
-                '[OOC][{}][{}]{}'.format(self.client.area.abbreviation,
-                                         self.client.char_name, args[1]),
-                self.client)
+            database.log_room('ooc', self.client, self.client.room, message=args[1])
 
     def net_cmd_mc(self, args):
         """Play music.
@@ -652,10 +644,7 @@ class AOProtocol(asyncio.Protocol):
                             return
                     self.client.area.add_jukebox_vote(self.client, name,
                                                       length, showname)
-                    logger.log_server(
-                        '[{}][{}]Added a jukebox vote for {}.'.format(
-                            self.client.area.abbreviation,
-                            self.client.char_name, name), self.client)
+                    database.log_room('jukebox.vote', self.client, self.client.room, message=name)
                 else:
                     if len(args) > 2:
                         showname = args[2]
@@ -673,10 +662,7 @@ class AOProtocol(asyncio.Protocol):
                         self.client.area.play_music(name, self.client.char_id,
                                                     length)
                         self.client.area.add_music_playing(self.client, name)
-                    logger.log_server(
-                        '[{}][{}]Changed music to {}.'.format(
-                            self.client.area.abbreviation,
-                            self.client.char_name, name), self.client)
+                    database.log_room('music', self.client, self.client.room, message=name)
             except ServerError:
                 return
         except ClientError as ex:
@@ -726,10 +712,7 @@ class AOProtocol(asyncio.Protocol):
         elif len(args) == 2:
             self.client.area.send_command('RT', args[0], args[1])
         self.client.area.add_to_judgelog(self.client, f'used {sign}')
-        logger.log_server(
-            "[{}]{} Used WT/CE".format(self.client.area.abbreviation,
-                                       self.client.char_name),
-            self.client)
+        database.log_room('wtce', self.client, self.client.room, message=sign)
 
     def net_cmd_setcase(self, args):
         """Sets the casing preferences of the given client.
@@ -768,20 +751,11 @@ class AOProtocol(asyncio.Protocol):
             msg = '=== Case Announcement ===\r\n{} [{}] is hosting {}, looking for '.format(
                 self.client.char_name, self.client.id, args[0])
 
-            lookingfor = []
+            lookingfor = [p for p, q in \
+                zip(['defense', 'prosecutor', 'judge', 'juror', 'stenographer'], args[1:])
+                if q == '1']
 
-            if args[1] == "1":
-                lookingfor.append("defence")
-            if args[2] == "1":
-                lookingfor.append("prosecutor")
-            if args[3] == "1":
-                lookingfor.append("judge")
-            if args[4] == "1":
-                lookingfor.append("juror")
-            if args[5] == "1":
-                lookingfor.append("stenographer")
-
-            msg = msg + ', '.join(lookingfor) + '.\r\n=================='
+            msg += ', '.join(lookingfor) + '.\r\n=================='
 
             self.client.server.send_all_cmd_pred('CASEA', msg, args[1],
                                                  args[2], args[3], args[4],
@@ -789,11 +763,9 @@ class AOProtocol(asyncio.Protocol):
 
             self.client.set_case_call_delay()
 
-            logger.log_server(
-                '[{}][{}][CASE_ANNOUNCEMENT]{}, DEF: {}, PRO: {}, JUD: {}, JUR: {}, STENO: {}.'
-                .format(self.client.area.abbreviation,
-                        self.client.char_name, args[0], args[1], args[2],
-                        args[3], args[4], args[5]), self.client)
+            log_data = {k: v for k, v in \
+                zip(('message', 'def', 'pro', 'jud', 'jur', 'steno'), args)}
+            database.log_room('case', client, client.area, message=log_data)
         else:
             raise ClientError(
                 'You cannot announce a case in an area where you are not a CM!'
@@ -819,10 +791,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.area.change_hp(args[0], args[1])
             self.client.area.add_to_judgelog(self.client,
                                              'changed the penalties')
-            logger.log_server(
-                '[{}]{} changed HP ({}) to {}'.format(
-                    self.client.area.abbreviation, self.client.char_name,
-                    args[0], args[1]), self.client)
+            database.log_room('hp', client, client.area)
         except AreaError:
             return
 
@@ -839,6 +808,7 @@ class AOProtocol(asyncio.Protocol):
         # evi = Evidence(args[0], args[1], args[2], self.client.pos)
         self.client.area.evi_list.add_evidence(self.client, args[0], args[1],
                                                args[2], 'all')
+        database.log_room('evidence.add', client, client.area)
         self.client.area.broadcast_evidence_list()
 
     def net_cmd_de(self, args):
@@ -850,6 +820,7 @@ class AOProtocol(asyncio.Protocol):
 
         self.client.area.evi_list.del_evidence(
             self.client, self.client.evi_list[int(args[0])])
+        database.log_room('evidence.del', client, client.area)
         self.client.area.broadcast_evidence_list()
 
     def net_cmd_ee(self, args):
@@ -866,6 +837,7 @@ class AOProtocol(asyncio.Protocol):
 
         self.client.area.evi_list.edit_evidence(
             self.client, self.client.evi_list[int(args[0])], evi)
+        database.log_room('evidence.edit', client, client.area)
         self.client.area.broadcast_evidence_list()
 
     def net_cmd_zz(self, args):
@@ -896,10 +868,7 @@ class AOProtocol(asyncio.Protocol):
                     self.client.ip, self.client.area.name),
                 pred=lambda c: c.is_mod)
             self.client.set_mod_call_delay()
-            logger.log_server(
-                '[{}]{} called a moderator.'.format(
-                    self.client.area.abbreviation,
-                    self.client.char_name), self.client)
+            database.log_room('modcall', client, client.area)
         else:
             self.server.send_all_cmd_pred(
                 'ZZ',
@@ -909,10 +878,7 @@ class AOProtocol(asyncio.Protocol):
                     args[0][:100]),
                 pred=lambda c: c.is_mod)
             self.client.set_mod_call_delay()
-            logger.log_server(
-                '[{}]{} called a moderator: {}.'.format(
-                    self.client.area.abbreviation, self.client.char_name,
-                    args[0]), self.client)
+            database.log_room('modcall', client, client.area, message=args[0])
 
     def net_cmd_opKICK(self, args):
         """

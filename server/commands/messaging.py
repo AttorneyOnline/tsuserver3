@@ -1,4 +1,4 @@
-from server import logger
+from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, ArgumentError, AreaError
 
@@ -57,6 +57,7 @@ def message_areas_cm(client, areas, message):
             return
         a.send_command('CT', client.name, message)
         a.send_owner_command('CT', client.name, message)
+        database.log_room('chat.cm', client, a, message=message)
 
 
 def ooc_cmd_g(client, arg):
@@ -69,9 +70,7 @@ def ooc_cmd_g(client, arg):
     if len(arg) == 0:
         raise ArgumentError("You can't send an empty message.")
     client.server.broadcast_global(client, arg)
-    logger.log_server(
-        '[{}][{}][GLOBAL]{}.'.format(client.area.abbreviation,
-                                     client.char_name, arg), client)
+    database.log_room('chat.global', client, client.area, message=arg)
 
 
 def ooc_cmd_gm(client, arg):
@@ -86,9 +85,7 @@ def ooc_cmd_gm(client, arg):
     if len(arg) == 0:
         raise ArgumentError("Can't send an empty message.")
     client.server.broadcast_global(client, arg, True)
-    logger.log_mod(
-        '[{}][{}][GLOBAL-MOD]{}.'.format(client.area.abbreviation,
-                                         client.char_name, arg), client)
+    database.log_room('chat.global-mod', client, client.area, message=arg)
 
 
 def ooc_cmd_m(client, arg):
@@ -101,9 +98,7 @@ def ooc_cmd_m(client, arg):
     if len(arg) == 0:
         raise ArgumentError("You can't send an empty message.")
     client.server.send_modchat(client, arg)
-    logger.log_mod(
-        '[{}][{}][MODCHAT]{}.'.format(client.area.abbreviation,
-                                      client.char_name, arg), client)
+    database.log_room('chat.mod', client, client.area, message=arg)
 
 
 def ooc_cmd_lm(client, arg):
@@ -118,9 +113,7 @@ def ooc_cmd_lm(client, arg):
     client.area.send_command(
         'CT', '{}[MOD][{}]'.format(client.server.config['hostname'],
                                    client.char_name), arg)
-    logger.log_mod(
-        '[{}][{}][LOCAL-MOD]{}.'.format(client.area.abbreviation,
-                                        client.char_name, arg), client)
+    database.log_room('chat.local-mod', client, client.area, message=arg)
 
 
 def ooc_cmd_announce(client, arg):
@@ -135,10 +128,7 @@ def ooc_cmd_announce(client, arg):
     client.server.send_all_cmd_pred(
         'CT', '{}'.format(client.server.config['hostname']),
         f'=== Announcement ===\r\n{arg}\r\n==================', '1')
-    logger.log_mod(
-        '[{}][{}][ANNOUNCEMENT]{}.'.format(client.area.abbreviation,
-                                           client.char_name, arg),
-        client)
+    database.log_room('chat.announce', client, client.area, message=arg)
 
 
 def ooc_cmd_toggleglobal(client, arg):
@@ -165,9 +155,7 @@ def ooc_cmd_need(client, arg):
     if len(arg) == 0:
         raise ArgumentError("You must specify what you need.")
     client.server.broadcast_need(client, arg)
-    logger.log_server(
-        '[{}][{}][NEED]{}.'.format(client.area.abbreviation,
-                                   client.char_name, arg), client)
+    database.log_room('chat.announce.need', client, client.area, message=arg)
 
 
 def ooc_cmd_toggleadverts(client, arg):
