@@ -4,6 +4,8 @@ from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, ServerError, ArgumentError
 
+from . import mod_only
+
 __all__ = [
     'ooc_cmd_doc',
     'ooc_cmd_cleardoc',
@@ -47,15 +49,14 @@ def ooc_cmd_cleardoc(client, arg):
     database.log_room('doc.clear', client, client.area)
 
 
+@mod_only
 def ooc_cmd_evidence_mod(client, arg):
     """
     Change the evidence privilege mode. Refer to the documentation
     for more information on the function of each mode.
     Usage: /evidence_mod <FFA|Mods|CM|HiddenCM>
     """
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
-    elif not arg or arg == client.area.evidence_mod:
+    if not arg or arg == client.area.evidence_mod:
         client.send_ooc(
             f'current evidence mod: {client.area.evidence_mod}')
     elif arg in ['FFA', 'Mods', 'CM', 'HiddenCM']:
@@ -138,37 +139,35 @@ def ooc_cmd_cm(client, arg):
         raise ClientError('You must be authorized to do that.')
 
 
+@mod_only(area_owners=True)
 def ooc_cmd_uncm(client, arg):
     """
     Remove a case manager from the current area.
     Usage: /uncm <id>
     """
-    if client in client.area.owners or client.is_mod:
-        if len(arg) > 0:
-            arg = arg.split(' ')
-        else:
-            arg = [client.id]
-        for id in arg:
-            try:
-                id = int(id)
-                c = client.server.client_manager.get_targets(
-                    client, TargetType.ID, id, False)[0]
-                if c in client.area.owners:
-                    client.area.owners.remove(c)
-                    client.server.area_manager.send_arup_cms()
-                    client.area.broadcast_ooc(
-                        '{} [{}] is no longer CM in this area.'.format(
-                            c.char_name, c.id))
-                    database.log_room('cm.remove', client, client.area, target=c)
-                else:
-                    client.send_ooc(
-                        'You cannot remove someone from CMing when they aren\'t a CM.'
-                    )
-            except:
-                client.send_ooc(
-                    f'{id} does not look like a valid ID.')
+    if len(arg) > 0:
+        arg = arg.split(' ')
     else:
-        raise ClientError('You must be authorized to do that.')
+        arg = [client.id]
+    for id in arg:
+        try:
+            id = int(id)
+            c = client.server.client_manager.get_targets(
+                client, TargetType.ID, id, False)[0]
+            if c in client.area.owners:
+                client.area.owners.remove(c)
+                client.server.area_manager.send_arup_cms()
+                client.area.broadcast_ooc(
+                    '{} [{}] is no longer CM in this area.'.format(
+                        c.char_name, c.id))
+                database.log_room('cm.remove', client, client.area, target=c)
+            else:
+                client.send_ooc(
+                    'You cannot remove someone from CMing when they aren\'t a CM.'
+                )
+        except:
+            client.send_ooc(
+                f'{id} does not look like a valid ID.')
 
 
 # LEGACY
@@ -237,14 +236,13 @@ def ooc_cmd_anncase(client, arg):
             'You cannot announce a case in an area where you are not a CM!')
 
 
+@mod_only
 def ooc_cmd_blockwtce(client, arg):
     """
     Prevent a user from using Witness Testimony/Cross Examination buttons
     as a judge.
     Usage: /blockwtce <id>
     """
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
         raise ArgumentError('You must specify a target. Use /blockwtce <id>.')
     try:
@@ -263,13 +261,12 @@ def ooc_cmd_blockwtce(client, arg):
         targets[0].char_name))
 
 
+@mod_only
 def ooc_cmd_unblockwtce(client, arg):
     """
     Allow a user to use WT/CE again.
     Usage: /unblockwtce <id>
     """
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
         raise ArgumentError(
             'You must specify a target. Use /unblockwtce <id>.')
@@ -289,13 +286,12 @@ def ooc_cmd_unblockwtce(client, arg):
         targets[0].char_name))
 
 
+@mod_only
 def ooc_cmd_judgelog(client, arg):
     """
     List the last 10 uses of judge controls in the current area.
     Usage: /judgelog
     """
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
     if len(arg) != 0:
         raise ArgumentError('This command does not take any arguments.')
     jlog = client.area.judgelog

@@ -4,6 +4,8 @@ from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, ServerError, ArgumentError, AreaError
 
+from . import mod_only
+
 __all__ = [
     'ooc_cmd_switch',
     'ooc_cmd_pos',
@@ -54,14 +56,12 @@ def ooc_cmd_pos(client, arg):
         client.send_ooc('Position changed.')
 
 
+@mod_only(area_owners=True)
 def ooc_cmd_forcepos(client, arg):
     """
     Set the place another character resides in the room.
     Usage: /forcepos <pos> <target>
     """
-    if not client in client.area.owners and not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
-
     args = arg.split()
 
     if len(args) < 1:
@@ -109,16 +109,17 @@ def ooc_cmd_charselect(client, arg):
     """
     if not arg:
         client.char_select()
-    elif not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
     else:
-        try:
-            client.server.client_manager.get_targets(client, TargetType.ID,
-                                                     int(arg),
-                                                     False)[0].char_select()
-        except:
-            raise ArgumentError(
-                'Wrong arguments. Use /charselect <target\'s id>')
+        force_charselect(client, arg)
+
+
+@mod_only
+def force_charselect(client, arg):
+    try:
+        client.server.client_manager.get_targets(client, TargetType.ID,
+            int(arg), False)[0].char_select()
+    except:
+        raise ArgumentError('Wrong arguments. Use /charselect <target\'s id>')
 
 
 def ooc_cmd_randomchar(client, arg):
@@ -143,14 +144,13 @@ def ooc_cmd_randomchar(client, arg):
         client.char_name))
 
 
+@mod_only
 def ooc_cmd_charcurse(client, arg):
     """
     Lock a user into being able to choose only from a list of characters.
     Usage: /charcurse <id> [charids...]
     """
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
-    elif len(arg) == 0:
+    if len(arg) == 0:
         raise ArgumentError(
             'You must specify a target (an ID) and at least one character ID. Consult /charids for the character IDs.'
         )
@@ -188,14 +188,13 @@ def ooc_cmd_charcurse(client, arg):
         client.send_ooc('No targets found.')
 
 
+@mod_only
 def ooc_cmd_uncharcurse(client, arg):
     """
     Remove the character choice restrictions from a user.
     Usage: /uncharcurse <id>
     """
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
-    elif len(arg) == 0:
+    if len(arg) == 0:
         raise ArgumentError('You must specify a target (an ID).')
     args = arg.split()
     try:
@@ -217,13 +216,12 @@ def ooc_cmd_uncharcurse(client, arg):
         client.send_ooc('No targets found.')
 
 
+@mod_only
 def ooc_cmd_charids(client, arg):
     """
     Show character IDs corresponding to each character name.
     Usage: /charids
     """
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
     if len(arg) != 0:
         raise ArgumentError("This command doesn't take any arguments")
     msg = 'Here is a list of all available characters on the server:'

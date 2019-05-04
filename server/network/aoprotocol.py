@@ -21,9 +21,10 @@ import unicodedata
 from enum import Enum
 from time import localtime, strftime
 
-from server import commands, database
+from server import database, logger
 from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
 from server.fantacrypt import fanta_decrypt
+from .. import commands
 
 
 class AOProtocol(asyncio.Protocol):
@@ -167,6 +168,7 @@ class AOProtocol(asyncio.Protocol):
         if not self.validate_net_cmd(args, self.ArgType.STR, needs_auth=False):
             return
         hdid = self.client.hdid = args[0]
+        ipid = self.client.ipid
         ban = database.find_ban(ipid, hdid)
         if ban is not None:
             database.log_connect(self.client, failed=True)
@@ -175,7 +177,7 @@ class AOProtocol(asyncio.Protocol):
             return
         database.log_connect(self.client, failed=False)
         self.client.send_command('ID', self.client.id, self.server.software,
-                                 self.server.get_version_string())
+                                 self.server.version)
         self.client.send_command('PN',
                                  self.server.player_count - 1,
                                  self.server.config['playerlimit'])
@@ -575,6 +577,8 @@ class AOProtocol(asyncio.Protocol):
                 arg = spl[1][:256]
             try:
                 called_function = f'ooc_cmd_{cmd}'
+                if cmd == 'help' and arg != '':
+                    self.client.send_ooc(commands.help(called_function))
                 getattr(commands, called_function)(self.client, arg)
             except AttributeError:
                 print('Attribute error with ' + called_function)
@@ -765,7 +769,7 @@ class AOProtocol(asyncio.Protocol):
 
             log_data = {k: v for k, v in \
                 zip(('message', 'def', 'pro', 'jud', 'jur', 'steno'), args)}
-            database.log_room('case', client, client.area, message=log_data)
+            database.log_room('case', self.client, self.client.area, message=log_data)
         else:
             raise ClientError(
                 'You cannot announce a case in an area where you are not a CM!'
@@ -791,7 +795,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.area.change_hp(args[0], args[1])
             self.client.area.add_to_judgelog(self.client,
                                              'changed the penalties')
-            database.log_room('hp', client, client.area)
+            database.log_room('hp', self.client, self.client.area)
         except AreaError:
             return
 
@@ -808,7 +812,7 @@ class AOProtocol(asyncio.Protocol):
         # evi = Evidence(args[0], args[1], args[2], self.client.pos)
         self.client.area.evi_list.add_evidence(self.client, args[0], args[1],
                                                args[2], 'all')
-        database.log_room('evidence.add', client, client.area)
+        database.log_room('evidence.add', self.client, self.client.area)
         self.client.area.broadcast_evidence_list()
 
     def net_cmd_de(self, args):
@@ -820,7 +824,7 @@ class AOProtocol(asyncio.Protocol):
 
         self.client.area.evi_list.del_evidence(
             self.client, self.client.evi_list[int(args[0])])
-        database.log_room('evidence.del', client, client.area)
+        database.log_room('evidence.del', self.client, self.client.area)
         self.client.area.broadcast_evidence_list()
 
     def net_cmd_ee(self, args):
@@ -837,7 +841,7 @@ class AOProtocol(asyncio.Protocol):
 
         self.client.area.evi_list.edit_evidence(
             self.client, self.client.evi_list[int(args[0])], evi)
-        database.log_room('evidence.edit', client, client.area)
+        database.log_room('evidence.edit', self.client, self.client.area)
         self.client.area.broadcast_evidence_list()
 
     def net_cmd_zz(self, args):
@@ -868,7 +872,7 @@ class AOProtocol(asyncio.Protocol):
                     self.client.ip, self.client.area.name),
                 pred=lambda c: c.is_mod)
             self.client.set_mod_call_delay()
-            database.log_room('modcall', client, client.area)
+            database.log_room('modcall', self.client, self.client.area)
         else:
             self.server.send_all_cmd_pred(
                 'ZZ',
@@ -878,7 +882,7 @@ class AOProtocol(asyncio.Protocol):
                     args[0][:100]),
                 pred=lambda c: c.is_mod)
             self.client.set_mod_call_delay()
-            database.log_room('modcall', client, client.area, message=args[0])
+            database.log_room('modcall', self.client, self.client.area, message=args[0])
 
     def net_cmd_opKICK(self, args):
         """

@@ -22,6 +22,7 @@ from enum import Enum
 
 import yaml
 
+from server import database
 from server.evidence import EvidenceList
 from server.exceptions import AreaError
 

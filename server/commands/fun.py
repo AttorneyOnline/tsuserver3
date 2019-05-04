@@ -2,6 +2,8 @@ from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, ArgumentError
 
+from . import mod_only
+
 __all__ = [
     'ooc_cmd_disemvowel',
     'ooc_cmd_undisemvowel',
@@ -10,14 +12,13 @@ __all__ = [
 ]
 
 
+@mod_only
 def ooc_cmd_disemvowel(client, arg):
     """
     Remove all vowels from a user's IC chat.
     Usage: /disemvowel <id>
     """
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
-    elif len(arg) == 0:
+    if len(arg) == 0:
         raise ArgumentError('You must specify a target.')
     try:
         targets = client.server.client_manager.get_targets(
@@ -33,14 +34,13 @@ def ooc_cmd_disemvowel(client, arg):
         client.send_ooc('No targets found.')
 
 
+@mod_only
 def ooc_cmd_undisemvowel(client, arg):
     """
     Give back the freedom of vowels to a user.
     Usage: /undisemvowel <id>
     """
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
-    elif len(arg) == 0:
+    if len(arg) == 0:
         raise ArgumentError('You must specify a target.')
     try:
         targets = client.server.client_manager.get_targets(
@@ -57,14 +57,13 @@ def ooc_cmd_undisemvowel(client, arg):
         client.send_ooc('No targets found.')
 
 
+@mod_only
 def ooc_cmd_shake(client, arg):
     """
     Scramble the words in a user's IC chat.
     Usage: /shake <id>
     """
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
-    elif len(arg) == 0:
+    if len(arg) == 0:
         raise ArgumentError('You must specify a target.')
     try:
         targets = client.server.client_manager.get_targets(
@@ -80,14 +79,13 @@ def ooc_cmd_shake(client, arg):
         client.send_ooc('No targets found.')
 
 
+@mod_only
 def ooc_cmd_unshake(client, arg):
     """
     Give back the freedom of coherent grammar to a user.
     Usage: /unshake <id>
     """
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
-    elif len(arg) == 0:
+    if len(arg) == 0:
         raise ArgumentError('You must specify a target.')
     try:
         targets = client.server.client_manager.get_targets(

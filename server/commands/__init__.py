@@ -15,6 +15,32 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+def reload():
+    """Reload all submodules."""
+    import sys, inspect, importlib
+    me = sys.modules[__name__]
+    for _, v in inspect.getmembers(me):
+        if inspect.ismodule(v):
+            m = importlib.reload(v)
+            for f in m.__all__:
+                me.__dict__[f] = m.__dict__[f]
+
+
+def help(command):
+    import sys
+    return getattr(sys.modules[__name__], command).__doc__
+
+
+def mod_only(func, area_owners=False):
+    import functools
+    @functools.wraps(func)
+    def wrapper_mod_only(client, arg, *args, **kwargs):
+        if not client.is_mod and (not area_owners or not client in area_owners):
+            raise ClientError('You must be authorized to do that.')
+        func(client, arg, *args, **kwargs)
+    return wrapper_mod_only
+
+
 # Note that only the members of __all__ in each module will be imported.
 # There must be an __all__ in each module in order for reloading
 # to work properly.
@@ -26,13 +52,3 @@ from .fun import *
 from .messaging import *
 from .music import *
 from .roleplay import *
-
-def reload():
-    """Reload all submodules."""
-    import sys, inspect, importlib
-    me = sys.modules[__name__]
-    for _, v in inspect.getmembers(me):
-        if inspect.ismodule(v):
-            m = importlib.reload(v)
-            for f in m.__all__:
-                me.__dict__[f] = m.__dict__[f]

@@ -2,6 +2,8 @@ from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, ArgumentError, AreaError
 
+from . import mod_only
+
 __all__ = [
     'ooc_cmd_a',
     'ooc_cmd_s',
@@ -73,13 +75,12 @@ def ooc_cmd_g(client, arg):
     database.log_room('chat.global', client, client.area, message=arg)
 
 
+@mod_only
 def ooc_cmd_gm(client, arg):
     """
     Broadcast a message to all areas, speaking officially.
     Usage: /gm <message>
     """
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
     if client.muted_global:
         raise ClientError('You have the global chat muted.')
     if len(arg) == 0:
@@ -88,26 +89,24 @@ def ooc_cmd_gm(client, arg):
     database.log_room('chat.global-mod', client, client.area, message=arg)
 
 
+@mod_only
 def ooc_cmd_m(client, arg):
     """
     Send a message to all online moderators.
     Usage: /m <message>
     """
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
         raise ArgumentError("You can't send an empty message.")
     client.server.send_modchat(client, arg)
     database.log_room('chat.mod', client, client.area, message=arg)
 
 
+@mod_only
 def ooc_cmd_lm(client, arg):
     """
     Send a message to all moderators in the current area.
     Usage: /lm <message>
     """
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
         raise ArgumentError("Can't send an empty message.")
     client.area.send_command(
@@ -116,13 +115,12 @@ def ooc_cmd_lm(client, arg):
     database.log_room('chat.local-mod', client, client.area, message=arg)
 
 
+@mod_only
 def ooc_cmd_announce(client, arg):
     """
     Make a server-wide announcement.
     Usage: /announce <message>
     """
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
         raise ArgumentError("Can't send an empty message.")
     client.server.send_all_cmd_pred(

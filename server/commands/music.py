@@ -1,6 +1,8 @@
 from server import database
 from server.exceptions import ClientError, ServerError, ArgumentError
 
+from . import mod_only
+
 __all__ = [
     'ooc_cmd_currentmusic',
     'ooc_cmd_jukebox_toggle',
@@ -32,14 +34,13 @@ def ooc_cmd_currentmusic(client, arg):
                 client.area.current_music, client.area.current_music_player))
 
 
+@mod_only(area_owners=True)
 def ooc_cmd_jukebox_toggle(client, arg):
     """
     Toggle jukebox mode. While jukebox mode is on, all music changes become
     votes for the next track, rather than changing the track immediately.
     Usage: /jukebox_toggle
     """
-    if not client.is_mod and not client in client.area.owners:
-        raise ClientError('You must be authorized to do that.')
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
     client.area.jukebox = not client.area.jukebox
@@ -50,13 +51,12 @@ def ooc_cmd_jukebox_toggle(client, arg):
         message=client.area.jukebox)
 
 
+@mod_only(area_owners=True)
 def ooc_cmd_jukebox_skip(client, arg):
     """
     Skip the current track.
     Usage: /jukebox_skip
     """
-    if not client.is_mod and not client in client.area.owners:
-        raise ClientError('You must be authorized to do that.')
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
     if not client.area.jukebox:
@@ -129,13 +129,12 @@ def ooc_cmd_jukebox(client, arg):
             f'The jukebox has the following songs in it:{message}')
 
 
+@mod_only
 def ooc_cmd_play(client, arg):
     """
     Play a track.
     Usage: /play <name>
     """
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
         raise ArgumentError('You must specify a song.')
     client.area.play_music(arg, client.char_id, -1)
@@ -143,13 +142,12 @@ def ooc_cmd_play(client, arg):
     database.log_room('play', client, client.area, message=arg)
 
 
+@mod_only
 def ooc_cmd_blockdj(client, arg):
     """
     Prevent a user from changing music.
     Usage: /blockdj <id>
     """
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
         raise ArgumentError('You must specify a target. Use /blockdj <id>.')
     try:
@@ -169,13 +167,12 @@ def ooc_cmd_blockdj(client, arg):
         targets[0].char_name))
 
 
+@mod_only
 def ooc_cmd_unblockdj(client, arg):
     """
     Unblock a user from changing music.
     Usage: /unblockdj <id>
     """
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
         raise ArgumentError('You must specify a target. Use /unblockdj <id>.')
     try:

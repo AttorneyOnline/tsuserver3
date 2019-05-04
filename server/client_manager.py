@@ -474,7 +474,7 @@ class ClientManager:
             positions = ('def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'jur', 'sea')
             if pos not in positions and pos != '':
                 raise ClientError(
-                    f'Invalid position. Possible values: {', '.join(positions)}'
+                    f'Invalid position. Possible values: {", ".join(positions)}'
                 )
             self.pos = pos
 

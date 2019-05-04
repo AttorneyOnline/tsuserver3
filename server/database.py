@@ -1,3 +1,4 @@
+import asyncio
 import sqlite3
 import json
 
@@ -97,7 +98,8 @@ class Database:
             else:
                 raise ServerError(f'unknown ban type {ban_type}')
 
-            return ban_id
+        self._schedule_unban(ban_id)
+        return ban_id
 
     @dataclass
     class Ban:
@@ -110,7 +112,7 @@ class Database:
     def find_ban(self, ipid, hdid):
         """Check if an IPID and/or HDID are banned."""
         with self.db as conn:
-            ban = conn.execute('SELECT * from (SELECT ban_id FROM ip_bans WHERE ipid = ? ' +
+            ban = conn.execute('SELECT * FROM (SELECT ban_id FROM ip_bans WHERE ipid = ? ' +
                                'UNION SELECT ban_id FROM hdid_bans WHERE hdid = ?)' +
                                'JOIN bans USING (ban_id) LIMIT 1', (ipid, hdid)).fetchone()
             if ban is not None:
@@ -123,6 +125,30 @@ class Database:
         with self.db as conn:
             unbans = conn.execute('DELETE FROM bans WHERE ban_id = ?', (ban_id,)).rowcount
             return unbans > 0
+
+    def schedule_unbans(self):
+        """
+        Schedule unbans from the database.
+
+        There is a bug in Python 3.7 and below where functions cannot be
+        scheduled with a timeout longer than one day. As a workaround,
+        schedule_unbans will only get the unbans for the next 12 hours
+        and then will have to be called again 12 hours later.
+        """
+        dated_bans = []
+        with self.db as conn:
+            dated_bans = conn.execute('SELECT ban_id FROM bans WHERE unban_date IS NOT NULL AND ' +
+                                      'datetime(unban_date) < datetime(?, \'+12 hours\')',
+                                      (datetime.datetime.now(),)).fetchall()
+
+        for ban in dated_bans:
+            self._schedule_unban(ban['ban_id'])
+
+    def _schedule_unban(self, ban_id):
+        with self.db as conn:
+            ban = conn.execute('SELECT unban_date FROM bans WHERE ban_id = ?', (ban_id,)).fetchone()
+            time_to_unban = (ban['unban_date'] - datetime.datetime.now()).total_seconds()
+            asyncio.get_event_loop().call_later(time_to_unban, self.unban, ban['ban_id'])
 
     def log_ic(self, client, room, showname, message):
         """Log an IC message."""

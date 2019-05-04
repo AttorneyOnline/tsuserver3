@@ -4,6 +4,8 @@ import re
 from server import database
 from server.exceptions import ClientError, ServerError, ArgumentError
 
+from . import mod_only
+
 __all__ = [
     'ooc_cmd_roll',
     'ooc_cmd_rollp',
@@ -121,13 +123,12 @@ def ooc_cmd_notecard_clear(client, arg):
         raise ClientError('You do not have a note card.')
 
 
+@mod_only(area_owners=True)
 def ooc_cmd_notecard_reveal(client, arg):
     """
     Reveal all notecards and their owners.
     Usage: /notecard_reveal
     """
-    if not client in client.area.owners and not client.is_mod:
-        raise ClientError('You must be a CM or moderator to reveal cards.')
     if len(client.area.cards) == 0:
         raise ClientError('There are no cards to reveal in this area.')
     msg = 'Note cards have been revealed.\n'
@@ -138,14 +139,12 @@ def ooc_cmd_notecard_reveal(client, arg):
     database.log_room('notecard_reveal', client, client.area)
 
 
+@mod_only
 def ooc_cmd_rolla_reload(client, arg):
     """
     Reload ability dice sets from a configuration file.
     Usage: /rolla_reload
     """
-    if not client.is_mod:
-        raise ClientError(
-            'You must be a moderator to load the ability dice configuration.')
     rolla_reload(client.area)
     client.send_ooc('Reloaded ability dice configuration.')
     database.log_room('rolla_reload', client, client.area)

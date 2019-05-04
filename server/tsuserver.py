@@ -79,6 +79,8 @@ class TsuServer3:
             self.ms_client = MasterServerClient(self)
             asyncio.ensure_future(self.ms_client.connect(), loop=loop)
 
+        asyncio.ensure_future(self.schedule_unbans())
+
         database.log_misc('start')
         print('Server started and is listening on port {}'.format(
             self.config['port']))
@@ -94,10 +96,15 @@ class TsuServer3:
         loop.run_until_complete(ao_server.wait_closed())
         loop.close()
 
-    def get_version_string(self):
+    async def schedule_unbans(self):
+        while True:
+            database.schedule_unbans()
+            await asyncio.sleep(3600 * 12)
+
+    @property
+    def version(self):
         """Get the server's current version."""
-        return str(self.release) + '.' + str(self.major_version) + '.' + str(
-            self.minor_version)
+        return f'{self.release}.{self.major_version}.{self.minor_version}'
 
     def new_client(self, transport):
         """
@@ -346,13 +353,13 @@ class TsuServer3:
         if args[0] == 0:
             for part_arg in args[1:]:
                 try:
-                    sanitised = int(part_arg)
+                    _sanitised = int(part_arg)
                 except:
                     return
         elif args[0] in (1, 2, 3):
             for part_arg in args[1:]:
                 try:
-                    sanitised = str(part_arg)
+                    _sanitised = str(part_arg)
                 except:
                     return
 
@@ -387,7 +394,7 @@ class TsuServer3:
                             self.client_manager.clients):
                         client.is_mod = False
                         client.mod_profile_name = None
-                        database.log_misc('unmod.modpass', client})
+                        database.log_misc('unmod.modpass', client)
                         client.send_ooc(
                             'Your moderator credentials have been revoked.')
             self.config['modpass'] = cfg_yaml['modpass']

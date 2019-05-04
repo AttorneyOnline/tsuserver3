@@ -2,6 +2,8 @@ from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, ServerError, ArgumentError
 
+from . import mod_only
+
 __all__ = [
     'ooc_cmd_motd',
     'ooc_cmd_help',
@@ -42,6 +44,7 @@ def ooc_cmd_help(client, arg):
     client.send_ooc(help_msg)
 
 
+@mod_only
 def ooc_cmd_kick(client, arg):
     """
     Kick a player.
@@ -50,9 +53,7 @@ def ooc_cmd_kick(client, arg):
      - "*" kicks everyone in the current area.
      - "**" kicks everyone in the server.
     """
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
-    elif len(arg) == 0:
+    if len(arg) == 0:
         raise ArgumentError(
             'You must specify a target. Use /kick <ipid> [reason]')
     elif arg[0] == '*':
@@ -103,9 +104,9 @@ def ooc_cmd_banhdid(client, arg):
     """
     kickban(client, arg, True)
 
+
+@mod_only
 def kickban(client, arg, ban_hdid):
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
     if len(arg) <= 1:
         raise ArgumentError(
             'You must specify a target and reason. Use /ban <ipid> <reason>')
@@ -133,13 +134,13 @@ def kickban(client, arg, ban_hdid):
             client.send_ooc(f'{len(targets)} clients were kicked.')
         client.send_ooc(f'{ipid} was banned. Ban ID: {ban_id}')
 
+
+@mod_only
 def ooc_cmd_unban(client, arg):
     """
     Unban a list of users.
     Usage: /unban <ipid...>
     """
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
         raise ArgumentError(
             'You must specify a target. Use /unban <ban_id> <ban_id> ...')
@@ -153,13 +154,12 @@ def ooc_cmd_unban(client, arg):
         database.log_misc('unban', client, data={'id': ban_id})
 
 
+@mod_only
 def ooc_cmd_mute(client, arg):
     """
     Prevent a user from speaking in-character.
     Usage: /mute <ipid>
     """
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
         raise ArgumentError('You must specify a target. Use /mute <ipid>.')
     args = list(arg.split(' '))
@@ -186,13 +186,12 @@ def ooc_cmd_mute(client, arg):
                 f'{raw_ipid} does not look like a valid IPID.')
 
 
+@mod_only
 def ooc_cmd_unmute(client, arg):
     """
     Unmute a user.
     Usage: /unmute <ipid>
     """
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
         raise ArgumentError('You must specify a target.')
     args = list(arg.split(' '))
@@ -239,14 +238,13 @@ def ooc_cmd_login(client, arg):
     database.log_misc('login', client, data={'profile': login_name})
 
 
+@mod_only
 def ooc_cmd_refresh(client, arg):
     """
     Reload all moderator credentials, server options, and commands without
     restarting the server.
     Usage: /refresh
     """
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
     if len(arg) > 0:
         raise ClientError('This command does not take in any arguments!')
     else:
@@ -286,13 +284,12 @@ def ooc_cmd_unmod(client, arg):
     client.send_ooc('you\'re not a mod now')
 
 
+@mod_only
 def ooc_cmd_ooc_mute(client, arg):
     """
     Prevent a user from talking out-of-character.
     Usage: /ooc_mute <ooc-name>
     """
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
         raise ArgumentError(
             'You must specify a target. Use /ooc_mute <OOC-name>.')
@@ -308,13 +305,12 @@ def ooc_cmd_ooc_mute(client, arg):
         len(targets)))
 
 
+@mod_only
 def ooc_cmd_ooc_unmute(client, arg):
     """
     Allow an OOC-muted user to talk out-of-character.
     Usage: /ooc_unmute <ooc-name>
     """
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
         raise ArgumentError(
             'You must specify a target. Use /ooc_unmute <OOC-name>.')
