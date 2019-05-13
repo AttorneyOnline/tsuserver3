@@ -18,10 +18,14 @@
 import asyncio
 import re
 import unicodedata
+
+import logging
+logger = logging.getLogger('debug')
+
 from enum import Enum
 from time import localtime, strftime
 
-from server import database, logger
+from server import database
 from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
 from server.fantacrypt import fanta_decrypt
 from .. import commands
@@ -64,7 +68,7 @@ class AOProtocol(asyncio.Protocol):
                 unban_date = 'N/A'
 
             msg = f'{ban.reason}\r\n'
-            msg += f'ID: {ban.id}\r\n'
+            msg += f'ID: {ban.ban_id}\r\n'
             msg += f'Until: {unban_date}'
             self.client.send_command('BD', msg)
             self.client.transport.close()
@@ -91,12 +95,11 @@ class AOProtocol(asyncio.Protocol):
                     msg = msg[1:]
                 spl = msg.split('#', 1)
                 msg = '#'.join([fanta_decrypt(spl[0])] + spl[1:])
-                logger.log_debug(f'[INC][RAW]{msg}', self.client)
             try:
                 cmd, *args = msg.split('#')
                 self.net_cmd_dispatcher[cmd](self, args)
             except KeyError:
-                logger.log_debug(f'[INC][UNK]{msg}', self.client)
+                logger.debug(f'Unknown incoming message from {ipid}: {msg}')
 
     def connection_made(self, transport):
         """Called upon a new client connecting
@@ -595,7 +598,7 @@ class AOProtocol(asyncio.Protocol):
                 'CT',
                 '[' + self.client.area.abbreviation + ']' + self.client.name,
                 args[1])
-            database.log_room('ooc', self.client, self.client.room, message=args[1])
+            database.log_room('ooc', self.client, self.client.area, message=args[1])
 
     def net_cmd_mc(self, args):
         """Play music.
@@ -648,7 +651,7 @@ class AOProtocol(asyncio.Protocol):
                             return
                     self.client.area.add_jukebox_vote(self.client, name,
                                                       length, showname)
-                    database.log_room('jukebox.vote', self.client, self.client.room, message=name)
+                    database.log_room('jukebox.vote', self.client, self.client.area, message=name)
                 else:
                     if len(args) > 2:
                         showname = args[2]
@@ -666,7 +669,7 @@ class AOProtocol(asyncio.Protocol):
                         self.client.area.play_music(name, self.client.char_id,
                                                     length)
                         self.client.area.add_music_playing(self.client, name)
-                    database.log_room('music', self.client, self.client.room, message=name)
+                    database.log_room('music', self.client, self.client.area, message=name)
             except ServerError:
                 return
         except ClientError as ex:
@@ -716,7 +719,7 @@ class AOProtocol(asyncio.Protocol):
         elif len(args) == 2:
             self.client.area.send_command('RT', args[0], args[1])
         self.client.area.add_to_judgelog(self.client, f'used {sign}')
-        database.log_room('wtce', self.client, self.client.room, message=sign)
+        database.log_room('wtce', self.client, self.client.area, message=sign)
 
     def net_cmd_setcase(self, args):
         """Sets the casing preferences of the given client.

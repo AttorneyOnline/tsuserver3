@@ -1,18 +1,26 @@
+import os
+
 import asyncio
 import sqlite3
 import json
 
+import logging
+logger = logging.getLogger('debug')
+event_logger = logging.getLogger('events')
+
 from dataclasses import dataclass
 from datetime import datetime
+from functools import reduce
 
 from .exceptions import ServerError
 
 
+DB_FILE = 'storage/db.sqlite3'
 _database_singleton = None
 
 def __getattr__(name):
     global _database_singleton
-    if _database_singleton is not None:
+    if _database_singleton is None:
         _database_singleton = Database()
     return getattr(_database_singleton, name)
 
@@ -24,50 +32,79 @@ class Database:
     """
 
     def __init__(self):
-        self.db = sqlite3.connect('storage/db.sqlite3')
+        self.db = sqlite3.connect(DB_FILE)
         self.db.execute('PRAGMA foreign_keys = ON')
         self.db.row_factory = sqlite3.Row
 
     def migrate_json_to_v1(self):
         """Migrate to v1 of the database from JSON."""
         with self.db as conn:
+            logger.debug('Initializing database')
             with open('migrations/v1.sql', 'r') as file:
                 conn.executescript(file.read())
+
+            if not os.path.exists('storage/ip_ids.json'):
+                logger.debug('ip_ids.json not found. Aborting migration.')
+                return
             with open('storage/ip_ids.json', 'r') as ipids_file:
+                # Sometimes, there are multiple IP addresses mapped to
+                # the same IPID, so we have to reassign those IPIDs.
                 ipids = json.loads(ipids_file.read())
-                for ip, ipid in ipids:
-                    conn.execute(
-                        'INSERT INTO ipids(ipid, ip_address) VALUES (?, ?)',
-                        (ipid, ip))
+                next_fallback_id = reduce(lambda max_ipid, ipid: max(max_ipid, ipid),
+                    [ipid for ip, ipid in ipids.items()])
+                for ip, ipid in ipids.items():
+                    effective_id = ipid
+                    while True:
+                        try:
+                            conn.execute(
+                                'INSERT INTO ipids(ipid, ip_address) VALUES (?, ?)',
+                                (effective_id, ip))
+                        except sqlite3.IntegrityError:
+                            effective_id = next_fallback_id
+                            effective_id += 1
+                            next_fallback_id = effective_id
+                        else:
+                            if effective_id != ipid:
+                                logger.debug(f'IPID {ipid} reassigned to {effective_id}')
+                            break
+
             with open('storage/hd_ids.json', 'r') as hdids_file:
                 hdids = json.loads(hdids_file.read())
-                for hdid, ipids in hdids:
+                for hdid, ipids in hdids.items():
                     for ipid in ipids:
                         conn.execute(
-                            'INSERT INTO hdids(hdid, ipid) VALUES (?, ?)',
+                            'INSERT OR IGNORE INTO hdids(hdid, ipid) VALUES (?, ?)',
                             (hdid, ipid))
+
+            if not os.path.exists('storage/banlist.json'):
+                return
             with open('storage/banlist.json', 'r') as banlist_file:
                 bans = json.load(banlist_file)
-                for ipid, ban_info in bans:
-                    ban = conn.execute(
+                for ipid, ban_info in bans.items():
+                    ban_id = conn.execute(
                         'INSERT INTO bans(ban_id, ban_date, reason) VALUES (NULL, NULL, ?)',
-                        (ban_info['Reason'], )).fetchone()
+                        (ban_info['Reason'],)).lastrowid
                     conn.execute(
                         'INSERT INTO ip_bans(ipid, ban_id) VALUES (?, ?)',
-                        (ipid, ban['ban_id']))
+                        (ipid, ban_id))
+
+            logger.debug('Migration complete')
 
     def ipid(self, ip):
         """Get an IPID from an IP address."""
         with self.db as conn:
             conn.execute(
-                'INSERT OR IGNORE INTO ipids(ipid, ip) VALUES (NULL, ?)',
+                'INSERT OR IGNORE INTO ipids(ipid, ip_address) VALUES (NULL, ?)',
                 (ip, ))
-            return conn.execute('SELECT ipid FROM ipids WHERE ip = ?',
+            ipid = conn.execute('SELECT ipid FROM ipids WHERE ip_address = ?',
                                 (ip, )).fetchone()['ipid']
+            event_logger.info(f'IPID for {ip}: {ipid}')
+            return ipid
 
     def add_hdid(self, ipid, hdid):
         """Associate an HDID with an IPID."""
         with self.db as conn:
+            event_logger.info(f'Associating HDID \'{hdid}\' with IPID {ipid}')
             conn.execute('INSERT INTO hdids(hdid, ipid) VALUES (?, ?)',
                          (hdid, ipid))
 
@@ -85,6 +122,8 @@ class Database:
         """
         with self.db as conn:
             if ban_id is None:
+                event_logger.info(f'{banned_by.name} ({banned_by.ipid}) ' +
+                                  f'banned {target_id}: \'{reason}\'.')
                 ban_id = conn.execute(
                     'INSERT INTO bans(reason, banned_by, unban_date) VALUES (?, ?, ?)',
                     (reason, banned_by.ipid, unban_date)).fetchone()['ban_id']
@@ -139,7 +178,7 @@ class Database:
         with self.db as conn:
             dated_bans = conn.execute('SELECT ban_id FROM bans WHERE unban_date IS NOT NULL AND ' +
                                       'datetime(unban_date) < datetime(?, \'+12 hours\')',
-                                      (datetime.datetime.now(),)).fetchall()
+                                      (datetime.now(),)).fetchall()
 
         for ban in dated_bans:
             self._schedule_unban(ban['ban_id'])
@@ -147,14 +186,16 @@ class Database:
     def _schedule_unban(self, ban_id):
         with self.db as conn:
             ban = conn.execute('SELECT unban_date FROM bans WHERE ban_id = ?', (ban_id,)).fetchone()
-            time_to_unban = (ban['unban_date'] - datetime.datetime.now()).total_seconds()
+            time_to_unban = (ban['unban_date'] - datetime.now()).total_seconds()
             asyncio.get_event_loop().call_later(time_to_unban, self.unban, ban['ban_id'])
 
     def log_ic(self, client, room, showname, message):
         """Log an IC message."""
+        event_logger.info(f'[{room.abbreviation}] {showname}/{client.char_name}' +
+                          f'/{client.name} ({client.ipid}): {message}')
         with self.db as conn:
             conn.execute(
-                'INSERT INTO ic_events(ipid, room_name, char_name, ic_name, message) VALUES (?, ?, ?, ?)',
+                'INSERT INTO ic_events(ipid, room_name, char_name, ic_name, message) VALUES (?, ?, ?, ?, ?)',
                 (client.ipid, room.abbreviation, client.char_name, showname, message))
 
     def log_room(self, event_subtype, client, room, message=None, target=None):
@@ -170,15 +211,19 @@ class Database:
         if isinstance(message, dict):
             message = json.dumps(message)
 
+        event_logger.info(f'[{room.abbreviation}] {client.char_name}' +
+                    f'/{client.name} ({client.ipid}): event {event_subtype} ({message})')
         with self.db as conn:
             conn.execute(
                 'INSERT INTO room_events(ipid, room_name, char_name, ooc_name, ' +
-                'event_subtype, message, target_ipid) VALUES (?, ?, ?, ?)',
+                'event_subtype, message, target_ipid) VALUES (?, ?, ?, ?, ?, ?, ?)',
                 (ipid, room.abbreviation, char_name, ooc_name, subtype_id, message,
                 target_ipid))
 
     def log_connect(self, client, failed=False):
         """Log a connect attempt."""
+        event_logger.info(f'{client.ipid} (HDID: {client.hdid}) ' +
+                          f'{"was blocked from connecting" if failed else "connected"}.')
         with self.db as conn:
             conn.execute(
                 'INSERT INTO connect_events(ipid, hdid, failed) VALUES (?, ?, ?)',
@@ -193,6 +238,7 @@ class Database:
         target_ipid = target.ipid if target is not None else None
         subtype_id = self._subtype_atom('misc', event_subtype)
         data_json = json.dumps(data)
+        event_logger.info(f'{event_subtype} ({client_ipid} onto {target_ipid}): {data}')
         with self.db as conn:
             conn.execute(
                 'INSERT INTO misc_events(ipid, target_ipid, event_subtype, event_data) VALUES (?, ?, ?, ?)',
@@ -205,7 +251,7 @@ class Database:
         with self.db as conn:
             conn.execute(
                 f'INSERT OR IGNORE INTO {event_type}_event_types(type_name) VALUES (?)',
-                event_subtype)
+                (event_subtype,))
             return conn.execute(
                 f'SELECT type_id FROM {event_type}_event_types WHERE type_name = ?',
-                event_subtype).fetchone()['type_id']
+                (event_subtype,)).fetchone()['type_id']

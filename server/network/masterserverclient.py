@@ -18,7 +18,10 @@
 import asyncio
 import time
 
-from server import logger, database
+import logging
+logger = logging.getLogger('debug')
+
+from server import database
 
 
 class MasterServerClient:
@@ -37,22 +40,17 @@ class MasterServerClient:
                     self.server.config['masterserver_port'],
                     loop=loop)
                 await self.handle_connection()
-            except (ConnectionRefusedError, TimeoutError):
-                pass
-            except (ConnectionResetError, asyncio.IncompleteReadError):
+            except (ConnectionRefusedError, TimeoutError,
+                ConnectionResetError, asyncio.IncompleteReadError):
+                logger.debug('Connection error occurred.')
                 self.writer = None
                 self.reader = None
             finally:
-                logger.log_debug(
-                    "Couldn't connect to the master server, retrying in 30 seconds."
-                )
-                print(
-                    "Couldn't connect to the master server, retrying in 30 seconds."
-                )
+                logger.debug('Retrying MS connection in 30 seconds.')
                 await asyncio.sleep(30)
 
     async def handle_connection(self):
-        logger.log_debug('Master server connected.')
+        logger.debug('Master server connected.')
         print('Master server connected ({}:{})'.format(
             self.server.config['masterserver_ip'],
             self.server.config['masterserver_port']))
@@ -70,12 +68,14 @@ class MasterServerClient:
                     raw_msg = data.decode()
                     cmd, *args = raw_msg.split('#')
                     if cmd != 'CHECK' and cmd != 'PONG':
-                        logger.log_debug(f'[MASTERSERVER][INC][RAW]{raw_msg}')
+                        logger.debug(f'Incoming: {raw_msg}')
                     elif cmd == 'CHECK':
+                        logger.debug('Replying to CHECK#% with ping')
                         await self.send_raw_message('PING#%')
                     elif cmd == 'PONG':
                         ping_timeout = False
                     elif cmd == 'NOSERV':
+                        logger.debug('MS does not have our server. Readvertising.')
                         await self.send_server_info()
             if time.time() - last_ping > 10:
                 if ping_timeout:
@@ -87,6 +87,7 @@ class MasterServerClient:
             await asyncio.sleep(1)
 
     async def send_server_info(self):
+        logger.debug('Advertising to MS')
         cfg = self.server.config
         port = str(cfg['port'])
         if cfg['use_websockets']:
@@ -97,8 +98,5 @@ class MasterServerClient:
         await self.send_raw_message(msg)
 
     async def send_raw_message(self, msg):
-        try:
-            self.writer.write(msg.encode())
-            await self.writer.drain()
-        except ConnectionResetError:
-            return
+        self.writer.write(msg.encode())
+        await self.writer.drain()

@@ -31,14 +31,16 @@ def help(command):
     return getattr(sys.modules[__name__], command).__doc__
 
 
-def mod_only(func, area_owners=False):
+def mod_only(area_owners=False):
     import functools
-    @functools.wraps(func)
-    def wrapper_mod_only(client, arg, *args, **kwargs):
-        if not client.is_mod and (not area_owners or not client in area_owners):
-            raise ClientError('You must be authorized to do that.')
-        func(client, arg, *args, **kwargs)
-    return wrapper_mod_only
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper_mod_only(client, arg, *args, **kwargs):
+            if not client.is_mod and (not area_owners or not client in area_owners):
+                raise ClientError('You must be authorized to do that.')
+            func(client, arg, *args, **kwargs)
+        return wrapper_mod_only
+    return decorator
 
 
 # Note that only the members of __all__ in each module will be imported.

@@ -98,14 +98,16 @@ class AreaManager:
             """Add a client to the area."""
             self.clients.add(client)
             self.server.area_manager.send_arup_players()
-            database.log_room('area.join', client, self)
+            if client.char_id != -1:
+                database.log_room('area.join', client, self)
 
         def remove_client(self, client):
             """Remove a disconnected client from the area."""
             self.clients.remove(client)
             if len(self.clients) == 0:
                 self.change_status('IDLE')
-            database.log_room('area.leave', client, self)
+            if client.char_id != -1:
+                database.log_room('area.leave', client, self)
 
         def unlock(self):
             """Mark the area as unlocked."""

@@ -463,7 +463,7 @@ class ClientManager:
         def char_name(self):
             """Get the name of the character that the client is using."""
             if self.char_id == -1:
-                return '(spectator)'
+                return None
             return self.server.char_list[self.char_id]
 
         def change_position(self, pos=''):
@@ -518,7 +518,7 @@ class ClientManager:
         """
         c = self.Client(
             self.server, transport, heappop(self.cur_id),
-            self.server.get_ipid(transport.get_extra_info('peername')[0]))
+            database.ipid(transport.get_extra_info('peername')[0]))
         self.clients.add(c)
         return c
 

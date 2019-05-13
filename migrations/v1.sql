@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS ipids(
 );
 
 CREATE TABLE IF NOT EXISTS hdids(
-	hdid TEXT NOT NULL,
+	hdid TEXT PRIMARY KEY,
 	ipid INTEGER NOT NULL,
 	FOREIGN KEY (ipid) REFERENCES ipids(ipid)
 		ON DELETE SET NULL,
@@ -81,6 +81,7 @@ INSERT INTO room_event_types(type_name) VALUES
 
 -- Useful for RP events and announcements, not just chat
 CREATE TABLE IF NOT EXISTS room_events(
+	event_id PRIMARY KEY,
 	event_time DATETIME DEFAULT CURRENT_TIMESTAMP,
 	ipid INTEGER NOT NULL,
 	target_ipid INTEGER,
@@ -88,12 +89,12 @@ CREATE TABLE IF NOT EXISTS room_events(
 	char_name TEXT,
 	ooc_name TEXT,
 	event_subtype INTEGER NOT NULL,
-	message TEXT NOT NULL,
+	message TEXT,
 	FOREIGN KEY (ipid) REFERENCES ipids(ipid)
 		ON DELETE CASCADE,
 	FOREIGN KEY (target_ipid) REFERENCES ipids(ipid)
 		ON DELETE CASCADE,
-	FOREIGN KEY (event_subtype) REFERENCES room_event_types(type_name)
+	FOREIGN KEY (event_subtype) REFERENCES room_event_types(type_id)
 );
 
 -- `profile_name` is NULL if the login attempt failed
@@ -138,15 +139,7 @@ CREATE TABLE IF NOT EXISTS misc_events(
 		ON DELETE CASCADE,
 	FOREIGN KEY (target_ipid) REFERENCES ipids(ipid)
 		ON DELETE CASCADE,
-	FOREIGN KEY (event_subtype) REFERENCES misc_event_types(type_name)
+	FOREIGN KEY (event_subtype) REFERENCES misc_event_types(type_id)
 );
 
 PRAGMA user_version = 1;
-
-INSERT INTO ipids(ipid, ip_address) VALUES (1, '192.168.1.1');
-INSERT INTO bans(ban_id) VALUES (2);
-INSERT INTO ip_bans(ipid, ban_id) VALUES (1, 2);
-SELECT * from (SELECT ban_id FROM ip_bans WHERE ipid = 1
-	UNION SELECT ban_id FROM hdid_bans WHERE hdid = 'a')
-	JOIN bans USING (ban_id)
-	LIMIT 1;

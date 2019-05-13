@@ -15,8 +15,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import logging
+import sys
 
+import logging
+import logging.handlers
 import time
 
 
@@ -27,24 +29,36 @@ def setup_logger(debug):
 
     """
     logging.Formatter.converter = time.gmtime
-    debug_formatter = logging.Formatter('[%(asctime)s UTC]%(message)s')
+    debug_formatter = logging.Formatter('[%(asctime)s UTC] %(message)s')
+
+    stdoutHandler = logging.StreamHandler(sys.stdout)
+    stdoutHandler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('[%(name)s] %(module)s@%(lineno)d : %(message)s')
+    stdoutHandler.setFormatter(formatter)
+    logging.getLogger().addHandler(stdoutHandler)
 
     debug_log = logging.getLogger('debug')
     debug_log.setLevel(logging.DEBUG)
 
-    debug_handler = logging.FileHandler('logs/debug.log', encoding='utf-8')
+    debug_handler = logging.handlers.RotatingFileHandler('logs/debug.log',
+        maxBytes=1024 * 1024 * 4)
     debug_handler.setLevel(logging.DEBUG)
     debug_handler.setFormatter(debug_formatter)
     debug_log.addHandler(debug_handler)
 
+    # Intended to be a brief log for `tail -f`. To search through events,
+    # use the database.
+    info_log = logging.getLogger('events')
+    info_log.setLevel(logging.INFO)
+    file_handler = logging.handlers.RotatingFileHandler('logs/server.log',
+        maxBytes=1024 * 512)
+    file_handler.setFormatter(logging.Formatter('[%(asctime)s UTC] %(message)s'))
+    info_log.addHandler(file_handler)
+
     if not debug:
         debug_log.disabled = True
-
-
-def log_debug(msg, client=None):
-    """Log a debug message that can be used for troubleshooting."""
-    msg = parse_client_info(client) + msg
-    logging.getLogger('debug').debug(msg)
+    else:
+        debug_log.debug('Logger started')
 
 
 def parse_client_info(client):

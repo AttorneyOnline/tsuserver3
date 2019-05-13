@@ -15,21 +15,26 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import asyncio
-import json
-
-import websockets
-import yaml
-
+import os
 import importlib
 
-from server import logger, database
+import asyncio
+import websockets
+
+import json
+import yaml
+
+import logging
+logger = logging.getLogger('debug')
+
+from server import database
 from server.area_manager import AreaManager
 from server.client_manager import ClientManager
 from server.exceptions import ServerError
 from server.network.aoprotocol import AOProtocol
 from server.network.aoprotocol_ws import new_websocket_client
 from server.network.masterserverclient import MasterServerClient
+import server.logger
 
 class TsuServer3:
     """The main class for tsuserver3 server software."""
@@ -41,7 +46,6 @@ class TsuServer3:
         self.client_manager = ClientManager(self)
         self.area_manager = AreaManager(self)
         self.software = 'tsuserver3'
-        self.version = 'vanilla'
         self.release = 3
         self.major_version = 2
         self.minor_version = 0
@@ -55,7 +59,10 @@ class TsuServer3:
         self.load_music()
         self.load_backgrounds()
         self.ms_client = None
-        logger.setup_logger(debug=self.config['debug'])
+        server.logger.setup_logger(debug=self.config['debug'])
+
+        if not os.path.exists('storage/db.sqlite3'):
+            database.migrate_json_to_v1()
 
     def start(self):
         """Start the server."""
@@ -131,8 +138,8 @@ class TsuServer3:
     @property
     def player_count(self):
         """Get the number of non-spectating clients."""
-        return len(filter(lambda client: client.char_id != -1,
-                          self.client_manager.clients))
+        return len([client for client in self.client_manager.clients
+            if client.char_id != -1])
 
     def load_config(self):
         """Load the main server configuration from a YAML file."""
@@ -177,7 +184,7 @@ class TsuServer3:
                       encoding='utf-8') as iniswaps:
                 self.allowed_iniswaps = yaml.load(iniswaps)
         except:
-            logger.log_debug('cannot find iniswaps.yaml')
+            logger.debug('Cannot find iniswaps.yaml')
 
     def build_char_pages_ao1(self):
         """
