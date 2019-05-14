@@ -87,6 +87,8 @@ class Database:
             with open('storage/banlist.json', 'r') as banlist_file:
                 bans = json.load(banlist_file)
                 for ipid, ban_info in bans.items():
+                    if ipid not in ipids:
+                        continue
                     ban_id = conn.execute(
                         'INSERT INTO bans(ban_id, ban_date, reason) VALUES (NULL, NULL, ?)',
                         (ban_info['Reason'],)).lastrowid
