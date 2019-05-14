@@ -30,6 +30,7 @@ logger = logging.getLogger('debug')
 from server import database
 from server.area_manager import AreaManager
 from server.client_manager import ClientManager
+from server.emotes import Emotes
 from server.exceptions import ServerError
 from server.network.aoprotocol import AOProtocol
 from server.network.aoprotocol_ws import new_websocket_client
@@ -50,6 +51,7 @@ class TsuServer3:
         self.major_version = 2
         self.minor_version = 0
         self.char_list = None
+        self.char_emotes = None
         self.char_pages_ao1 = None
         self.music_list = None
         self.music_list_ao2 = None
@@ -164,6 +166,7 @@ class TsuServer3:
         with open('config/characters.yaml', 'r', encoding='utf-8') as chars:
             self.char_list = yaml.load(chars)
         self.build_char_pages_ao1()
+        self.char_emotes = [Emotes(char) for char in self.char_list]
 
     def load_music(self):
         """Load the music list from a YAML file."""

@@ -188,21 +188,18 @@ class AreaManager:
             delay = min(3000, 100 + 60 * msg_length)
             self.next_message_time = round(time.time() * 1000.0 + delay)
 
-        def is_iniswap(self, client, anim1, anim2, char):
+        def is_iniswap(self, client, preanim, anim, char, sfx):
             """
             Determine if a client is performing an INI swap.
-            TODO: This is extremely flimsy and only covers specific cases.
-            Server-side INIs would be a stronger check against custom
-            characters.
             :param client: client attempting the INI swap.
-            :param anim1: name of preanimation
-            :param anim2: name of idle/talking animation
+            :param preanim: name of preanimation
+            :param anim: name of idle/talking animation
             :param char: name of character
 
             """
             if self.iniswap_allowed:
                 return False
-            if '..' in anim1 or '..' in anim2:
+            if '..' in preanim or '..' in anim or '..' in char:
                 # Prohibit relative paths
                 return True
             for char_link in self.server.allowed_iniswaps:
@@ -210,7 +207,7 @@ class AreaManager:
                 # target character are in the allowed INI swap list
                 if client.char_name in char_link and char in char_link:
                     return False
-            return True
+            return self.server.char_emotes[char].validate(preanim, anim, sfx)
 
         def add_jukebox_vote(self, client, music_name, length=-1, showname=''):
             """

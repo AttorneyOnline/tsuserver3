@@ -354,13 +354,12 @@ class AOProtocol(asyncio.Protocol):
                 return
         else:
             return
-        if self.client.area.is_iniswap(
-                self.client, pre, anim,
-                folder) and folder != self.client.char_name:
-            self.client.send_ooc("Iniswap is blocked in this area")
+        if self.client.area.is_iniswap(self.client, pre, anim,
+                folder, sfx) and folder != self.client.char_name:
+            self.client.send_ooc("Iniswap/custom emotes are blocked in this area")
             return
-        if len(self.client.charcurse
-               ) > 0 and folder != self.client.char_name:
+        if len(self.client.charcurse) > 0 and \
+            folder != self.client.char_name:
             self.client.send_ooc(
                 "You may not iniswap while you are charcursed!")
             return
