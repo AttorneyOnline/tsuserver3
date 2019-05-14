@@ -46,6 +46,8 @@ class Database:
             if not os.path.exists('storage/ip_ids.json'):
                 logger.debug('ip_ids.json not found. Aborting migration.')
                 return
+
+            ipids = None
             with open('storage/ip_ids.json', 'r') as ipids_file:
                 # Sometimes, there are multiple IP addresses mapped to
                 # the same IPID, so we have to reassign those IPIDs.
@@ -70,8 +72,12 @@ class Database:
 
             with open('storage/hd_ids.json', 'r') as hdids_file:
                 hdids = json.loads(hdids_file.read())
-                for hdid, ipids in hdids.items():
-                    for ipid in ipids:
+                for hdid, hdid_ipids in hdids.items():
+                    for ipid in hdid_ipids:
+                        # Sometimes, there are HDID entries that do not
+                        # correspond to any IPIDs in the IPID table.
+                        if ipid not in ipids:
+                            continue
                         conn.execute(
                             'INSERT OR IGNORE INTO hdids(hdid, ipid) VALUES (?, ?)',
                             (hdid, ipid))

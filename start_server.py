@@ -30,7 +30,7 @@ def check_deps():
                 sys.executable, "-m", "pip", "install", "--user", "-r",
                 "requirements.txt"
             ])
-        except CalledProcessError:
+        except subprocess.CalledProcessError:
             print(
                 "Couldn't install it for you, because you don't have pip, or another error occurred."
             )
