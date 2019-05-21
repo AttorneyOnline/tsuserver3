@@ -151,22 +151,6 @@ class EvidenceList:
 
     def edit_evidence(self, client, id, arg):
         if self.login(client):
-            #evidence-based hub loading support, may be discontinued in the future.
-            if(arg[0] == '/loadhub'):
-                if not client.is_mod and not client.is_cm:
-                    client.send_host_message(
-                        "You must be authorized to do that.")
-                    return
-                try:
-                    client.hub.load(arg[1].strip())
-                    client.send_host_message("Loading hub save data...")
-                    self.evidences.pop[id]
-                except:
-                    client.send_host_message(
-                        "Could not load hub save data! Try pressing the [X] and make sure if your save data is correct.")
-                return
-            #END evidence-based hub loading support
-
             if client.area.evidence_mod == 'HiddenCM':
                 if self.correct_format(client, arg[1]):
                     lines = arg[1].split('\n')

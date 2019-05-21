@@ -1709,14 +1709,6 @@ def ooc_cmd_area_unhide(client, arg):
             i += 1
     client.send_host_message('Unhid {} areas.'.format(i))
 
-def ooc_cmd_savehub_legacy(client, arg):
-    if not client.is_cm and not client.is_mod:
-        raise ClientError('Only CM or mods can save the hub.')
-    area = client.hub.default_area()
-    area.evi_list.add_evidence(client, '--HUB SAVE DATA--', client.hub.save(), '2.png', 'all')
-    area.broadcast_evidence_list()
-    client.send_host_message('The hub data has been saved in an evidence file in area [{}] {}.'.format(area.id, area.name))
-
 def ooc_cmd_listhubs(client, arg):
     if not client.is_mod:
         raise ClientError('Only mods can view available hub saves.')

@@ -79,8 +79,8 @@ class HubManager:
 				self.desc = desc
 				self.is_locked = locked
 				self.is_hidden = hidden
-				self.max_players = -1
-				self.move_delay = 0
+				self.max_players = max_players
+				self.move_delay = move_delay
 
 			def set_desc(self, dsc):
 				desc = dsc[:512]
@@ -114,7 +114,7 @@ class HubManager:
 					area['can_rename'] = False
 				if 'bglock' not in area:
 					area['bglock'] = False
-				if 'poslock' not in area:
+				if 'poslock' not in area or area['poslock'] == 'null':
 					area['poslock'] = []
 				else:
 					_poslock = area['poslock'].split(' ')
@@ -158,44 +158,6 @@ class HubManager:
 					self.evi_list.evidences.clear()
 					self.evi_list.import_evidence(area['evidence'])
 					self.broadcast_evidence_list()
-
-			def save(self):
-				desc = self.desc
-				if len(self.desc) <= 0:
-					desc = 'None'
-				desc = desc.strip()
-				accessible = ','.join(map(str, self.accessible))
-				if len(accessible) <= 0:
-					accessible = 'None'
-				return '{};{};{};{};{};{};{}'.format(
-					self.id, self.name.replace(';', ''), desc.replace(';', ''), self.background, self.pos_lock, accessible, self.is_locked)
-
-			def load(self, arg):
-				args = arg.split(';')
-				if str(args[1]) != "*":
-					print("Attempting to set name")
-					self.name = str(args[1])
-				if str(args[2]) != "*":
-					print("Attempting to set desc")
-					self.desc = str(args[2])
-				if str(args[3]) != "*":
-					print("Attempting to set bg")
-					self.change_background(str(args[3]))
-				if str(args[4]) != "*":
-					print("Attempting to set poslock")
-					if str(args[4]).lower() in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit'):
-						self.pos_lock = str(args[4]).lower()
-					else:
-						self.pos_lock = []
-				if str(args[5]) != "*":
-					print("Attempting to set access")
-					if args[5] == 'None':
-						self.accessible = []
-					else:
-						self.accessible = [int(s) for s in str(args[5]).split(',')]
-				if str(args[6]) != "*":
-					print("Attempting to set lock")
-					self.is_locked = str(args[6]).lower() == 'true'
 
 			def new_client(self, client):
 				self.clients.add(client)
@@ -454,35 +416,6 @@ class HubManager:
 			for area in hub['areas']:
 				self.areas[aid].update_from_yaml(area)
 				aid += 1
-
-		def save(self):
-			s = ''
-			for area in self.areas:
-				if not area.locking_allowed:
-					continue
-				s += area.save() + '\n'
-			return s
-
-		def load(self, arg):
-			args = arg.split('\n')
-			print(args)
-			try:
-				for a in args:
-					aid = int(a.split(';')[0])
-					print(a)
-					if(len(a) < 7):
-						continue
-					i = 0
-					while len(self.areas) <= aid:
-						self.create_area('Area {}'.format(self.cur_id))
-						i += 1
-					print("Created {} new areas".format(i))
-					self.areas[aid].load(a)
-					print("Loaded", aid)
-				print("Donezo")
-			except:
-				print("Bad area save file!")
-				raise AreaError('Bad save file!')
 
 		def create_area(self, name, can_rename=True, bg='default', bglock=False, poslock=None, evimod='FFA', lockallow=True, removable=True, accessible=None, desc='', locked=False, hidden=False):
 			self.areas.append(
