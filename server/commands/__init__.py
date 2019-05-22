@@ -28,7 +28,10 @@ def reload():
 
 def help(command):
     import sys
-    return getattr(sys.modules[__name__], command).__doc__
+    try:
+        return getattr(sys.modules[__name__], command).__doc__
+    except AttributeError:
+        return 'No help found for that command.'
 
 
 def mod_only(area_owners=False):
