@@ -182,7 +182,7 @@ class AOProtocol(asyncio.Protocol):
         self.client.send_command('ID', self.client.id, self.server.software,
                                  self.server.version)
         self.client.send_command('PN',
-                                 self.server.player_count - 1,
+                                 self.server.player_count,
                                  self.server.config['playerlimit'])
 
     def net_cmd_id(self, args):
@@ -580,13 +580,17 @@ class AOProtocol(asyncio.Protocol):
             try:
                 called_function = f'ooc_cmd_{cmd}'
                 if cmd == 'help' and arg != '':
-                    self.client.send_ooc(commands.help(called_function))
-                getattr(commands, called_function)(self.client, arg)
+                    self.client.send_ooc(commands.help(f'ooc_cmd_{arg}'))
+                else:
+                    getattr(commands, called_function)(self.client, arg)
             except AttributeError:
                 print('Attribute error with ' + called_function)
                 self.client.send_ooc('Invalid command.')
             except (ClientError, AreaError, ArgumentError, ServerError) as ex:
                 self.client.send_ooc(ex)
+            except Exception as ex:
+                self.client.send_ooc('An internal error occurred. Please check the server log.')
+                logger.exception('Exception while running a command')
         else:
             if self.client.shaken:
                 args[1] = self.client.shake_message(args[1])
