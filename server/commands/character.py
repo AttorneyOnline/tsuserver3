@@ -113,7 +113,7 @@ def ooc_cmd_charselect(client, arg):
         force_charselect(client, arg)
 
 
-@mod_only
+@mod_only()
 def force_charselect(client, arg):
     try:
         client.server.client_manager.get_targets(client, TargetType.ID,
@@ -144,7 +144,7 @@ def ooc_cmd_randomchar(client, arg):
         client.char_name))
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_charcurse(client, arg):
     """
     Lock a user into being able to choose only from a list of characters.
@@ -188,7 +188,7 @@ def ooc_cmd_charcurse(client, arg):
         client.send_ooc('No targets found.')
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_uncharcurse(client, arg):
     """
     Remove the character choice restrictions from a user.
@@ -216,7 +216,7 @@ def ooc_cmd_uncharcurse(client, arg):
         client.send_ooc('No targets found.')
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_charids(client, arg):
     """
     Show character IDs corresponding to each character name.

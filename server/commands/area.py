@@ -41,7 +41,7 @@ def ooc_cmd_bg(client, arg):
     database.log_room('bg', client, client.area, message=arg)
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_bglock(client, arg):
     """
     Toggle whether or not non-moderators are allowed to change
@@ -61,7 +61,7 @@ def ooc_cmd_bglock(client, arg):
     database.log_room('bglock', client, client.area, message=client.area.bg_lock)
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_allow_iniswap(client, arg):
     """
     Toggle whether or not users are allowed to swap INI files in character
@@ -256,7 +256,7 @@ def ooc_cmd_uninvite(client, arg):
         client.send_ooc("No targets found.")
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_area_kick(client, arg):
     """
     Remove a user from the current area and move them to another area.

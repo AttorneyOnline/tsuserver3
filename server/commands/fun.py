@@ -12,7 +12,7 @@ __all__ = [
 ]
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_disemvowel(client, arg):
     """
     Remove all vowels from a user's IC chat.
@@ -34,7 +34,7 @@ def ooc_cmd_disemvowel(client, arg):
         client.send_ooc('No targets found.')
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_undisemvowel(client, arg):
     """
     Give back the freedom of vowels to a user.
@@ -57,7 +57,7 @@ def ooc_cmd_undisemvowel(client, arg):
         client.send_ooc('No targets found.')
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_shake(client, arg):
     """
     Scramble the words in a user's IC chat.
@@ -79,7 +79,7 @@ def ooc_cmd_shake(client, arg):
         client.send_ooc('No targets found.')
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_unshake(client, arg):
     """
     Give back the freedom of coherent grammar to a user.

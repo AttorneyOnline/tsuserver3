@@ -139,7 +139,7 @@ def ooc_cmd_notecard_reveal(client, arg):
     database.log_room('notecard_reveal', client, client.area)
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_rolla_reload(client, arg):
     """
     Reload ability dice sets from a configuration file.

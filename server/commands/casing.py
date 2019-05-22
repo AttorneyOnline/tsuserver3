@@ -49,7 +49,7 @@ def ooc_cmd_cleardoc(client, arg):
     database.log_room('doc.clear', client, client.area)
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_evidence_mod(client, arg):
     """
     Change the evidence privilege mode. Refer to the documentation
@@ -236,7 +236,7 @@ def ooc_cmd_anncase(client, arg):
             'You cannot announce a case in an area where you are not a CM!')
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_blockwtce(client, arg):
     """
     Prevent a user from using Witness Testimony/Cross Examination buttons
@@ -261,7 +261,7 @@ def ooc_cmd_blockwtce(client, arg):
         targets[0].char_name))
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_unblockwtce(client, arg):
     """
     Allow a user to use WT/CE again.
@@ -286,7 +286,7 @@ def ooc_cmd_unblockwtce(client, arg):
         targets[0].char_name))
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_judgelog(client, arg):
     """
     List the last 10 uses of judge controls in the current area.

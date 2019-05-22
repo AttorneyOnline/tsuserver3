@@ -129,7 +129,7 @@ def ooc_cmd_jukebox(client, arg):
             f'The jukebox has the following songs in it:{message}')
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_play(client, arg):
     """
     Play a track.
@@ -142,7 +142,7 @@ def ooc_cmd_play(client, arg):
     database.log_room('play', client, client.area, message=arg)
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_blockdj(client, arg):
     """
     Prevent a user from changing music.
@@ -167,7 +167,7 @@ def ooc_cmd_blockdj(client, arg):
         targets[0].char_name))
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_unblockdj(client, arg):
     """
     Unblock a user from changing music.

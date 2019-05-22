@@ -75,7 +75,7 @@ def ooc_cmd_g(client, arg):
     database.log_room('chat.global', client, client.area, message=arg)
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_gm(client, arg):
     """
     Broadcast a message to all areas, speaking officially.
@@ -89,7 +89,7 @@ def ooc_cmd_gm(client, arg):
     database.log_room('chat.global-mod', client, client.area, message=arg)
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_m(client, arg):
     """
     Send a message to all online moderators.
@@ -101,7 +101,7 @@ def ooc_cmd_m(client, arg):
     database.log_room('chat.mod', client, client.area, message=arg)
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_lm(client, arg):
     """
     Send a message to all moderators in the current area.
@@ -115,7 +115,7 @@ def ooc_cmd_lm(client, arg):
     database.log_room('chat.local-mod', client, client.area, message=arg)
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_announce(client, arg):
     """
     Make a server-wide announcement.

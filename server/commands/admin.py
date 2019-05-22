@@ -44,7 +44,7 @@ def ooc_cmd_help(client, arg):
     client.send_ooc(help_msg)
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_kick(client, arg):
     """
     Kick a player.
@@ -105,7 +105,7 @@ def ooc_cmd_banhdid(client, arg):
     kickban(client, arg, True)
 
 
-@mod_only
+@mod_only()
 def kickban(client, arg, ban_hdid):
     if len(arg) <= 1:
         raise ArgumentError(
@@ -135,7 +135,7 @@ def kickban(client, arg, ban_hdid):
         client.send_ooc(f'{ipid} was banned. Ban ID: {ban_id}')
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_unban(client, arg):
     """
     Unban a list of users.
@@ -154,7 +154,7 @@ def ooc_cmd_unban(client, arg):
         database.log_misc('unban', client, data={'id': ban_id})
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_mute(client, arg):
     """
     Prevent a user from speaking in-character.
@@ -186,7 +186,7 @@ def ooc_cmd_mute(client, arg):
                 f'{raw_ipid} does not look like a valid IPID.')
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_unmute(client, arg):
     """
     Unmute a user.
@@ -238,7 +238,7 @@ def ooc_cmd_login(client, arg):
     database.log_misc('login', client, data={'profile': login_name})
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_refresh(client, arg):
     """
     Reload all moderator credentials, server options, and commands without
@@ -284,7 +284,7 @@ def ooc_cmd_unmod(client, arg):
     client.send_ooc('you\'re not a mod now')
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_ooc_mute(client, arg):
     """
     Prevent a user from talking out-of-character.
@@ -305,7 +305,7 @@ def ooc_cmd_ooc_mute(client, arg):
         len(targets)))
 
 
-@mod_only
+@mod_only()
 def ooc_cmd_ooc_unmute(client, arg):
     """
     Allow an OOC-muted user to talk out-of-character.
