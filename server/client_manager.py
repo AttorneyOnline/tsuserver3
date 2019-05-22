@@ -444,6 +444,8 @@ class ClientManager:
                            modpasses))
             elif modpasses == password:
                 matches = ['default']
+            else:
+                matches = []
 
             if self.is_mod:
                 raise ClientError('Already logged in.')
