@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import sys
 import os
 import importlib
 
@@ -40,16 +41,13 @@ import server.logger
 class TsuServer3:
     """The main class for tsuserver3 server software."""
     def __init__(self):
-        self.config = None
-        self.allowed_iniswaps = None
-        self.load_config()
-        self.load_iniswaps()
-        self.client_manager = ClientManager(self)
-        self.area_manager = AreaManager(self)
         self.software = 'tsuserver3'
         self.release = 3
-        self.major_version = 2
+        self.major_version = 3
         self.minor_version = 0
+
+        self.config = None
+        self.allowed_iniswaps = None
         self.char_list = None
         self.char_emotes = None
         self.char_pages_ao1 = None
@@ -57,14 +55,27 @@ class TsuServer3:
         self.music_list_ao2 = None
         self.music_pages_ao1 = None
         self.backgrounds = None
-        self.load_characters()
-        self.load_music()
-        self.load_backgrounds()
-        self.ms_client = None
-        server.logger.setup_logger(debug=self.config['debug'])
 
-        if not os.path.exists('storage/db.sqlite3'):
-            database.migrate_json_to_v1()
+        self.ms_client = None
+
+        try:
+            self.load_config()
+            self.area_manager = AreaManager(self)
+            self.load_iniswaps()
+            self.load_characters()
+            self.load_music()
+            self.load_backgrounds()
+        except yaml.YAMLError as exc:
+            print('There was a syntax error parsing a configuration file:')
+            print(exc)
+            print('Please revise your syntax and restart the server.')
+            # Truly idiotproof
+            if os.name == 'nt':
+                input('(Press Enter to exit)')
+            sys.exit(1)
+
+        self.client_manager = ClientManager(self)
+        server.logger.setup_logger(debug=self.config['debug'])
 
     def start(self):
         """Start the server."""
@@ -160,6 +171,8 @@ class TsuServer3:
                 'interval_length': 0,
                 'mute_length': 0
             }
+        if isinstance(self.config['modpass'], str):
+            self.config['modpass'] = {'default': {'password': self.config['modpass']}}
 
     def load_characters(self):
         """Load the character list from a YAML file."""
@@ -392,9 +405,9 @@ class TsuServer3:
             # Reload moderator passwords list and unmod any moderator affected by
             # credential changes or removals
             if isinstance(self.config['modpass'], str):
-                self.config['modpass'] = {'default': self.config['modpass']}
+                self.config['modpass'] = {'default': {'password': self.config['modpass']}}
             if isinstance(cfg_yaml['modpass'], str):
-                cfg_yaml['modpass'] = {'default': cfg_yaml['modpass']}
+                cfg_yaml['modpass'] = {'default': {'password': cfg_yaml['modpass']}}
 
             for profile in self.config['modpass']:
                 if profile not in cfg_yaml['modpass'] or \

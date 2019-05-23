@@ -1,2 +1,6 @@
 PyYAML
 websockets
+arrow
+
+# Stability of this package is backed by piqueserver
+git+git://github.com/godwhoa/pytimeparse

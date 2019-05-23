@@ -4,13 +4,16 @@ import asyncio
 import sqlite3
 import json
 
+import arrow
+
 import logging
 logger = logging.getLogger('debug')
 event_logger = logging.getLogger('events')
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from functools import reduce
+from textwrap import dedent
 
 from .exceptions import ServerError
 
@@ -32,9 +35,12 @@ class Database:
     """
 
     def __init__(self):
+        new = not os.path.exists('storage/db.sqlite3')
         self.db = sqlite3.connect(DB_FILE)
         self.db.execute('PRAGMA foreign_keys = ON')
         self.db.row_factory = sqlite3.Row
+        if new:
+            self.migrate_json_to_v1()
 
     def migrate_json_to_v1(self):
         """Migrate to v1 of the database from JSON."""
@@ -52,15 +58,17 @@ class Database:
                 # Sometimes, there are multiple IP addresses mapped to
                 # the same IPID, so we have to reassign those IPIDs.
                 ipids = json.loads(ipids_file.read())
-                next_fallback_id = reduce(lambda max_ipid, ipid: max(max_ipid, ipid),
+                next_fallback_id = reduce(
+                    lambda max_ipid, ipid: max(max_ipid, ipid),
                     [ipid for ip, ipid in ipids.items()])
                 for ip, ipid in ipids.items():
                     effective_id = ipid
                     while True:
                         try:
-                            conn.execute(
-                                'INSERT INTO ipids(ipid, ip_address) VALUES (?, ?)',
-                                (effective_id, ip))
+                            conn.execute(dedent('''
+                                INSERT INTO ipids(ipid, ip_address)
+                                VALUES (?, ?)
+                                '''), (effective_id, ip))
                         except sqlite3.IntegrityError:
                             effective_id = next_fallback_id
                             effective_id += 1
@@ -78,9 +86,10 @@ class Database:
                         # correspond to any IPIDs in the IPID table.
                         if ipid not in ipids:
                             continue
-                        conn.execute(
-                            'INSERT OR IGNORE INTO hdids(hdid, ipid) VALUES (?, ?)',
-                            (hdid, ipid))
+                        conn.execute(dedent('''
+                            INSERT OR IGNORE INTO hdids(hdid, ipid)
+                            VALUES (?, ?)
+                            '''), (hdid, ipid))
 
             if not os.path.exists('storage/banlist.json'):
                 return
@@ -89,23 +98,26 @@ class Database:
                 for ipid, ban_info in bans.items():
                     if ipid not in ipids:
                         continue
-                    ban_id = conn.execute(
-                        'INSERT INTO bans(ban_id, ban_date, reason) VALUES (NULL, NULL, ?)',
-                        (ban_info['Reason'],)).lastrowid
-                    conn.execute(
-                        'INSERT INTO ip_bans(ipid, ban_id) VALUES (?, ?)',
-                        (ipid, ban_id))
+                    ban_id = conn.execute(dedent('''
+                        INSERT INTO bans(ban_id, ban_date, reason)
+                        VALUES (NULL, NULL, ?)
+                        '''), (ban_info['Reason'],)).lastrowid
+                    conn.execute(dedent('''
+                        INSERT INTO ip_bans(ipid, ban_id)
+                        VALUES (?, ?)
+                        '''), (ipid, ban_id))
 
             logger.debug('Migration complete')
 
     def ipid(self, ip):
         """Get an IPID from an IP address."""
         with self.db as conn:
-            conn.execute(
-                'INSERT OR IGNORE INTO ipids(ipid, ip_address) VALUES (NULL, ?)',
-                (ip, ))
-            ipid = conn.execute('SELECT ipid FROM ipids WHERE ip_address = ?',
-                                (ip, )).fetchone()['ipid']
+            conn.execute(dedent('''
+                INSERT OR IGNORE INTO ipids(ipid, ip_address) VALUES (NULL, ?)
+                '''), (ip, ))
+            ipid = conn.execute(dedent('''
+                SELECT ipid FROM ipids WHERE ip_address = ?
+                '''), (ip, )).fetchone()['ipid']
             event_logger.info(f'IPID for {ip}: {ipid}')
             return ipid
 
@@ -113,8 +125,9 @@ class Database:
         """Associate an HDID with an IPID."""
         with self.db as conn:
             event_logger.info(f'Associating HDID \'{hdid}\' with IPID {ipid}')
-            conn.execute('INSERT INTO hdids(hdid, ipid) VALUES (?, ?)',
-                         (hdid, ipid))
+            conn.execute(dedent('''
+                INSERT INTO hdids(hdid, ipid) VALUES (?, ?)
+                '''), (hdid, ipid))
 
     def ban(self,
             target_id,
@@ -132,36 +145,105 @@ class Database:
             if ban_id is None:
                 event_logger.info(f'{banned_by.name} ({banned_by.ipid}) ' +
                                   f'banned {target_id}: \'{reason}\'.')
-                ban_id = conn.execute(
-                    'INSERT INTO bans(reason, banned_by, unban_date) VALUES (?, ?, ?)',
-                    (reason, banned_by.ipid, unban_date)).fetchone()['ban_id']
+                ban_id = conn.execute(dedent('''
+                    INSERT INTO bans(reason, banned_by, unban_date)
+                    VALUES (?, ?, ?)
+                    '''), (reason, banned_by.ipid, unban_date)).lastrowid
             if ban_type == 'ipid':
-                conn.execute('INSERT INTO ip_bans(ipid, ban_id) VALUES (?, ?)',
-                             (target_id, ban_id))
+                try:
+                    conn.execute(dedent('''
+                        INSERT INTO ip_bans(ipid, ban_id) VALUES (?, ?)
+                        '''), (target_id, ban_id))
+                except sqlite3.IntegrityError as exc:
+                    raise ServerError(f'Error inserting ban: {exc}')
             elif ban_type == 'hdid':
-                conn.execute(
-                    'INSERT INTO hdid_bans(hdid, ban_id) VALUES (?, ?)',
-                    (target_id, ban_id))
+                try:
+                    conn.execute(dedent('''
+                        INSERT INTO hdid_bans(hdid, ban_id) VALUES (?, ?)
+                        '''), (target_id, ban_id))
+                except sqlite3.IntegrityError:
+                    raise ServerError(f'Error inserting ban: {exc}')
             else:
                 raise ServerError(f'unknown ban type {ban_type}')
 
-        self._schedule_unban(ban_id)
+        if unban_date is not None:
+            self._schedule_unban(ban_id)
+
         return ban_id
+
+    def last_known_name(self, ipid):
+        """
+        Find the last known OOC name of an IPID.
+        """
+        with self.db as conn:
+            row = conn.execute(dedent('''
+                SELECT ooc_name FROM room_events
+                WHERE ipid = ? AND ooc_name IS NOT NULL AND ooc_name != ''
+                ORDER BY event_time DESC LIMIT 1
+                '''), (ipid,)).fetchone()
+            if row is not None:
+                return row['ooc_name']
+            else:
+                return None
 
     @dataclass
     class Ban:
         ban_id: int
         ban_date: datetime
         unban_date: datetime
-        banned_by: str
+        banned_by: int
         reason: str
 
-    def find_ban(self, ipid, hdid):
+        @property
+        def ipids(self):
+            """Find IPIDs affected by this ban."""
+            with _database_singleton.db as conn:
+                return [row['ipid'] for row in
+                    conn.execute(dedent('''
+                        SELECT ipid FROM ip_bans WHERE ban_id = ?
+                        '''), (self.ban_id,)).fetchall()
+                ]
+
+        @property
+        def hdids(self):
+            """Find HDIDs affected by this ban."""
+            with _database_singleton.db as conn:
+                return [row['hdid'] for row in
+                    conn.execute(dedent('''
+                        SELECT hdid FROM hdid_bans WHERE ban_id = ?
+                        '''), (self.ban_id,)).fetchall()
+                ]
+
+        @property
+        def banned_by_name(self):
+            """
+            Find the last known OOC name of the player who issued
+            the ban.
+            """
+            return _database_singleton.last_known_name(self.banned_by)
+
+    def find_ban(self, ipid=None, hdid=None, ban_id=None):
         """Check if an IPID and/or HDID are banned."""
         with self.db as conn:
-            ban = conn.execute('SELECT * FROM (SELECT ban_id FROM ip_bans WHERE ipid = ? ' +
-                               'UNION SELECT ban_id FROM hdid_bans WHERE hdid = ?)' +
-                               'JOIN bans USING (ban_id) LIMIT 1', (ipid, hdid)).fetchone()
+            # Why is this query so complicated? The answer is that I am
+            # offloading most of the work to SQLite. This query first
+            # finds HDID or IPID bans, then looks up the associated ban
+            # information. Then it finds the last known OOC name of the
+            # player who issued that ban, purely as a convenience
+            # for later use. Use `EXPLAIN QUERY PLAN` for a breakdown.
+            #   LEFT OUTER JOIN room_events ON
+            #      room_events.ipid = banned_by AND
+            #      ooc_name IS NOT NULL
+            #   ORDER BY event_time DESC LIMIT 1
+            ban = conn.execute(dedent('''
+                SELECT *
+                FROM (
+                    SELECT ban_id FROM ip_bans WHERE ipid = ?
+                    UNION SELECT ban_id FROM hdid_bans WHERE hdid = ?
+                    UNION SELECT ban_id FROM bans WHERE ban_id = ?
+                )
+                JOIN bans USING (ban_id)
+                '''), (ipid, hdid, ban_id)).fetchone()
             if ban is not None:
                 return Database.Ban(**ban)
             else:
@@ -169,8 +251,11 @@ class Database:
 
     def unban(self, ban_id):
         """Remove a ban entry."""
+        event_logger.info(f'Unbanning {ban_id}')
         with self.db as conn:
-            unbans = conn.execute('DELETE FROM bans WHERE ban_id = ?', (ban_id,)).rowcount
+            unbans = conn.execute(dedent('''
+                DELETE FROM bans WHERE ban_id = ?
+                '''), (ban_id,)).rowcount
             return unbans > 0
 
     def schedule_unbans(self):
@@ -184,27 +269,33 @@ class Database:
         """
         dated_bans = []
         with self.db as conn:
-            dated_bans = conn.execute('SELECT ban_id FROM bans WHERE unban_date IS NOT NULL AND ' +
-                                      'datetime(unban_date) < datetime(?, \'+12 hours\')',
-                                      (datetime.now(),)).fetchall()
+            dated_bans = conn.execute(dedent('''
+                SELECT ban_id FROM bans
+                WHERE unban_date IS NOT NULL AND
+                    datetime(unban_date) < datetime(?, '+12 hours')
+                '''), (arrow.utcnow().datetime,)).fetchall()
 
         for ban in dated_bans:
             self._schedule_unban(ban['ban_id'])
 
     def _schedule_unban(self, ban_id):
         with self.db as conn:
-            ban = conn.execute('SELECT unban_date FROM bans WHERE ban_id = ?', (ban_id,)).fetchone()
-            time_to_unban = (ban['unban_date'] - datetime.now()).total_seconds()
-            asyncio.get_event_loop().call_later(time_to_unban, self.unban, ban['ban_id'])
+            ban = conn.execute(dedent('''
+                SELECT unban_date FROM bans WHERE ban_id = ?
+                '''), (ban_id,)).fetchone()
+            time_to_unban = (arrow.get(ban['unban_date']) - arrow.utcnow()).total_seconds()
+            asyncio.get_event_loop().call_later(time_to_unban, self.unban, ban_id)
 
     def log_ic(self, client, room, showname, message):
         """Log an IC message."""
         event_logger.info(f'[{room.abbreviation}] {showname}/{client.char_name}' +
                           f'/{client.name} ({client.ipid}): {message}')
         with self.db as conn:
-            conn.execute(
-                'INSERT INTO ic_events(ipid, room_name, char_name, ic_name, message) VALUES (?, ?, ?, ?, ?)',
-                (client.ipid, room.abbreviation, client.char_name, showname, message))
+            conn.execute(dedent('''
+                INSERT INTO ic_events(ipid, room_name, char_name, ic_name,
+                    message) VALUES (?, ?, ?, ?, ?)
+                '''), (client.ipid, room.abbreviation, client.char_name,
+                    showname, message))
 
     def log_room(self, event_subtype, client, room, message=None, target=None):
         """
@@ -222,20 +313,21 @@ class Database:
         event_logger.info(f'[{room.abbreviation}] {client.char_name}' +
                     f'/{client.name} ({client.ipid}): event {event_subtype} ({message})')
         with self.db as conn:
-            conn.execute(
-                'INSERT INTO room_events(ipid, room_name, char_name, ooc_name, ' +
-                'event_subtype, message, target_ipid) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                (ipid, room.abbreviation, char_name, ooc_name, subtype_id, message,
-                target_ipid))
+            conn.execute(dedent('''
+                INSERT INTO room_events(ipid, room_name, char_name, ooc_name,
+                    event_subtype, message, target_ipid)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                '''), (ipid, room.abbreviation, char_name, ooc_name,
+                    subtype_id, message, target_ipid))
 
     def log_connect(self, client, failed=False):
         """Log a connect attempt."""
         event_logger.info(f'{client.ipid} (HDID: {client.hdid}) ' +
                           f'{"was blocked from connecting" if failed else "connected"}.')
         with self.db as conn:
-            conn.execute(
-                'INSERT INTO connect_events(ipid, hdid, failed) VALUES (?, ?, ?)',
-                (client.ipid, client.hdid, failed))
+            conn.execute(dedent('''
+                INSERT INTO connect_events(ipid, hdid, failed) VALUES (?, ?, ?)
+                '''), (client.ipid, client.hdid, failed))
 
     def log_misc(self, event_subtype, client=None, target=None, data=None):
         """
@@ -247,19 +339,35 @@ class Database:
         subtype_id = self._subtype_atom('misc', event_subtype)
         data_json = json.dumps(data)
         event_logger.info(f'{event_subtype} ({client_ipid} onto {target_ipid}): {data}')
+
         with self.db as conn:
-            conn.execute(
-                'INSERT INTO misc_events(ipid, target_ipid, event_subtype, event_data) VALUES (?, ?, ?, ?)',
-                (client_ipid, target_ipid, subtype_id, data_json))
+            conn.execute(dedent('''
+                INSERT INTO misc_events(ipid, target_ipid, event_subtype,
+                    event_data) VALUES (?, ?, ?, ?)
+                '''), (client_ipid, target_ipid, subtype_id, data_json))
+
+    def recent_bans(self, count=5):
+        """
+        Get the most recent bans in chronological order.
+        """
+        with self.db as conn:
+            return [Database.Ban(**row) for row in
+                conn.execute(dedent('''
+                    SELECT * FROM (SELECT * FROM bans
+                        ORDER BY ban_date DESC LIMIT ?)
+                    ORDER BY ban_date ASC
+                    '''), (count,)).fetchall()]
 
     def _subtype_atom(self, event_type, event_subtype):
         if event_type not in ('room', 'misc'):
             raise AssertionError()
 
         with self.db as conn:
-            conn.execute(
-                f'INSERT OR IGNORE INTO {event_type}_event_types(type_name) VALUES (?)',
-                (event_subtype,))
-            return conn.execute(
-                f'SELECT type_id FROM {event_type}_event_types WHERE type_name = ?',
-                (event_subtype,)).fetchone()['type_id']
+            conn.execute(dedent(f'''
+                INSERT OR IGNORE INTO {event_type}_event_types(type_name)
+                VALUES (?)
+                '''), (event_subtype,))
+            return conn.execute(dedent(f'''
+                SELECT type_id FROM {event_type}_event_types
+                WHERE type_name = ?
+                '''), (event_subtype,)).fetchone()['type_id']

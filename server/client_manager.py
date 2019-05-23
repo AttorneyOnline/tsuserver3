@@ -439,9 +439,8 @@ class ClientManager:
             """
             modpasses = self.server.config['modpass']
             if isinstance(modpasses, dict):
-                matches = list(
-                    filter(lambda k: modpasses[k]['password'] == password,
-                           modpasses))
+                matches = [k for k in modpasses
+                    if modpasses[k]['password'] == password]
             elif modpasses == password:
                 matches = ['default']
             else:

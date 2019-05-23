@@ -1,3 +1,8 @@
+import shlex
+
+import arrow
+import pytimeparse
+
 from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, ServerError, ArgumentError
@@ -18,7 +23,9 @@ __all__ = [
     'ooc_cmd_mods',
     'ooc_cmd_unmod',
     'ooc_cmd_ooc_mute',
-    'ooc_cmd_ooc_unmute'
+    'ooc_cmd_ooc_unmute',
+    'ooc_cmd_bans',
+    'ooc_cmd_baninfo'
 ]
 
 
@@ -90,8 +97,11 @@ def ooc_cmd_kick(client, arg):
 
 def ooc_cmd_ban(client, arg):
     """
-    Ban a user permanently.
-    Usage: /ban <ipid> <reason>
+    Ban a user. If a ban ID is specified instead of a reason,
+    then the IPID is added to an existing ban record.
+    Ban durations are 6 hours by default.
+    Usage: /ban <ipid> "reason" ["<N> <minute|hour|day|week|month>(s)|perma"]
+    Usage 2: /ban <ipid> <ban_id>
     """
     kickban(client, arg, False)
 
@@ -99,28 +109,49 @@ def ooc_cmd_ban(client, arg):
 def ooc_cmd_banhdid(client, arg):
     """
     Ban both a user's HDID and IPID.
-    Danger: Banning web users by HDID has unintended consequences.
-    Usage: /banhdid <ipid> <reason>
+    DANGER: Banning webAO users by HDID has unintended consequences.
+    Usage: See /ban.
     """
     kickban(client, arg, True)
 
 
 @mod_only()
 def kickban(client, arg, ban_hdid):
-    if len(arg) <= 1:
-        raise ArgumentError(
-            'You must specify a target and reason. Use /ban <ipid> <reason>')
-    args = list(arg.split(' '))
-
-    raw_ipid = args[0]
-    reason = ' '.join(args[1:])
+    args = shlex.split(arg)
+    if len(args) < 2:
+        raise ArgumentError('Not enough arguments.')
+    elif len(args) == 2:
+        reason = None
+        ban_id = None
+        try:
+            ban_id = int(args[1])
+            unban_date = None
+        except ValueError:
+            reason = args[1]
+            unban_date = arrow.get().shift(hours=6).datetime
+    elif len(args) == 3:
+        ban_id = None
+        reason = args[1]
+        if 'perma' in args[2]:
+            unban_date = None
+        else:
+            duration = pytimeparse.parse(args[2], granularity='hours')
+            if duration is None:
+                raise ArgumentError('Invalid ban duration.')
+            unban_date = arrow.get().shift(seconds=duration).datetime
+    else:
+        raise ArgumentError(f'Ambiguous input: {arg}\nPlease wrap your arguments '
+                             'in quotes.')
 
     try:
+        raw_ipid = args[0]
         ipid = int(raw_ipid)
-    except:
+    except ValueError:
         raise ClientError(f'{raw_ipid} does not look like a valid IPID.')
 
-    ban_id = database.ban(ipid, reason, ban_type='ipid', banned_by=client)
+    ban_id = database.ban(ipid, reason, ban_type='ipid', banned_by=client,
+        ban_id=ban_id, unban_date=unban_date)
+
     if ipid != None:
         targets = client.server.client_manager.get_targets(
             client, TargetType.IPID, ipid, False)
@@ -139,13 +170,13 @@ def kickban(client, arg, ban_hdid):
 def ooc_cmd_unban(client, arg):
     """
     Unban a list of users.
-    Usage: /unban <ipid...>
+    Usage: /unban <ban_id...>
     """
     if len(arg) == 0:
         raise ArgumentError(
-            'You must specify a target. Use /unban <ban_id> <ban_id> ...')
+            'You must specify a target. Use /unban <ban_id...>')
     args = list(arg.split(' '))
-    client.send_ooc(f'Attempting to unban {len(args)} users.')
+    client.send_ooc(f'Attempting to lift {len(args)} ban(s)...')
     for ban_id in args:
         if database.unban(ban_id):
             client.send_ooc(f'Removed ban ID {ban_id}.')
@@ -322,3 +353,53 @@ def ooc_cmd_ooc_unmute(client, arg):
         database.log_room('ooc_unmute', client, client.area, target=target)
     client.send_ooc('Unmuted {} existing client(s).'.format(
         len(targets)))
+
+@mod_only()
+def ooc_cmd_bans(client, _arg):
+    """
+    Get the 5 most recent bans.
+    Usage: /bans
+    """
+    msg = 'Last 5 bans:\n'
+    for ban in database.recent_bans():
+        time = arrow.get(ban.ban_date).humanize()
+        msg += f'{time}: {ban.banned_by_name} ({ban.banned_by}) issued ban ' \
+               f'{ban.ban_id} (\'{ban.reason}\')\n'
+    client.send_ooc(msg)
+
+@mod_only()
+def ooc_cmd_baninfo(client, arg):
+    """
+    Get information about a ban.
+    Usage: /baninfo <id> ['ban_id'|'ipid'|'hdid']
+    By default, id identifies a ban_id.
+    """
+    args = arg.split(' ')
+    if len(arg) == 0:
+        raise ArgumentError('You must specify an ID.')
+    elif len(args) == 1:
+        lookup_type = 'ban_id'
+    else:
+        lookup_type = args[1]
+
+    if lookup_type not in ('ban_id', 'ipid', 'hdid'):
+        raise ArgumentError('Incorrect lookup type.')
+
+    ban = database.find_ban(**{lookup_type: args[0]})
+    if ban is None:
+        client.send_ooc('No ban found for this ID.')
+    else:
+        msg = f'Ban ID: {ban.ban_id}\n'
+        msg += 'Affected IPIDs: ' + ', '.join([str(ipid) for ipid in ban.ipids]) + '\n'
+        msg += 'Affected HDIDs: ' + ', '.join(ban.hdids) + '\n'
+        msg += f'Reason: "{ban.reason}"\n'
+        msg += f'Banned by: {ban.banned_by_name} ({ban.banned_by})\n'
+
+        ban_date = arrow.get(ban.ban_date)
+        msg += f'Banned on: {ban_date.format()} ({ban_date.humanize()})\n'
+        if ban.unban_date is not None:
+            unban_date = arrow.get(ban.unban_date)
+            msg += f'Unban date: {unban_date.format()} ({unban_date.humanize()})'
+        else:
+            msg += 'Unban date: N/A'
+        client.send_ooc(msg)

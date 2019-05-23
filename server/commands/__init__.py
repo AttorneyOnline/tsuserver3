@@ -36,6 +36,7 @@ def help(command):
 
 def mod_only(area_owners=False):
     import functools
+    from ..exceptions import ClientError
     def decorator(func):
         @functools.wraps(func)
         def wrapper_mod_only(client, arg, *args, **kwargs):
