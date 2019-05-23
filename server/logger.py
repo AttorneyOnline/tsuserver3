@@ -15,64 +15,58 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import logging
+import sys
 
+import logging
+import logging.handlers
 import time
 
 
 def setup_logger(debug):
+    """
+    Set up all loggers.
+    :param debug: whether debug mode should be enabled
+
+    """
     logging.Formatter.converter = time.gmtime
-    debug_formatter = logging.Formatter('[%(asctime)s UTC]%(message)s')
-    srv_formatter = logging.Formatter('[%(asctime)s UTC]%(message)s')
-    mod_formatter = logging.Formatter('[%(asctime)s UTC]%(message)s')
+    debug_formatter = logging.Formatter('[%(asctime)s UTC] %(message)s')
+
+    stdoutHandler = logging.StreamHandler(sys.stdout)
+    stdoutHandler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('[%(name)s] %(module)s@%(lineno)d : %(message)s')
+    stdoutHandler.setFormatter(formatter)
+    logging.getLogger().addHandler(stdoutHandler)
 
     debug_log = logging.getLogger('debug')
     debug_log.setLevel(logging.DEBUG)
 
-    debug_handler = logging.FileHandler('logs/debug.log', encoding='utf-8')
+    debug_handler = logging.handlers.RotatingFileHandler('logs/debug.log',
+        maxBytes=1024 * 1024 * 4)
     debug_handler.setLevel(logging.DEBUG)
     debug_handler.setFormatter(debug_formatter)
     debug_log.addHandler(debug_handler)
 
+    # Intended to be a brief log for `tail -f`. To search through events,
+    # use the database.
+    info_log = logging.getLogger('events')
+    info_log.setLevel(logging.INFO)
+    file_handler = logging.handlers.RotatingFileHandler('logs/server.log',
+        maxBytes=1024 * 512)
+    file_handler.setFormatter(logging.Formatter('[%(asctime)s UTC] %(message)s'))
+    info_log.addHandler(file_handler)
+
     if not debug:
         debug_log.disabled = True
-
-    server_log = logging.getLogger('server')
-    server_log.setLevel(logging.INFO)
-
-    server_handler = logging.FileHandler('logs/server.log', encoding='utf-8')
-    server_handler.setLevel(logging.INFO)
-    server_handler.setFormatter(srv_formatter)
-    server_log.addHandler(server_handler)
-
-    mod_log = logging.getLogger('mod')
-    mod_log.setLevel(logging.INFO)
-
-    mod_handler = logging.FileHandler('logs/mod.log', encoding='utf-8')
-    mod_handler.setLevel(logging.INFO)
-    mod_handler.setFormatter(mod_formatter)
-    mod_log.addHandler(mod_handler)
-
-
-def log_debug(msg, client=None):
-    msg = parse_client_info(client) + msg
-    logging.getLogger('debug').debug(msg)
-
-
-def log_server(msg, client=None):
-    msg = parse_client_info(client) + msg
-    logging.getLogger('server').info(msg)
-
-
-def log_mod(msg, client=None):
-    msg = parse_client_info(client) + msg
-    logging.getLogger('mod').info(msg)
+    else:
+        debug_log.debug('Logger started')
 
 
 def parse_client_info(client):
+    """Prepend information about a client to a log entry."""
     if client is None:
         return ''
-    info = client.get_ip()
+    ipid = client.ip
+    prefix = f'[{ipid:<15}][{client.id:<3}][{client.name}]'
     if client.is_mod:
-        return '[{:<15}][{:<3}][{}][MOD]'.format(info, client.id, client.name)
-    return '[{:<15}][{:<3}][{}]'.format(info, client.id, client.name)
+        prefix += '[MOD]'
+    return prefix
