@@ -98,6 +98,11 @@ class Database:
             with open('storage/banlist.json', 'r') as banlist_file:
                 bans = json.load(banlist_file)
                 for ipid, ban_info in bans.items():
+                    try:
+                        ipid = int(ipid)
+                    except ValueError:
+                        logger.debug(f'Bad IPID {ipid} in ban list. Ignoring.')
+                        continue
                     if ipid not in ipids:
                         logger.debug(f'IPID {ipid} in ban list does not exist. Ignoring.')
                         continue
