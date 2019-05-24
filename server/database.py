@@ -107,8 +107,8 @@ class Database:
                         logger.debug(f'IPID {ipid} in ban list does not exist. Ignoring.')
                         continue
                     ban_id = conn.execute(dedent('''
-                        INSERT INTO bans(ban_id, ban_date, reason)
-                        VALUES (NULL, NULL, ?)
+                        INSERT INTO bans(ban_id, reason)
+                        VALUES (NULL, ?)
                         '''), (ban_info['Reason'],)).lastrowid
                     conn.execute(dedent('''
                         INSERT INTO ip_bans(ipid, ban_id)
@@ -362,6 +362,7 @@ class Database:
             return [Database.Ban(**row) for row in
                 conn.execute(dedent('''
                     SELECT * FROM (SELECT * FROM bans
+                        WHERE ban_date IS NOT NULL
                         ORDER BY ban_date DESC LIMIT ?)
                     ORDER BY ban_date ASC
                     '''), (count,)).fetchall()]

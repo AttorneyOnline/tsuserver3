@@ -30,9 +30,9 @@ class Emotes:
             return
 
         for emote_id in range(1, int(char_ini['Emotions']['number'])):
-            _name, preanim, anim, _mod = char_ini['Emotions'][emote_id].split('#')
+            _name, preanim, anim, _mod = char_ini['Emotions'][str(emote_id)].split('#')
             if emote_id in char_ini['SoundN']:
-                sfx = char_ini['SoundN'][emote_id]
+                sfx = char_ini['SoundN'][str(emote_id)]
                 if len(sfx) == 1:
                     # Often, a one-character SFX is a placeholder for no sfx,
                     # so allow it

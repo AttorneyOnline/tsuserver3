@@ -20,7 +20,8 @@ import re
 import unicodedata
 
 import logging
-logger = logging.getLogger('debug')
+logger_debug = logging.getLogger('debug')
+logger = logging.getLogger('events')
 
 from enum import Enum
 from time import localtime, strftime
@@ -99,7 +100,7 @@ class AOProtocol(asyncio.Protocol):
                 cmd, *args = msg.split('#')
                 self.net_cmd_dispatcher[cmd](self, args)
             except KeyError:
-                logger.debug(f'Unknown incoming message from {ipid}: {msg}')
+                logger_debug.debug(f'Unknown incoming message from {ipid}: {msg}')
 
     def connection_made(self, transport):
         """Called upon a new client connecting

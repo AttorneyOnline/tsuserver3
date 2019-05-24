@@ -343,7 +343,7 @@ class ClientManager:
             if not sorted_clients:
                 return ''
             sorted_clients = sorted(sorted_clients,
-                                    key=lambda x: x.char_name)
+                                    key=lambda x: x.char_name or '')
             for c in sorted_clients:
                 info += '\r\n'
                 if c in area.owners:
