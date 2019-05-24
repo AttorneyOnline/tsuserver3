@@ -53,15 +53,14 @@ class Database:
                 logger.debug('ip_ids.json not found. Aborting migration.')
                 return
 
-            ipids = None
+            ipids = set()
             with open('storage/ip_ids.json', 'r') as ipids_file:
                 # Sometimes, there are multiple IP addresses mapped to
                 # the same IPID, so we have to reassign those IPIDs.
-                ipids = json.loads(ipids_file.read())
+                ip_ipids = json.loads(ipids_file.read())
                 next_fallback_id = reduce(
-                    lambda max_ipid, ipid: max(max_ipid, ipid),
-                    [ipid for ip, ipid in ipids.items()])
-                for ip, ipid in ipids.items():
+                    lambda max_ipid, ipid: max(max_ipid, ipid), ipids)
+                for ip, ipid in ip_ipids.items():
                     effective_id = ipid
                     while True:
                         try:
@@ -85,6 +84,7 @@ class Database:
                         # Sometimes, there are HDID entries that do not
                         # correspond to any IPIDs in the IPID table.
                         if ipid not in ipids:
+                            logger.debug(f'IPID {ipid} in HDID list does not exist. Ignoring.')
                             continue
                         conn.execute(dedent('''
                             INSERT OR IGNORE INTO hdids(hdid, ipid)
@@ -92,11 +92,13 @@ class Database:
                             '''), (hdid, ipid))
 
             if not os.path.exists('storage/banlist.json'):
+                logger.debug(f'banlist.json not found. Not migrating bans.')
                 return
             with open('storage/banlist.json', 'r') as banlist_file:
                 bans = json.load(banlist_file)
                 for ipid, ban_info in bans.items():
                     if ipid not in ipids:
+                        logger.debug(f'IPID {ipid} in ban list does not exist. Ignoring.')
                         continue
                     ban_id = conn.execute(dedent('''
                         INSERT INTO bans(ban_id, ban_date, reason)
