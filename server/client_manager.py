@@ -287,8 +287,6 @@ class ClientManager:
 
             self.send_ooc(
                 f'Changed area to {area.name} [{self.area.status}].')
-            database.log_room('area.leave', self, old_area)
-            database.log_room('area.join', self, self.area)
             self.area.send_command('CharsCheck',
                                    *self.get_available_char_list())
             self.send_command('HP', 1, self.area.hp_def)
