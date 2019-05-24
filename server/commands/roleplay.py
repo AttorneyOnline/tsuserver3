@@ -154,7 +154,7 @@ def rolla_reload(area):
     try:
         import yaml
         with open('config/dice.yaml', 'r') as dice:
-            area.ability_dice = yaml.load(dice)
+            area.ability_dice = yaml.safe_load(dice)
     except:
         raise ServerError(
             'There was an error parsing the ability dice configuration. Check your syntax.'

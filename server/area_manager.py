@@ -484,7 +484,7 @@ class AreaManager:
     def load_areas(self):
         """Create all areas from a YAML file."""
         with open('config/areas.yaml', 'r') as chars:
-            areas = yaml.load(chars)
+            areas = yaml.safe_load(chars)
         for item in areas:
             if 'evidence_mod' not in item:
                 item['evidence_mod'] = 'FFA'

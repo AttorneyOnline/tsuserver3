@@ -157,7 +157,7 @@ class TsuServer3:
     def load_config(self):
         """Load the main server configuration from a YAML file."""
         with open('config/config.yaml', 'r', encoding='utf-8') as cfg:
-            self.config = yaml.load(cfg)
+            self.config = yaml.safe_load(cfg)
             self.config['motd'] = self.config['motd'].replace('\\n', ' \n')
         if 'music_change_floodguard' not in self.config:
             self.config['music_change_floodguard'] = {
@@ -177,28 +177,28 @@ class TsuServer3:
     def load_characters(self):
         """Load the character list from a YAML file."""
         with open('config/characters.yaml', 'r', encoding='utf-8') as chars:
-            self.char_list = yaml.load(chars)
+            self.char_list = yaml.safe_load(chars)
         self.build_char_pages_ao1()
         self.char_emotes = [Emotes(char) for char in self.char_list]
 
     def load_music(self):
         """Load the music list from a YAML file."""
         with open('config/music.yaml', 'r', encoding='utf-8') as music:
-            self.music_list = yaml.load(music)
+            self.music_list = yaml.safe_load(music)
         self.build_music_pages_ao1()
         self.build_music_list_ao2()
 
     def load_backgrounds(self):
         """Load the backgrounds list from a YAML file."""
         with open('config/backgrounds.yaml', 'r', encoding='utf-8') as bgs:
-            self.backgrounds = yaml.load(bgs)
+            self.backgrounds = yaml.safe_load(bgs)
 
     def load_iniswaps(self):
         """Load a list of characters for which INI swapping is allowed."""
         try:
             with open('config/iniswaps.yaml', 'r',
                       encoding='utf-8') as iniswaps:
-                self.allowed_iniswaps = yaml.load(iniswaps)
+                self.allowed_iniswaps = yaml.safe_load(iniswaps)
         except:
             logger.debug('Cannot find iniswaps.yaml')
 
@@ -399,7 +399,7 @@ class TsuServer3:
          - Commands
         """
         with open('config/config.yaml', 'r') as cfg:
-            cfg_yaml = yaml.load(cfg)
+            cfg_yaml = yaml.safe_load(cfg)
             self.config['motd'] = cfg_yaml['motd'].replace('\\n', ' \n')
 
             # Reload moderator passwords list and unmod any moderator affected by
