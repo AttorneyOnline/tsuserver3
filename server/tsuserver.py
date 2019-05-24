@@ -179,7 +179,7 @@ class TsuServer3:
         with open('config/characters.yaml', 'r', encoding='utf-8') as chars:
             self.char_list = yaml.safe_load(chars)
         self.build_char_pages_ao1()
-        self.char_emotes = [Emotes(char) for char in self.char_list]
+        self.char_emotes = {char: Emotes(char) for char in self.char_list}
 
     def load_music(self):
         """Load the music list from a YAML file."""
