@@ -422,14 +422,10 @@ class TsuServer3:
                             'Your moderator credentials have been revoked.')
             self.config['modpass'] = cfg_yaml['modpass']
 
-        with open('config/characters.yaml', 'r') as chars:
-            self.char_list = yaml.load(chars)
-        with open('config/music.yaml', 'r') as music:
-            self.music_list = yaml.load(music)
-        self.build_music_pages_ao1()
-        self.build_music_list_ao2()
-        with open('config/backgrounds.yaml', 'r') as bgs:
-            self.backgrounds = yaml.load(bgs)
+        self.load_characters()
+        self.load_iniswaps()
+        self.load_music()
+        self.load_backgrounds()
 
         import server.commands
         importlib.reload(server.commands)
