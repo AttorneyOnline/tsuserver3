@@ -53,14 +53,15 @@ class Database:
                 logger.debug('ip_ids.json not found. Aborting migration.')
                 return
 
-            ipids = set()
             with open('storage/ip_ids.json', 'r') as ipids_file:
                 # Sometimes, there are multiple IP addresses mapped to
                 # the same IPID, so we have to reassign those IPIDs.
                 ip_ipids = json.loads(ipids_file.read())
+                ipids = set([ipid for ip, ipid in ip_ipids.items()])
                 next_fallback_id = reduce(
                     lambda max_ipid, ipid: max(max_ipid, ipid), ipids)
                 for ip, ipid in ip_ipids.items():
+                    ipids.add(ipid)
                     effective_id = ipid
                     while True:
                         try:
