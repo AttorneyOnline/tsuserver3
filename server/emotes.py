@@ -30,7 +30,8 @@ class Emotes:
             return
 
         for emote_id in range(1, int(char_ini['Emotions']['number'])):
-            _name, preanim, anim, _mod = char_ini['Emotions'][str(emote_id)].split('#')
+            emote_id = str(emote_id)
+            _name, preanim, anim, _mod = char_ini['Emotions'][str(emote_id)].split('#')[:4]
             if emote_id in char_ini['SoundN']:
                 sfx = char_ini['SoundN'][str(emote_id)]
                 if len(sfx) == 1:
@@ -56,4 +57,6 @@ class Emotes:
 
         if len(sfx) <= 1:
             sfx = None
+        print(self.emotes)
+        print((preanim, anim, sfx))
         return (preanim, anim, sfx) in self.emotes

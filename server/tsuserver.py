@@ -47,7 +47,7 @@ class TsuServer3:
         self.minor_version = 0
 
         self.config = None
-        self.allowed_iniswaps = None
+        self.allowed_iniswaps = []
         self.char_list = None
         self.char_emotes = None
         self.char_pages_ao1 = None

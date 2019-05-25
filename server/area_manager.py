@@ -202,12 +202,13 @@ class AreaManager:
             if '..' in preanim or '..' in anim or '..' in char:
                 # Prohibit relative paths
                 return True
-            for char_link in self.server.allowed_iniswaps:
-                # Only allow if both the original character and the
-                # target character are in the allowed INI swap list
-                if client.char_name in char_link and char in char_link:
-                    return False
-            return self.server.char_emotes[char].validate(preanim, anim, sfx)
+            if char.lower() != client.char_name.lower():
+                for char_link in self.server.allowed_iniswaps:
+                    # Only allow if both the original character and the
+                    # target character are in the allowed INI swap list
+                    if client.char_name in char_link and char in char_link:
+                        return False
+            return not self.server.char_emotes[char].validate(preanim, anim, sfx)
 
         def add_jukebox_vote(self, client, music_name, length=-1, showname=''):
             """

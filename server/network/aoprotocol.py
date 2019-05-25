@@ -356,7 +356,7 @@ class AOProtocol(asyncio.Protocol):
         else:
             return
         if self.client.area.is_iniswap(self.client, pre, anim,
-                folder, sfx) and folder != self.client.char_name:
+                folder, sfx):
             self.client.send_ooc("Iniswap/custom emotes are blocked in this area")
             return
         if len(self.client.charcurse) > 0 and \
