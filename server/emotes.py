@@ -57,6 +57,4 @@ class Emotes:
 
         if len(sfx) <= 1:
             sfx = None
-        print(self.emotes)
-        print((preanim, anim, sfx))
         return (preanim, anim, sfx) in self.emotes
