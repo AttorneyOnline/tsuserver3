@@ -1,4 +1,4 @@
 PyYAML
 websockets
 arrow
-pytimeparse-plus
+timeparse-plus
