@@ -142,17 +142,19 @@ Requires Python 3.6+ and PyYAML.
 * **bg** "background" 
     - Changes the current background
 * **area_add**
-    - Add an area
-* **area_remove** <id1> <id2> <idx>
-    - Remove listed areas
+    - Add an area at the end of the area list
+* **area_remove** <id>
+    - Remove specified area while updating all existing access references to match.
+* **area_swap** <id1> <id2>
+    - Swaps first area ID with the second area ID while updating all existing access references to match.
 * **poslock** <def> <hld> <pro> <hlp> <wit> <jud> <clear>
     - Lock the position of current area into provided pos. <clear> to unlock.
 * **rename** <text>
     - Rename current area's display name to <text>
 * **area_access** <id1> <id2> <idx>
-    - Set which areas are accessible from your area for movement.
+    - Display area access numbers if blank, or set which areas are accessible from your area for movement. /area_access clear to clear the area access. Use area_link/area_unlink for two-way paths instead.
 * **area_link** <id1> <id2> <idx>
-    - Set up a two-way accessibility from and to your area for listed ID's.
+    - Set up a two-way accessibility from and to your current area for listed ID's.
 * **area_unlink** <id1> <id2> <idx>
     - Unlink specified areas from the area you're in.
 * **evidence_mod** <MOD>

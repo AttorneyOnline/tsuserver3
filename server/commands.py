@@ -1025,7 +1025,7 @@ def ooc_cmd_area_add(client, arg):
 
     if client.hub.cur_id < client.hub.max_areas:
         client.hub.create_area('Area {}'.format(client.hub.cur_id))
-        client.hub.send_host_message(
+        client.send_host_message(
             'New area created! ({}/{})'.format(client.hub.cur_id, client.hub.max_areas))
     else:
         raise AreaError('Too many areas! ({}/{})'.format(client.hub.cur_id, client.hub.max_areas))
@@ -1042,7 +1042,7 @@ def ooc_cmd_area_remove(client, arg):
             area = client.hub.get_area_by_id(int(args[0]))
             if not area.can_remove:
                 raise AreaError('This area cannot be removed!')
-            client.hub.send_host_message('Area {} ({}) removed! ({}/{})'.format(
+            client.send_host_message('Area {} ({}) removed! ({}/{})'.format(
                 area.id, area.name, client.hub.cur_id-1, client.hub.max_areas))
             client.hub.remove_area(area)
         except ValueError:
@@ -1051,6 +1051,24 @@ def ooc_cmd_area_remove(client, arg):
             raise
     else:
         raise ArgumentError('Invalid number of arguments. Use /area <id>.')
+
+def ooc_cmd_area_swap(client, arg):
+    args = arg.split(' ')
+    if len(args) != 2:
+        raise ClientError("You must specify 2 numbers.")
+    try:
+        area1 = client.hub.get_area_by_id(int(args[0]))
+        area2 = client.hub.get_area_by_id(int(args[1]))
+        if not area1.can_remove:
+            raise AreaError('First area cannot be modified!')
+        if not area2.can_remove:
+            raise AreaError('Second area cannot be modified!')
+        client.send_host_message('Area [{}] has been swapped with Area [{}]!'.format(area1.name, area2.name))
+        client.hub.swap_area(area1, area2)
+    except ValueError:
+        raise ArgumentError('Area ID must be a number.')
+    except (AreaError, ClientError):
+        raise
 
 def ooc_cmd_rename(client, arg):
     if not client.is_mod and not client.is_cm:

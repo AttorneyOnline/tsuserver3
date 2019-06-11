@@ -114,7 +114,7 @@ class HubManager:
 					area['can_rename'] = False
 				if 'bglock' not in area:
 					area['bglock'] = False
-				if 'poslock' not in area or area['poslock'] == 'null':
+				if 'poslock' not in area or area['poslock'] == None or area['poslock'] == 'null':
 					area['poslock'] = []
 				else:
 					_poslock = area['poslock'].split(' ')
@@ -428,7 +428,38 @@ class HubManager:
 			clients = area.clients.copy()
 			for client in clients:
 				client.change_area(self.default_area())
+
+			#Update area accessibility memes
+			for _area in self.areas:
+				accessible = []
+				for _id in _area.accessible:
+					if _id > area.id:
+						_id -= 1 #Shift it down as one area was removed
+					elif _id == area.id:
+						continue #remove the reference to this area
+					accessible.append(_id)
+				_area.accessible = accessible
 			self.areas.remove(area)
+			self.update_area_ids()
+
+		def swap_area(self, area1, area2):
+			if not (area1 in self.areas) or not (area2 in self.areas):
+				raise AreaError('Area not found.')
+
+			a, b = self.areas.index(area1), self.areas.index(area2)
+			self.areas[b], self.areas[a] = self.areas[a], self.areas[b] #Swap 'em good
+
+			#Update area accessibility memes
+			for _area in self.areas:
+				accessible = []
+				for _id in _area.accessible:
+					if _id == a:
+						_id = b
+					elif _id == b:
+						_id = a
+					accessible.append(_id)
+				_area.accessible = accessible
+
 			self.update_area_ids()
 
 		def update_area_ids(self):
