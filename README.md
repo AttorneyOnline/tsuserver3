@@ -175,6 +175,8 @@ Requires Python 3.6+ and PyYAML.
     - Even if iniswap at all is forbidden you can configure all-time allowed iniswaps in *iniswaps.yaml*
 * **akick** <id> <area#> (<hub#>)
     - Kicks target and all of their multi-accs from your area to area 0 or specified <area#> in same hub (or specified <hub#> if you're a mod)
+* **masskick** <area1> <area2>
+    - Kicks all people from <area1> to <area2>.
 
 ### Mod Commands
 * **login** "Password"

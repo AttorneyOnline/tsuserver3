@@ -1801,14 +1801,31 @@ def ooc_cmd_akick(client, arg):
                 # if area.is_locked:
                 #     area.invite_list[c.ipid] = None
                 c.change_area(area, True) #hidden change area regardless of sneak
-                c.send_host_message("You were kicked from the area to area {} [Hub {}].".format(output[0], output[1]))
+                c.send_host_message("You were kicked to area {} [Hub {}].".format(output[0], output[1]))
         except AreaError:
             raise
         except ClientError:
             raise
     else:
         client.send_host_message("No targets found.")
-    
+
+def ooc_cmd_masskick(client, arg):
+    args = arg.split(' ')
+    if len(args) != 2:
+        raise ClientError("You must specify 2 numbers.")
+    try:
+        area1 = client.hub.get_area_by_id(int(args[0]))
+        area2 = client.hub.get_area_by_id(int(args[1]))
+        clients = area1.clients.copy()
+        for c in clients:
+            # hidden change area regardless of sneak
+            c.change_area(area2, True)
+            c.send_host_message("You were kicked to area {} [Hub {}].".format(area2.id, area2.hub.id))
+    except ValueError:
+        raise ArgumentError('Area ID must be a number.')
+    except (AreaError, ClientError):
+        raise
+
 def ooc_cmd_ooc_mute(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
