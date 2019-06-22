@@ -29,22 +29,26 @@ class Emotes:
             logger.warn(f'Character file {char_path} not found')
             return
 
-        for emote_id in range(1, int(char_ini['Emotions']['number'])):
-            emote_id = str(emote_id)
-            _name, preanim, anim, _mod = char_ini['Emotions'][str(emote_id)].split('#')[:4]
-            if emote_id in char_ini['SoundN']:
-                sfx = char_ini['SoundN'][str(emote_id)]
-                if len(sfx) == 1:
-                    # Often, a one-character SFX is a placeholder for no sfx,
-                    # so allow it
+        try:
+            for emote_id in range(1, int(char_ini['Emotions']['number']) + 1):
+                emote_id = str(emote_id)
+                _name, preanim, anim, _mod = char_ini['Emotions'][str(emote_id)].split('#')[:4]
+                if emote_id in char_ini['SoundN']:
+                    sfx = char_ini['SoundN'][str(emote_id)]
+                    if len(sfx) == 1:
+                        # Often, a one-character SFX is a placeholder for no sfx,
+                        # so allow it
+                        sfx = None
+                else:
                     sfx = None
-            else:
-                sfx = None
-            self.emotes.add((preanim, anim, sfx))
+                self.emotes.add((preanim, anim, sfx))
 
-            # No SFX should always be allowed
-            self.emotes.add((preanim, anim, None))
-
+                # No SFX should always be allowed
+                self.emotes.add((preanim, anim, None))
+        except KeyError as e:
+            logger.warn(f'Unknown key {e.args[0]} in character file {char_path}. '
+                         'This indicates a malformed character INI file.')
+            return
 
     def validate(self, preanim, anim, sfx):
         """
