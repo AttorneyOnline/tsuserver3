@@ -14,6 +14,7 @@ __all__ = [
     'ooc_cmd_help',
     'ooc_cmd_kick',
     'ooc_cmd_ban',
+    'ooc_cmd_banhdid',
     'ooc_cmd_unban',
     'ooc_cmd_mute',
     'ooc_cmd_unmute',
