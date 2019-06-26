@@ -59,22 +59,6 @@ class AOProtocol(asyncio.Protocol):
         """
         buf = data
         ipid = self.client.ipid
-        hdid = self.client.hdid
-        ban = database.find_ban(ipid, hdid)
-
-        if not self.client.is_checked and ban is not None:
-            if ban.unban_date is not None:
-                unban_date = ban.unban_date.date().isoformat()
-            else:
-                unban_date = 'N/A'
-
-            msg = f'{ban.reason}\r\n'
-            msg += f'ID: {ban.ban_id}\r\n'
-            msg += f'Until: {unban_date}'
-            self.client.send_command('BD', msg)
-            self.client.transport.close()
-        else:
-            self.client.is_checked = True
 
         if buf is None:
             buf = b''
@@ -173,12 +157,26 @@ class AOProtocol(asyncio.Protocol):
             return
         hdid = self.client.hdid = args[0]
         ipid = self.client.ipid
+
+        database.add_hdid(ipid, hdid)
         ban = database.find_ban(ipid, hdid)
         if ban is not None:
+            if ban.unban_date is not None:
+                unban_date = ban.unban_date.date().isoformat()
+            else:
+                unban_date = 'N/A'
+
+            msg = f'{ban.reason}\r\n'
+            msg += f'ID: {ban.ban_id}\r\n'
+            msg += f'Until: {unban_date}'
+
             database.log_connect(self.client, failed=True)
-            self.client.send_command('BD', ban.reason)
+            self.client.send_command('BD', msg)
             self.client.disconnect()
             return
+        else:
+            self.client.is_checked = True
+
         database.log_connect(self.client, failed=False)
         self.client.send_command('ID', self.client.id, self.server.software,
                                  self.server.version)
@@ -304,6 +302,9 @@ class AOProtocol(asyncio.Protocol):
                                      self.ArgType.STR,
                                      needs_auth=False):
             return
+        elif not self.client.is_checked:
+            return
+
         cid = args[1]
         try:
             self.client.change_character(cid)
@@ -316,10 +317,12 @@ class AOProtocol(asyncio.Protocol):
         Refer to the implementation for details.
 
         """
-        if self.client.is_muted:  # Checks to see if the client has been muted by a mod
+        if not self.client.is_checked:
+            return
+        elif self.client.is_muted:  # Checks to see if the client has been muted by a mod
             self.client.send_ooc('You are muted by a moderator.')
             return
-        if not self.client.area.can_send_message(self.client):
+        elif not self.client.area.can_send_message(self.client):
             return
 
         target_area = []
@@ -538,6 +541,8 @@ class AOProtocol(asyncio.Protocol):
         CT#<name:string>#<message:string>#%
 
         """
+        if not self.client.is_checked:
+            return
         if self.client.is_ooc_muted:  # Checks to see if the client has been muted by a mod
             self.client.send_ooc('You are muted by a moderator.')
             return
@@ -610,6 +615,8 @@ class AOProtocol(asyncio.Protocol):
         MC#<song_name:int>#<???:int>#%
 
         """
+        if not self.client.is_checked:
+            return
         try:
             area = self.server.area_manager.get_area_by_name(args[0])
             self.client.change_area(area)
@@ -685,6 +692,8 @@ class AOProtocol(asyncio.Protocol):
         RT#<type:string>#%
 
         """
+        if not self.client.is_checked:
+            return
         if not self.client.area.shouts_allowed:
             self.client.send_ooc(
                 "You cannot use the testimony buttons here!")
@@ -749,6 +758,8 @@ class AOProtocol(asyncio.Protocol):
         Note: Though all but the first arguments are ints, they technically behave as bools of 0 and 1 value.
 
         """
+        if not self.client.is_checked:
+            return
         if self.client in self.client.area.owners:
             if not self.client.can_call_case():
                 raise ClientError(
@@ -788,6 +799,8 @@ class AOProtocol(asyncio.Protocol):
         HP#<type:int>#<new_value:int>#%
 
         """
+        if not self.client.is_checked:
+            return
         if self.client.is_muted:  # Checks to see if the client has been muted by a mod
             self.client.send_ooc('You are muted by a moderator.')
             return
@@ -814,7 +827,9 @@ class AOProtocol(asyncio.Protocol):
         :param args: 
 
         """
-        if len(args) < 3:
+        if not self.client.is_checked:
+            return
+        elif len(args) < 3:
             return
         # evi = Evidence(args[0], args[1], args[2], self.client.pos)
         self.client.area.evi_list.add_evidence(self.client, args[0], args[1],
@@ -828,7 +843,8 @@ class AOProtocol(asyncio.Protocol):
         DE#<id: int>#%
 
         """
-
+        if not self.client.is_checked:
+            return
         self.client.area.evi_list.del_evidence(
             self.client, self.client.evi_list[int(args[0])])
         database.log_room('evidence.del', self.client, self.client.area)
@@ -840,8 +856,9 @@ class AOProtocol(asyncio.Protocol):
         EE#<id: int>#<name: string>#<description: string>#<image: string>#%
 
         """
-
-        if len(args) < 4:
+        if not self.client.is_checked:
+            return
+        elif len(args) < 4:
             return
 
         evi = (args[1], args[2], args[3], 'all')
@@ -855,6 +872,9 @@ class AOProtocol(asyncio.Protocol):
         """Sent on mod call.
 
         """
+        if not self.client.is_checked:
+            return
+
         if self.client.is_muted:  # Checks to see if the client has been muted by a mod
             self.client.send_ooc('You are muted by a moderator.')
             return

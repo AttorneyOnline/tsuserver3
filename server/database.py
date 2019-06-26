@@ -41,6 +41,7 @@ class Database:
         self.db.row_factory = sqlite3.Row
         if new:
             self.migrate_json_to_v1()
+        self.migrate()
 
     def migrate_json_to_v1(self):
         """Migrate to v1 of the database from JSON."""
@@ -115,7 +116,21 @@ class Database:
                         VALUES (?, ?)
                         '''), (ipid, ban_id))
 
-            logger.debug('Migration complete')
+            logger.debug('Migration to v1 complete')
+
+    def migrate(self):
+        self.migrate_to_version(2)
+
+    def migrate_to_version(self, version):
+        with self.db as conn:
+            cur_version = conn.execute('PRAGMA user_version') \
+                .fetchone()['user_version']
+            if cur_version >= version:
+                return
+
+            with open(f'migrations/v{version}.sql', 'r') as file:
+                conn.executescript(file.read())
+        logger.debug(f'Migration to v{version} complete')
 
     def ipid(self, ip):
         """Get an IPID from an IP address."""
@@ -132,9 +147,9 @@ class Database:
     def add_hdid(self, ipid, hdid):
         """Associate an HDID with an IPID."""
         with self.db as conn:
-            event_logger.info(f'Associating HDID \'{hdid}\' with IPID {ipid}')
+            event_logger.info(f'Associated {ipid} with {hdid}')
             conn.execute(dedent('''
-                INSERT INTO hdids(hdid, ipid) VALUES (?, ?)
+                INSERT OR IGNORE INTO hdids(hdid, ipid) VALUES (?, ?)
                 '''), (hdid, ipid))
 
     def ban(self,
@@ -163,13 +178,14 @@ class Database:
                         INSERT INTO ip_bans(ipid, ban_id) VALUES (?, ?)
                         '''), (target_id, ban_id))
                 except sqlite3.IntegrityError as exc:
-                    raise ServerError(f'Error inserting ban: {exc}')
+                    raise ServerError(f'Error inserting ban: {exc}'
+                                      ' (the IPID may not exist)')
             elif ban_type == 'hdid':
                 try:
                     conn.execute(dedent('''
                         INSERT INTO hdid_bans(hdid, ban_id) VALUES (?, ?)
                         '''), (target_id, ban_id))
-                except sqlite3.IntegrityError:
+                except sqlite3.IntegrityError as exc:
                     raise ServerError(f'Error inserting ban: {exc}')
             else:
                 raise ServerError(f'unknown ban type {ban_type}')
@@ -292,7 +308,12 @@ class Database:
                 SELECT unban_date FROM bans WHERE ban_id = ?
                 '''), (ban_id,)).fetchone()
             time_to_unban = (arrow.get(ban['unban_date']) - arrow.utcnow()).total_seconds()
-            asyncio.get_event_loop().call_later(time_to_unban, self.unban, ban_id)
+
+            def auto_unban():
+                self.unban(ban_id)
+                self.log_misc('auto_unban', data={'id': ban_id})
+
+            asyncio.get_event_loop().call_later(time_to_unban, auto_unban)
 
     def log_ic(self, client, room, showname, message):
         """Log an IC message."""
