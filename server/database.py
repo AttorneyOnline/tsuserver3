@@ -119,7 +119,8 @@ class Database:
             logger.debug('Migration to v1 complete')
 
     def migrate(self):
-        self.migrate_to_version(2)
+        for version in [2, 3]:
+            self.migrate_to_version(version)
 
     def migrate_to_version(self, version):
         with self.db as conn:
@@ -217,6 +218,10 @@ class Database:
         unban_date: datetime
         banned_by: int
         reason: str
+
+        def __post_init__(self):
+            self.ban_date = arrow.get(self.ban_date).datetime
+            self.unban_date = arrow.get(self.unban_date).datetime
 
         @property
         def ipids(self):
