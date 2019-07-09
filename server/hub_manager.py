@@ -31,8 +31,50 @@ from server.constants import TargetType
 from server.exceptions import AreaError
 from server.evidence import EvidenceList
 
+from heapq import heappop, heappush
+
 class HubManager:
 	class Hub:
+		class Schedule:
+			def __init__(self, hub, _id, targets, time, affected, message):
+				self.hub = hub
+				self.id = _id
+				targetlist = ['ic', 'ooc', 'pm', 'gm']
+				self.targets = targetlist.pop(targetlist.index(targets)) #If there isn't such a "target" it will throw an error
+				self.start_time = -1
+				self.time = time
+				self.affected = affected
+				self.message = message
+
+				self.task = None
+
+			def start(self):
+				self.task = asyncio.create_task(self.step())
+
+			async def step(self):
+				loop = asyncio.get_event_loop()
+				self.start_time = loop.time()
+				end_time = loop.time() + self.time
+				step = self.time / 10
+
+				# print('Timer {} id, with {} seconds, {} step, START'.format(self.id, self.time, step))
+				while True:
+					if loop.time() >= end_time:
+						self.finish()
+						break
+					self.hub.schedule_step(self.id)
+					# print('Timer {} id, {} seconds left'.format(self.id, end_time - loop.time()))
+					await asyncio.sleep(step)
+
+			def cancel(self):
+				if self.task:
+					self.task.cancel()
+				# print('Timer {} id, with {} seconds, CANCEL'.format(self.id, self.time))
+
+			def finish(self):
+				# print('Timer {} id, with {} seconds, END'.format(self.id, self.time))
+				self.hub.schedule_finish(self.id)
+
 		class Area:
 			def __init__(self, area_id, server, hub, name, can_rename=True, background='default', bg_lock=False, pos_lock=None, evidence_mod = 'FFA',
 						locking_allowed = False, can_remove = False, accessible = None, desc = '', locked=False, hidden=False, max_players=-1, move_delay=0):
@@ -233,7 +275,7 @@ class HubManager:
 					self.music_looper.cancel()
 				if length > 0:
 					self.music_looper = asyncio.get_event_loop().call_later(length,
-																			lambda: self.play_music(name, -1, length))
+																			lambda: self.play_music(name, cid, length))
 
 			def play_music_shownamed(self, name, cid, showname, length=-1):
 				for client in self.server.client_manager.clients:
@@ -248,7 +290,7 @@ class HubManager:
 					self.music_looper.cancel()
 				if length > 0:
 					self.music_looper = asyncio.get_event_loop().call_later(length,
-																			lambda: self.play_music(name, -1, length))
+																			lambda: self.play_music_shownamed(name, cid, showname, length))
 
 			def can_send_message(self, client):
 				if self.cannot_ic_interact(client):
@@ -325,6 +367,8 @@ class HubManager:
 			self.is_ooc_muted = False
 			self.areas = []
 			self.cur_id = 0
+			self.schedules = []
+			self.cur_sched = [i for i in range(20)] #Max 20 schedules per hub
 			self.update(name, allow_cm, max_areas, doc, status, showname_changes_allowed,
                             shouts_allowed, non_int_pres_only, iniswap_allowed, blankposting_allowed, abbreviation, move_delay)
 
@@ -617,6 +661,35 @@ class HubManager:
 				return name[:3].upper()
 			else:
 				return name.upper()
+
+		def setup_schedule(self, targets, time, affected, message):
+			_id = heappop(self.cur_sched)
+			self.schedules.append(self.Schedule(self, _id, targets, time, affected, message))
+			return _id
+
+		def find_schedule(self, _id):
+			return [s for s in self.schedules if s.id == _id][0]
+
+		def destroy_schedule(self, _id):
+			schedule = self.find_schedule(_id)
+			if not schedule:
+				return
+			self.schedules.remove(schedule)
+			heappush(self.cur_sched, _id) #return the ID as available
+
+		def start_schedule(self, _id):
+			schedule = self.find_schedule(_id)
+			if not schedule:
+				return
+			schedule.start()
+		
+		def schedule_step(self, _id):
+			print("step")
+			#TODO: Check for all "linked" clients/areas/etc. and update the penalty bar accordingly
+		
+		def schedule_finish(self, _id):
+			print("finished, destroying schedule")
+			self.destroy_schedule(_id)
 
 	def __init__(self, server):
 		self.server = server

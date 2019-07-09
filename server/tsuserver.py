@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import importlib
+
 import asyncio
 import json
 
@@ -207,7 +209,7 @@ class TsuServer3:
                 index += 1
         self.music_pages_ao1 = [self.music_pages_ao1[x:x + 10] for x in range(0, len(self.music_pages_ao1), 10)]
 
-    def build_music_list_ao2(self):
+    def build_music_list_ao2(self, from_area=None, c=None, music_list=None):
         self.music_list_ao2 = []
         # add hubs first
         for hub in self.hub_manager.hubs:
@@ -301,26 +303,57 @@ class TsuServer3:
         if args[0] == 0:
             for part_arg in args[1:]:
                 try:
-                    sanitised = int(part_arg)
+                    _sanitised = int(part_arg)
                 except:
                     return
         elif args[0] in (1, 2, 3):
             for part_arg in args[1:]:
                 try:
-                    sanitised = str(part_arg)
+                    _sanitised = str(part_arg)
                 except:
                     return
 
         self.send_all_cmd_pred('ARUP', *args, pred=lambda x: True)
 
     def refresh(self):
+        """
+        Refresh as many parts of the server as possible:
+         - MOTD
+         - Mod credentials (unmodding users if necessary)
+         - Characters
+         - Music
+         - Backgrounds
+         - Commands
+        """
         with open('config/config.yaml', 'r') as cfg:
-            self.config['motd'] = yaml.load(cfg)['motd'].replace('\\n', ' \n')
-        with open('config/characters.yaml', 'r') as chars:
-            self.char_list = yaml.load(chars)
-        with open('config/music.yaml', 'r') as music:
-            self.music_list = yaml.load(music)
-        self.build_music_pages_ao1()
-        self.build_music_list_ao2()
-        with open('config/backgrounds.yaml', 'r') as bgs:
-            self.backgrounds = yaml.load(bgs)
+            cfg_yaml = yaml.safe_load(cfg)
+            self.config['motd'] = cfg_yaml['motd'].replace('\\n', ' \n')
+
+            # Reload moderator passwords list and unmod any moderator affected by
+            # credential changes or removals
+            if isinstance(self.config['modpass'], str):
+                self.config['modpass'] = {'default': {'password': self.config['modpass']}}
+            if isinstance(cfg_yaml['modpass'], str):
+                cfg_yaml['modpass'] = {'default': {'password': cfg_yaml['modpass']}}
+
+            for profile in self.config['modpass']:
+                if profile not in cfg_yaml['modpass'] or \
+                   self.config['modpass'][profile] != cfg_yaml['modpass'][profile]:
+                    for client in filter(
+                            lambda c: c.mod_profile_name == profile,
+                            self.client_manager.clients):
+                        client.is_mod = False
+                        client.mod_profile_name = None
+                        database.log_misc('unmod.modpass', client)
+                        client.send_ooc(
+                            'Your moderator credentials have been revoked.')
+            self.config['modpass'] = cfg_yaml['modpass']
+
+        self.load_characters()
+        self.load_iniswaps()
+        self.load_music()
+        self.load_backgrounds()
+
+        import server.commands
+        importlib.reload(server.commands)
+        # server.commands.reload()

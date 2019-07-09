@@ -1,3 +1,3 @@
-python start_server.py
+py start_server.py
 
 cmd /k

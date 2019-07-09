@@ -1187,18 +1187,22 @@ def ooc_cmd_hide(client, arg):
     elif len(arg) == 0:
         raise ArgumentError('You must specify a target.')
     try:
-        targets = client.server.client_manager.get_targets(
-            client, TargetType.ID, int(arg), False)
+        targets = []
+        ids = [int(s) for s in arg.split(' ')]
+        for targ_id in ids:
+            c = client.server.client_manager.get_targets(client, TargetType.ID, targ_id, True)
+            if c:
+                targets = targets + c
     except:
         raise ArgumentError('You must specify a target. Use /hide <id>.')
     if targets:
-        c = targets[0]
-        if c.hidden:
-            raise ClientError(
-                'Client [{}] {} already hidden!'.format(c.id, c.get_char_name(True)))
-        c.hide(True)
-        client.send_host_message(
-            'You have hidden [{}] {} from /getarea.'.format(c.id, c.get_char_name(True)))
+        for c in targets:
+            if c.hidden:
+                raise ClientError(
+                    'Client [{}] {} already hidden!'.format(c.id, c.get_char_name(True)))
+            c.hide(True)
+            client.send_host_message(
+                'You have hidden [{}] {} from /getarea.'.format(c.id, c.get_char_name(True)))
     else:
         client.send_host_message('No targets found.')
 
@@ -1208,17 +1212,21 @@ def ooc_cmd_unhide(client, arg):
     elif len(arg) == 0:
         raise ArgumentError('You must specify a target.')
     try:
-        targets = client.server.client_manager.get_targets(
-            client, TargetType.ID, int(arg), False)
+        targets = []
+        ids = [int(s) for s in arg.split(' ')]
+        for targ_id in ids:
+            c = client.server.client_manager.get_targets(client, TargetType.ID, targ_id, True)
+            if c:
+                targets = targets + c
     except:
         raise ArgumentError('You must specify a target. Use /unhide <id>.')
     if targets:
-        c = targets[0]
-        if not c.hidden:
-            raise ClientError(
-                'Client [{}] {} already revealed!'.format(c.id, c.get_char_name(True)))
-        c.hide(False)
-        client.send_host_message('You have revealed [{}] {} for /getarea.'.format(c.id, c.get_char_name(True)))
+        for c in targets:
+            if not c.hidden:
+                raise ClientError(
+                    'Client [{}] {} already revealed!'.format(c.id, c.get_char_name(True)))
+            c.hide(False)
+            client.send_host_message('You have revealed [{}] {} for /getarea.'.format(c.id, c.get_char_name(True)))
     else:
         client.send_host_message('No targets found.')
 
@@ -1238,18 +1246,24 @@ def ooc_cmd_blind(client, arg):
     elif len(arg) == 0:
         raise ArgumentError('You must specify a target.')
     try:
-        targets = client.server.client_manager.get_targets(
-            client, TargetType.ID, int(arg), False)
+        targets = []
+        ids = [int(s) for s in arg.split(' ')]
+        for targ_id in ids:
+            c = client.server.client_manager.get_targets(client, TargetType.ID, targ_id, True)
+            if c:
+                targets = targets + c
     except:
         raise ArgumentError('You must specify a target. Use /blind <id>.')
+
     if targets:
-        c = targets[0]
-        if c.blinded:
-            raise ClientError(
-                'Client [{}] {} already blinded!'.format(c.id, c.get_char_name(True)))
-        c.blind(True)
-        client.send_host_message(
-            'You have blinded [{}] {} from using /getarea and seeing non-broadcasted IC messages.'.format(c.id, c.get_char_name(True)))
+        for c in targets:
+            if c.blinded:
+                client.send_host_message(
+                    'Client [{}] {} already blinded!'.format(c.id, c.get_char_name(True)))
+                continue
+            c.blind(True)
+            client.send_host_message(
+                'You have blinded [{}] {} from using /getarea and seeing non-broadcasted IC messages.'.format(c.id, c.get_char_name(True)))
     else:
         client.send_host_message('No targets found.')
 
@@ -1259,18 +1273,22 @@ def ooc_cmd_unblind(client, arg):
     elif len(arg) == 0:
         raise ArgumentError('You must specify a target.')
     try:
-        targets = client.server.client_manager.get_targets(
-            client, TargetType.ID, int(arg), False)
+        targets = []
+        ids = [int(s) for s in arg.split(' ')]
+        for targ_id in ids:
+            c = client.server.client_manager.get_targets(client, TargetType.ID, targ_id, True)
+            if c:
+                targets = targets + c
     except:
         raise ArgumentError('You must specify a target. Use /unblind <id>.')
     if targets:
-        c = targets[0]
-        if not c.blinded:
-            raise ClientError(
-                'Client [{}] {} already unblinded!'.format(c.id, c.get_char_name(True)))
-        c.blind(False)
-        client.send_host_message(
-            'You have revealed [{}] {} for using /getarea and seeing non-broadcasted IC messages.'.format(c.id, c.get_char_name(True)))
+        for c in targets:
+            if not c.blinded:
+                raise ClientError(
+                    'Client [{}] {} already unblinded!'.format(c.id, c.get_char_name(True)))
+            c.blind(False)
+            client.send_host_message(
+                'You have revealed [{}] {} for using /getarea and seeing non-broadcasted IC messages.'.format(c.id, c.get_char_name(True)))
     else:
         client.send_host_message('No targets found.')
 
@@ -1282,6 +1300,12 @@ def ooc_cmd_getareas(client, arg):
         raise AreaError('Hub is {} - /getareas functionality disabled.'.format(client.hub.status))
     client.send_area_info(-1)
 
+def ooc_cmd_timer(client, arg):
+    args = arg.split(' ')
+    if arg == "" or len(args) != 1:
+        raise ClientError("You must specify a number.")
+    time = int(args[0])
+    client.hub.start_schedule(client.hub.setup_schedule('ooc', time, 'all', 'woah'))
 
 def ooc_cmd_mods(client, arg):
     #LMAO make it *actually* send mods in *hubs*
