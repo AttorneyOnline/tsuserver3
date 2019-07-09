@@ -39,41 +39,46 @@ class HubManager:
 			def __init__(self, hub, _id, targets, time, affected, message):
 				self.hub = hub
 				self.id = _id
-				targetlist = ['ic', 'ooc', 'pm', 'gm']
+				targetlist = ['ic', 'ooc', 'pm', 'icpm']
 				self.targets = targetlist.pop(targetlist.index(targets)) #If there isn't such a "target" it will throw an error
 				self.start_time = -1
 				self.time = time
 				self.affected = affected
 				self.message = message
+				self.display = 0
 
+				self.cancelling = False
 				self.task = None
 
 			def start(self):
-				self.task = asyncio.create_task(self.step())
+				self.task = asyncio.get_event_loop().create_task(self.step())
 
 			async def step(self):
 				loop = asyncio.get_event_loop()
 				self.start_time = loop.time()
 				end_time = loop.time() + self.time
 				step = self.time / 10
-
-				# print('Timer {} id, with {} seconds, {} step, START'.format(self.id, self.time, step))
-				while True:
-					if loop.time() >= end_time:
-						self.finish()
-						break
-					self.hub.schedule_step(self.id)
-					# print('Timer {} id, {} seconds left'.format(self.id, end_time - loop.time()))
-					await asyncio.sleep(step)
+				stepcount = 10
+				try:
+					# print('Timer {} id, with {} seconds, {} step, START'.format(self.id, self.time, step))
+					while True:
+						if self.cancelling:
+							return
+						self.hub.schedule_step(self.id, stepcount)
+						stepcount -= 1
+						# print('Timer {} id, {} seconds left'.format(self.id, end_time - loop.time()))
+						if loop.time() >= end_time:
+							break
+						await asyncio.sleep(step)
+					self.hub.schedule_finish(self.id)
+				except asyncio.CancelledError:
+					raise
+				except Exception:
+					pass
 
 			def cancel(self):
-				if self.task:
-					self.task.cancel()
+				self.cancelling = True
 				# print('Timer {} id, with {} seconds, CANCEL'.format(self.id, self.time))
-
-			def finish(self):
-				# print('Timer {} id, with {} seconds, END'.format(self.id, self.time))
-				self.hub.schedule_finish(self.id)
 
 		class Area:
 			def __init__(self, area_id, server, hub, name, can_rename=True, background='default', bg_lock=False, pos_lock=None, evidence_mod = 'FFA',
@@ -358,7 +363,7 @@ class HubManager:
 			# 	return msg
 
 		def __init__(self, hub_id, server, name, allow_cm=False, max_areas=1, doc='No document.', status='IDLE', showname_changes_allowed=False,
-                        shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation='', move_delay=0):
+						shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation='', move_delay=0):
 			self.server = server
 			self.id = hub_id
 
@@ -370,7 +375,7 @@ class HubManager:
 			self.schedules = []
 			self.cur_sched = [i for i in range(20)] #Max 20 schedules per hub
 			self.update(name, allow_cm, max_areas, doc, status, showname_changes_allowed,
-                            shouts_allowed, non_int_pres_only, iniswap_allowed, blankposting_allowed, abbreviation, move_delay)
+							shouts_allowed, non_int_pres_only, iniswap_allowed, blankposting_allowed, abbreviation, move_delay)
 
 		def update(self, name, allow_cm=False, max_areas=1, doc='No document.', status='IDLE', showname_changes_allowed=False,
 					 shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation='', move_delay=0):
@@ -663,9 +668,12 @@ class HubManager:
 				return name.upper()
 
 		def setup_schedule(self, targets, time, affected, message):
-			_id = heappop(self.cur_sched)
-			self.schedules.append(self.Schedule(self, _id, targets, time, affected, message))
-			return _id
+			try:
+				_id = heappop(self.cur_sched)
+				self.schedules.append(self.Schedule(self, _id, targets, time, affected, message))
+				return _id
+			except:
+				return -1
 
 		def find_schedule(self, _id):
 			return [s for s in self.schedules if s.id == _id][0]
@@ -674,6 +682,7 @@ class HubManager:
 			schedule = self.find_schedule(_id)
 			if not schedule:
 				return
+			schedule.cancel()
 			self.schedules.remove(schedule)
 			heappush(self.cur_sched, _id) #return the ID as available
 
@@ -682,13 +691,49 @@ class HubManager:
 			if not schedule:
 				return
 			schedule.start()
+
+		def stop_schedule(self, _id):
+			schedule = self.find_schedule(_id)
+			if not schedule:
+				return
+			schedule.cancel()
 		
-		def schedule_step(self, _id):
-			print("step")
+		def schedule_step(self, _id, val):
 			#TODO: Check for all "linked" clients/areas/etc. and update the penalty bar accordingly
+			schedule = self.find_schedule(_id)
+			if not schedule:
+				return
+			if schedule.display in [1, 2]:
+				if schedule.targets in ["ic", "ooc"]:
+					if schedule.affected == 'all':
+						self.send_command('HP', schedule.display, val)
+					else:
+						for aid in schedule.affected:
+							area = self.get_area_by_id(aid)
+							if not area:
+								continue
+							area.send_command('HP', schedule.display, val)
+				if schedule.targets == ["pm", "icpm"]:
+					return
+		
+		def schedule_display(self, _id, val): 
+			schedule = self.find_schedule(_id)
+			if not schedule:
+				return
+			schedule.display = val
 		
 		def schedule_finish(self, _id):
-			print("finished, destroying schedule")
+			schedule = self.find_schedule(_id)
+			if not schedule:
+				return
+			if schedule.targets == "ooc":
+				if schedule.affected == 'all':
+					self.send_command('CT', '~Timer', schedule.message)
+				else:
+					for aid in schedule.affected:
+						area = self.get_area_by_id(aid)
+						if area:
+							area.send_command('CT', '~Timer', schedule.message)
 			self.destroy_schedule(_id)
 
 	def __init__(self, server):

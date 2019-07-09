@@ -1300,12 +1300,166 @@ def ooc_cmd_getareas(client, arg):
         raise AreaError('Hub is {} - /getareas functionality disabled.'.format(client.hub.status))
     client.send_area_info(-1)
 
+seconds_per_unit = {"s": 1, "m": 60, "h": 3600, "d": 86400, "w": 604800}
+schedre = re.compile(r'(\d*)(\D)')
+
+def convert_to_seconds(s):
+    return int(s[:-1]) * seconds_per_unit[s[-1]]
+
+def convert_string_to_seconds(s):
+    if not re.search(schedre, s):
+        return -1
+    seconds = 0
+    for match in schedre.finditer(s):
+        print(match.group(0), match.group(1), match.group(2))
+        seconds += convert_to_seconds(match.group(0))
+    print(seconds)
+    return seconds
+
+def ooc_cmd_schedules(client, arg):
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can see currently running schedules.')
+    
+    msg = "Current schedules:"
+    for schedule in client.hub.schedules:
+        running = {True: '[R]', False: ''}
+        display = {0: 'None', 1: 'Def', 2: 'Pro'}
+        msg = msg + "\n[{}]{} targ: {} time: {} affected: {} display: {}\n--[Message: {}".format(
+            schedule.id, running[schedule.task is not None], schedule.targets,
+            schedule.time, schedule.affected, display[schedule.display], schedule.message)
+    client.send_host_message(msg)
+
 def ooc_cmd_timer(client, arg):
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can create schedules.')
     args = arg.split(' ')
-    if arg == "" or len(args) != 1:
-        raise ClientError("You must specify a number.")
-    time = int(args[0])
-    client.hub.start_schedule(client.hub.setup_schedule('ooc', time, 'all', 'woah'))
+    try:
+        if len(args) < 1:
+            raise
+        time = convert_string_to_seconds(args[0])
+        if time == -1:
+            time = int(args[0]) #we seconds
+
+        if time > 14400: #4 hours is max
+            client.send_host_message('Max amount of time is 4 hours.')
+            return
+
+        bar = 0
+        if len(args) >= 2 and args[1] in ['def', 'pro']:
+            bar = {'def': 1, 'pro': 2}[args[1]]
+
+        msg = 'Timer end.'
+        if len(args) >= 3:
+            msg = ' '.join(args[2:])
+
+        sched = client.hub.setup_schedule('ooc', time, [client.area.id], msg)
+        client.hub.start_schedule(sched)
+        client.hub.schedule_display(sched, bar)
+        client.send_host_message('Area timer [{}] has been created: {} seconds, msg: {}, and immediately started.'.format(sched, time, msg))
+    except:
+        # raise ArgumentError('Usage: /schedule [ic/ooc/pm/icpm] [time] [affected (all by default)].')
+        raise ArgumentError('Usage: /timer [time] [bar] [msg].')
+
+def ooc_cmd_schedule(client, arg):
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can create schedules.')
+    args = arg.split(' ')
+    try:
+        if len(args) < 1:
+            raise
+        targets = 'ooc'
+        # targets = args[0]
+        # if not targets in ['ic', 'ooc', 'pm', 'icpm']:
+        #     raise
+        time = convert_string_to_seconds(args[0])
+        if time == -1:
+            time = int(args[0]) #we seconds
+
+        if time > 14400: #4 hours is max
+            client.send_host_message('Max amount of time is 4 hours.')
+            return
+
+        affected = 'all'
+        if len(args) >= 2:
+            affected = args[1:]
+
+        sched = client.hub.setup_schedule(targets, time, affected, 'Timer end.')
+        client.send_host_message('Schedule [{}] has been created for {} in {} seconds, affecting {}.'.format(sched, targets, time, affected))
+    except:
+        # raise ArgumentError('Usage: /schedule [ic/ooc/pm/icpm] [time] [affected (all by default)].')
+        raise ArgumentError('Usage: /schedule [time] [affected (all by default)].')
+
+def ooc_cmd_editschedule(client, arg):
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can edit schedules.')
+    args = arg.split(' ')
+    try:
+        if len(args) < 1:
+            raise
+
+        _id = int(args[0])
+
+        msg = ' '.join(args[1:])
+
+        schedule = client.hub.find_schedule(_id)
+        schedule.message = msg
+        client.send_host_message('Schedule [{}] has been edited: "{}".'.format(_id, msg))
+    except:
+        raise ArgumentError('Usage: /editschedule [id] [msg]. View list using /schedules')
+
+def ooc_cmd_startschedule(client, arg):
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can start schedules.')
+
+    try:
+        client.hub.start_schedule(int(arg))
+        client.send_host_message('Schedule {} has been started.'.format(int(arg)))
+    except:
+        raise ArgumentError('Schedule not found. Usage: /startschedule [id]. View list using /schedules')
+
+# def ooc_cmd_stopschedule(client, arg):
+#     if not client.is_cm and not client.is_mod:
+#         raise ClientError('Only CM or mods can stop schedules.')
+
+#     try:
+#         client.hub.stop_schedule(int(arg))
+#         client.send_host_message('Schedule {} has been stopped.'.format(int(arg)))
+#     except:
+#         raise ArgumentError('Schedule not found. Usage: /stopschedule [id]. View list using /schedules')
+
+def ooc_cmd_destroyschedule(client, arg):
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can destroy schedules.')
+
+    try:
+        client.hub.destroy_schedule(int(arg))
+        client.send_host_message('Schedule {} has been destroyed.'.format(int(arg)))
+    except:
+        raise ArgumentError('Schedule not found. Usage: /destroyschedule [id]. View list using /schedules')
+
+def ooc_cmd_runschedule(client, arg):
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can run schedules.')
+
+    try:
+        client.hub.schedule_finish(int(arg))
+        client.send_host_message('Schedule {} has been forcibly finished'.format(int(arg)))
+    except:
+        raise ArgumentError('Schedule not found. Usage: /runschedule [id]. View list using /schedules')
+
+def ooc_cmd_displayschedule(client, arg):
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can display schedules.')
+    args = arg.split(' ')
+
+    try:
+        side = 0
+        if args[1] in ['def', 'pro']:
+            side = {'def': 1, 'pro': 2}[args[1]]
+        client.hub.schedule_display(int(args[0]), side)
+        client.send_host_message('Schedule {} display settings changed to {}.'.format(int(args[0]), side))
+    except:
+        raise ArgumentError('Schedule not found. Usage: /displayschedule [id]. View list using /schedules')
 
 def ooc_cmd_mods(client, arg):
     #LMAO make it *actually* send mods in *hubs*
@@ -1321,43 +1475,6 @@ def ooc_cmd_evi_swap(client, arg):
     except:
         raise ClientError("You must specify 2 numbers.")
 
-# def ooc_cmd_evi_edit(client, arg):
-#     #<id: int>#<name: string>#<description: string>#<image: string>#%
-#     args = arg.split(' ')
-#     if len(args) < 2:
-#         raise ClientError("Usage: <id: int> <name: string> <description: string> <image: string>. Replace string with . (period) if you wish to keep original data.")
-
-#     try:
-#         ID = int(args[0])
-
-#         name = args[1]
-
-#         if len(args) >= 3:
-#             desc = args[2]
-#         else:
-#             desc = '.'
-
-#         if len(args) >= 4:
-#             image = args[3]
-#         else:
-#             image = '.'
-
-#         ebdns = client.area.evi_list.evidences[client.evi_list[ID]]
-#         if ebdns:
-#             if name == '.':
-#                 name = ebdns.name
-#             if desc == '.':
-#                 desc = ebdns.desc
-#             if image == '.':
-#                 image = ebdns.image
-
-#         evi = (name, desc, image, 'all')
-
-#         client.area.evi_list.edit_evidence(client, client.evi_list[ID], evi)
-#         client.area.broadcast_evidence_list()
-#     except:
-#         raise ArgumentError("Error: One or more arguments invalid. Usage: <id: int> <name: string> <description: string> <image: string>. Replace string with . if you wish to keep original data.")
-
 def ooc_cmd_cm(client, arg):
     if len(arg) > 0:
         if not client.is_cm or client.hub.master != client:
@@ -1368,17 +1485,10 @@ def ooc_cmd_cm(client, arg):
             if c == client:
                 raise
             if c.is_cm:
-                if c.hub.master == c:
-                    c.hub.master = None
-                c.is_cm = False
-                client.hub.send_host_message(
-                    '{} is no longer a co-CM.'.format(c.name))
-                c.send_host_message(
-                    'You are no longer a co-CM of hub {}.'.format(client.hub.name))
+                raise ClientError('Target is already a CM.')
             else:
                 c.is_cm = True
-                client.hub.send_host_message(
-                    '{} has been made a co-CM.'.format(c.name))
+                client.send_host_message('{} has been made a co-CM.'.format(c.name))
                 c.send_host_message(
                     'You have been made a co-CM of hub {} by {}.'.format(client.hub.name, client.name))
             if client.area.evidence_mod == 'HiddenCM':
@@ -1391,9 +1501,9 @@ def ooc_cmd_cm(client, arg):
         if not client.hub.master and (len(client.hub.get_cm_list()) <= 0 or client.is_cm):
             client.hub.master = client
             client.is_cm = True
+            client.hub.send_host_message('{} is master CM in this hub now.'.format(client.name))
             if client.area.evidence_mod == 'HiddenCM':
                 client.area.broadcast_evidence_list()
-            client.hub.send_host_message('{} is master CM in this hub now.'.format(client.name))
         else:
             raise ClientError('Master CM exists. Use /cm <id>')
     #If we got past the errors we're going to tell the server to update itself.
@@ -1408,15 +1518,33 @@ def ooc_cmd_cms(client, arg):
         client.send_host_message('=>{}CM [{}] {}'.format(m, cm.id, cm.get_char_name(True)))
 
 def ooc_cmd_uncm(client, arg):
-    if client.is_cm:
-        if client.hub.master == client:
-            client.hub.master = None
-        client.is_cm = False
-        client.send_host_message(
-            'You are no longer a CM of hub {}.'.format(client.hub.name))
-        client.server.hub_manager.send_arup_cms()
-        if client.area.evidence_mod == 'HiddenCM':
-            client.area.broadcast_evidence_list()
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only master CM or mods can use /uncm.')
+
+    try:
+        if arg == "":
+            target = client
+        elif target.hub.master == client:
+            target = client.server.client_manager.get_targets(
+                client, TargetType.ID, int(arg), False)[0]
+        else:
+            raise ClientError('You must be the master CM to remove CM status of other CM\'s.')
+    except:
+        raise ArgumentError('Please provide target ID or blank to remove CM status.')
+
+    if target:
+        if not target.is_cm:
+            raise ClientError('Target is not a CM.')
+
+        if target.hub.master == client:
+            target.hub.master = None
+            target.hub.send_host_message('{} is no longer the master CM in this hub.'.format(target.name))
+        target.is_cm = False
+        target.send_host_message(
+            'You are no longer a CM of hub {}.'.format(target.hub.name))
+        target.server.hub_manager.send_arup_cms()
+        if target.area.evidence_mod == 'HiddenCM':
+            target.area.broadcast_evidence_list()
 
 def ooc_cmd_cmlogs(client, arg):
     logtypes = ['MoveLog', 'RollLog', 'PMLog', 'CharLog']
