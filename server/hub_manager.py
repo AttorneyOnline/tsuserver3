@@ -36,11 +36,11 @@ from heapq import heappop, heappush
 class HubManager:
 	class Hub:
 		class Schedule:
-			def __init__(self, hub, _id, targets, time, affected, message):
+			def __init__(self, hub, _id, target, time, affected, message):
 				self.hub = hub
 				self.id = _id
-				targetlist = ['ic', 'ooc', 'pm', 'icpm']
-				self.targets = targetlist.pop(targetlist.index(targets)) #If there isn't such a "target" it will throw an error
+				targetlist = ['area', 'user']
+				self.target = targetlist.pop(targetlist.index(target)) #If there isn't such a "target" it will throw an error
 				self.start_time = -1
 				self.time = time
 				self.affected = affected
@@ -704,7 +704,7 @@ class HubManager:
 			if not schedule:
 				return
 			if schedule.display in [1, 2]:
-				if schedule.targets in ["ic", "ooc"]:
+				if schedule.target == "area":
 					if schedule.affected == 'all':
 						self.send_command('HP', schedule.display, val)
 					else:
@@ -713,8 +713,14 @@ class HubManager:
 							if not area:
 								continue
 							area.send_command('HP', schedule.display, val)
-				if schedule.targets == ["pm", "icpm"]:
-					return
+				if schedule.target == "user":
+					if schedule.affected == 'all':
+						self.send_command('HP', schedule.display, val)
+					else:
+						for client in self.clients():
+							if not client.id in schedule.affected:
+								continue
+							client.send_command('HP', schedule.display, val)
 		
 		def schedule_display(self, _id, val): 
 			schedule = self.find_schedule(_id)
@@ -726,7 +732,7 @@ class HubManager:
 			schedule = self.find_schedule(_id)
 			if not schedule:
 				return
-			if schedule.targets == "ooc":
+			if schedule.target == "area":
 				if schedule.affected == 'all':
 					self.send_command('CT', '~Timer', schedule.message)
 				else:
@@ -734,6 +740,14 @@ class HubManager:
 						area = self.get_area_by_id(aid)
 						if area:
 							area.send_command('CT', '~Timer', schedule.message)
+			if schedule.target == "user":
+				if schedule.affected == 'all':
+					self.send_command('CT', '~Timer', schedule.message)
+				else:
+					for client in self.clients():
+						if not client.id in schedule.affected:
+							continue
+						client.send_command('CT', '~Timer', schedule.message)
 			self.destroy_schedule(_id)
 
 	def __init__(self, server):
