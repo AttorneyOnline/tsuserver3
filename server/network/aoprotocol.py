@@ -523,6 +523,18 @@ class AOProtocol(asyncio.Protocol):
             charid_pair = -1
             offset_pair = 0
 
+        if self.client.is_cm and self.client.waiting_for_schedule != None:
+            args = msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid, sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname, charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip, nonint_pre
+            schedule = self.client.hub.find_schedule(self.client.waiting_for_schedule)
+            if schedule:
+                schedule.msgtype = 'ic'
+                schedule.message = args
+                self.client.send_host_message('You have succesfully updated the schedule message.')
+            else:
+                self.client.send_host_message('The schedule no longer exists. Schedule message edit cancelled.')
+            self.client.waiting_for_schedule = None
+            return
+
         if self.client.is_cm and len(self.client.broadcast_ic) > 0:
             i = 0
             for b in self.client.broadcast_ic:
@@ -635,6 +647,16 @@ class AOProtocol(asyncio.Protocol):
             except (ClientError, AreaError, ArgumentError, ServerError) as ex:
                 self.client.send_host_message(ex)
         else:
+            if self.client.is_cm and self.client.waiting_for_schedule != None:
+                schedule = self.client.hub.find_schedule(self.client.waiting_for_schedule)
+                if schedule:
+                    schedule.msgtype = 'ooc'
+                    schedule.message = args[1]
+                    self.client.send_host_message('You have succesfully updated the schedule message.')
+                else:
+                    self.client.send_host_message('The schedule no longer exists. Schedule message edit cancelled.')
+                self.client.waiting_for_schedule = None
+                return
             if self.client.shaken:
                 args[1] = self.client.shake_message(args[1])
             if self.client.disemvowel:

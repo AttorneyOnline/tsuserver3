@@ -67,6 +67,7 @@ class ClientManager:
             self.blinded_by = None
             self.following = None
             self.sneak = False
+            self.waiting_for_schedule = None
 
             # Pairing stuff
             self.charid_pair = -1

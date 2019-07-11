@@ -36,7 +36,7 @@ from heapq import heappop, heappush
 class HubManager:
 	class Hub:
 		class Schedule:
-			def __init__(self, hub, _id, target, time, affected, message):
+			def __init__(self, hub, _id, target, time, affected, message, msgtype):
 				self.hub = hub
 				self.id = _id
 				targetlist = ['area', 'user']
@@ -45,6 +45,8 @@ class HubManager:
 				self.time = time
 				self.affected = affected
 				self.message = message
+				typelist = ['ic', 'ooc']
+				self.msgtype = typelist.pop(typelist.index(msgtype))
 				self.display = 0
 
 				self.cancelling = False
@@ -280,7 +282,7 @@ class HubManager:
 					self.music_looper.cancel()
 				if length > 0:
 					self.music_looper = asyncio.get_event_loop().call_later(length,
-																			lambda: self.play_music(name, cid, length))
+																			lambda: self.play_music(name, -1, length))
 
 			def play_music_shownamed(self, name, cid, showname, length=-1):
 				for client in self.server.client_manager.clients:
@@ -295,7 +297,7 @@ class HubManager:
 					self.music_looper.cancel()
 				if length > 0:
 					self.music_looper = asyncio.get_event_loop().call_later(length,
-																			lambda: self.play_music_shownamed(name, cid, showname, length))
+																			lambda: self.play_music(name, -1, length))
 
 			def can_send_message(self, client):
 				if self.cannot_ic_interact(client):
@@ -667,10 +669,10 @@ class HubManager:
 			else:
 				return name.upper()
 
-		def setup_schedule(self, targets, time, affected, message):
+		def setup_schedule(self, targets, time, affected, message, msgtype):
 			try:
 				_id = heappop(self.cur_sched)
-				self.schedules.append(self.Schedule(self, _id, targets, time, affected, message))
+				self.schedules.append(self.Schedule(self, _id, targets, time, affected, message, msgtype))
 				return _id
 			except:
 				return -1
@@ -734,20 +736,48 @@ class HubManager:
 				return
 			if schedule.target == "area":
 				if schedule.affected == 'all':
-					self.send_command('CT', '~Timer', schedule.message)
+					if schedule.msgtype == 'ooc':
+						self.send_command('CT', '~Timer', schedule.message)
+					elif schedule.msgtype == 'ic':
+						msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid, sfx_delay, button, evi, flip, ding, color, showname, charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip, nonint_pre = schedule.message
+						self.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
+									sfx_delay, button, evi, flip, ding, color, showname,
+									charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
+									nonint_pre)
 				else:
 					for aid in schedule.affected:
 						area = self.get_area_by_id(aid)
 						if area:
-							area.send_command('CT', '~Timer', schedule.message)
+							if schedule.msgtype == 'ooc':
+								area.send_command('CT', '~Timer', schedule.message)
+							elif schedule.msgtype == 'ic':
+								msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid, sfx_delay, button, evi, flip, ding, color, showname, charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip, nonint_pre = schedule.message
+								area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
+											sfx_delay, button, evi, flip, ding, color, showname,
+											charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
+											nonint_pre)
 			if schedule.target == "user":
 				if schedule.affected == 'all':
-					self.send_command('CT', '~Timer', schedule.message)
+					if schedule.msgtype == 'ooc':
+						self.send_command('CT', '~Timer', schedule.message)
+					elif schedule.msgtype == 'ic':
+						msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid, sfx_delay, button, evi, flip, ding, color, showname, charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip, nonint_pre = schedule.message
+						self.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
+									sfx_delay, button, evi, flip, ding, color, showname,
+									charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
+									nonint_pre)
 				else:
 					for client in self.clients():
 						if not client.id in schedule.affected:
 							continue
-						client.send_command('CT', '~Timer', schedule.message)
+						if schedule.msgtype == 'ooc':
+							client.send_command('CT', '~Timer', schedule.message)
+						elif schedule.msgtype == 'ic':
+							msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid, sfx_delay, button, evi, flip, ding, color, showname, charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip, nonint_pre = schedule.message
+							client.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
+                                        sfx_delay, button, evi, flip, ding, color, showname,
+                                        charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
+                                        nonint_pre)
 			self.destroy_schedule(_id)
 
 	def __init__(self, server):

@@ -1352,7 +1352,7 @@ def ooc_cmd_timer(client, arg):
         if len(args) >= 3:
             msg = ' '.join(args[2:])
 
-        sched = client.hub.setup_schedule('area', time, [client.area.id], msg)
+        sched = client.hub.setup_schedule('area', time, [client.area.id], msg, 'ooc')
         client.hub.start_schedule(sched)
         client.hub.schedule_display(sched, bar)
         client.send_host_message('Area timer [{}] has been created: {} seconds, msg: {}, and immediately started.'.format(sched, time, msg))
@@ -1385,7 +1385,7 @@ def ooc_cmd_schedule(client, arg):
         if len(args) >= 3:
             affected = args[2:]
 
-        sched = client.hub.setup_schedule(target, time, affected, 'Timer end.')
+        sched = client.hub.setup_schedule(target, time, affected, 'Timer end.', 'ooc')
         client.send_host_message('Schedule [{}] has been created for {} in {} seconds, affecting {}.'.format(sched, target, time, affected))
     except:
         # raise ArgumentError('Usage: /schedule [ic/ooc/pm/icpm] [time] [affected (all by default)].')
@@ -1396,18 +1396,14 @@ def ooc_cmd_editschedule(client, arg):
         raise ClientError('Only CM or mods can edit schedules.')
     args = arg.split(' ')
     try:
-        if len(args) < 1:
+        if len(args) != 1:
             raise
 
         _id = int(args[0])
-
-        msg = ' '.join(args[1:])
-
-        schedule = client.hub.find_schedule(_id)
-        schedule.message = msg
-        client.send_host_message('Schedule [{}] has been edited: "{}".'.format(_id, msg))
+        client.waiting_for_schedule = _id
+        client.send_host_message('Please type your message in IC or OOC to record it.')
     except:
-        raise ArgumentError('Usage: /editschedule [id] [msg]. View list using /schedules')
+        raise ArgumentError('Usage: /editschedule [id], then use OOC or IC bar to update the message. View list using /schedules')
 
 def ooc_cmd_startschedule(client, arg):
     if not client.is_cm and not client.is_mod:
