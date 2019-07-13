@@ -700,19 +700,10 @@ class AOProtocol(asyncio.Protocol):
                 return
             try:
                 if args[0].startswith('=='): #Trying to stop music because we pressed a category track
-                    if len(args) > 2:
-                        showname = args[2]
-                        if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
-                            self.client.send_host_message("Showname changes are forbidden in this hub!")
-                            return
-                        self.client.area.play_music_shownamed('Stop', self.client.char_id, showname, 0)
-                    else:
-                        self.client.area.play_music('Stop', self.client.char_id, 0)
-                    logger.log_server('[MUS]Stopped music.', self.client)
-                    logger.log_demo('[MUS]Stop', self.client)
-                    return
-                name, length = self.server.get_song_data(args[0])
-
+                    name = 'Stop'
+                    length = 0
+                else:
+                    name, length = self.server.get_song_data(args[0])
                 # if self.client.area.jukebox:
                 #     showname = ''
                 #     if len(args) > 2:
@@ -801,14 +792,33 @@ class AOProtocol(asyncio.Protocol):
                 'You used witness testimony/cross examination signs too many times. Please try again after {} seconds.'.format(
                     int(self.client.wtce_mute())))
             return
-        if len(args) == 1:
-            self.client.area.send_command('RT', args[0])
-            logger.log_demo('[WTCE][{}]'.format(args[0]), self.client)
-        elif len(args) == 2:
-            self.client.area.send_command('RT', args[0], args[1])
-            logger.log_demo('[WTCE][{} {}]'.format(
-                args[0], args[1]), self.client)
-        self.client.area.add_to_judgelog(self.client, 'used {}'.format(sign))
+        if self.client.is_cm and len(self.client.broadcast_ic) > 0:
+            i = 0
+            for b in self.client.broadcast_ic:
+                area = self.client.hub.get_area_by_id(b)
+                if area:
+                    if len(args) == 1:
+                        area.send_command('RT', args[0])
+                        logger.log_demo('[WTCE][{}]'.format(args[0]), self.client)
+                    elif len(args) == 2:
+                        area.send_command('RT', args[0], args[1])
+                        logger.log_demo('[WTCE][{} {}]'.format(
+                            args[0], args[1]), self.client)
+                    area.add_to_judgelog(self.client, 'used {}'.format(sign))
+                    i += 1
+            self.client.send_host_message(
+                'Broadcasting judge animation to {} areas.'.format(len(self.client.broadcast_ic)))
+        else:
+            area = self.client.area
+            if len(args) == 1:
+                area.send_command('RT', args[0])
+                logger.log_demo('[WTCE][{}]'.format(args[0]), self.client)
+            elif len(args) == 2:
+                area.send_command('RT', args[0], args[1])
+                logger.log_demo('[WTCE][{} {}]'.format(
+                    args[0], args[1]), self.client)
+            area.add_to_judgelog(self.client, 'used {}'.format(sign))
+
         logger.log_server('[WTCE]Used WT/CE.', self.client)
 
     def net_cmd_setcase(self, args):

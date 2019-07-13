@@ -331,23 +331,23 @@ class TsuServer3:
 
             # Reload moderator passwords list and unmod any moderator affected by
             # credential changes or removals
-            if isinstance(self.config['modpass'], str):
-                self.config['modpass'] = {'default': {'password': self.config['modpass']}}
-            if isinstance(cfg_yaml['modpass'], str):
-                cfg_yaml['modpass'] = {'default': {'password': cfg_yaml['modpass']}}
+            # if isinstance(self.config['modpass'], str):
+            #     self.config['modpass'] = {'default': {'password': self.config['modpass']}}
+            # if isinstance(cfg_yaml['modpass'], str):
+            #     cfg_yaml['modpass'] = {'default': {'password': cfg_yaml['modpass']}}
 
-            for profile in self.config['modpass']:
-                if profile not in cfg_yaml['modpass'] or \
-                   self.config['modpass'][profile] != cfg_yaml['modpass'][profile]:
-                    for client in filter(
-                            lambda c: c.mod_profile_name == profile,
-                            self.client_manager.clients):
-                        client.is_mod = False
-                        client.mod_profile_name = None
-                        database.log_misc('unmod.modpass', client)
-                        client.send_ooc(
-                            'Your moderator credentials have been revoked.')
-            self.config['modpass'] = cfg_yaml['modpass']
+            # for profile in self.config['modpass']:
+            #     if profile not in cfg_yaml['modpass'] or \
+            #        self.config['modpass'][profile] != cfg_yaml['modpass'][profile]:
+            #         for client in filter(
+            #                 lambda c: c.mod_profile_name == profile,
+            #                 self.client_manager.clients):
+            #             client.is_mod = False
+            #             client.mod_profile_name = None
+            #             database.log_misc('unmod.modpass', client)
+            #             client.send_ooc(
+            #                 'Your moderator credentials have been revoked.')
+            # self.config['modpass'] = cfg_yaml['modpass']
 
         self.load_characters()
         self.load_iniswaps()

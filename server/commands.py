@@ -1410,8 +1410,19 @@ def ooc_cmd_startschedule(client, arg):
         raise ClientError('Only CM or mods can start schedules.')
 
     try:
-        client.hub.start_schedule(int(arg))
-        client.send_host_message('Schedule {} has been started.'.format(int(arg)))
+        targets = []
+        ids = [int(s) for s in arg.split(' ')]
+        for targ_id in ids:
+            sched = client.hub.find_schedule(targ_id)
+            if sched:
+                targets.append(targ_id)
+    except:
+        raise ArgumentError('You must specify a target or multiple targets. Usage: /startschedule [id]. View list using /schedules.')
+
+    try:
+        for sched_id in targets:
+            client.hub.start_schedule(sched_id)
+            client.send_host_message('Schedule {} has been started.'.format(sched_id))
     except:
         raise ArgumentError('Schedule not found. Usage: /startschedule [id]. View list using /schedules')
 
@@ -1677,6 +1688,104 @@ def ooc_cmd_area_unlink(client, arg):
     client.area.send_host_message(
         'Areas that can now be accessed from and to area [{}] {}: {}.'.format(area_from.id, area_from.name, area_from.accessible))
 
+def ooc_cmd_key_add(client, arg):
+    if not arg:
+        raise ArgumentError("Usage: /key_add [char_id] [area id(s)]. Allows the selected user to use /lock and /unlock functionality outside the area (must be accessible).")
+
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can assign areas.')
+    args = arg.split(' ')
+    if len(args) <= 1:
+        raise ArgumentError("Please provide the area ID's to add. Usage: /key_add [char_id] [area id(s)].")
+    try:
+        target = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), True)
+        if target:
+            target = target[0]
+        else:
+            raise ArgumentError('Target not found.')
+        args = args[1:]
+        for a in args:
+            a = int(a)
+            area_to = target.hub.get_area_by_id(a) #Will throw an exception if the area doesn't exist
+            if not (a in target.assigned_areas):
+                target.assigned_areas.append(a)
+    except ValueError:
+        raise ArgumentError('Area ID must be a number.')
+    except (AreaError, ClientError):
+        raise
+
+    client.send_host_message("Target's keys are updated: {}".format(target.assigned_areas))
+
+def ooc_cmd_key_set(client, arg):
+    if not arg:
+        raise ArgumentError("Usage: /key_set [char_id] [area id(s)]. Allows the selected user to use /lock and /unlock functionality outside the area (must be accessible).")
+
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can assign areas.')
+    args = arg.split(' ')
+
+    try:
+        target = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), True)
+        if target:
+            target = target[0]
+        else:
+            raise ArgumentError('Target not found.')
+        target.assigned_areas.clear()
+        args = args[1:]
+        for a in args:
+            a = int(a)
+            area_to = target.hub.get_area_by_id(a) #Will throw an exception if the area doesn't exist
+            if not (a in target.assigned_areas):
+                target.assigned_areas.append(a)
+        client.send_host_message("Target's keys are updated: {}".format(target.assigned_areas))
+    except ValueError:
+        raise ArgumentError('Area ID must be a number.')
+    except (AreaError, ClientError):
+        raise
+
+def ooc_cmd_key_remove(client, arg):
+    if not arg:
+        raise ArgumentError("Usage: /key_remove [char_id] [area id(s)]. Removes the selected 'keys' from the user.")
+
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can assign areas.')
+    args = arg.split(' ')
+    if len(args) <= 1:
+        raise ArgumentError("Please provide the area ID's to add. Usage: /key_add [char_id] [area id(s)].")
+    try:
+        target = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), True)
+        if target:
+            target = target[0]
+        else:
+            raise ArgumentError('Target not found.')
+        args = args[1:]
+        for a in args:
+            a = int(a)
+            if a in target.assigned_areas:
+                target.assigned_areas.remove(a)
+        client.send_host_message("Target's keys are updated: {}".format(target.assigned_areas))
+    except ValueError:
+        raise ArgumentError('Area ID must be a number.')
+    except (AreaError, ClientError):
+        raise
+
+def ooc_cmd_keys(client, arg):
+    if not arg:
+        client.send_host_message("Your current keys are {}".format(client.assigned_areas))
+        return
+    if arg == 0:
+        try:
+            target = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), True)
+            if target:
+                target = target[0]
+            else:
+                raise ArgumentError('Target not found.')
+            client.send_host_message("Target's current keys are {}".format(target.assigned_areas))
+        except:
+            raise ArgumentError('Target not found.')
+    else:
+        raise ArgumentError("Usage: /keys [char_id] (optional). Display the 'keys', aka areas you can /lock and /unlock, for yourself or the specified char_id.")
+
 def ooc_cmd_announce_movement(client, arg):
     raise ArgumentError("/announce_movement has now been renamed to /sneak. Please get used to that version.")
 
@@ -1740,8 +1849,6 @@ def ooc_cmd_lockin(client, arg):
     client.send_host_message('This area will be unlocked when you leave.')
 
 def ooc_cmd_lock(client, arg):
-    if not client.is_cm and not client.is_mod:
-        raise ClientError('Only CM or mods can lock the area.')
     args = []
     if arg == 'all':
         for area in client.hub.areas:
@@ -1753,7 +1860,11 @@ def ooc_cmd_lock(client, arg):
             args = [int(s) for s in str(arg).split(' ')]
         except:
             raise ArgumentError('Invalid argument!')
-    
+
+    allowed = client.is_cm or client.is_mod
+    if not allowed:
+        args = [args[0]] #only one singular number so client can't lock a bunch of areas in one fell swoop
+
     i = 0
     for area in client.hub.areas:
         if area.id in args:
@@ -1761,6 +1872,11 @@ def ooc_cmd_lock(client, arg):
                 client.send_host_message(
                     'Area locking is disabled in area {}.'.format(area.id))
                 continue
+            if not allowed:
+                if not (area.id in client.assigned_areas):
+                    raise ClientError('Only CM or mods can lock this area.')
+                if not (client.area == area) and len(client.area.accessible) > 0 and not (area.id in client.area.accessible):
+                    raise ClientError('That area is inaccessible from your current area.')
             if area.is_locked:
                 client.send_host_message(
                     'Area {} is already locked.'.format(area.id))
@@ -1771,8 +1887,6 @@ def ooc_cmd_lock(client, arg):
     client.send_host_message('Locked {} areas.'.format(i))
 
 def ooc_cmd_unlock(client, arg):
-    if not client.is_cm and not client.is_mod:
-        raise ClientError('Only CM or mods can unlock the area.')
     args = []
     if arg == 'all':
         for area in client.hub.areas:
@@ -1784,7 +1898,11 @@ def ooc_cmd_unlock(client, arg):
             args = [int(s) for s in str(arg).split(' ')]
         except:
             raise ArgumentError('Invalid argument!')
-    
+
+    allowed = client.is_cm or client.is_mod
+    if not allowed:
+        args = [args[0]] #only one singular number so client can't lock a bunch of areas in one fell swoop
+
     i = 0
     for area in client.hub.areas:
         if area.id in args:
@@ -1792,6 +1910,11 @@ def ooc_cmd_unlock(client, arg):
                 client.send_host_message(
                     'Area locking is disabled in area {}.'.format(area.id))
                 continue
+            if not allowed:
+                if not (area.id in client.assigned_areas):
+                    raise ClientError('Only CM or mods can lock this area.')
+                if not (client.area == area) and len(client.area.accessible) > 0 and not (area.id in client.area.accessible):
+                    raise ClientError('That area is inaccessible from your current area.')
             if not area.is_locked:
                 client.send_host_message(
                     'Area {} is already unlocked.'.format(area.id))
