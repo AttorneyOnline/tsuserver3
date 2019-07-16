@@ -2,6 +2,7 @@
 # Sensitive data
 config/
 storage/**/*.json
+storage/db.sqlite3
 logs/**/*.log
 
 ### Python related
