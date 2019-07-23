@@ -57,7 +57,7 @@ class AOProtocol(asyncio.Protocol):
         :param data: bytes of data
 
         """
-        buf = data.replace(b'\0', b'')
+        buf = data
         ipid = self.client.ipid
 
         if buf is None:
@@ -68,6 +68,8 @@ class AOProtocol(asyncio.Protocol):
             self.buffer += buf.decode('utf-8', 'ignore')
         else:
             self.buffer = buf
+
+        self.buffer = self.buffer({ord(c): None for c in '\0'})
 
         if len(self.buffer) > 8192:
             self.client.disconnect()
