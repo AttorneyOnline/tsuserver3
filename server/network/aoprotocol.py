@@ -57,7 +57,7 @@ class AOProtocol(asyncio.Protocol):
         :param data: bytes of data
 
         """
-        buf = data
+        buf = data.replace(b'\0', b'')
         ipid = self.client.ipid
 
         if buf is None:
