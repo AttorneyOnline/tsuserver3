@@ -65,3 +65,6 @@ wtce_floodguard:
   times_per_interval: 5
   interval_length: 10
   mute_length: 1000
+
+# How many subscripts zalgo is stripped by; 3 is recommended as not to hurt special language diacritics
+zalgo_tolerance: 3
