@@ -55,6 +55,7 @@ class TsuServer3:
         self.music_list_ao2 = None
         self.music_pages_ao1 = None
         self.backgrounds = None
+        self.zalgo_tolerance = None
 
         self.ms_client = None
 
@@ -98,6 +99,9 @@ class TsuServer3:
         if self.config['use_masterserver']:
             self.ms_client = MasterServerClient(self)
             asyncio.ensure_future(self.ms_client.connect(), loop=loop)
+
+        if self.config['zalgo_tolerance']:
+            self.zalgo_tolerance = self.config['zalgo_tolerance']
 
         asyncio.ensure_future(self.schedule_unbans())
 
@@ -171,6 +175,10 @@ class TsuServer3:
                 'interval_length': 0,
                 'mute_length': 0
             }
+
+        if 'zalgo_tolerance' not in self.config:
+            self.config['zalgo_tolerance'] = 3
+
         if isinstance(self.config['modpass'], str):
             self.config['modpass'] = {'default': {'password': self.config['modpass']}}
 

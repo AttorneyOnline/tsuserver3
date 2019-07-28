@@ -20,6 +20,9 @@ import re
 import unicodedata
 
 import logging
+
+import re
+
 logger_debug = logging.getLogger('debug')
 logger = logging.getLogger('events')
 
@@ -47,6 +50,14 @@ class AOProtocol(asyncio.Protocol):
         self.client = None
         self.buffer = ''
         self.ping_timeout = None
+
+    def dezalgo(self, input):
+        """
+        Turns any string into a de-zalgo'd version, with a tolerance to allow for special language characters.
+        """
+        print(self.server.zalgo_tolerance)
+        filtered = re.sub("([̀-ͯ᪰-᫿᷀-᷿⃐-⃿︠-︯]{" + re.escape(str(self.server.zalgo_tolerance)) + ",})",'',input)
+        return filtered
 
     def data_received(self, data):
         """Handles any data received from the network.
@@ -469,7 +480,7 @@ class AOProtocol(asyncio.Protocol):
             if pos not in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'jur',
                            'sea'):
                 return
-        msg = text[:256]
+        msg = self.dezalgo(text)[:256]
         if self.client.shaken:
             msg = self.client.shake_message(msg)
         if self.client.disemvowel:
@@ -600,6 +611,7 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_ooc('An internal error occurred. Please check the server log.')
                 logger.exception('Exception while running a command')
         else:
+            args[1] = self.dezalgo(args[1])
             if self.client.shaken:
                 args[1] = self.client.shake_message(args[1])
             if self.client.disemvowel:
