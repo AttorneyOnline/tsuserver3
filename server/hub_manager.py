@@ -301,7 +301,7 @@ class HubManager:
 
 			def can_send_message(self, client):
 				if self.cannot_ic_interact(client):
-					client.send_host_message('This is a locked area - ask the CM to speak.')
+					client.send_host_message('You are unable to speak in this area.')
 					return False
 				return (time.time() * 1000.0 - self.next_message_time) > 0
 
@@ -314,7 +314,7 @@ class HubManager:
 				return 0
 
 			def cannot_ic_interact(self, client):
-				return False
+				return self.mute_ic and (not client.is_cm and not client.is_mod)
 
 			def change_hp(self, side, val):
 				if not 0 <= val <= 10:
@@ -365,7 +365,7 @@ class HubManager:
 			# 	return msg
 
 		def __init__(self, hub_id, server, name, allow_cm=False, max_areas=1, doc='No document.', status='IDLE', showname_changes_allowed=False,
-						shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation='', move_delay=0):
+						shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation='', move_delay=0, keys=[]):
 			self.server = server
 			self.id = hub_id
 
@@ -377,10 +377,10 @@ class HubManager:
 			self.schedules = []
 			self.cur_sched = [i for i in range(20)] #Max 20 schedules per hub
 			self.update(name, allow_cm, max_areas, doc, status, showname_changes_allowed,
-							shouts_allowed, non_int_pres_only, iniswap_allowed, blankposting_allowed, abbreviation, move_delay)
+							shouts_allowed, non_int_pres_only, iniswap_allowed, blankposting_allowed, abbreviation, move_delay, keys)
 
 		def update(self, name, allow_cm=False, max_areas=1, doc='No document.', status='IDLE', showname_changes_allowed=False,
-					 shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation='', move_delay=0):
+					 shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation='', move_delay=0, keys=[]):
 			self.name = name
 			self.allow_cm = allow_cm
 			self.max_areas = max_areas
@@ -392,6 +392,7 @@ class HubManager:
 			self.iniswap_allowed = iniswap_allowed
 			self.blankposting_allowed = blankposting_allowed
 			self.move_delay = move_delay
+			self.keys = keys
 			if abbreviation == '':
 				self.abbreviation = self.get_generated_abbreviation()
 

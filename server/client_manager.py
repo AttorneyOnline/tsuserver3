@@ -304,12 +304,14 @@ class ClientManager:
             msg = '=== {}Areas for Hub [{}]: {} ==='.format(acc, self.hub.id, self.hub.name)
             lock = {True: '[L]', False: ''}
             hide = {True: '[H]', False: ''}
+            mute = {True: '[M]', False: ''}
             for area in self.hub.areas:
                 users = ''
                 lo = ''
                 hi = ''
                 acc = ''
                 me = ''
+                mu = ''
                 if self.area != area and len(self.area.accessible) > 0 and not (area.id in self.area.accessible):
                     if not accessible:
                         acc = '<X>'
@@ -320,16 +322,18 @@ class ClientManager:
                     users = '(users: {}) '.format(len(area.clients))
                     lo = lock[area.is_locked]
                     hi = hide[area.is_hidden]
+                    mu = mute[area.mute_ic]
                 elif self.area != area and area.is_hidden:
                     continue
                 
                 if self.area == area:
                     lo = lock[area.is_locked]
                     hi = hide[area.is_hidden]
+                    mu = mute[area.mute_ic]
                     me = '[*]'
 
-                msg += '\r\n{}Area {}: {}{} {}{}{}'.format(
-                    me, area.id, acc, area.name, users, lo, hi)
+                msg += '\r\n{}Area {}: {}{} {}{}{}{}'.format(
+                    me, area.id, acc, area.name, users, lo, hi, mu)
             self.send_host_message(msg)
 
         def send_hub_list(self):

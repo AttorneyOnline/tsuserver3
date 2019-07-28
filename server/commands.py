@@ -1190,7 +1190,7 @@ def ooc_cmd_hide(client, arg):
         targets = []
         ids = [int(s) for s in arg.split(' ')]
         for targ_id in ids:
-            c = client.server.client_manager.get_targets(client, TargetType.ID, targ_id, True)
+            c = client.server.client_manager.get_targets(client, TargetType.ID, targ_id, False)
             if c:
                 targets = targets + c
     except:
@@ -1215,7 +1215,7 @@ def ooc_cmd_unhide(client, arg):
         targets = []
         ids = [int(s) for s in arg.split(' ')]
         for targ_id in ids:
-            c = client.server.client_manager.get_targets(client, TargetType.ID, targ_id, True)
+            c = client.server.client_manager.get_targets(client, TargetType.ID, targ_id, False)
             if c:
                 targets = targets + c
     except:
@@ -1249,7 +1249,7 @@ def ooc_cmd_blind(client, arg):
         targets = []
         ids = [int(s) for s in arg.split(' ')]
         for targ_id in ids:
-            c = client.server.client_manager.get_targets(client, TargetType.ID, targ_id, True)
+            c = client.server.client_manager.get_targets(client, TargetType.ID, targ_id, False)
             if c:
                 targets = targets + c
     except:
@@ -1276,7 +1276,7 @@ def ooc_cmd_unblind(client, arg):
         targets = []
         ids = [int(s) for s in arg.split(' ')]
         for targ_id in ids:
-            c = client.server.client_manager.get_targets(client, TargetType.ID, targ_id, True)
+            c = client.server.client_manager.get_targets(client, TargetType.ID, targ_id, False)
             if c:
                 targets = targets + c
     except:
@@ -1698,7 +1698,7 @@ def ooc_cmd_key_add(client, arg):
     if len(args) <= 1:
         raise ArgumentError("Please provide the area ID's to add. Usage: /key_add [char_id] [area id(s)].")
     try:
-        target = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), True)
+        target = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), False)
         if target:
             target = target[0]
         else:
@@ -1725,7 +1725,7 @@ def ooc_cmd_key_set(client, arg):
     args = arg.split(' ')
 
     try:
-        target = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), True)
+        target = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), False)
         if target:
             target = target[0]
         else:
@@ -1753,7 +1753,7 @@ def ooc_cmd_key_remove(client, arg):
     if len(args) <= 1:
         raise ArgumentError("Please provide the area ID's to add. Usage: /key_add [char_id] [area id(s)].")
     try:
-        target = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), True)
+        target = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), False)
         if target:
             target = target[0]
         else:
@@ -1770,12 +1770,13 @@ def ooc_cmd_key_remove(client, arg):
         raise
 
 def ooc_cmd_keys(client, arg):
-    if not arg:
+    args = arg.split(' ')
+    if len(args) <= 1:
         client.send_host_message("Your current keys are {}".format(client.assigned_areas))
         return
-    if arg == 0:
+    elif len(args) == 1:
         try:
-            target = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), True)
+            target = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), False)
             if target:
                 target = target[0]
             else:
@@ -1916,8 +1917,6 @@ def ooc_cmd_unlock(client, arg):
                 if not (client.area == area) and len(client.area.accessible) > 0 and not (area.id in client.area.accessible):
                     raise ClientError('That area is inaccessible from your current area.')
             if not area.is_locked:
-                client.send_host_message(
-                    'Area {} is already unlocked.'.format(area.id))
                 continue
             
             area.unlock()
@@ -2004,6 +2003,59 @@ def ooc_cmd_area_unhide(client, arg):
             area.unhide()
             i += 1
     client.send_host_message('Unhid {} areas.'.format(i))
+
+
+def ooc_cmd_area_mute(client, arg):
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can mute the area.')
+    args = []
+    if arg == 'all':
+        for area in client.hub.areas:
+            args.append(area.id)
+    elif len(arg) == 0:
+        args = [client.area.id]
+    else:
+        try:
+            args = [int(s) for s in str(arg).split(' ')]
+        except:
+            raise ArgumentError('Invalid argument!')
+    
+    i = 0
+    for area in client.hub.areas:
+        if area.id in args:
+            if area.mute_ic:
+                client.send_host_message('Area {} is already muted.'.format(area.id))
+                continue
+            
+            area.mute_ic = True
+            i += 1
+    client.send_host_message('Muted {} areas.'.format(i))
+
+def ooc_cmd_area_unmute(client, arg):
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can unmute the area.')
+    args = []
+    if arg == 'all':
+        for area in client.hub.areas:
+            args.append(area.id)
+    elif len(arg) == 0:
+        args = [client.area.id]
+    else:
+        try:
+            args = [int(s) for s in str(arg).split(' ')]
+        except:
+            raise ArgumentError('Invalid argument!')
+    
+    i = 0
+    for area in client.hub.areas:
+        if area.id in args:
+            if not area.mute_ic:
+                client.send_host_message('Area {} is already unmuted.'.format(area.id))
+                continue
+            
+            area.mute_ic = False
+            i += 1
+    client.send_host_message('Unmuted {} areas.'.format(i))
 
 def ooc_cmd_listhubs(client, arg):
     if not client.is_mod:

@@ -52,7 +52,7 @@ class AOProtocol(asyncio.Protocol):
 
         :param data: bytes of data
         """
-        buf = data
+        buf = data.replace(b'\0', b'')
 
         if not self.client.is_checked and self.server.ban_manager.is_banned(self.client.ipid):
             self.client.transport.close()
