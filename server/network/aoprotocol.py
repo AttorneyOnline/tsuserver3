@@ -776,8 +776,9 @@ class AOProtocol(asyncio.Protocol):
             return
         if self.client in self.client.area.owners:
             if not self.client.can_call_case():
-                raise ClientError(
+                self.client.send_ooc(
                     'Please wait 60 seconds between case announcements!')
+                return
 
             if not args[1] == "1" and not args[2] == "1" and not args[
                     3] == "1" and not args[4] == "1" and not args[5] == "1":
@@ -803,7 +804,7 @@ class AOProtocol(asyncio.Protocol):
                 zip(('message', 'def', 'pro', 'jud', 'jur', 'steno'), args)}
             database.log_room('case', self.client, self.client.area, message=log_data)
         else:
-            raise ClientError(
+            self.client.send_ooc(
                 'You cannot announce a case in an area where you are not a CM!'
             )
 
