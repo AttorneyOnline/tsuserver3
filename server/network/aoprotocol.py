@@ -782,9 +782,10 @@ class AOProtocol(asyncio.Protocol):
 
             if not args[1] == "1" and not args[2] == "1" and not args[
                     3] == "1" and not args[4] == "1" and not args[5] == "1":
-                raise ArgumentError(
+                self.client.send_ooc(
                     'You should probably announce the case to at least one person.'
                 )
+                return
             msg = '=== Case Announcement ===\r\n{} [{}] is hosting {}, looking for '.format(
                 self.client.char_name, self.client.id, args[0])
 
