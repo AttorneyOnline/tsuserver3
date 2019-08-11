@@ -428,7 +428,7 @@ class AOProtocol(asyncio.Protocol):
             return
         if sfx_delay < 0:
             return
-        if button not in (0, 1, 2, 3, 4):
+        if button < 0:
             return
         if evidence < 0:
             return
