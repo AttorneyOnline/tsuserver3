@@ -33,7 +33,7 @@ local: false
 modpass: mod
 
 #default ban duration goes here
-bandur: 60
+bandur: 6
 
 # Sent to joining players.
 motd: Welcome to my server!
