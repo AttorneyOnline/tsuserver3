@@ -32,6 +32,9 @@ local: false
 # revoked.
 modpass: mod
 
+#default ban duration goes here
+bandur: 60
+
 # Sent to joining players.
 motd: Welcome to my server!
 
