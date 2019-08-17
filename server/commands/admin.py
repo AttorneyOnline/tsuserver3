@@ -129,7 +129,7 @@ def kickban(client, arg, ban_hdid):
             unban_date = None
         except ValueError:
             reason = args[1]
-            unban_date = arrow.get().shift(hours=6).datetime
+            unban_date = arrow.get().shift(hours=self.server.config['bandur']).datetime
     elif len(args) == 3:
         ban_id = None
         reason = args[1]
