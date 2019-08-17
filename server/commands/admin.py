@@ -9,6 +9,7 @@ from server.exceptions import ClientError, ServerError, ArgumentError
 
 from . import mod_only
 
+	
 __all__ = [
     'ooc_cmd_motd',
     'ooc_cmd_help',
@@ -128,8 +129,9 @@ def kickban(client, arg, ban_hdid):
             ban_id = int(args[1])
             unban_date = None
         except ValueError:
-            reason = args[1]
-            unban_date = arrow.get().shift(hours=self.server.config['bandur']).datetime
+            reason = args[1]                     
+            bandur = client.server.config['bandur']
+            unban_date = arrow.get().shift(hours=bandur).datetime
     elif len(args) == 3:
         ban_id = None
         reason = args[1]
