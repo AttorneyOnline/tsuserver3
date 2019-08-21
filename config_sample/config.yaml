@@ -50,7 +50,8 @@ masterserver_port: 27016
 masterserver_name: My First Server
 masterserver_description: This is my flashy new server
 
-# Timeout for dead connections.
+# Timeout for dead connections (in seconds).
+# To prevent issues, this value should be greater than 60.
 timeout: 250
 
 # Enables additional logging.
