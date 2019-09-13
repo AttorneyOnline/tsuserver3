@@ -56,7 +56,9 @@ class AOProtocol(asyncio.Protocol):
         Turns any string into a de-zalgo'd version, with a tolerance to allow for special language characters.
         """
         print(self.server.zalgo_tolerance)
-        filtered = re.sub("([̀-ͯ᪰-᫿᷀-᷿⃐-⃿︠-︯]{" + re.escape(str(self.server.zalgo_tolerance)) + ",})",'',input)
+        filtered = re.sub('([\u0300\u036f\u1ab0\u1aff\u1dc0\u1dff\u20d0\u20ff\ufe20\ufe2f]' +
+                          '{' + re.escape(str(self.server.zalgo_tolerance)) + ',})',
+                          '', input)
         return filtered
 
     def data_received(self, data):
@@ -428,7 +430,7 @@ class AOProtocol(asyncio.Protocol):
             return
         if sfx_delay < 0:
             return
-        if button < 0:
+        if int(button[:1]) < 0 or "&" not in button:
             return
         if evidence < 0:
             return
