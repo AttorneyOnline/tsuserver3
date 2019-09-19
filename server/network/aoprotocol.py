@@ -42,7 +42,8 @@ class AOProtocol(asyncio.Protocol):
         """Represents the data type of an argument for a network command."""
         STR = 1,
         STR_OR_EMPTY = 2,
-        INT = 3
+        INT = 3,
+        INT_OR_STR = 3
 
     def __init__(self, server):
         super().__init__()
@@ -150,7 +151,7 @@ class AOProtocol(asyncio.Protocol):
             return False
         if len(args) != len(types):
             return False
-        for i, arg in enumerate(args):
+        for i, arg in enumerate(args):          
             if len(arg) == 0 and types[i] != self.ArgType.STR_OR_EMPTY:
                 return False
             if types[i] == self.ArgType.INT:
@@ -341,15 +342,14 @@ class AOProtocol(asyncio.Protocol):
             return
 
         target_area = []
-
-        if self.validate_net_cmd(args, self.ArgType.STR,
-                                 self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
-                                 self.ArgType.STR, self.ArgType.STR,
-                                 self.ArgType.STR, self.ArgType.STR,
-                                 self.ArgType.INT, self.ArgType.INT,
-                                 self.ArgType.INT, self.ArgType.INT,
-                                 self.ArgType.INT, self.ArgType.INT,
-                                 self.ArgType.INT, self.ArgType.INT):
+        if self.validate_net_cmd(args, self.ArgType.STR, # msg_type
+                                 self.ArgType.STR_OR_EMPTY, self.ArgType.STR,#pre, folder
+                                 self.ArgType.STR, self.ArgType.STR,# anim, text
+                                 self.ArgType.STR, self.ArgType.STR,#pos, sfx
+                                 self.ArgType.INT, self.ArgType.INT,#anim_type, cid
+                                 self.ArgType.INT, self.ArgType.INT_OR_STR,#sfx_delay, button
+                                 self.ArgType.INT, self.ArgType.INT,#evidence, flip
+                                 self.ArgType.INT, self.ArgType.INT):#ding, color
             # Pre-2.6 validation monstrosity.
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color = args
             showname = ""
@@ -357,13 +357,13 @@ class AOProtocol(asyncio.Protocol):
             offset_pair = 0
             nonint_pre = 0
         elif self.validate_net_cmd(
-                args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,
-                self.ArgType.STR, self.ArgType.STR, self.ArgType.STR,
-                self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
-                self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
-                self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
-                self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.INT,
-                self.ArgType.INT, self.ArgType.INT):
+                args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,#msg_type, pre
+                self.ArgType.STR, self.ArgType.STR, self.ArgType.STR,#folder, anim, text
+                self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,# pos, sfx, anim_type
+                self.ArgType.INT, self.ArgType.INT, self.ArgType.INT_OR_STR,#cid, sfx_delay, button
+                self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,#evidence, flip, ding
+                self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.INT, #color, showname, charid_pair
+                self.ArgType.INT, self.ArgType.INT): #offset_pair, nonint_pre
             # 2.6+ validation monstrosity.
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre = args
             if len(showname
@@ -430,7 +430,8 @@ class AOProtocol(asyncio.Protocol):
             return
         if sfx_delay < 0:
             return
-        if button not in (0, 1, 2, 3, 4):
+        if '4' in button and "<and>" not in button:
+            print(button)
             return
         if evidence < 0:
             return
