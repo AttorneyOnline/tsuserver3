@@ -292,7 +292,7 @@ def ooc_cmd_rollp(client, arg):
     client.hub.send_to_cm('RollLog', '[A{}][ID{}]{} used /rollp and got {} out of {}.'.format(client.area.id, client.id, client.get_char_name(True), roll, chosen_max), client)
     logger.log_server('Used /rollp and got {} out of {}.'.format(roll, chosen_max), client)
 
-def ooc_cmd_currentmusic(client, arg):
+def ooc_cmd_music(client, arg):
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
     if client.area.current_music == '':
@@ -304,6 +304,33 @@ def ooc_cmd_currentmusic(client, arg):
     else:
         client.send_host_message('The current music is {} and was played by {}.'.format(client.area.current_music,
                                                                                         client.area.current_music_player))
+
+def ooc_cmd_getmusic(client, arg):
+    if client.area.current_music == '':
+        raise ClientError('There is no music currently playing.')
+    else:
+        client.send_command('MC', client.area.current_music, -1)
+        client.send_host_message('You changed your track to {}.'.format(client.area.current_music))
+
+def ooc_cmd_editambience(client, arg):
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('You must be authorized to do that.')
+
+    if len(arg.split()) > 1:
+        raise ArgumentError("This command can only take one argument ('on' or 'off') or no arguments at all!")
+    if arg:
+        if arg == 'on':
+            client.ambience_editing = True
+        elif arg == 'off':
+            client.ambience_editing = False
+        else:
+            raise ArgumentError("Invalid argument: {}".format(arg))
+    else:
+        client.ambience_editing = not client.ambience_editing
+    stat = 'no longer'
+    if client.ambience_editing:
+        stat = 'now'
+    client.send_host_message('Playing a song will {} edit the area\'s ambience.'.format(stat))
 
 def ooc_cmd_coinflip(client, arg):
     if len(arg) != 0:
@@ -492,7 +519,7 @@ def ooc_cmd_play(client, arg):
         raise ClientError('You must be authorized to do that.')
     if len(arg) == 0:
         raise ArgumentError('You must specify a song.')
-    client.area.play_music(arg, client.char_id, -1)
+    client.area.play_music(arg, client.char_id)
     # client.area.add_music_playing(client, arg)
     logger.log_server('Changed music to {}.'.format(arg), client)
 

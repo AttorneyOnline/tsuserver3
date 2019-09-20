@@ -200,7 +200,7 @@ class AOProtocol(asyncio.Protocol):
 
         self.client.send_command('FL', 'yellowtext', 'flipping', 'customobjections', 'fastloading', 'noencryption',
                                  'deskmod', 'evidence', 'cccc_ic_support', 'arup', 'casing_alerts', 'modcall_reason',
-                                 'looping_sfx', 'additive')
+                                 'looping_sfx', 'additive', 'effects')
 
     def net_cmd_ch(self, _):
         """ Periodically checks the connection.
@@ -341,6 +341,7 @@ class AOProtocol(asyncio.Protocol):
             frames_realization = ""
             frames_sfx = ""
             additive = 0
+            effect = ""
         elif self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
                                    self.ArgType.STR,
                                    self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
@@ -357,6 +358,7 @@ class AOProtocol(asyncio.Protocol):
             frames_realization = ""
             frames_sfx = ""
             additive = 0
+            effect = ""
             if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
                 self.client.send_host_message("Showname changes are forbidden in this hub!")
                 return
@@ -375,6 +377,7 @@ class AOProtocol(asyncio.Protocol):
             frames_realization = ""
             frames_sfx = ""
             additive = 0
+            effect = ""
             if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
                 self.client.send_host_message("Showname changes are forbidden in this hub!")
                 return
@@ -392,6 +395,7 @@ class AOProtocol(asyncio.Protocol):
             frames_realization = ""
             frames_sfx = ""
             additive = 0
+            effect = ""
             if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
                 self.client.send_host_message("Showname changes are forbidden in this hub!")
                 return
@@ -404,6 +408,20 @@ class AOProtocol(asyncio.Protocol):
                                    self.ArgType.INT, self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT):
             # Looping sfx and frame shenanigans validation monstrosity.
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive = args
+            effect = ""
+            if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
+                self.client.send_host_message("Showname changes are forbidden in this hub!")
+                return
+        elif self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
+                                   self.ArgType.STR,
+                                   self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
+                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
+                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR_OR_EMPTY,
+                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR,
+                                   self.ArgType.INT, self.ArgType.STR, self.ArgType.STR, self.ArgType.STR,
+                                   self.ArgType.INT, self.ArgType.STR):
+            # Looping sfx and frame shenanigans validation monstrosity.
+            msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive, effect = args
             if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
                 self.client.send_host_message("Showname changes are forbidden in this hub!")
                 return
@@ -586,7 +604,7 @@ class AOProtocol(asyncio.Protocol):
                     area.send_command('MS', 'broadcast', pre, folder, anim, msg, pos, sfx, anim_type, cid,
                                         sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
                                         charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
-                                        nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive)
+                                        nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive, effect)
                     area.set_next_msg_delay(len(msg))
                     
                     logger.log_demo('[IC][' + ', '.join(str(s) for s in ['broadcast', pre, folder, anim, pos, sfx, anim_type, cid,
@@ -610,7 +628,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
                                         sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
                                         charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
-                                        nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive)
+                                        nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive, effect)
             self.client.area.set_next_msg_delay(len(msg))
             
             logger.log_demo('[IC][' + ', '.join(str(s) for s in [msg_type, pre, folder, anim, pos, sfx, anim_type, cid,
@@ -724,11 +742,10 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_host_message(
                     "You are not on the area's invite list, and thus, you cannot change music!")
                 return
-            if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT) and not self.validate_net_cmd(args,
-                                                                                                                 self.ArgType.STR,
-                                                                                                                 self.ArgType.INT,
-                                                                                                                 self.ArgType.STR):
-                return
+            if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT):
+                if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT, self.ArgType.STR):
+                    if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT, self.ArgType.STR, self.ArgType.INT, self.ArgType.INT):
+                        return
             if args[1] != self.client.char_id:
                 return
             if self.client.change_music_cd():
@@ -742,18 +759,14 @@ class AOProtocol(asyncio.Protocol):
                     length = 0
                 else:
                     name, length = self.server.get_song_data(args[0])
-                # if self.client.area.jukebox:
-                #     showname = ''
-                #     if len(args) > 2:
-                #         showname = args[2]
-                #         if len(showname) > 0 and not self.client.area.showname_changes_allowed:
-                #             self.client.send_host_message("Showname changes are forbidden in this area!")
-                #             return
-                #     self.client.area.add_jukebox_vote(self.client, name, length, showname)
-                #     logger.log_server('[{}][{}]Added a jukebox vote for {}.'.format(self.client.hub.abbreviation,
-                #                                                                     self.client.get_char_name(), name),
-                #                       self.client)
-                # else:
+
+                if self.client.is_cm and self.client.ambience_editing:
+                    self.client.area.set_ambience(name, self.client.char_id)
+                    self.client.send_host_message(
+                        'Setting current area\'s ambience to {}.'.format(name))
+                    return
+
+                length = -1 #cuz fuck you that's why clientsided music is superior
                 if len(args) > 2:
                     showname = args[2]
                     if len(showname) > 0 and not self.client.hub.showname_changes_allowed:

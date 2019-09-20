@@ -98,6 +98,7 @@ class HubManager:
 				self.current_music = ''
 				self.current_music_player = ''
 				self.current_music_player_ipid = ''
+				self.current_ambience = ''
 				self.is_recording = False
 				self.record_start = 0
 				self.recorded_messages = []
@@ -216,6 +217,7 @@ class HubManager:
 				self.hub.send_to_cm('MoveLog', '[{}] {} has entered area [{}] {}.{}'.format(
 					client.id, client.get_char_name(True), self.id, self.name, hidden), client)
 				self.server.hub_manager.send_arup_players()
+				self.play_ambience(client)
 
 			def remove_client(self, client):
 				if self.locked_by == client:  # /lockin was used. Unlock the room.
@@ -269,6 +271,21 @@ class HubManager:
 				delay = min(3000, 100 + 60 * msg_length)
 				self.next_message_time = round(time.time() * 1000.0 + delay)
 
+			def play_ambience(self, client):
+				#'MC' = music packet
+				#'name' = name of the ambience
+				#-1 = the character id (unused)
+				#-1 = showname
+				#-1 = confusing, but -1 means "loop this" and anything else means "don't".
+				#1 = Which channel to play this song on. Available channels are 0, 1, 2 and 3.
+				#1 = Whether or not we should cross-fade this track. Note that crossfading tries to update the
+				#	position of the next played song to match the last one as well. (enjoy your dynamic music)
+				client.send_command('MC', self.current_ambience, -1, -1, -1, 1, 1)
+
+			def set_ambience(self, name, cid):
+				self.current_ambience = name
+				self.send_command('MC', self.current_ambience, -1, -1, -1, 1, 1)
+
 			def play_music(self, name, cid, length=-1):
 				for client in self.server.client_manager.clients:
 					if client.char_id == cid:
@@ -277,7 +294,7 @@ class HubManager:
 						break
 
 				self.current_music = name
-				self.send_command('MC', name, cid)
+				self.send_command('MC', name, cid, -1, 0, 0)
 				if self.music_looper:
 					self.music_looper.cancel()
 				if length > 0:
@@ -292,7 +309,7 @@ class HubManager:
 						break
 
 				self.current_music = name
-				self.send_command('MC', name, cid, showname)
+				self.send_command('MC', name, cid, showname, 0, 0)
 				if self.music_looper:
 					self.music_looper.cancel()
 				if length > 0:
