@@ -199,7 +199,7 @@ class AOProtocol(asyncio.Protocol):
         self.client.is_ao2 = True
 
         self.client.send_command('FL', 'yellowtext', 'flipping', 'customobjections', 'fastloading', 'noencryption',
-                                 'deskmod', 'evidence', 'cccc_ic_support', 'arup', 'casing_alerts', 'modcall_reason',
+                                 'deskmod', 'evidence', 'cccc_ic_support', 'casing_alerts', 'modcall_reason',
                                  'looping_sfx', 'additive', 'effects')
 
     def net_cmd_ch(self, _):
@@ -264,7 +264,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_command('EM', *self.server.music_pages_ao1[args[0]])
         else:
             self.client.send_done()
-            self.client.send_area_list()
+            self.client.show_area_list()
             self.client.send_motd()
 
     def net_cmd_rc(self, _):
@@ -293,7 +293,7 @@ class AOProtocol(asyncio.Protocol):
         """
 
         self.client.send_done()
-        self.client.send_area_list()
+        self.client.show_area_list()
         self.client.send_motd()
 
     def net_cmd_cc(self, args):
@@ -729,8 +729,9 @@ class AOProtocol(asyncio.Protocol):
 
         """
         try:
-            hub = self.server.hub_manager.get_hub_by_name(args[0])
-            self.client.change_hub(hub)
+            area = self.client.hub.get_area_by_id_or_name(args[0])
+            called_function = 'ooc_cmd_area'
+            getattr(commands, called_function)(self.client, args[0])
         except AreaError:
             if self.client.is_muted:  # Checks to see if the client has been muted by a mod
                 self.client.send_host_message("You have been muted by a moderator")
@@ -765,8 +766,6 @@ class AOProtocol(asyncio.Protocol):
                     self.client.send_host_message(
                         'Setting current area\'s ambience to {}.'.format(name))
                     return
-
-                length = -1 #cuz fuck you that's why clientsided music is superior
                 if len(args) > 2:
                     showname = args[2]
                     if len(showname) > 0 and not self.client.hub.showname_changes_allowed:

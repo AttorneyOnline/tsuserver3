@@ -355,13 +355,13 @@ def ooc_cmd_pos(client, arg):
         raise ClientError('Intended position is locked.')
     if len(arg) == 0:
         client.change_position()
-        client.area.broadcast_evidence_list()
+        client.area.update_area_list(client)
     else:
         try:
             client.change_position(arg)
         except ClientError:
             raise
-        client.area.broadcast_evidence_list()
+        client.area.update_area_list(client)
 
 
 def ooc_cmd_poslock(client, arg):
@@ -416,7 +416,7 @@ def ooc_cmd_forcepos(client, arg):
     for t in targets:
         try:
             t.change_position(pos)
-            t.area.broadcast_evidence_list()
+            t.area.update_area_list(t)
             t.send_host_message('Forced into /pos {}.'.format(pos))
         except ClientError:
             raise
@@ -636,7 +636,7 @@ def ooc_cmd_login(client, arg):
     except ClientError:
         raise
     if client.area.evidence_mod == 'HiddenCM':
-        client.area.broadcast_evidence_list()
+        client.area.update_area_list(client)
     client.send_host_message('Logged in as a moderator.')
     logger.log_server('Logged in as moderator.', client)
     logger.log_mod('Logged in as moderator.', client)
@@ -943,7 +943,8 @@ def ooc_cmd_area(client, arg):
         rpmode = True
         args.clear()
     if len(args) == 0:
-        client.send_area_list(rpmode, rpmode)
+        client.show_area_list(rpmode, rpmode)
+        client.area.update_area_list(client)
         return
 
     try:
@@ -1507,7 +1508,7 @@ def ooc_cmd_evi_swap(client, arg):
         raise ClientError("You must specify 2 numbers.")
     try:
         client.area.evi_list.evidence_swap(client, int(args[0]), int(args[1]))
-        client.area.broadcast_evidence_list()
+        client.area.update_area_list(client)
     except:
         raise ClientError("You must specify 2 numbers.")
 
@@ -1529,7 +1530,7 @@ def ooc_cmd_cm(client, arg):
                 c.send_host_message(
                     'You have been made a co-CM of hub {} by {}.'.format(client.hub.name, client.name))
             if client.area.evidence_mod == 'HiddenCM':
-                client.area.broadcast_evidence_list()
+                client.area.update_area_list(client)
         except:
             raise ClientError('You must specify a target. Use /cm <id>')
     else:
@@ -1541,11 +1542,11 @@ def ooc_cmd_cm(client, arg):
             client.is_cm = True
             client.hub.send_host_message('{} is master CM in this hub now.'.format(client.name))
             if client.area.evidence_mod == 'HiddenCM':
-                client.area.broadcast_evidence_list()
+                client.area.update_area_list(client)
         else:
             raise ClientError('Master CM exists. Use /cm <id>')
     #If we got past the errors we're going to tell the server to update itself.
-    client.server.hub_manager.send_arup_cms()
+    # client.server.hub_manager.send_arup_cms()
 
 def ooc_cmd_cms(client, arg):
     client.send_host_message('=CM\'s in this hub:=')
@@ -1583,9 +1584,8 @@ def ooc_cmd_uncm(client, arg):
             'You are no longer a CM of hub {}.'.format(target.hub.name))
         client.send_host_message(
             '{} is no longer a CM of hub {}.'.format(target.name, target.hub.name))
-        target.server.hub_manager.send_arup_cms()
-        if target.area.evidence_mod == 'HiddenCM':
-            target.area.broadcast_evidence_list()
+        # target.server.hub_manager.send_arup_cms()
+        target.area.update_area_list(client)
 
 def ooc_cmd_cmlogs(client, arg):
     logtypes = ['MoveLog', 'RollLog', 'PMLog', 'CharLog']
@@ -1655,6 +1655,7 @@ def ooc_cmd_area_access(client, arg):
                 raise ClientError('Invalid area ID.')
         client.area.send_host_message(
             'Areas that can now be accessed from this area: {}.'.format(client.area.accessible))
+        client.area.update_area_list()
 
 def ooc_cmd_area_link(client, arg):
     if not client.is_cm and not client.is_mod:
@@ -1676,6 +1677,8 @@ def ooc_cmd_area_link(client, arg):
                 area_from.accessible.append(a)
             if area_from.id not in area_to.accessible:
                 area_to.accessible.append(area_from.id)
+            area_from.update_area_list()
+            area_to.update_area_list()
     except ValueError:
         raise ArgumentError('Area ID must be a number.')
     except (AreaError, ClientError):
@@ -1707,6 +1710,8 @@ def ooc_cmd_area_unlink(client, arg):
                 area_from.accessible.remove(a)
             if area_from.id in area_to.accessible:
                 area_to.accessible.remove(area_from.id)
+            area_from.update_area_list()
+            area_to.update_area_list()
     except ValueError:
         raise ArgumentError('Area ID must be a number.')
     except (AreaError, ClientError):
@@ -1836,8 +1841,7 @@ def ooc_cmd_sneak(client, arg):
 
 def ooc_cmd_unmod(client, arg):
     client.is_mod = False
-    if client.area.evidence_mod == 'HiddenCM':
-        client.area.broadcast_evidence_list()
+    client.area.update_area_list(client)
     client.send_host_message('you\'re not a mod now')
 
 def ooc_cmd_cleanup(client, arg):

@@ -245,6 +245,26 @@ class ClientManager:
             except ClientError:
                 raise
 
+        def reload_music_list(self, areas=[]):
+            """
+            Rebuild the music list so that it only contains the target area's
+            reachable areas+music. Useful when moving areas/logging in or out.
+            """
+            song_list = []
+            # if new_music_file:
+            #     new_music_list = self.server.load_music(music_list_file=new_music_file,
+            #                                             server_music_list=False)
+            #     song_list = self.server.build_music_list_ao2(from_area=self.area, c=self,
+            #                                      music_list=new_music_list)
+            # else:
+            if (len(areas) > 0):
+                song_list += areas
+            song_list += self.server.build_music_list_ao2()
+            # KEEP THE ASTERISK, unless you want a very weird single area comprised
+            # of all areas back to back forming a black hole area of doom and despair
+            # that crashes all clients that dare attempt join this area.
+            self.send_command('FM', *song_list)
+
         def change_hub(self, hub):
             if self.hub == hub:
                 raise ClientError('User already in specified hub.')
@@ -298,7 +318,23 @@ class ClientManager:
             self.send_command('BN', self.area.background)
             self.send_command('LE', *self.area.get_evidence_list(self))
 
-        def send_area_list(self, hidden=False, accessible=False):
+        def get_area_list(self, hidden=False, accessible=False):
+            area_list = []
+            for area in self.hub.areas:
+                if self.area != area and len(self.area.accessible) > 0 and not (area.id in self.area.accessible):
+                    if accessible:
+                        continue
+
+                if hidden and self.area != area and area.is_hidden:
+                    continue
+                
+                # if self.area == area:
+                #     continue
+                area_list.append(area)
+
+            return area_list
+
+        def show_area_list(self, hidden=False, accessible=False):
             acc = ''
             if accessible:
                 acc = 'Accessible '
@@ -306,7 +342,7 @@ class ClientManager:
             lock = {True: '[L]', False: ''}
             hide = {True: '[H]', False: ''}
             mute = {True: '[M]', False: ''}
-            for area in self.hub.areas:
+            for area in self.get_area_list(hidden, accessible):
                 users = ''
                 lo = ''
                 hi = ''
@@ -316,16 +352,12 @@ class ClientManager:
                 if self.area != area and len(self.area.accessible) > 0 and not (area.id in self.area.accessible):
                     if not accessible:
                         acc = '<X>'
-                    else:
-                        continue
 
                 if not hidden:
                     users = '(users: {}) '.format(len(area.clients))
                     lo = lock[area.is_locked]
                     hi = hide[area.is_hidden]
                     mu = mute[area.mute_ic]
-                elif self.area != area and area.is_hidden:
-                    continue
                 
                 if self.area == area:
                     lo = lock[area.is_locked]
@@ -428,10 +460,10 @@ class ClientManager:
             self.send_command('LE', *self.area.get_evidence_list(self))
             self.send_command('MM', 1)
 
-            self.server.hub_manager.send_arup_players()
-            self.server.hub_manager.send_arup_status()
-            self.server.hub_manager.send_arup_cms()
-            self.server.hub_manager.send_arup_lock()
+            # self.server.hub_manager.send_arup_players()
+            # self.server.hub_manager.send_arup_status()
+            # self.server.hub_manager.send_arup_cms()
+            # self.server.hub_manager.send_arup_lock()
 
             self.send_command('DONE')
 

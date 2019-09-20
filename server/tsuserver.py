@@ -144,8 +144,8 @@ class TsuServer3:
     def load_music(self):
         with open('config/music.yaml', 'r', encoding='utf-8') as music:
             self.music_list = yaml.load(music)
-        self.build_music_pages_ao1()
-        self.build_music_list_ao2()
+        self.music_pages_ao1 = self.build_music_pages_ao1()
+        self.music_list_ao2 = self.build_music_list_ao2()
 
     def load_ids(self):
         self.ipid_list = {}
@@ -194,27 +194,19 @@ class TsuServer3:
             self.char_pages_ao1[i // 10][i % 10] = '{}#{}&&0&&&0&'.format(i, self.char_list[i])
 
     def build_music_pages_ao1(self):
-        self.music_pages_ao1 = []
+        song_list = []
         index = 0
-        # add hubs first
-        for hub in self.hub_manager.hubs:
-            self.music_pages_ao1.append('{}#{}'.format(index, hub.name))
-            index += 1
-        # then add music
         for item in self.music_list:
-            self.music_pages_ao1.append('{}#{}'.format(index, item['category']))
+            song_list.append('{}#{}'.format(index, item['category']))
             index += 1
             for song in item['songs']:
-                self.music_pages_ao1.append('{}#{}'.format(index, song['name']))
+                song_list.append('{}#{}'.format(index, song['name']))
                 index += 1
-        self.music_pages_ao1 = [self.music_pages_ao1[x:x + 10] for x in range(0, len(self.music_pages_ao1), 10)]
+        song_list = [song_list[x:x + 10] for x in range(0, len(song_list), 10)]
+        return song_list
 
-    def build_music_list_ao2(self, from_area=None, c=None, music_list=None):
-        self.music_list_ao2 = []
-        # add hubs first
-        for hub in self.hub_manager.hubs:
-            self.music_list_ao2.append(hub.name)
-            # then add music
+    def build_music_list_ao2(self):
+        song_list = []
         for item in self.music_list:
             prefixes = set()
             for song in item['songs']:
@@ -223,9 +215,10 @@ class TsuServer3:
                     pre = s[s.find("[") : s.find("]")+1]
                     prefixes.add(pre)
                 
-            self.music_list_ao2.append('{}  {}'.format(item['category'], ' '.join(prefixes)))
+            song_list.append('{}  {}'.format(item['category'], ' '.join(prefixes)))
             for song in item['songs']:
-                self.music_list_ao2.append(song['name'])
+                song_list.append(song['name'])
+        return song_list
 
     def is_valid_char_id(self, char_id):
         return len(self.char_list) > char_id >= 0

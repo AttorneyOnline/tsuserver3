@@ -207,7 +207,7 @@ class HubManager:
 				if len(area['evidence']) > 0:
 					self.evi_list.evidences.clear()
 					self.evi_list.import_evidence(area['evidence'])
-					self.broadcast_evidence_list()
+					self.update_area_list()
 
 			def new_client(self, client):
 				self.clients.add(client)
@@ -216,7 +216,9 @@ class HubManager:
 					hidden = ' [HIDDEN]'
 				self.hub.send_to_cm('MoveLog', '[{}] {} has entered area [{}] {}.{}'.format(
 					client.id, client.get_char_name(True), self.id, self.name, hidden), client)
-				self.server.hub_manager.send_arup_players()
+
+				self.update_area_list(client)
+				# self.server.hub_manager.send_arup_players()
 				self.play_ambience(client)
 
 			def remove_client(self, client):
@@ -228,7 +230,20 @@ class HubManager:
 					hidden = ' [HIDDEN]'
 				self.hub.send_to_cm('MoveLog', '[{}] {} has left area [{}] {}.{}'.format(
 					client.id, client.get_char_name(True), self.id, self.name, hidden), client)
-				self.server.hub_manager.send_arup_players()
+				# self.server.hub_manager.send_arup_players()
+
+			def update_area_list(self, client=None):
+				clients = []				
+				if client == None:
+					clients = self.clients
+				else:
+					clients.append(client)
+
+				for c in clients:
+					allowed = c.is_cm or c.is_mod or c.get_char_name() == "Spectator"
+					rpmode = not allowed and c.hub.rpmode
+					c.reload_music_list([a.name for a in c.get_area_list(rpmode, rpmode)])
+					c.send_command('LE', *self.get_evidence_list(c)) #Update evidence list as well
 
 			def lock(self, client=None):
 				self.is_locked = True
@@ -275,16 +290,16 @@ class HubManager:
 				#'MC' = music packet
 				#'name' = name of the ambience
 				#-1 = the character id (unused)
-				#-1 = showname
+				#"" = showname
 				#-1 = confusing, but -1 means "loop this" and anything else means "don't".
 				#1 = Which channel to play this song on. Available channels are 0, 1, 2 and 3.
 				#1 = Whether or not we should cross-fade this track. Note that crossfading tries to update the
 				#	position of the next played song to match the last one as well. (enjoy your dynamic music)
-				client.send_command('MC', self.current_ambience, -1, -1, -1, 1, 1)
+				client.send_command('MC', self.current_ambience, -1, "", -1, 1, 1)
 
 			def set_ambience(self, name, cid):
 				self.current_ambience = name
-				self.send_command('MC', self.current_ambience, -1, -1, -1, 1, 1)
+				self.send_command('MC', self.current_ambience, -1, "", -1, 1, 1)
 
 			def play_music(self, name, cid, length=-1):
 				for client in self.server.client_manager.clients:
@@ -294,7 +309,9 @@ class HubManager:
 						break
 
 				self.current_music = name
-				self.send_command('MC', name, cid, -1, 0, 0)
+				if (length > 0):
+					length = -1 #That means the server defined the length for this file, aka it should loop.
+				self.send_command('MC', name, cid, "", length, 0, 0)
 				if self.music_looper:
 					self.music_looper.cancel()
 				if length > 0:
@@ -309,7 +326,9 @@ class HubManager:
 						break
 
 				self.current_music = name
-				self.send_command('MC', name, cid, showname, 0, 0)
+				if (length > 0):
+					length = -1 #That means the server defined the length for this file, aka it should loop.
+				self.send_command('MC', name, cid, showname, length, 0, 0)
 				if self.music_looper:
 					self.music_looper.cancel()
 				if length > 0:
@@ -490,6 +509,7 @@ class HubManager:
 			self.areas.append(
 				self.Area(self.cur_id, self.server, self, name, can_rename, bg, bglock, poslock, evimod, lockallow, removable, accessible, desc, locked, hidden))
 			self.cur_id += 1
+			self.update_area_list()
 
 		def remove_area(self, area):
 			if not (area in self.areas):
@@ -510,6 +530,7 @@ class HubManager:
 				_area.accessible = accessible
 			self.areas.remove(area)
 			self.update_area_ids()
+			self.update_area_list()
 
 		def swap_area(self, area1, area2):
 			if not (area1 in self.areas) or not (area2 in self.areas):
@@ -530,6 +551,12 @@ class HubManager:
 				_area.accessible = accessible
 
 			self.update_area_ids()
+			self.update_area_list()
+
+		#Global update of all areas for the client music lists in the hub
+		def update_area_list(self):
+			for area in self.areas:
+				area.update_area_list()
 
 		def update_area_ids(self):
 			for i, area in enumerate(self.areas):
@@ -594,6 +621,7 @@ class HubManager:
 				self.stop_recording(True)
 				self.rpmode = False
 			self.server.hub_manager.send_arup_status()
+			self.update_area_list()
 
 		def is_iniswap(self, client, anim1, anim2, char):
 			if self.iniswap_allowed:
