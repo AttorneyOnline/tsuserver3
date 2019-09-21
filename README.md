@@ -103,6 +103,8 @@ Requires Python 3.7+ and PyYAML.
     - Locks your area, preventing anyone outside of the invite list from speaking IC.
 * **area_unlock**
     - Unlocks your area.
+* **area_spectate**
+    - Allow users to join the current area, but only as spectators.
 * **invite** "ID"
     - Adds target in invite list of your area.
 * **uninvite** "ID"
