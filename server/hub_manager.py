@@ -179,7 +179,7 @@ class HubManager:
 					area['locking_allowed'] = False
 				if 'can_remove' not in area:
 					area['can_remove'] = False
-				if 'accessible' not in area or len(area['accessible']) <= 0:
+				if 'accessible' not in area or type(area['accessible']) != list or len(area['accessible']) <= 0:
 					area['accessible'] = []
 				else:
 					area['accessible'] = [int(s) for s in str(area['accessible']).split(' ')]
@@ -199,7 +199,7 @@ class HubManager:
 								area['can_remove'], area['accessible'], area['desc'], area['locked'],
 								area['hidden'], area['max_players'], area['move_delay'])
 
-				self.send_command('BN', self.background) #make sure everyone in the area gets the background update
+				self.change_background(self.background) #make sure everyone in the area gets the background update
 
 				if 'evidence' not in area or len(area['evidence']) <= 0:
 					area['evidence'] = []
@@ -365,9 +365,13 @@ class HubManager:
 
 			def change_background(self, bg, bypass=False):
 				if not bypass and self.server.bglock and bg.lower() not in (name.lower() for name in self.server.backgrounds):
-					raise AreaError('Invalid background name.')
+					raise AreaError('Invalid background name {}.'.format(bg))
 				self.background = bg
-				self.send_command('BN', self.background)
+				for client in self.clients:
+					#Update all clients to the pos lock
+					if len(self.pos_lock) > 0 and client.pos not in self.pos_lock:
+						client.change_position(self.pos_lock[0])
+					client.send_command('BN', self.background, client.pos)
 
 			# def change_desc(self, desc=''):
 			# 	self.desc = desc

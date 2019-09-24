@@ -541,7 +541,7 @@ class AOProtocol(asyncio.Protocol):
             msg = self.client.shake_message(msg)
         if self.client.disemvowel:
             msg = self.client.disemvowel_message(msg)
-        self.client.pos = pos
+
         #FUCK YOU
         #I SPENT AN HOUR TRYING TO DEBUG WHY HIDDEN EVIDENCE BECAME UNHIDDEN YOU FUCK
         #WHY DID YOU DO THIS TO ME

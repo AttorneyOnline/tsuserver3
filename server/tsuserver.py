@@ -42,8 +42,8 @@ class TsuServer3:
         self.load_config()
         self.load_iniswaps()
         self.client_manager = ClientManager(self)
-        self.hub_manager = HubManager(self)
-        self.ban_manager = BanManager()
+        self.hub_manager = None
+        self.ban_manager = None
         self.software = 'tsuserver3'
         self.version = 'vanilla'
         self.release = 3
@@ -91,6 +91,9 @@ class TsuServer3:
 
         if self.config['use_backgrounds_yaml']:
             self.bglock = True
+
+        self.hub_manager = HubManager(self)
+        self.ban_manager = BanManager()
 
         logger.log_debug('Server started.')
         print('Server started and is listening on port {}'.format(self.config['port']))
@@ -208,14 +211,14 @@ class TsuServer3:
     def build_music_list_ao2(self):
         song_list = []
         for item in self.music_list:
-            prefixes = set()
-            for song in item['songs']:
-                if song['name'].startswith('['):
-                    s = song['name']
-                    pre = s[s.find("[") : s.find("]")+1]
-                    prefixes.add(pre)
+            # prefixes = set()
+            # for song in item['songs']:
+            #     if song['name'].startswith('['):
+            #         s = song['name']
+            #         pre = s[s.find("[") : s.find("]")+1]
+            #         prefixes.add(pre)
                 
-            song_list.append('{}  {}'.format(item['category'], ' '.join(prefixes)))
+            song_list.append(item['category']) #'{}  {}'.format(item['category'], ' '.join(prefixes)))
             for song in item['songs']:
                 song_list.append(song['name'])
         return song_list

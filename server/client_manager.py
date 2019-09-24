@@ -169,7 +169,7 @@ class ClientManager:
                 raise ClientError('Character not available.')
             old_char = self.get_char_name()
             self.char_id = char_id
-            self.pos = ''
+            # self.pos = ''
             self.send_command('PV', self.id, 'CID', self.char_id)
             self.area.send_command('CharsCheck', *self.get_available_char_list())
             logger.log_server('Changed character from {} to {}.'.format(old_char, self.get_char_name()), self)
@@ -315,7 +315,7 @@ class ClientManager:
             self.area.send_command('CharsCheck', *self.get_available_char_list())
             self.send_command('HP', 1, self.area.hp_def)
             self.send_command('HP', 2, self.area.hp_pro)
-            self.send_command('BN', self.area.background)
+            self.send_command('BN', self.area.background, self.pos)
             self.send_command('LE', *self.area.get_evidence_list(self))
 
         def get_area_list(self, hidden=False, accessible=False):
@@ -456,7 +456,7 @@ class ClientManager:
             self.send_command('CharsCheck', *self.get_available_char_list())
             self.send_command('HP', 1, self.area.hp_def)
             self.send_command('HP', 2, self.area.hp_pro)
-            self.send_command('BN', self.area.background)
+            self.send_command('BN', self.area.background, self.pos)
             self.send_command('LE', *self.area.get_evidence_list(self))
             self.send_command('MM', 1)
 
@@ -504,6 +504,7 @@ class ClientManager:
                 raise ClientError('Invalid position. Possible values: def, pro, hld, hlp, jud, wit, jur, sea.')
             self.pos = pos
             self.send_host_message('Position set to {}.'.format(pos))
+            self.send_command('SP', self.pos) #Send a "Set Position" packet
 
         def set_mod_call_delay(self):
             self.mod_call_time = round(time.time() * 1000.0 + 30000)
