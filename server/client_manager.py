@@ -169,7 +169,7 @@ class ClientManager:
                 raise ClientError('Character not available.')
             old_char = self.get_char_name()
             self.char_id = char_id
-            # self.pos = ''
+            self.pos = ''
             self.send_command('PV', self.id, 'CID', self.char_id)
             self.area.send_command('CharsCheck', *self.get_available_char_list())
             logger.log_server('Changed character from {} to {}.'.format(old_char, self.get_char_name()), self)

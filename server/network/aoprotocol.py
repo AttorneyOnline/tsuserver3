@@ -118,6 +118,39 @@ class AOProtocol(asyncio.Protocol):
             self.buffer = ''
             yield askchar2
 
+    def parse_msg_delay(self, msg):
+        """ Parses the correct delay for the message supporting escaped characters and }}} {{{ speed-ups/slowdowns.
+
+        :param msg: the string
+        :return: delay integer in ms
+        """
+        #Fastest - Default - Slowest. These are default values in ms for KFO Client.
+        message_display_speed = [0, 10, 25, 40, 50, 70, 90]
+
+        #Starts in the middle of the messageDisplaySpeed list
+        current_display_speed = 3
+
+        #The 'meh' part of this is we can't exactly calculate accurately if color chars are used (as they could change clientside).
+        formatting_chars = "@$`|_~%\\}{" 
+
+        calculated_delay = 0
+
+        escaped = False
+
+        for symbol in msg:
+            if symbol in formatting_chars and not escaped:
+                if symbol == "\\":
+                    escaped = True
+                elif symbol == "{": #slow down
+                    current_display_speed = min(len(message_display_speed)-1, current_display_speed + 1)
+                elif symbol == "}": #speed up
+                    current_display_speed = max(0, current_display_speed - 1)
+                continue
+            elif escaped and symbol == "n": #Newline monstrosity
+                continue
+            calculated_delay += message_display_speed[current_display_speed]
+        return calculated_delay
+
     def validate_net_cmd(self, args, *types, needs_auth=True):
         """ Makes sure the net command's arguments match expectations.
 
@@ -522,15 +555,15 @@ class AOProtocol(asyncio.Protocol):
             button = 0
             # Turn off the ding.
             ding = 0
-        if color == 2 and not (self.client.is_mod or self.client.is_cm):
-            color = 0
-        if color == 6:
-            text = re.sub(r'[^\x00-\x7F]+', ' ', text)  # remove all unicode to prevent redtext abuse
-            if len(text.strip(' ')) == 1:
-                color = 0
-            else:
-                if text.strip(' ') in ('<num>', '<percent>', '<dollar>', '<and>'):
-                    color = 0
+        # if color == 2 and not (self.client.is_mod or self.client.is_cm):
+        #     color = 0
+        # if color == 6:
+        #     text = re.sub(r'[^\x00-\x7F]+', ' ', text)  # remove all unicode to prevent redtext abuse
+        #     if len(text.strip(' ')) == 1:
+        #         color = 0
+        #     else:
+        #         if text.strip(' ') in ('<num>', '<percent>', '<dollar>', '<and>'):
+        #             color = 0
         if self.client.pos:
             pos = self.client.pos
         else:
@@ -605,7 +638,7 @@ class AOProtocol(asyncio.Protocol):
                                         sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
                                         charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
                                         nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive, effect)
-                    area.set_next_msg_delay(len(msg))
+                    area.set_next_msg_delay(self.parse_msg_delay(msg))
                     
                     logger.log_demo('[IC][' + ', '.join(str(s) for s in ['broadcast', pre, folder, anim, pos, sfx, anim_type, cid,
                                         sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
@@ -629,7 +662,7 @@ class AOProtocol(asyncio.Protocol):
                                         sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
                                         charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
                                         nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive, effect)
-            self.client.area.set_next_msg_delay(len(msg))
+            self.client.area.set_next_msg_delay(self.parse_msg_delay(msg))
             
             logger.log_demo('[IC][' + ', '.join(str(s) for s in [msg_type, pre, folder, anim, pos, sfx, anim_type, cid,
                                 sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,

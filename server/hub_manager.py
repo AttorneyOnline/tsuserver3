@@ -282,8 +282,8 @@ class HubManager:
 			def send_host_message(self, msg):
 				self.send_command('CT', self.server.config['hostname'], msg)
 
-			def set_next_msg_delay(self, msg_length):
-				delay = min(3000, 100 + 60 * msg_length)
+			def set_next_msg_delay(self, delay):
+				delay = min(3000, 100 + delay) #100ms lag margin
 				self.next_message_time = round(time.time() * 1000.0 + delay)
 
 			def play_ambience(self, client):
