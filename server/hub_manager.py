@@ -207,7 +207,9 @@ class HubManager:
 				if len(area['evidence']) > 0:
 					self.evi_list.evidences.clear()
 					self.evi_list.import_evidence(area['evidence'])
-					self.update_area_list()
+					self.update_evidence_list()
+
+				self.update_area_list()
 
 			def new_client(self, client):
 				self.clients.add(client)
@@ -218,6 +220,7 @@ class HubManager:
 					client.id, client.get_char_name(True), self.id, self.name, hidden), client)
 
 				self.update_area_list(client)
+				self.update_evidence_list(client)
 				# self.server.hub_manager.send_arup_players()
 				self.play_ambience(client)
 
@@ -232,6 +235,16 @@ class HubManager:
 					client.id, client.get_char_name(True), self.id, self.name, hidden), client)
 				# self.server.hub_manager.send_arup_players()
 
+			def update_evidence_list(self, client=None):
+				clients = []				
+				if client == None:
+					clients = self.clients
+				else:
+					clients.append(client)
+
+				for c in clients:
+					c.send_command('LE', *self.get_evidence_list(c)) #Update evidence list as well
+
 			def update_area_list(self, client=None):
 				clients = []				
 				if client == None:
@@ -242,8 +255,7 @@ class HubManager:
 				for c in clients:
 					allowed = c.is_cm or c.is_mod or c.get_char_name() == "Spectator"
 					rpmode = not allowed and c.hub.rpmode
-					c.reload_music_list([a.name for a in c.get_area_list(rpmode, rpmode)])
-					c.send_command('LE', *self.get_evidence_list(c)) #Update evidence list as well
+					c.reload_area_list([a.name for a in c.get_area_list(rpmode, rpmode)])
 
 			def lock(self, client=None):
 				self.is_locked = True

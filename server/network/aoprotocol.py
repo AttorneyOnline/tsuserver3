@@ -232,7 +232,7 @@ class AOProtocol(asyncio.Protocol):
         self.client.is_ao2 = True
 
         self.client.send_command('FL', 'yellowtext', 'flipping', 'customobjections', 'fastloading', 'noencryption',
-                                 'deskmod', 'evidence', 'cccc_ic_support', 'casing_alerts', 'modcall_reason',
+                                 'deskmod', 'evidence', 'cccc_ic_support', 'modcall_reason',
                                  'looping_sfx', 'additive', 'effects')
 
     def net_cmd_ch(self, _):
@@ -631,8 +631,7 @@ class AOProtocol(asyncio.Protocol):
                 if area:
                     if len(area.pos_lock) > 0 and pos not in area.pos_lock:
                         pos = area.pos_lock[0]
-                        self.client.change_position(pos)
-                    if self.client.pos == '' and pos != None:
+                    if pos != None:
                         self.client.change_position(pos)
                     area.send_command('MS', 'broadcast', pre, folder, anim, msg, pos, sfx, anim_type, cid,
                                         sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,

@@ -245,25 +245,30 @@ class ClientManager:
             except ClientError:
                 raise
 
-        def reload_music_list(self, areas=[]):
+        def reload_music_list(self, music=[]):
             """
-            Rebuild the music list so that it only contains the target area's
-            reachable areas+music. Useful when moving areas/logging in or out.
+            Rebuild the music list with the provided array, or the server music list as a whole.
             """
             song_list = []
-            # if new_music_file:
-            #     new_music_list = self.server.load_music(music_list_file=new_music_file,
-            #                                             server_music_list=False)
-            #     song_list = self.server.build_music_list_ao2(from_area=self.area, c=self,
-            #                                      music_list=new_music_list)
-            # else:
+
             if (len(areas) > 0):
-                song_list += areas
-            song_list += self.server.build_music_list_ao2()
-            # KEEP THE ASTERISK, unless you want a very weird single area comprised
-            # of all areas back to back forming a black hole area of doom and despair
-            # that crashes all clients that dare attempt join this area.
+                song_list = music
+            else:
+                song_list = self.server.build_music_list_ao2()
+            # KEEP THE ASTERISK
             self.send_command('FM', *song_list)
+
+        def reload_area_list(self, areas=[]):
+            """
+            Rebuild the area list according to provided areas list.
+            """
+            area_list = []
+
+            if (len(areas) > 0):
+                area_list = areas
+
+            # KEEP THE ASTERISK
+            self.send_command('FA', *area_list)
 
         def change_hub(self, hub):
             if self.hub == hub:

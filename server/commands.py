@@ -355,13 +355,11 @@ def ooc_cmd_pos(client, arg):
         raise ClientError('Intended position is locked.')
     if len(arg) == 0:
         client.change_position()
-        client.area.update_area_list(client)
     else:
         try:
             client.change_position(arg)
         except ClientError:
             raise
-        client.area.update_area_list(client)
 
 
 def ooc_cmd_poslock(client, arg):
@@ -416,7 +414,6 @@ def ooc_cmd_forcepos(client, arg):
     for t in targets:
         try:
             t.change_position(pos)
-            t.area.update_area_list(t)
             t.send_host_message('Forced into /pos {}.'.format(pos))
         except ClientError:
             raise
@@ -635,8 +632,8 @@ def ooc_cmd_login(client, arg):
         client.auth_mod(arg)
     except ClientError:
         raise
-    if client.area.evidence_mod == 'HiddenCM':
-        client.area.update_area_list(client)
+    client.area.update_area_list(client)
+    client.area.update_evidence_list(client)
     client.send_host_message('Logged in as a moderator.')
     logger.log_server('Logged in as moderator.', client)
     logger.log_mod('Logged in as moderator.', client)
@@ -1508,7 +1505,7 @@ def ooc_cmd_evi_swap(client, arg):
         raise ClientError("You must specify 2 numbers.")
     try:
         client.area.evi_list.evidence_swap(client, int(args[0]), int(args[1]))
-        client.area.update_area_list(client)
+        client.area.update_evidence_list(client)
     except:
         raise ClientError("You must specify 2 numbers.")
 
@@ -1529,8 +1526,9 @@ def ooc_cmd_cm(client, arg):
                 client.send_host_message('{} has been made a co-CM.'.format(c.name))
                 c.send_host_message(
                     'You have been made a co-CM of hub {} by {}.'.format(client.hub.name, client.name))
-            if client.area.evidence_mod == 'HiddenCM':
-                client.area.update_area_list(client)
+            c.area.update_area_list(c)
+            if c.area.evidence_mod == 'HiddenCM':
+                c.area.update_evidence_list(c)
         except:
             raise ClientError('You must specify a target. Use /cm <id>')
     else:
@@ -1541,8 +1539,9 @@ def ooc_cmd_cm(client, arg):
             client.hub.master = client
             client.is_cm = True
             client.hub.send_host_message('{} is master CM in this hub now.'.format(client.name))
+            client.area.update_area_list(client)
             if client.area.evidence_mod == 'HiddenCM':
-                client.area.update_area_list(client)
+                client.area.update_evidence_list(client)
         else:
             raise ClientError('Master CM exists. Use /cm <id>')
     #If we got past the errors we're going to tell the server to update itself.
@@ -1586,6 +1585,7 @@ def ooc_cmd_uncm(client, arg):
             '{} is no longer a CM of hub {}.'.format(target.name, target.hub.name))
         # target.server.hub_manager.send_arup_cms()
         target.area.update_area_list(client)
+        target.area.update_evidence_list(target)
 
 def ooc_cmd_cmlogs(client, arg):
     logtypes = ['MoveLog', 'RollLog', 'PMLog', 'CharLog']
@@ -1842,6 +1842,7 @@ def ooc_cmd_sneak(client, arg):
 def ooc_cmd_unmod(client, arg):
     client.is_mod = False
     client.area.update_area_list(client)
+    client.area.update_evidence_list(client)
     client.send_host_message('you\'re not a mod now')
 
 def ooc_cmd_cleanup(client, arg):
