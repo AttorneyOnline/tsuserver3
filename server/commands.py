@@ -376,9 +376,9 @@ def ooc_cmd_poslock(client, arg):
 
     args = arg.split()
     positions = sorted(set(args),key=args.index) #remove duplicates while preserving order
-    for pos in positions:
-        if pos not in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'sea', 'jur'):
-            raise ClientError('Invalid pos.')
+    # for pos in positions:
+    #     if pos not in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'sea', 'jur'):
+    #         raise ClientError('Invalid pos.')
        
     client.area.pos_lock = positions
     client.area.send_host_message('Locked pos into {}.'.format(positions))

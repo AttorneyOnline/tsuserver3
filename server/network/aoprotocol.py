@@ -164,7 +164,7 @@ class AOProtocol(asyncio.Protocol):
         if len(args) != len(types):
             return False
         for i, arg in enumerate(args):
-            if len(arg) == 0 and types[i] != self.ArgType.STR_OR_EMPTY:
+            if len(str(arg)) == 0 and types[i] != self.ArgType.STR_OR_EMPTY:
                 return False
             if types[i] == self.ArgType.INT:
                 try:
@@ -315,8 +315,12 @@ class AOProtocol(asyncio.Protocol):
         AM#%
 
         """
-
-        self.client.send_command('SM', *self.server.music_list_ao2)
+        song_list = []
+        allowed = self.client.is_cm or self.client.is_mod or self.client.get_char_name() == "Spectator"
+        rpmode = not allowed and self.client.hub.rpmode
+        song_list += [a.name for a in self.client.get_area_list(rpmode, rpmode)]
+        song_list += self.server.music_list_ao2
+        self.client.send_command('SM', *song_list)
 
     def net_cmd_rd(self, _):
         """ Asks for server metadata(charscheck, motd etc.) and a DONE#% signal(also best packet)
@@ -357,6 +361,18 @@ class AOProtocol(asyncio.Protocol):
 
         target_area = []
 
+        showname = ""
+        charid_pair = -1
+        offset_pair = 0
+        nonint_pre = 0
+        sfx_looping = "0"
+        screenshake = 0
+        frames_shake = ""
+        frames_realization = ""
+        frames_sfx = ""
+        additive = 0
+        effect = ""
+        pair_order = 0
         if self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
                                  self.ArgType.STR,
                                  self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
@@ -364,17 +380,6 @@ class AOProtocol(asyncio.Protocol):
                                  self.ArgType.INT, self.ArgType.INT, self.ArgType.INT):
             # Vanilla validation monstrosity.
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color = args
-            showname = ""
-            charid_pair = -1
-            offset_pair = 0
-            nonint_pre = 0
-            sfx_looping = "0"
-            screenshake = 0
-            frames_shake = ""
-            frames_realization = ""
-            frames_sfx = ""
-            additive = 0
-            effect = ""
         elif self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
                                    self.ArgType.STR,
                                    self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
@@ -382,16 +387,6 @@ class AOProtocol(asyncio.Protocol):
                                    self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR_OR_EMPTY):
             # 1.3.0 validation monstrosity.
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname = args
-            charid_pair = -1
-            offset_pair = 0
-            nonint_pre = 0
-            sfx_looping = "0"
-            screenshake = 0
-            frames_shake = ""
-            frames_realization = ""
-            frames_sfx = ""
-            additive = 0
-            effect = ""
             if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
                 self.client.send_host_message("Showname changes are forbidden in this hub!")
                 return
@@ -403,14 +398,6 @@ class AOProtocol(asyncio.Protocol):
                                    self.ArgType.INT, self.ArgType.INT):
             # 1.3.5 validation monstrosity.
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair = args
-            nonint_pre = 0
-            sfx_looping = "0"
-            screenshake = 0
-            frames_shake = ""
-            frames_realization = ""
-            frames_sfx = ""
-            additive = 0
-            effect = ""
             if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
                 self.client.send_host_message("Showname changes are forbidden in this hub!")
                 return
@@ -422,13 +409,6 @@ class AOProtocol(asyncio.Protocol):
                                    self.ArgType.INT, self.ArgType.INT, self.ArgType.INT):
             # 1.4.0 validation monstrosity.
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre = args
-            sfx_looping = "0"
-            screenshake = 0
-            frames_shake = ""
-            frames_realization = ""
-            frames_sfx = ""
-            additive = 0
-            effect = ""
             if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
                 self.client.send_host_message("Showname changes are forbidden in this hub!")
                 return
@@ -441,7 +421,6 @@ class AOProtocol(asyncio.Protocol):
                                    self.ArgType.INT, self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT):
             # Looping sfx and frame shenanigans validation monstrosity.
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive = args
-            effect = ""
             if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
                 self.client.send_host_message("Showname changes are forbidden in this hub!")
                 return
@@ -453,8 +432,25 @@ class AOProtocol(asyncio.Protocol):
                                    self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR,
                                    self.ArgType.INT, self.ArgType.STR, self.ArgType.STR, self.ArgType.STR,
                                    self.ArgType.INT, self.ArgType.STR):
-            # Looping sfx and frame shenanigans validation monstrosity.
+            # Looping sfx and frame shenanigans validation monstrosity, effect and pair order edition
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive, effect = args
+            if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
+                self.client.send_host_message("Showname changes are forbidden in this hub!")
+                return
+        elif self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
+                                   self.ArgType.STR,
+                                   self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
+                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
+                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR_OR_EMPTY,
+                                   self.ArgType.STR, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR,
+                                   self.ArgType.INT, self.ArgType.STR, self.ArgType.STR, self.ArgType.STR,
+                                   self.ArgType.INT, self.ArgType.STR):
+            # Looping sfx and frame shenanigans validation monstrosity, effect and pair order edition
+            msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive, effect = args
+            pair_args = charid_pair.split("^")
+            charid_pair = int(pair_args[0])
+            if (len(pair_args) > 1):
+                pair_order = pair_args[1]
             if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
                 self.client.send_host_message("Showname changes are forbidden in this hub!")
                 return
@@ -564,11 +560,7 @@ class AOProtocol(asyncio.Protocol):
         #     else:
         #         if text.strip(' ') in ('<num>', '<percent>', '<dollar>', '<and>'):
         #             color = 0
-        if self.client.pos:
-            pos = self.client.pos
-        else:
-            if pos not in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'jur', 'sea'):
-                return
+
         msg = text[:256]
         if self.client.shaken:
             msg = self.client.shake_message(msg)
@@ -606,11 +598,14 @@ class AOProtocol(asyncio.Protocol):
                     other_emote = target.last_sprite
                     other_flip = target.flip
                     other_folder = target.claimed_folder
+                    if (pair_order != ""):
+                        charid_pair = "{}^{}".format(charid_pair, pair_order)
+                    print(offset_pair, other_offset)
                     break
 
         if not confirmed:
             charid_pair = -1
-            offset_pair = 0
+            # offset_pair = 0
 
         if self.client.is_cm and self.client.waiting_for_schedule != None:
             args = msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid, sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname, charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip, nonint_pre
@@ -631,7 +626,7 @@ class AOProtocol(asyncio.Protocol):
                 if area:
                     if len(area.pos_lock) > 0 and pos not in area.pos_lock:
                         pos = area.pos_lock[0]
-                    if pos != None:
+                    if pos != None and self.client.pos != pos:
                         self.client.change_position(pos)
                     area.send_command('MS', 'broadcast', pre, folder, anim, msg, pos, sfx, anim_type, cid,
                                         sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
@@ -654,8 +649,7 @@ class AOProtocol(asyncio.Protocol):
         else:
             if len(self.client.area.pos_lock) > 0 and pos not in self.client.area.pos_lock:
                 pos = self.client.area.pos_lock[0]
-                self.client.change_position(pos)
-            if self.client.pos == '' and pos != None:
+            if pos != None and self.client.pos != pos:
                 self.client.change_position(pos)
             self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
                                         sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,

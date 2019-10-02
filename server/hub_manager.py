@@ -171,7 +171,7 @@ class HubManager:
 					area['poslock'] = []
 					for pos in _poslock:
 						pos = pos.lower()
-						if pos in ['def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'sea', 'jur'] and not (pos in area['poslock']):
+						if pos != "none" and not (pos in area['poslock']):
 							area['poslock'].append(pos)
 				if 'evidence_mod' not in area:
 					area['evidence_mod'] = 'FFA'

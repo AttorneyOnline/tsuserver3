@@ -505,8 +505,8 @@ class ClientManager:
             return self.server.char_list[self.char_id]
 
         def change_position(self, pos=''):
-            if pos not in ('', 'def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'jur', 'sea'):
-                raise ClientError('Invalid position. Possible values: def, pro, hld, hlp, jud, wit, jur, sea.')
+            # if pos not in ('', 'def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'jur', 'sea'):
+            #     raise ClientError('Invalid position. Possible values: def, pro, hld, hlp, jud, wit, jur, sea.')
             self.pos = pos
             self.send_host_message('Position set to {}.'.format(pos))
             self.send_command('SP', self.pos) #Send a "Set Position" packet

@@ -71,7 +71,7 @@ Requires Python 3.6+ and PyYAML.
     - Randomly chooses a character
 * **pos** "position" 
     - Changes your position in the court
-    - Positions: 'def', 'pro', 'hld', 'hlp', 'jud', 'wit'
+    - Positions: 'def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'jur', 'sea'
 * **roll** "max" 
     - Rolls a 1D6 if blank
 * **coinflip**
@@ -104,7 +104,7 @@ Requires Python 3.6+ and PyYAML.
     - Unlocks your area (or list of areas if you provide <id1> <id2> <idx>).
 * **forcepos** "position" [target]
     - Forcibly change [target]'s position. Leave blank to affect everyone in area.
-    - Positions: 'def', 'pro', 'hld', 'hlp', 'jud', 'wit'
+    - Positions: 'def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'jur', 'sea'
 * **follow** <id> or blank
     - Follow specified character <id> when they move areas or display who you're following if left blank.
 * **unfollow**
@@ -147,7 +147,7 @@ Requires Python 3.6+ and PyYAML.
     - Remove specified area while updating all existing access references to match.
 * **area_swap** <id1> <id2>
     - Swaps first area ID with the second area ID while updating all existing access references to match.
-* **poslock** <def> <hld> <pro> <hlp> <wit> <jud> <clear>
+* **poslock** <def> <hld> <pro> <hlp> <wit> <jud> <jur> <sea> <clear>
     - Lock the position of current area into provided pos. <clear> to unlock.
 * **rename** <text>
     - Rename current area's display name to <text>
