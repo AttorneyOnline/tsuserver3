@@ -769,10 +769,13 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_host_message(
                     "You are not on the area's invite list, and thus, you cannot change music!")
                 return
+
             if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT):
-                if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT, self.ArgType.STR):
-                    if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT, self.ArgType.STR, self.ArgType.INT, self.ArgType.INT):
-                        return
+                if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT, self.ArgType.STR_OR_EMPTY):
+                    if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.INT):
+                        if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.INT, self.ArgType.INT):
+                            return
+
             if args[1] != self.client.char_id:
                 return
             if self.client.change_music_cd():
@@ -787,7 +790,7 @@ class AOProtocol(asyncio.Protocol):
                 else:
                     name, length = self.server.get_song_data(args[0])
 
-                if self.client.is_cm and self.client.ambience_editing:
+                if (self.client.is_mod or self.client.is_cm) and self.client.ambience_editing:
                     self.client.area.set_ambience(name, self.client.char_id)
                     self.client.send_host_message(
                         'Setting current area\'s ambience to {}.'.format(name))
@@ -798,19 +801,22 @@ class AOProtocol(asyncio.Protocol):
                         self.client.send_host_message("Showname changes are forbidden in this hub!")
                         return
 
+                    effects = 0
+                    if len(args) > 3:
+                        effects = int(args[3])
+
                     if self.client.is_cm and len(self.client.broadcast_ic) > 0:
                         i = 0
                         for b in self.client.broadcast_ic:
                             area = self.client.hub.get_area_by_id(b)
                             if area:
-                                area.play_music_shownamed(
-                                    name, self.client.char_id, showname, length)
+                                area.play_music(
+                                    name, self.client.char_id, length, showname, effects)
                                 i += 1
                         self.client.send_host_message(
                             'Broadcasting music to {} areas.'.format(len(self.client.broadcast_ic)))
                     else:
-                        self.client.area.play_music_shownamed(name, self.client.char_id, showname, length)
-                    # self.client.area.add_music_playing_shownamed(self.client, showname, name)
+                        self.client.area.play_music(name, self.client.char_id, length, showname, effects)
                 else:
                     if self.client.is_cm and len(self.client.broadcast_ic) > 0:
                         i = 0

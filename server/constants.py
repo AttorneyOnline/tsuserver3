@@ -16,6 +16,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from enum import Enum
+from enum import IntFlag
 
 
 class TargetType(Enum):
@@ -27,3 +28,8 @@ class TargetType(Enum):
     IPID = 4
     HDID = 5
     ALL = 6
+
+class MusicEffect(IntFlag):
+    FADE_IN = 1
+    FADE_OUT = 2
+    SYNC_POS = 4
