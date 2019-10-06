@@ -440,6 +440,7 @@ class HubManager:
 			self.keys = keys
 			self.abbreviation = abbreviation
 			self.music_ref = music_ref
+
 			if abbreviation == '':
 				self.abbreviation = self.get_generated_abbreviation()
 			if music_ref != '':
@@ -487,6 +488,8 @@ class HubManager:
 			self.update_from_yaml(hub)
 
 		def update_from_yaml(self, hub):
+			if 'hub' not in hub:
+				hub['hub'] = self.name
 			if 'allow_cm' not in hub:
 				hub['allow_cm'] = self.allow_cm
 			if 'max_areas' not in hub:
@@ -738,6 +741,9 @@ class HubManager:
 				path = 'storage/musiclists'
 				with open('{}/{}.yaml'.format(path, music_ref), 'r') as stream:
 					self.music_list = yaml.load(stream)
+				for item in self.music_list:
+					for song in item['songs']:
+						song['name'] = '{}/{}'.format(music_ref, song['name'])
 				self.refresh_music()
 			except:
 				print("Unable to load music list {} for hub {}: {}".format(music_ref, self.id, self.name))
