@@ -405,7 +405,8 @@ class HubManager:
 			# 	return msg
 
 		def __init__(self, hub_id, server, name, allow_cm=False, max_areas=1, doc='No document.', status='IDLE', showname_changes_allowed=False,
-						shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation='', move_delay=0, keys=[]):
+						shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation='',
+						move_delay=0, keys=[], music_ref=''):
 			self.server = server
 			self.id = hub_id
 
@@ -415,12 +416,16 @@ class HubManager:
 			self.areas = []
 			self.cur_id = 0
 			self.schedules = []
+			self.abbreviation = ''
+			self.music_ref = ''
+			self.music_list = []
 			self.cur_sched = [i for i in range(20)] #Max 20 schedules per hub
 			self.update(name, allow_cm, max_areas, doc, status, showname_changes_allowed,
-							shouts_allowed, non_int_pres_only, iniswap_allowed, blankposting_allowed, abbreviation, move_delay, keys)
+							shouts_allowed, non_int_pres_only, iniswap_allowed, blankposting_allowed, abbreviation, move_delay, keys, music_ref)
 
 		def update(self, name, allow_cm=False, max_areas=1, doc='No document.', status='IDLE', showname_changes_allowed=False,
-					 shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation='', move_delay=0, keys=[]):
+					 shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation='',
+					 move_delay=0, keys=[], music_ref=''):
 			self.name = name
 			self.allow_cm = allow_cm
 			self.max_areas = max_areas
@@ -433,8 +438,12 @@ class HubManager:
 			self.blankposting_allowed = blankposting_allowed
 			self.move_delay = move_delay
 			self.keys = keys
+			self.abbreviation = abbreviation
+			self.music_ref = music_ref
 			if abbreviation == '':
 				self.abbreviation = self.get_generated_abbreviation()
+			if music_ref != '':
+				self.load_music(music_ref)
 
 		def yaml_save(self, stream='', limited=True):
 			data = OrderedDict()
@@ -451,6 +460,7 @@ class HubManager:
 			data['iniswap_allowed'] = self.iniswap_allowed
 			data['blankposting_allowed'] = self.blankposting_allowed
 			data['move_delay'] = self.move_delay
+			data['music_ref'] = self.music_ref
 			areas = []
 			for area in self.areas:
 				areas.append(area.yaml_save())
@@ -477,30 +487,34 @@ class HubManager:
 			self.update_from_yaml(hub)
 
 		def update_from_yaml(self, hub):
-			if 'hub' in hub:
-				self.name = hub['hub']
-			if 'allow_cm' in hub:
-				self.allow_cm = hub['allow_cm']
-			if 'max_areas' in hub:
-				self.max_areas = hub['max_areas']
-			if 'doc' in hub:
-				self.change_doc(hub['doc'])
-			if 'status' in hub:
-				self.change_status(hub['status'])
-			if 'showname_changes_allowed' in hub:
-				self.showname_changes_allowed = hub['showname_changes_allowed']
-			if 'shouts_allowed' in hub:
-				self.shouts_allowed = hub['shouts_allowed']
-			if 'noninterrupting_pres' in hub:
-				self.non_int_pres_only = hub['noninterrupting_pres']
-			if 'iniswap_allowed' in hub:
-				self.iniswap_allowed = hub['iniswap_allowed']
-			if 'blankposting_allowed' in hub:
-				self.blankposting_allowed = hub['blankposting_allowed']
-			if 'abbreviation' in hub:
-				self.abbreviation = hub['abbreviation']
-			if 'move_delay' in hub:
-				self.move_delay = hub['move_delay']
+			if 'allow_cm' not in hub:
+				hub['allow_cm'] = self.allow_cm
+			if 'max_areas' not in hub:
+				hub['max_areas'] = self.max_areas
+			if 'abbreviation' not in hub:
+				hub['abbreviation'] = self.abbreviation
+			if 'doc' not in hub:
+				hub['doc'] = 'No document.'
+			if 'status' not in hub:
+				hub['status'] = 'IDLE'
+			if 'showname_changes_allowed' not in hub:
+				hub['showname_changes_allowed'] = False
+			if 'shouts_allowed' not in hub:
+				hub['shouts_allowed'] = True
+			if 'noninterrupting_pres' not in hub:
+				hub['noninterrupting_pres'] = False #todo: make this area-specific feature (class trials anyone?)
+			if 'iniswap_allowed' not in hub:
+				hub['iniswap_allowed'] = False
+			if 'blankposting_allowed' not in hub:
+				hub['blankposting_allowed'] = False
+			if 'move_delay' not in hub:
+				hub['move_delay'] = 0
+			if 'music_ref' not in hub:
+				hub['music_ref'] = ''
+
+			self.update(hub['hub'], hub['allow_cm'], hub['max_areas'], hub['doc'], hub['status'], hub['showname_changes_allowed'],
+							hub['shouts_allowed'], hub['noninterrupting_pres'], hub['iniswap_allowed'], hub['blankposting_allowed'],
+							hub['abbreviation'], hub['move_delay'], [], hub['music_ref'])
 
 			while len(self.areas) < len(hub['areas']):
 				self.create_area('Area {}'.format(self.cur_id))
@@ -571,7 +585,7 @@ class HubManager:
 			self.doc = doc
 
 		def new_client(self, client):
-			return
+			client.reload_music_list(self.server.music_list + self.music_list)
 
 		def remove_client(self, client):
 			if client.is_cm:
@@ -718,6 +732,21 @@ class HubManager:
 				return name[:3].upper()
 			else:
 				return name.upper()
+
+		def load_music(self, music_ref):
+			try:
+				path = 'storage/musiclists'
+				with open('{}/{}.yaml'.format(path, music_ref), 'r') as stream:
+					self.music_list = yaml.load(stream)
+				self.refresh_music()
+			except:
+				print("Unable to load music list {} for hub {}: {}".format(music_ref, self.id, self.name))
+				self.music_list = []
+		
+		def refresh_music(self):
+			song_list = self.server.music_list + self.music_list
+			for client in self.clients():
+				client.reload_music_list(song_list)
 
 		def setup_schedule(self, targets, time, affected, message, msgtype):
 			try:

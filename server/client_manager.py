@@ -251,10 +251,12 @@ class ClientManager:
             """
             song_list = []
 
-            if (len(areas) > 0):
+            if (len(music) > 0):
                 song_list = music
             else:
-                song_list = self.server.build_music_list_ao2()
+                song_list = self.server.music_list
+
+            song_list = self.server.build_music_list_ao2(song_list)
             # KEEP THE ASTERISK
             self.send_command('FM', *song_list)
 

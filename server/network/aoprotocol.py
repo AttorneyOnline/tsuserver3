@@ -455,7 +455,6 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_host_message("Showname changes are forbidden in this hub!")
                 return
         else:
-            print(args)
             return
         if self.client.hub.is_iniswap(self.client, pre, anim, folder) and folder != self.client.get_char_name():
             self.client.send_host_message("Iniswap is blocked in this area")
@@ -600,7 +599,6 @@ class AOProtocol(asyncio.Protocol):
                     other_folder = target.claimed_folder
                     if (pair_order != ""):
                         charid_pair = "{}^{}".format(charid_pair, pair_order)
-                    print(offset_pair, other_offset)
                     break
 
         if not confirmed:
@@ -784,11 +782,11 @@ class AOProtocol(asyncio.Protocol):
                         int(self.client.change_music_cd())))
                 return
             try:
-                if args[0].startswith('=='): #Trying to stop music because we pressed a category track
+                if args[0].startswith('==') or args[0].lower() == 'stop': #Trying to stop music because we pressed a category track
                     name = 'Stop'
                     length = 0
                 else:
-                    name, length = self.server.get_song_data(args[0])
+                    name, length = self.server.get_song_data(self.server.music_list + self.client.hub.music_list, args[0])
 
                 if (self.client.is_mod or self.client.is_cm) and self.client.ambience_editing:
                     self.client.area.set_ambience(name, self.client.char_id)

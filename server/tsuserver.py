@@ -147,8 +147,8 @@ class TsuServer3:
     def load_music(self):
         with open('config/music.yaml', 'r', encoding='utf-8') as music:
             self.music_list = yaml.load(music)
-        self.music_pages_ao1 = self.build_music_pages_ao1()
-        self.music_list_ao2 = self.build_music_list_ao2()
+        self.music_pages_ao1 = self.build_music_pages_ao1(self.music_list)
+        self.music_list_ao2 = self.build_music_list_ao2(self.music_list)
 
     def load_ids(self):
         self.ipid_list = {}
@@ -196,10 +196,10 @@ class TsuServer3:
         for i in range(len(self.char_list)):
             self.char_pages_ao1[i // 10][i % 10] = '{}#{}&&0&&&0&'.format(i, self.char_list[i])
 
-    def build_music_pages_ao1(self):
+    def build_music_pages_ao1(self, music_list):
         song_list = []
         index = 0
-        for item in self.music_list:
+        for item in music_list:
             song_list.append('{}#{}'.format(index, item['category']))
             index += 1
             for song in item['songs']:
@@ -208,9 +208,9 @@ class TsuServer3:
         song_list = [song_list[x:x + 10] for x in range(0, len(song_list), 10)]
         return song_list
 
-    def build_music_list_ao2(self):
+    def build_music_list_ao2(self, music_list):
         song_list = []
-        for item in self.music_list:
+        for item in music_list:
             # prefixes = set()
             # for song in item['songs']:
             #     if song['name'].startswith('['):
@@ -232,8 +232,8 @@ class TsuServer3:
                 return i
         raise ServerError('Character not found.')
 
-    def get_song_data(self, music):
-        for item in self.music_list:
+    def get_song_data(self, music_list, music):
+        for item in music_list:
             if item['category'] == music:
                 return item['category'], -1
             for song in item['songs']:
