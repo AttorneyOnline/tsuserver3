@@ -180,7 +180,7 @@ class HubManager:
 					area['locking_allowed'] = False
 				if 'can_remove' not in area:
 					area['can_remove'] = False
-				if 'accessible' not in area or type(area['accessible']) != list or len(area['accessible']) <= 0:
+				if 'accessible' not in area or len(area['accessible']) <= 0:
 					area['accessible'] = []
 				else:
 					area['accessible'] = [int(s) for s in str(area['accessible']).split(' ')]
