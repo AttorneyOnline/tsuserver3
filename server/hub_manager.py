@@ -483,7 +483,7 @@ class HubManager:
 		def yaml_load(self, name=''):
 			path = 'storage/hubs'
 			with open('{}/{}.yaml'.format(path, name), 'r') as stream:
-				hub = yaml.load(stream)
+				hub = yaml.safe_load(stream)
 
 			self.update_from_yaml(hub)
 
@@ -740,10 +740,11 @@ class HubManager:
 			try:
 				path = 'storage/musiclists'
 				with open('{}/{}.yaml'.format(path, music_ref), 'r') as stream:
-					self.music_list = yaml.load(stream)
+					self.music_list = yaml.safe_load(stream)
 				for item in self.music_list:
+					category_path = item['category'].lower().replace('=', '')
 					for song in item['songs']:
-						song['name'] = '{}/{}'.format(music_ref, song['name'])
+						song['name'] = '{}/{}/{}'.format(music_ref, category_path, song['name'])
 				self.refresh_music()
 			except:
 				print("Unable to load music list {} for hub {}: {}".format(music_ref, self.id, self.name))
@@ -873,7 +874,7 @@ class HubManager:
 
 	def load_hubs(self):
 		with open('config/areas.yaml', 'r') as chars:
-			hubs = yaml.load(chars)
+			hubs = yaml.safe_load(chars)
 
 		for hub in hubs:
 			print(self.cur_id, hub['hub'])

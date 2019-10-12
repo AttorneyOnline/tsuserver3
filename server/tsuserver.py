@@ -53,7 +53,7 @@ class TsuServer3:
         self.hdid_list = {}
         self.char_list = None
         self.char_pages_ao1 = None
-        self.music_list = None
+        self.music_list = []
         self.music_list_ao2 = None
         self.music_pages_ao1 = None
         self.bglock = False
@@ -132,7 +132,7 @@ class TsuServer3:
 
     def load_config(self):
         with open('config/config.yaml', 'r', encoding='utf-8') as cfg:
-            self.config = yaml.load(cfg)
+            self.config = yaml.safe_load(cfg)
             self.config['motd'] = self.config['motd'].replace('\\n', ' \n')
         if 'music_change_floodguard' not in self.config:
             self.config['music_change_floodguard'] = {'times_per_interval': 1, 'interval_length': 0, 'mute_length': 0}
@@ -141,12 +141,11 @@ class TsuServer3:
 
     def load_characters(self):
         with open('config/characters.yaml', 'r', encoding='utf-8') as chars:
-            self.char_list = yaml.load(chars)
+            self.char_list = yaml.safe_load(chars)
         self.build_char_pages_ao1()
 
     def load_music(self):
-        with open('config/music.yaml', 'r', encoding='utf-8') as music:
-            self.music_list = yaml.load(music)
+        self.build_music_list()
         self.music_pages_ao1 = self.build_music_pages_ao1(self.music_list)
         self.music_list_ao2 = self.build_music_list_ao2(self.music_list)
 
@@ -182,12 +181,12 @@ class TsuServer3:
 
     def load_backgrounds(self):
         with open('config/backgrounds.yaml', 'r', encoding='utf-8') as bgs:
-            self.backgrounds = yaml.load(bgs)
+            self.backgrounds = yaml.safe_load(bgs)
 
     def load_iniswaps(self):
         try:
             with open('config/iniswaps.yaml', 'r', encoding='utf-8') as iniswaps:
-                self.allowed_iniswaps = yaml.load(iniswaps)
+                self.allowed_iniswaps = yaml.safe_load(iniswaps)
         except:
             logger.log_debug('cannot find iniswaps.yaml')
 
@@ -195,6 +194,17 @@ class TsuServer3:
         self.char_pages_ao1 = [self.char_list[x:x + 10] for x in range(0, len(self.char_list), 10)]
         for i in range(len(self.char_list)):
             self.char_pages_ao1[i // 10][i % 10] = '{}#{}&&0&&&0&'.format(i, self.char_list[i])
+
+    def build_music_list(self):
+        self.music_list.clear()
+        with open('config/music.yaml', 'r', encoding='utf-8') as music:
+            self.music_list = yaml.safe_load(music)
+        for item in self.music_list:
+            category_path = item['category'].lower().replace('=', '') + '/'
+            for song in item['songs']:
+                if song['name'].find('/') != -1: #this song already supplies its own filepath
+                    continue
+                song['name'] = '{}{}'.format(category_path, song['name'])
 
     def build_music_pages_ao1(self, music_list):
         song_list = []
@@ -211,14 +221,7 @@ class TsuServer3:
     def build_music_list_ao2(self, music_list):
         song_list = []
         for item in music_list:
-            # prefixes = set()
-            # for song in item['songs']:
-            #     if song['name'].startswith('['):
-            #         s = song['name']
-            #         pre = s[s.find("[") : s.find("]")+1]
-            #         prefixes.add(pre)
-                
-            song_list.append(item['category']) #'{}  {}'.format(item['category'], ' '.join(prefixes)))
+            song_list.append(item['category'])
             for song in item['songs']:
                 song_list.append(song['name'])
         return song_list
