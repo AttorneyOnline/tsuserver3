@@ -196,20 +196,15 @@ class TsuServer3:
             self.char_pages_ao1[i // 10][i % 10] = '{}#{}&&0&&&0&'.format(i, self.char_list[i])
 
     def build_music_list(self):
-        self.music_list.clear()
         with open('config/music.yaml', 'r', encoding='utf-8') as music:
             self.music_list = yaml.safe_load(music)
-        for item in self.music_list:
-            category_path = item['category'].lower().replace('=', '') + '/'
-            for song in item['songs']:
-                if song['name'].find('/') != -1: #this song already supplies its own filepath
-                    continue
-                song['name'] = '{}{}'.format(category_path, song['name'])
 
     def build_music_pages_ao1(self, music_list):
         song_list = []
         index = 0
         for item in music_list:
+            if 'category' not in item:
+                continue
             song_list.append('{}#{}'.format(index, item['category']))
             index += 1
             for song in item['songs']:
@@ -221,6 +216,8 @@ class TsuServer3:
     def build_music_list_ao2(self, music_list):
         song_list = []
         for item in music_list:
+            if 'category' not in item: #skip settings n stuff
+                continue
             song_list.append(item['category'])
             for song in item['songs']:
                 song_list.append(song['name'])
@@ -237,6 +234,8 @@ class TsuServer3:
 
     def get_song_data(self, music_list, music):
         for item in music_list:
+            if 'category' not in item: #skip settings n stuff
+                continue
             if item['category'] == music:
                 return item['category'], -1
             for song in item['songs']:

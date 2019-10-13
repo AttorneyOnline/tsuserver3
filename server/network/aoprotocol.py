@@ -319,7 +319,12 @@ class AOProtocol(asyncio.Protocol):
         allowed = self.client.is_cm or self.client.is_mod or self.client.get_char_name() == "Spectator"
         rpmode = not allowed and self.client.hub.rpmode
         song_list += [a.name for a in self.client.get_area_list(rpmode, rpmode)]
-        song_list += self.server.music_list_ao2
+        
+        if self.client.hub.replace_music:
+            song_list += self.server.build_music_list_ao2(self.client.hub.music_list)
+        else:
+            song_list += self.server.music_list_ao2 + self.server.build_music_list_ao2(self.client.hub.music_list)
+
         self.client.send_command('SM', *song_list)
 
     def net_cmd_rd(self, _):
@@ -789,7 +794,7 @@ class AOProtocol(asyncio.Protocol):
                     name, length = self.server.get_song_data(self.server.music_list + self.client.hub.music_list, args[0])
 
                 if (self.client.is_mod or self.client.is_cm) and self.client.ambience_editing:
-                    self.client.area.set_ambience(name, self.client.char_id)
+                    self.client.area.set_ambience(name)
                     self.client.send_host_message(
                         'Setting current area\'s ambience to {}.'.format(name))
                     return

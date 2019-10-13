@@ -85,7 +85,7 @@ class HubManager:
 
 		class Area:
 			def __init__(self, area_id, server, hub, name, can_rename=True, background='default', bg_lock=False, pos_lock=None, evidence_mod = 'FFA',
-						locking_allowed = False, can_remove = False, accessible = None, desc = '', locked=False, hidden=False, max_players=-1, move_delay=0):
+						locking_allowed = False, can_remove = False, accessible = None, desc = '', locked=False, hidden=False, max_players=-1, move_delay=0, ambience=''):
 				self.id = area_id
 				self.server = server
 				self.hub = hub
@@ -99,7 +99,7 @@ class HubManager:
 				self.current_music = ''
 				self.current_music_player = ''
 				self.current_music_player_ipid = ''
-				self.current_ambience = ''
+				self.current_ambience = ambience
 				self.is_recording = False
 				self.record_start = 0
 				self.recorded_messages = []
@@ -108,10 +108,11 @@ class HubManager:
 				self.evi_list = EvidenceList()
 				self.locked_by = None
 
-				self.update(name, can_rename, background, bg_lock, pos_lock, evidence_mod, locking_allowed, can_remove, accessible, desc, locked, hidden, max_players, move_delay)
+				self.update(name, can_rename, background, bg_lock, pos_lock, evidence_mod, locking_allowed, can_remove, accessible, desc, locked, hidden, max_players, move_delay, ambience)
 
 			def update(self, name, can_rename=True, background='default', bg_lock=False, pos_lock=None, evidence_mod = 'FFA',
-						locking_allowed = False, can_remove = False, accessible = None, desc = '', locked=False, hidden=False, max_players=-1, move_delay=0):
+						locking_allowed = False, can_remove = False, accessible = None, desc = '', locked=False, hidden=False,
+						max_players=-1, move_delay=0, ambience=''):
 				self.name = name
 				self.can_rename = can_rename
 				self.background = background
@@ -132,9 +133,10 @@ class HubManager:
 				self.is_hidden = hidden
 				self.max_players = max_players
 				self.move_delay = move_delay
+				self.set_ambience(ambience)
 
 			def set_desc(self, dsc):
-				desc = dsc[:512]
+				self.desc = dsc[:512]
 
 			def yaml_save(self):
 				data = OrderedDict()
@@ -152,6 +154,7 @@ class HubManager:
 				data['hidden'] = self.is_hidden
 				data['max_players'] = self.max_players
 				data['move_delay'] = self.move_delay
+				data['ambience'] = self.current_ambience
 				acs = ' '.join(map(str, self.accessible))
 				if len(acs) > 0:
 					data['accessible'] = acs
@@ -194,11 +197,13 @@ class HubManager:
 					area['max_players'] = -1
 				if 'move_delay' not in area:
 					area['move_delay'] = 0
+				if 'ambience' not in area:
+					area['ambience'] = ''
 
 				self.update(area['area'], area['can_rename'], area['background'], area['bglock'],
 								area['poslock'], area['evidence_mod'], area['locking_allowed'],
 								area['can_remove'], area['accessible'], area['desc'], area['locked'],
-								area['hidden'], area['max_players'], area['move_delay'])
+								area['hidden'], area['max_players'], area['move_delay'], area['ambience'])
 
 				self.change_background(self.background) #make sure everyone in the area gets the background update
 
@@ -237,9 +242,9 @@ class HubManager:
 				# self.server.hub_manager.send_arup_players()
 
 			def update_evidence_list(self, client=None):
-				clients = []				
+				clients = []
 				if client == None:
-					clients = self.clients
+					clients = list(self.clients)
 				else:
 					clients.append(client)
 
@@ -247,9 +252,9 @@ class HubManager:
 					c.send_command('LE', *self.get_evidence_list(c)) #Update evidence list as well
 
 			def update_area_list(self, client=None):
-				clients = []				
+				clients = []
 				if client == None:
-					clients = self.clients
+					clients = list(self.clients)
 				else:
 					clients.append(client)
 
@@ -312,7 +317,7 @@ class HubManager:
 				flags = int(MusicEffect.FADE_OUT | MusicEffect.FADE_IN | MusicEffect.SYNC_POS)
 				client.send_command('MC', self.current_ambience, -1, "", length, 1, flags)
 
-			def set_ambience(self, name, cid):
+			def set_ambience(self, name):
 				self.current_ambience = name
 				flags = int(MusicEffect.FADE_OUT | MusicEffect.FADE_IN | MusicEffect.SYNC_POS)
 				self.send_command('MC', self.current_ambience, -1, "", -1, 1, flags)
@@ -410,6 +415,7 @@ class HubManager:
 			self.server = server
 			self.id = hub_id
 
+			self.replace_music = False
 			self.rpmode = False
 			self.master = None
 			self.is_ooc_muted = False
@@ -588,7 +594,7 @@ class HubManager:
 			self.doc = doc
 
 		def new_client(self, client):
-			client.reload_music_list(self.server.music_list + self.music_list)
+			self.refresh_music([client])
 
 		def remove_client(self, client):
 			if client.is_cm:
@@ -739,20 +745,38 @@ class HubManager:
 		def load_music(self, music_ref):
 			try:
 				path = 'storage/musiclists'
+				self.music_list.clear()
 				with open('{}/{}.yaml'.format(path, music_ref), 'r') as stream:
 					self.music_list = yaml.safe_load(stream)
+
+				prepath = ''
 				for item in self.music_list:
-					category_path = item['category'].lower().replace('=', '')
+					if 'replace' in item:
+						self.replace_music = item['replace'] == True
+						if 'use_unique_folder' in item and item['use_unique_folder'] == True:
+							prepath = music_ref + '/'
+						continue
+
+					if 'category' not in item:
+						continue
+
 					for song in item['songs']:
-						song['name'] = '{}/{}/{}'.format(music_ref, category_path, song['name'])
+						song['name'] = prepath + song['name']
 				self.refresh_music()
 			except:
 				print("Unable to load music list {} for hub {}: {}".format(music_ref, self.id, self.name))
-				self.music_list = []
+				self.music_list.clear()
+				self.replace_music = False
+				self.refresh_music()
 		
-		def refresh_music(self):
-			song_list = self.server.music_list + self.music_list
-			for client in self.clients():
+		def refresh_music(self, clients=[]):
+			if len(clients) <= 0:
+				clients = self.clients()
+			if self.replace_music:
+				song_list = self.music_list
+			else:
+				song_list = self.server.music_list + self.music_list
+			for client in clients:
 				client.reload_music_list(song_list)
 
 		def setup_schedule(self, targets, time, affected, message, msgtype):
