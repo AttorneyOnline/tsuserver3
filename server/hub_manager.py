@@ -165,10 +165,12 @@ class HubManager:
 				
 			def update_from_yaml(self, area):
 				if 'can_rename' not in area:
-					area['can_rename'] = False
+					area['can_rename'] = self.can_rename
 				if 'bglock' not in area:
-					area['bglock'] = False
-				if 'poslock' not in area or area['poslock'] == None or area['poslock'] == 'null':
+					area['bglock'] = self.bg_lock
+				if 'poslock' not in area:
+					area['poslock'] = self.pos_lock
+				elif area['poslock'] == None or area['poslock'] == 'null':
 					area['poslock'] = []
 				else:
 					_poslock = area['poslock'].split(' ')
@@ -178,27 +180,29 @@ class HubManager:
 						if pos != "none" and not (pos in area['poslock']):
 							area['poslock'].append(pos)
 				if 'evidence_mod' not in area:
-					area['evidence_mod'] = 'FFA'
+					area['evidence_mod'] = self.evidence_mod
 				if 'locking_allowed' not in area:
-					area['locking_allowed'] = False
+					area['locking_allowed'] = self.locking_allowed
 				if 'can_remove' not in area:
-					area['can_remove'] = False
-				if 'accessible' not in area or len(area['accessible']) <= 0:
+					area['can_remove'] = self.can_remove
+				if 'accessible' not in area:
+					area['accessible'] = self.accessible
+				elif len(area['accessible']) <= 0:
 					area['accessible'] = []
 				else:
 					area['accessible'] = [int(s) for s in str(area['accessible']).split(' ')]
 				if 'desc' not in area:
-					area['desc'] = ''
+					area['desc'] = self.desc
 				if 'locked' not in area:
-					area['locked'] = False
+					area['locked'] = self.is_locked
 				if 'hidden' not in area:
-					area['hidden'] = False
+					area['hidden'] = self.is_hidden
 				if 'max_players' not in area:
-					area['max_players'] = -1
+					area['max_players'] = self.max_players
 				if 'move_delay' not in area:
-					area['move_delay'] = 0
+					area['move_delay'] = self.move_delay
 				if 'ambience' not in area:
-					area['ambience'] = ''
+					area['ambience'] = self.current_ambience
 
 				self.update(area['area'], area['can_rename'], area['background'], area['bglock'],
 								area['poslock'], area['evidence_mod'], area['locking_allowed'],
