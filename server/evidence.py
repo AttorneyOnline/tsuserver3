@@ -44,20 +44,24 @@ class EvidenceList:
 
     def __init__(self):
         self.evidences = []
-        self.poses = {'defense': ['def', 'hld'],
+        self.poses = {'def': ['def'],
+                      'pro': ['pro'],
+                      'wit': ['wit'],
+                      'sea': ['sea'],
+                      'hlp': ['hlp'],
+                      'hld': ['hld'],
+                      'jud': ['jud'],
+                      'jur': ['jur'],
+                      'defense': ['def', 'hld'],
                       'prosecution': ['pro', 'hlp'],
                       'benches': ['def', 'hld', 'pro', 'hlp'],
                       'witness': ['wit', 'sea'],
                       'judge': ['jud', 'jur'],
+                      'all': ['hlp', 'hld', 'wit', 'jud', 'pro', 'def', 'jur', 'sea', ''],
                       'pos': []}
 
     def can_see(self, evi, pos):  # used with hiddenCM ebidense
-        if evi.pos == 'all':
-            return True
-
         for p in evi.pos.strip(' ').split(','):
-            if pos == p:
-                return True
             poslist = self.poses[p]
             if pos in poslist:
                 return True
