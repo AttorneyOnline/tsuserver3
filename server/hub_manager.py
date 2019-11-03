@@ -103,6 +103,7 @@ class HubManager:
 				self.is_recording = False
 				self.record_start = 0
 				self.recorded_messages = []
+				self.last_speaker = None
 				self.mute_ic = False
 
 				self.evi_list = EvidenceList()

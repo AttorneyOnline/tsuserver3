@@ -44,26 +44,11 @@ class EvidenceList:
 
     def __init__(self):
         self.evidences = []
-        self.poses = {'def': ['def'],
-                      'pro': ['pro'],
-                      'wit': ['wit'],
-                      'sea': ['sea'],
-                      'hlp': ['hlp'],
-                      'hld': ['hld'],
-                      'jud': ['jud'],
-                      'jur': ['jur'],
-                      'defense': ['def', 'hld'],
-                      'prosecution': ['pro', 'hlp'],
-                      'benches': ['def', 'hld', 'pro', 'hlp'],
-                      'witness': ['wit', 'sea'],
-                      'judge': ['jud', 'jur'],
-                      'all': ['hlp', 'hld', 'wit', 'jud', 'pro', 'def', 'jur', 'sea', ''],
-                      'pos': []}
 
     def can_see(self, evi, pos):  # used with hiddenCM ebidense
+        pos = pos.strip(' ')
         for p in evi.pos.strip(' ').split(','):
-            poslist = self.poses[p]
-            if pos in poslist:
+            if p == 'all' or (pos != '' and pos == p):
                 return True
         return False
 
@@ -89,7 +74,7 @@ class EvidenceList:
             lines = desc.split('\n')
             cmd = lines[0].strip(' ') #remove all whitespace
             if cmd[:7] == '<owner=' and cmd.endswith('>'):
-                poses = cmd[7:-1]
+                # poses = cmd[7:-1]
                 #broken with extra shorthands
                 # for pos in poses.strip(' ').split(','):
                 #     if not (pos in self.poses['all']) and pos != 'pos':

@@ -231,7 +231,7 @@ class AOProtocol(asyncio.Protocol):
 
         self.client.is_ao2 = True
 
-        self.client.send_command('FL', 'yellowtext', 'flipping', 'customobjections', 'fastloading', 'noencryption',
+        self.client.send_command('FL', 'yellowtext', 'prezoom', 'flipping', 'customobjections', 'fastloading', 'noencryption',
                                  'deskmod', 'evidence', 'cccc_ic_support', 'modcall_reason',
                                  'looping_sfx', 'additive', 'effects')
 
@@ -513,9 +513,11 @@ class AOProtocol(asyncio.Protocol):
         #     text = ' '.join(part[1:])
         if msg_type not in ('chat', '0', '1'):
             return
-        if msg_type == 'chat': #For foregrounds
+        # Disable the meme functionality of desk_mod that makes you selectively hide jud/hld/hlp foregrounds when showing every other foreground due to how many
+        # characters are set up with that by accident, preventing many characters from appearing behind desk for jud unless they were specifically made for it, etc.
+        if msg_type == 'chat':
             msg_type = '1'
-        if anim_type not in (0, 1, 2, 5, 6):
+        if anim_type not in (0, 1, 2, 4, 5, 6):
             return
         if cid != self.client.char_id:
             return
@@ -594,8 +596,8 @@ class AOProtocol(asyncio.Protocol):
         other_folder = ''
 
         confirmed = False
-        if charid_pair > -1:
-            for target in self.client.area.clients:
+        for target in self.client.area.clients:
+            if charid_pair > -1 and not confirmed:
                 if target.char_id == self.client.charid_pair and target.charid_pair == self.client.char_id and target != self.client and target.pos == self.client.pos:
                     confirmed = True
                     other_offset = target.offset_pair
@@ -605,7 +607,7 @@ class AOProtocol(asyncio.Protocol):
                     if (pair_order != ""):
                         charid_pair = "{}^{}".format(charid_pair, pair_order)
                     break
-
+        
         if not confirmed:
             charid_pair = -1
             # offset_pair = 0
@@ -631,11 +633,14 @@ class AOProtocol(asyncio.Protocol):
                         pos = area.pos_lock[0]
                     if pos != None and self.client.pos != pos:
                         self.client.change_position(pos)
+                    if area.last_speaker != self.client:
+                        additive = 0
                     area.send_command('MS', 'broadcast', pre, folder, anim, msg, pos, sfx, anim_type, cid,
                                         sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
                                         charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
                                         nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive, effect)
                     area.set_next_msg_delay(self.parse_msg_delay(msg))
+                    area.last_speaker = self.client
                     
                     logger.log_demo('[IC][' + ', '.join(str(s) for s in ['broadcast', pre, folder, anim, pos, sfx, anim_type, cid,
                                         sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
@@ -654,11 +659,14 @@ class AOProtocol(asyncio.Protocol):
                 pos = self.client.area.pos_lock[0]
             if pos != None and self.client.pos != pos:
                 self.client.change_position(pos)
+            if self.client.area.last_speaker != self.client:
+                additive = 0
             self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
                                         sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
                                         charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
                                         nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive, effect)
             self.client.area.set_next_msg_delay(self.parse_msg_delay(msg))
+            self.client.area.last_speaker = self.client
             
             logger.log_demo('[IC][' + ', '.join(str(s) for s in [msg_type, pre, folder, anim, pos, sfx, anim_type, cid,
                                 sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,

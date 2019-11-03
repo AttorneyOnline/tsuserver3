@@ -2124,11 +2124,11 @@ def ooc_cmd_loadhub(client, arg):
     if arg == '':
         raise ClientError('No save name provided!')
 
-    # try:
-    client.hub.yaml_load(arg)
-    client.send_host_message("Loading hub save data \'{}.yaml\'...".format(arg))
-    # except:
-    #     raise ClientError('No save of that name exists or the file is corrupted!')
+    try:
+        client.hub.yaml_load(arg)
+        client.send_host_message("Loading hub save data \'{}.yaml\'...".format(arg))
+    except:
+        raise ClientError('No save of that name exists or the file is corrupted!')
 
 def ooc_cmd_akick(client, arg):
     if not client.is_mod and not client.is_cm:
