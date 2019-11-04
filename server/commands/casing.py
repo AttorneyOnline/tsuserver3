@@ -17,7 +17,8 @@ __all__ = [
     'ooc_cmd_anncase',
     'ooc_cmd_blockwtce',
     'ooc_cmd_unblockwtce',
-    'ooc_cmd_judgelog'
+    'ooc_cmd_judgelog',
+    'ooc_cmd_afk'
 ]
 
 
@@ -139,7 +140,7 @@ def ooc_cmd_cm(client, arg):
         raise ClientError('You must be authorized to do that.')
 
 
-@mod_only(area_owners=True)
+
 def ooc_cmd_uncm(client, arg):
     """
     Remove a case manager from the current area.
@@ -304,3 +305,5 @@ def ooc_cmd_judgelog(client, arg):
         raise ServerError(
             'There have been no judge actions in this area since start of session.'
         )
+def ooc_cmd_afk(client, arg):
+    client.server.client_manager.toggle_afk(client)

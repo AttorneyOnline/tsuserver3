@@ -137,7 +137,8 @@ class TsuServer3:
         :param transport: asyncio transport
         :returns: created client object
         """
-        c = self.client_manager.new_client(transport)
+        #if not(self.client_manager.new_client_auth(transport)):
+        c = self.client_manager.new_client(transport) #fx this
         c.server = self
         c.area = self.area_manager.default_area()
         c.area.new_client(c)
@@ -362,7 +363,7 @@ class TsuServer3:
 
     def send_arup(self, args):
         """Update the area properties for 2.6 clients.
-        
+
         Playercount:
             ARUP#0#<area1_p: int>#<area2_p: int>#...
         Status:
@@ -372,7 +373,7 @@ class TsuServer3:
         Lockedness:
             ARUP#3##<area1_l: string>##<area2_l: string>#...
 
-        :param args: 
+        :param args:
 
         """
         if len(args) < 2:

@@ -268,8 +268,14 @@ def ooc_cmd_area_kick(client, arg):
         raise ClientError(
             'You must specify a target. Use /area_kick <id> [destination #]')
     arg = arg.split(' ')
-    targets = client.server.client_manager.get_targets(client, TargetType.ID,
-                                                       int(arg[0]), False)
+    if arg[0] == 'afk':
+        trgtype = TargetType.AFK
+        argi = arg[0]
+    else:
+        trgtype = TargetType.ID
+        argi = int(arg[0])
+    targets = client.server.client_manager.get_targets(client, trgtype,
+                                                       argi, False)
     if targets:
         try:
             for c in targets:

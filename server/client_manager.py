@@ -91,7 +91,8 @@ class ClientManager:
                 for x in range(self.server.config['wtce_floodguard']
                                ['times_per_interval'])
             ]
-
+            #security stuff
+            self.clientscon = 0
         def send_raw_message(self, msg):
             """
             Send a raw packet over TCP.
@@ -351,10 +352,11 @@ class ClientManager:
                         info += '[RCM]'
                     else:
                         info += '[CM]'
-                info += f'[{c.id}] {c.char_name}'
+                if c in area.afkers:
+                    info += '[AFK]'
+                info += f' [{c.id}] {c.char_name}'
                 if self.is_mod:
                     info += f' ({c.ipid}): {c.name}'
-
             return info
 
         def send_area_info(self, area_id, mods):
@@ -510,15 +512,32 @@ class ClientManager:
         self.server = server
         self.cur_id = [i for i in range(self.server.config['playerlimit'])]
 
+
+    def new_client_auth(self,transport): #future authentication methods should go here
+        try:
+            maxclients = self.server.config['Multiclient_limit']
+        except:
+            maxclients = 3
+        temp_ipid = database.ipid(transport.get_extra_info('peername')[0])
+        for client in self.server.client_manager.clients:
+            if client.ipid == temp_ipid:
+                if client.clientscon > maxclients:
+                    return False #More than 4 clients have connected, yeet the client
+        return True #Client is all good
     def new_client(self, transport):
         """
         Create a new client, add it to the list, and assign it a player ID.
         :param transport: asyncio transport
         """
+
         c = self.Client(
             self.server, transport, heappop(self.cur_id),
             database.ipid(transport.get_extra_info('peername')[0]))
         self.clients.add(c)
+        temp_ipid = c.ipid
+        for client in self.server.client_manager.clients:
+            if c.ipid == temp_ipid:
+                c.clientscon = c.clientscon + 1
         return c
 
     def remove_client(self, client):
@@ -536,6 +555,10 @@ class ClientManager:
                     if a.is_locked != a.Locked.FREE:
                         a.unlock()
         heappush(self.cur_id, client.id)
+        temp_ipid = client.ipid
+        for client in self.server.client_manager.clients:
+            if client.ipid == temp_ipid:
+                client.clientscon = client.clientscon - 1
         self.clients.remove(client)
 
     def get_targets(self, client, key, value, local=False, single=False):
@@ -578,6 +601,9 @@ class ClientManager:
                 elif key == TargetType.IPID:
                     if client.ipid == value:
                         targets.append(client)
+                elif key == TargetType.AFK:
+                     if client in area.afkers:
+                        targets.append(client)
         return targets
 
     def get_muted_clients(self):
@@ -595,3 +621,12 @@ class ClientManager:
             if client.is_ooc_muted:
                 clients.append(client)
         return clients
+    def toggle_afk(self, client):
+            if client in client.area.afkers:
+                    client.area.broadcast_ooc('{} is no longer AFK.'.format(client.char_name))
+                    client.send_ooc('You are no longer AFK. Welcome back!') #Making the server a bit friendly wouldn't hurt, right?
+                    client.area.afkers.remove(client)
+            else:
+                    client.area.broadcast_ooc('{} is now AFK.'.format(client.char_name))
+                    client.send_ooc('You are now AFK. Have a good day!')
+                    client.area.afkers.append(client)
