@@ -69,3 +69,6 @@ wtce_floodguard:
 
 # How many subscripts zalgo is stripped by; 3 is recommended as not to hurt special language diacritics
 zalgo_tolerance: 3
+
+#How many simultanious connections a user can do to the server. If this option is removed the default value is 3
+Multiclient_limit: 4
