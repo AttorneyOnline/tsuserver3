@@ -140,7 +140,7 @@ def ooc_cmd_cm(client, arg):
         raise ClientError('You must be authorized to do that.')
 
 
-
+@mod_only(area_owners=True)
 def ooc_cmd_uncm(client, arg):
     """
     Remove a case manager from the current area.
