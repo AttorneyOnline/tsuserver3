@@ -137,8 +137,7 @@ class TsuServer3:
         :param transport: asyncio transport
         :returns: created client object
         """
-        #if not(self.client_manager.new_client_auth(transport)):
-        c = self.client_manager.new_client(transport) #fx this
+        c = self.client_manager.new_client(transport) 
         c.server = self
         c.area = self.area_manager.default_area()
         c.area.new_client(c)
@@ -182,6 +181,8 @@ class TsuServer3:
 
         if isinstance(self.config['modpass'], str):
             self.config['modpass'] = {'default': {'password': self.config['modpass']}}
+        if 'multiclient_limit' not in self.config:
+            self.config['multiclient_limit'] = 16
 
     def load_characters(self):
         """Load the character list from a YAML file."""

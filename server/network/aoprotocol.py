@@ -108,9 +108,10 @@ class AOProtocol(asyncio.Protocol):
         :param transport: the transport object
         """
         self.client = self.server.new_client(transport)
-        if not(self.server.client_manager.new_client_auth(transport)):
+        if not self.server.client_manager.new_client_preauth(transport):
             self.client.send_command('BD', 'DOS Prevention. Maximum clients reached. \n Disconnect one of your clients to continue')
             self.client.disconnect
+            return
         # Client needs to send CHECK#% within the timeout - otherwise,
         # it will be automatically dropped.
         self.ping_timeout = asyncio.get_event_loop().call_later(
@@ -435,9 +436,7 @@ class AOProtocol(asyncio.Protocol):
             return
         if '4' in button and "<and>" not in button:
             if not button.isdigit():
-               print("NOOOOO" + button)
                return
-        print(button)
         if evidence < 0:
             return
         if ding not in (0, 1):
