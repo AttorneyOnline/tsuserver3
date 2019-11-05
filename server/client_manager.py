@@ -268,6 +268,8 @@ class ClientManager:
                     'This area is spectatable, but not free - you cannot talk in-character unless invited.'
                 )
 
+			if self in self.area.afkers:
+                self.server.client_manager.toggle_afk(self)
             if self.area.jukebox:
                 self.area.remove_jukebox_vote(self, True)
 
@@ -581,8 +583,6 @@ class ClientManager:
         if key == TargetType.ALL:
             for nkey in range(6):
                 targets += self.get_targets(client, nkey, value, local)
-        elif key == TargetType.AFK:
-            return list(area.afkers)
         for area in areas:
             for client in area.clients:
                 if key == TargetType.IP:
@@ -601,6 +601,9 @@ class ClientManager:
                         targets.append(client)
                 elif key == TargetType.IPID:
                     if client.ipid == value:
+                        targets.append(client)
+				elif key == TargetType.AFK:
+                     if client in area.afkers:
                         targets.append(client)
         return targets
 
