@@ -71,4 +71,4 @@ wtce_floodguard:
 zalgo_tolerance: 3
 
 #How many simultanious connections a user can do to the server. If this option is removed the default value is 3
-Multiclient_limit: 4
+multiclient_limit: 16
