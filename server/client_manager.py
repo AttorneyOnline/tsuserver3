@@ -513,11 +513,9 @@ class ClientManager:
         self.cur_id = [i for i in range(self.server.config['playerlimit'])]
 
 
-    def new_client_auth(self,transport): #future authentication methods should go here
-        try:
-            maxclients = self.server.config['Multiclient_limit']
-        except:
-            maxclients = 3
+    def new_client_preauth(self,transport): #future pre authentication methods for security concerns should go here
+
+        maxclients = self.server.config['multiclient_limit']
         temp_ipid = database.ipid(transport.get_extra_info('peername')[0])
         for client in self.server.client_manager.clients:
             if client.ipid == temp_ipid:
@@ -537,7 +535,7 @@ class ClientManager:
         temp_ipid = c.ipid
         for client in self.server.client_manager.clients:
             if c.ipid == temp_ipid:
-                c.clientscon = c.clientscon + 1
+                c.clientscon += 1
         return c
 
     def remove_client(self, client):
@@ -558,9 +556,10 @@ class ClientManager:
         temp_ipid = client.ipid
         for client in self.server.client_manager.clients:
             if client.ipid == temp_ipid:
-                client.clientscon = client.clientscon - 1
+                client.clientscon -= 1
         self.clients.remove(client)
-
+        if client in client.area.afkers:
+            client.area.afkers.remove(client)
     def get_targets(self, client, key, value, local=False, single=False):
         """
         Find players by a combination of identifying data.
@@ -582,6 +581,8 @@ class ClientManager:
         if key == TargetType.ALL:
             for nkey in range(6):
                 targets += self.get_targets(client, nkey, value, local)
+        elif key == TargetType.AFK:
+            return list(area.afkers)
         for area in areas:
             for client in area.clients:
                 if key == TargetType.IP:
@@ -600,9 +601,6 @@ class ClientManager:
                         targets.append(client)
                 elif key == TargetType.IPID:
                     if client.ipid == value:
-                        targets.append(client)
-                elif key == TargetType.AFK:
-                     if client in area.afkers:
                         targets.append(client)
         return targets
 
