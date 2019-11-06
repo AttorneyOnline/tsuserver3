@@ -137,7 +137,7 @@ class TsuServer3:
         :param transport: asyncio transport
         :returns: created client object
         """
-        c = self.client_manager.new_client(transport) 
+        c = self.client_manager.new_client(transport)
         c.server = self
         c.area = self.area_manager.default_area()
         c.area.new_client(c)
