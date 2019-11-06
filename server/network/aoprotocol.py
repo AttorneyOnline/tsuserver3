@@ -675,7 +675,7 @@ class AOProtocol(asyncio.Protocol):
 
                 if self.client.area.jukebox:
                     showname = ''
-                    if len(args)>3:
+                    if len(args) > 3:
                         showname = args[2]
                         if len(
                                 showname
