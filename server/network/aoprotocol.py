@@ -110,7 +110,7 @@ class AOProtocol(asyncio.Protocol):
         self.client = self.server.new_client(transport)
         if not self.server.client_manager.new_client_preauth(transport):
             self.client.send_command('BD', 'DOS Prevention. Maximum clients reached. \n Disconnect one of your clients to continue')
-            self.client.disconnect
+            self.client.disconnect()
             return
         # Client needs to send CHECK#% within the timeout - otherwise,
         # it will be automatically dropped.
