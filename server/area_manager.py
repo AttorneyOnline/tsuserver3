@@ -87,7 +87,7 @@ class AreaManager:
             self.jukebox_prev_char_id = -1
 
             self.owners = []
-
+            self.afkers = []
         class Locked(Enum):
             """Lock state of an area."""
             FREE = 1,

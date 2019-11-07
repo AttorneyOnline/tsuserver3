@@ -181,6 +181,8 @@ class TsuServer3:
 
         if isinstance(self.config['modpass'], str):
             self.config['modpass'] = {'default': {'password': self.config['modpass']}}
+        if 'multiclient_limit' not in self.config:
+            self.config['multiclient_limit'] = 16
 
     def load_characters(self):
         """Load the character list from a YAML file."""
@@ -362,7 +364,7 @@ class TsuServer3:
 
     def send_arup(self, args):
         """Update the area properties for 2.6 clients.
-        
+
         Playercount:
             ARUP#0#<area1_p: int>#<area2_p: int>#...
         Status:
@@ -372,7 +374,7 @@ class TsuServer3:
         Lockedness:
             ARUP#3##<area1_l: string>##<area2_l: string>#...
 
-        :param args: 
+        :param args:
 
         """
         if len(args) < 2:
