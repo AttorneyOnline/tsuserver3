@@ -324,6 +324,8 @@ class ClientManager:
             self.send_command('HP', 2, self.area.hp_pro)
             self.send_command('BN', self.area.background, self.pos)
             self.send_command('LE', *self.area.get_evidence_list(self))
+            if self.area.desc != '':
+                self.send_host_message('Area Description: {}'.format(self.area.desc))
 
         def get_area_list(self, hidden=False, accessible=False):
             area_list = []

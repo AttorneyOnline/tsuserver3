@@ -774,7 +774,7 @@ def ooc_cmd_desc(client, arg):
             raise AreaError(
                 'Hub is {} - only the CM can change /desc for this area.'.format(client.hub.status))
         client.area.desc = arg
-        client.area.send_host_message('[{}]{} changed the area description.'.format(client.id, client.get_char_name(True)))
+        client.area.send_host_message('[{}]{} changed the area description to:'.format(client.id, client.get_char_name(True), arg))
         logger.log_server('Changed document to: {}'.format(arg))
 
 def ooc_cmd_descadd(client, arg):
