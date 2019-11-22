@@ -19,6 +19,9 @@
 
 
 # Install dependencies in case one is missing
+
+import sys, subprocess
+
 def check_deps():
     py_version = sys.version_info
     if py_version.major < 3 or (py_version.major < 3 and py_version.minor < 7):
@@ -31,7 +34,6 @@ def check_deps():
     except ModuleNotFoundError:
         print('Installing dependencies for you...')
         try:
-            import sys, subprocess
             subprocess.check_call([
                 sys.executable, '-m', 'pip', 'install', '--user', '-r',
                 'requirements.txt'
