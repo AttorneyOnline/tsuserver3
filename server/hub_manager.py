@@ -137,7 +137,7 @@ class HubManager:
 				self.set_ambience(ambience)
 
 			def set_desc(self, dsc):
-				self.desc = dsc[:512]
+				self.desc = dsc
 
 			def yaml_save(self):
 				data = OrderedDict()

@@ -773,9 +773,12 @@ def ooc_cmd_desc(client, arg):
         if client.hub.status.lower().startswith('rp-strict') and not client.is_cm:
             raise AreaError(
                 'Hub is {} - only the CM can change /desc for this area.'.format(client.hub.status))
-        client.area.desc = arg
-        client.area.send_host_message('[{}]{} changed the area description to:'.format(client.id, client.get_char_name(True), arg))
-        logger.log_server('Changed document to: {}'.format(arg))
+        client.area.set_desc(arg)
+        desc = arg[:128]
+        if len(arg) > len(desc):
+            desc += "... Use /desc to read the rest."
+        client.area.send_host_message('[{}]{} changed the area description to: {}'.format(client.id, client.get_char_name(True), desc))
+        logger.log_server('Changed description to: {}'.format(arg))
 
 def ooc_cmd_descadd(client, arg):
     if len(arg) == 0:
