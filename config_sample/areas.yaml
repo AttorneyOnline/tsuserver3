@@ -1,130 +1,70 @@
 - hub: Main
   allow_cm: false
-  doc: 'Haha this is not a doc though'
-  areas:
-    - area: Basement
-      background: gs4
-      desc: 'spamzone'
-      bglock: true
-      poslock: None
-      can_rename: false
-      evidence_mod: FFA
-      locking_allowed: false
-      iniswap_allowed: true
-    - area: Lounge
-      background: gs4
-      desc: 'woah'
-      bglock: true
-      poslock: None
-      can_rename: false
-      evidence_mod: FFA
-      locking_allowed: false
-      iniswap_allowed: true
-
-- hub: Courtrooms
-  allow_cm: false
-  areas:
-    - area: Courtroom 1
-      background: gs5
-      desc: 'woah'
-      bglock: false
-      poslock: None
-      can_rename: false
-      evidence_mod: CM
-      locking_allowed: true
-      iniswap_allowed: true
-    - area: Courtroom 2
-      background: gs4
-      desc: 'woah'
-      bglock: false
-      poslock: None
-      can_rename: false
-      evidence_mod: Mods
-      locking_allowed: false
-      iniswap_allowed: true
-    - area: Courtroom 2
-      background: gs4
-      desc: 'woah'
-      bglock: false
-      poslock: None
-      can_rename: false
-      evidence_mod: HiddenCM
-      locking_allowed: true
-      iniswap_allowed: true
-
-#Examples of multi-area general roleplaying set-ups below
-- hub: Roleplay 1
-  allow_cm: true
-  max_areas: 50
-  doc: 'A roleplay zone'
+  doc: 'Welcome! Please use /motd'
+  iniswap_allowed: true
+  showname_changes_allowed: true
+  shouts_allowed: true
+  iniswap_allowed: true
+  blankposting_allowed: true
+  music_ref: legacy
   areas:
     - area: Lobby
-      background: gs5
-      desc: 'woah'
+      background: OCCourtNew
+      desc: 'This is where you end up when you first join the server. Enjoy your stay!'
       bglock: false
       poslock: None
       can_rename: false
-      can_remove: false
-      evidence_mod: HiddenCM
-      locking_allowed: true
-      iniswap_allowed: true
-
-- hub: Roleplay 2
+      evidence_mod: FFA
+      locking_allowed: false
+    - area: Lounge
+      background: OCCourtCafe
+      desc: 'The place where you literally chill out.'
+      bglock: false
+      poslock: None
+      can_rename: false
+      evidence_mod: FFA
+      locking_allowed: false
+    - area: Laboratory
+      background: default
+      desc: 'Place where you test stuff.'
+      bglock: false
+      poslock: None
+      can_rename: false
+      evidence_mod: FFA
+      locking_allowed: false
+    - area: Arcade 1
+      background: OCArcade
+      desc: 'This is where you play your mafias or whatever.'
+      bglock: false
+      poslock: None
+      can_rename: false
+      evidence_mod: FFA
+      locking_allowed: false
+    - area: Arcade 2
+      background: OCArcade
+      desc: 'This is where you play your mafias or whatever.'
+      bglock: false
+      poslock: None
+      can_rename: false
+      evidence_mod: FFA
+      locking_allowed: false
+- hub: Roleplay
   allow_cm: true
   max_areas: 100
-  doc: 'A pre-made roleplay zone'
+  doc: 'A roleplay zone'
+  iniswap_allowed: true
+  showname_changes_allowed: true
+  shouts_allowed: true
+  iniswap_allowed: true
+  blankposting_allowed: true
+  music_ref: legacy
   areas:
     - area: Lobby
-      background: gs5
-      desc: 'woah'
+      background: OCCourtNew
+      desc: 'The main dropzone for the RP.'
       bglock: false
       poslock: None
       can_rename: false
       can_remove: false
-      evidence_mod: HiddenCM
-      locking_allowed: true
-      iniswap_allowed: true
-    - area: Place 1
-      background: DGSJapanCourt
-      desc: 'woah'
-      bglock: false
-      poslock: wit
-      accessible: 2 3 4
-      can_rename: true
-      can_remove: true
       evidence_mod: FFA
-      locking_allowed: true
-      iniswap_allowed: true
-    - area: Place 2
-      background: DGSJapanCourt
-      desc: 'woah'
-      bglock: false
-      poslock: jud
-      accessible: 1
-      can_rename: true
-      can_remove: true
-      evidence_mod: FFA
-      locking_allowed: true
-      iniswap_allowed: true
-    - area: Place 3
-      background: DGSJapanCourt
-      desc: 'woah'
-      bglock: false
-      poslock: def
-      accessible: 1 4
-      can_rename: true
-      can_remove: true
-      evidence_mod: FFA
-      locking_allowed: true
-      iniswap_allowed: true
-    - area: Place 4
-      background: DGSJapanCourt
-      desc: 'woah'
-      bglock: false
-      poslock: def
-      accessible: 1 3
-      can_rename: true
-      can_remove: true
-      evidence_mod: FFA
-      locking_allowed: true
-      iniswap_allowed: true
+      locking_allowed: false
