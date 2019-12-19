@@ -2,11 +2,11 @@
 
 A Python-based server for Attorney Online.
 
-Requires Python 3.6+ and PyYAML.
+Requires Python 3.7+ and PyYAML.
 
 ## How to use
 
-* Install the latest version of Python. **Python 2 will not work**, as tsuserver3 depends on async/await, which can only be found on Python 3.5 and newer.
+* Install the latest version of Python. **Python 2 will not work**, as tsuserver3 depends on async/await, which can only be found on Python 3.7 and newer.
   - If your system supports it, it is recommended that you use a separate virtual environment, such as [Anaconda](https://www.continuum.io/downloads) for Windows, or [virtualenv](https://virtualenv.pypa.io/en/stable/) for everyone else (it runs itself using Python).
 * Open Command Prompt or your terminal, and change to the directory where you downloaded tsuserver3 to. You can do this in two ways:
   - Go up one folder above the tsuserver3 folder, Shift + right click the tsuserver3 folder, and click `Open command window here`. This is the easiest method.
@@ -82,13 +82,16 @@ Requires Python 3.6+ and PyYAML.
     - Makes you a CM of this area.
 ### CM Commands
 * **area_lock**
-    - Locks your area.
+    - Locks your area, preventing anyone outside of the invite list from speaking IC.
 * **area_unlock**
     - Unlocks your area.
 * **invite** "ID"
     - Adds target in invite list of your area.
-* **area_kick** "ID"
-    - Kicks target and all his(same for all genders) multi-accs from your area and remove him from invite-list.
+* **uninvite** "ID"
+    - Removes target from invite list of your area.
+* **forcepos** "position" [target]
+    - Forcibly change [target]'s position. Leave blank to affect everyone in area.
+    - Positions: 'def', 'pro', 'hld', 'hlp', 'jud', 'wit'
 ### Mod Commands
 * **login** "Password"
 * **gm** "Message" 
@@ -105,6 +108,8 @@ Requires Python 3.6+ and PyYAML.
     - Kicks a player back to the character select screen. If no ID was entered then target yourself.
 * **kick** "IPID" 
     - Kicks the targets with this IPID.
+* **area_kick** "ID" [area]
+    - Kicks target and all of their multi-accs from your area to area 0 or specified [area] and removes them from invite-list should the area be locked.
 * **ban** "IPID" 
     - Bans the IPID (hdid is linked to ipid so all bans happens in a same time).
 * **unban** "IPID" 
@@ -126,6 +131,10 @@ Requires Python 3.6+ and PyYAML.
 * **blockdj** "target"
     - Mutes the target from changing music. 
 * **unblockdj** "target"
+    - Undo previous command.
+* **blockwtce** "target"
+    - Blocks the target from using Witness Testimony/Cross Examination signs.
+* **unblockwtce** "target"
     - Undo previous command.
 * **evidence_mod** <MOD>
     - Changes evidence_mod in this area. Possible values: FFA, CM, HiddenCM, Mods

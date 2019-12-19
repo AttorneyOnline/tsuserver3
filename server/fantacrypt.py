@@ -3,17 +3,21 @@
 # Copyright (C) 2016 argoneus <argoneuscze@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# GNU Affero General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+"""
+An awful encryption scheme from another era.
+"""
 
 # fantacrypt was a mistake, just hardcoding some numbers is good enough
 
@@ -25,6 +29,11 @@ CRYPT_KEY = 5
 
 
 def fanta_decrypt(data):
+    """
+    Decrypt data.
+    :param data: hex string
+
+    """
     data_bytes = [int(data[x:x + 2], 16) for x in range(0, len(data), 2)]
     key = CRYPT_KEY
     ret = ''
@@ -36,10 +45,16 @@ def fanta_decrypt(data):
 
 
 def fanta_encrypt(data):
+    """
+    Encrypt data.
+    :param data: message string
+    :returns: hex-encoded message
+    """
     key = CRYPT_KEY
     ret = ''
     for char in data:
         val = ord(char) ^ ((key & 0xffff) >> 8)
-        ret += binascii.hexlify(val.to_bytes(1, byteorder='big')).decode().upper()
+        ret += binascii.hexlify(val.to_bytes(
+            1, byteorder='big')).decode().upper()
         key = ((val + key) * CRYPT_CONST_1) + CRYPT_CONST_2
     return ret
