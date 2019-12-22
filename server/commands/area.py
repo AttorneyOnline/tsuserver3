@@ -19,7 +19,9 @@ __all__ = [
     'ooc_cmd_area_unlock',
     'ooc_cmd_invite',
     'ooc_cmd_uninvite',
-    'ooc_cmd_area_kick'
+    'ooc_cmd_area_kick',
+    'ooc_cmd_getafk',
+    'ooc_cmd_getafks'
 ]
 
 
@@ -147,7 +149,7 @@ def ooc_cmd_getarea(client, arg):
     Show information about the current area.
     Usage: /getarea
     """
-    client.send_area_info(client.area.id, False)
+    client.send_area_info(client.area.id, False, False)
 
 
 def ooc_cmd_getareas(client, arg):
@@ -155,8 +157,24 @@ def ooc_cmd_getareas(client, arg):
     Show information about all areas.
     Usage: /getareas
     """
-    client.send_area_info(-1, False)
+    client.send_area_info(-1, False, False)
 
+
+def ooc_cmd_getafk(client, arg):
+    """
+    Show currently AFK-ing players in the current area.
+    Usage: /getafk
+    """
+    #client.area.broadcast_ooc(client.area.afkers)
+    client.send_area_info(client.area.id, False, True)
+
+
+def ooc_cmd_getafks(client, arg):
+    """
+    Show currently AFK-ing players in all areas.
+    Usage: /getafks
+    """
+    client.send_area_info(-1, False, True)
 
 def ooc_cmd_area_lock(client, arg):
     """

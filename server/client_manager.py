@@ -314,7 +314,7 @@ class ClientManager:
                     msg += ' [*]'
             self.send_ooc(msg)
 
-        def get_area_info(self, area_id, mods):
+        def get_area_info(self, area_id, mods, afk_check):
             """
             Get information about a specific area.
             :param area_id: area ID
@@ -334,14 +334,18 @@ class ClientManager:
                 area.Locked.SPECTATABLE: '[SPECTATABLE]',
                 area.Locked.LOCKED: '[LOCKED]'
             }
-            info += f'[{area.abbreviation}]: [{len(area.clients)} users][{area.status}]{lock[area.is_locked]}'
-
+            if afk_check == True:
+                list1 = area.afkers
+            else:
+                list1 = area.clients
+            info += f'[{area.abbreviation}]: [{len(list1)} users][{area.status}]{lock[area.is_locked]}'
+            
             sorted_clients = []
-            for client in area.clients:
+            for client in list1:
                 if (not mods) or client.is_mod:
                     sorted_clients.append(client)
             for owner in area.owners:
-                if not (mods or owner in area.clients):
+                if not (mods or owner in list1):
                     sorted_clients.append(owner)
             if not sorted_clients:
                 return ''
@@ -350,7 +354,7 @@ class ClientManager:
             for c in sorted_clients:
                 info += '\r\n'
                 if c in area.owners:
-                    if not c in area.clients:
+                    if not c in list1:
                         info += '[RCM]'
                     else:
                         info += '[CM]'
@@ -361,7 +365,7 @@ class ClientManager:
                     info += f' ({c.ipid}): {c.name}'
             return info
 
-        def send_area_info(self, area_id, mods):
+        def send_area_info(self, area_id, mods, afk_check):
             """
             Send information over OOC about a specific area.
             :param area_id: area ID
@@ -374,18 +378,34 @@ class ClientManager:
                 cnt = 0
                 info = '\n== Area List =='
                 for i in range(len(self.server.area_manager.areas)):
-                    if len(self.server.area_manager.areas[i].clients
-                           ) > 0 or len(
+                    if afk_check == True:
+                        client_list1 = self.server.area_manager.areas[i].afkers
+                        get_area1 = self.get_area_info(i, mods, True)
+                    else:
+                        client_list1 = self.server.area_manager.areas[i].clients
+                        get_area1 = self.get_area_info(i, mods, False)
+                    if len(client_list1) > 0 or len(
                                self.server.area_manager.areas[i].owners) > 0:
-                        cnt += len(self.server.area_manager.areas[i].clients)
-                        info += f'{self.get_area_info(i, mods)}'
-                info = f'Current online: {cnt}{info}'
+                        cnt += len(client_list1)
+                        info += f'{get_area1}'
+                if afk_check == True:
+                    info = f'Current AFK-ers: {cnt}{info}'
+                else:
+                    info = f'Current online: {cnt}{info}'
             else:
                 try:
-                    area_client_cnt = len(
-                        self.server.area_manager.areas[area_id].clients)
-                    info = f'People in this area: {area_client_cnt}'
-                    info += self.get_area_info(area_id, mods)
+                    if afk_check == True:
+                        client_list2 = self.server.area_manager.areas[area_id].afkers
+                        get_area2 = self.get_area_info(area_id, mods, True)
+                    else:
+                        client_list2 = self.server.area_manager.areas[area_id].clients
+                        get_area2 = self.get_area_info(area_id, mods, False)
+                    area_client_cnt = len(client_list2)
+                    if afk_check == True:
+                        info = f'People AFK-ing in this area: {area_client_cnt}'
+                    else:
+                        info = f'People in this area: {area_client_cnt}'
+                    info += get_area2
 
                 except AreaError:
                     raise
