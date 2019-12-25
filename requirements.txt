@@ -2,3 +2,5 @@ PyYAML
 websockets
 arrow
 timeparse-plus
+pygubu
+jsonpatch
