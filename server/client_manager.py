@@ -314,11 +314,12 @@ class ClientManager:
                     msg += ' [*]'
             self.send_ooc(msg)
 
-        def get_area_info(self, area_id, mods):
+        def get_area_info(self, area_id, mods, afk_check):
             """
             Get information about a specific area.
             :param area_id: area ID
             :param mods: limit player list to mods
+            :param afk_check: Limit player list to afks
             :returns: information as a string
             """
             info = '\r\n'
@@ -334,14 +335,18 @@ class ClientManager:
                 area.Locked.SPECTATABLE: '[SPECTATABLE]',
                 area.Locked.LOCKED: '[LOCKED]'
             }
-            info += f'[{area.abbreviation}]: [{len(area.clients)} users][{area.status}]{lock[area.is_locked]}'
-
+            if afk_check:
+                player_list = area.afkers
+            else:
+                player_list = area.clients
+            info += f'[{area.abbreviation}]: [{len(player_list)} users][{area.status}]{lock[area.is_locked]}'
+            
             sorted_clients = []
-            for client in area.clients:
+            for client in player_list:
                 if (not mods) or client.is_mod:
                     sorted_clients.append(client)
             for owner in area.owners:
-                if not (mods or owner in area.clients):
+                if not (mods or owner in player_list):
                     sorted_clients.append(owner)
             if not sorted_clients:
                 return ''
@@ -350,7 +355,7 @@ class ClientManager:
             for c in sorted_clients:
                 info += '\r\n'
                 if c in area.owners:
-                    if not c in area.clients:
+                    if not c in player_list:
                         info += '[RCM]'
                     else:
                         info += '[CM]'
@@ -361,11 +366,12 @@ class ClientManager:
                     info += f' ({c.ipid}): {c.name}'
             return info
 
-        def send_area_info(self, area_id, mods):
+        def send_area_info(self, area_id, mods, afk_check):
             """
             Send information over OOC about a specific area.
             :param area_id: area ID
             :param mods: limit player list to mods
+            :param afk_check: Limit player list to afks
             """
             # if area_id is -1 then return all areas. If mods is True then return only mods
             info = ''
@@ -374,18 +380,34 @@ class ClientManager:
                 cnt = 0
                 info = '\n== Area List =='
                 for i in range(len(self.server.area_manager.areas)):
-                    if len(self.server.area_manager.areas[i].clients
-                           ) > 0 or len(
+                    client_list = self.server.area_manager.areas[i]
+                    if afk_check:
+                        client_list = client_list.afkers
+                    else:
+                        client_list = client_list.clients
+                    area_info = self.get_area_info(i, mods, afk_check)
+                    if len(client_list) > 0 or len(
                                self.server.area_manager.areas[i].owners) > 0:
-                        cnt += len(self.server.area_manager.areas[i].clients)
-                        info += f'{self.get_area_info(i, mods)}'
-                info = f'Current online: {cnt}{info}'
+                        cnt += len(client_list)
+                        info += f'{area_info}'
+                if afk_check:
+                    info = f'Current AFK-ers: {cnt}{info}'
+                else:
+                    info = f'Current online: {cnt}{info}'
             else:
                 try:
-                    area_client_cnt = len(
-                        self.server.area_manager.areas[area_id].clients)
-                    info = f'People in this area: {area_client_cnt}'
-                    info += self.get_area_info(area_id, mods)
+                    client_list = self.server.area_manager.areas[area_id]
+                    if afk_check:
+                        client_list = client_list.afkers
+                    else:
+                        client_list = client_list.clients
+                    area_info = self.get_area_info(area_id, mods, afk_check)
+                    area_client_cnt = len(client_list)
+                    if afk_check:
+                        info = f'People AFK-ing in this area: {area_client_cnt}'
+                    else:
+                        info = f'People in this area: {area_client_cnt}'
+                    info += area_info
 
                 except AreaError:
                     raise
@@ -622,6 +644,7 @@ class ClientManager:
             if client.is_ooc_muted:
                 clients.append(client)
         return clients
+        
     def toggle_afk(self, client):
             if client in client.area.afkers:
                     client.area.broadcast_ooc('{} is no longer AFK.'.format(client.char_name))
