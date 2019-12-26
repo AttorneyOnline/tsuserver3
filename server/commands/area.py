@@ -176,6 +176,7 @@ def ooc_cmd_getafks(client, arg):
     """
     client.send_area_info(-1, False, True)
 
+
 def ooc_cmd_area_lock(client, arg):
     """
     Prevent users from joining the current area.

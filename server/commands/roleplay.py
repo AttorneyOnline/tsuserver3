@@ -234,3 +234,4 @@ def ooc_cmd_8ball(client, arg):
     ability_dice = client.area.ability_dice['8ball']
     client.area.broadcast_ooc('{} asked a question: {} and the answer is: {}.'.format(
         client.char_name, arg, rolla(ability_dice)[2]))
+        

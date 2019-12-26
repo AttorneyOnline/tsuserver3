@@ -644,6 +644,7 @@ class ClientManager:
             if client.is_ooc_muted:
                 clients.append(client)
         return clients
+        
     def toggle_afk(self, client):
             if client in client.area.afkers:
                     client.area.broadcast_ooc('{} is no longer AFK.'.format(client.char_name))
