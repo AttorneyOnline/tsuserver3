@@ -47,7 +47,7 @@ Requires Python 3.7+ and PyYAML.
 * **getareas** 
     - Shows all characters in all areas.
 * **afk**
-    - Gives you the afk status.
+    - Toggles the afk status on and off.
 * **getafk**
     - Displays players with the afk status in the current area.
 * **getafks**
