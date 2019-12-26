@@ -76,6 +76,10 @@ Requires Python 3.7+ and PyYAML.
     - Positions: 'def', 'pro', 'hld', 'hlp', 'jud', 'wit'.
 * **bg** "background" 
     - Changes the current background.
+* **notecard** "message"
+    - Write a notecard that can only be revealed by a CM.
+* **notecard_clear** 
+    - Erase the notecard written by you.
 * **roll** "max" 
     - Rolls a 1D6 if blank.
 * **rolla_set** "set"
@@ -106,6 +110,8 @@ Requires Python 3.7+ and PyYAML.
 * **forcepos** "position" "target"
     - Forcibly change target's position. Leave blank to affect everyone in area.
     - Positions: 'def', 'pro', 'hld', 'hlp', 'jud', 'wit'
+* **notecard_reveal**
+    - Reveal all notecards and their owners in the area.
 ### Mod Commands
 * **login** "Password"
     - Logs you in as a moderator.
