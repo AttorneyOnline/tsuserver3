@@ -31,51 +31,59 @@ Requires Python 3.7+ and PyYAML.
 ### User Commands
 
 * **help**
-    - Links to this readme
+    - Links to this readme.
 * **g** "message" 
-    - Sends a serverwide message
+    - Sends a serverwide message.
 * **toggleglobal** 
-    - Toggles global on and off
+    - Toggles global on and off.
 * **need** "message" 
-    - Sends a serverwide advert
+    - Sends a serverwide advert.
 * **toggleadverts** 
-    - Toggles adverts on and off
+    - Toggles adverts on and off.
 * **area** "area number" 
-    - Displays all areas when blank, swaps to area with number
+    - Displays all areas when blank, swaps to area with number.
 * **getarea** 
-    - Shows the current characters in your area
+    - Shows the current characters in your area.
 * **getareas** 
-    - Shows all characters in all areas
+    - Shows all characters in all areas.
 * **doc** "url" 
-    - Gives the doc url if blank, updates the doc url
+    - Gives the doc url if blank, updates the doc url.
 * **cleardoc** 
-    - Clears the doc url
+    - Clears the doc url.
 * **status** "status" 
-    - Shows current areas status if blank, updates the status
-    - Statuses: 'idle', 'building-open', 'building-full', 'casing-open', 'casing-full', 'recess'
+    - Shows current areas status if blank, updates the status.
+    - Statuses: 'idle', 'building-open', 'building-full', 'casing-open', 'casing-full', 'recess'.
 * **pm** "target" "Message" 
-    - PMs the target, can either be character name or OOC name
+    - PMs the target, can either be character name or OOC name.
 * **pmmute**
-    - Disables all incoming PMs
+    - Disables all incoming PMs.
 * **charselect** 
-    - Puts you back to char select screen
+    - Puts you back to char select screen.
 * **reload** 
-    - Reloads your character ini
+    - Reloads your character ini.
 * **switch** "character" 
-    - Quick switch to a character
+    - Quick switch to a character.
 * **randomchar** 
-    - Randomly chooses a character
+    - Randomly chooses a character.
 * **pos** "position" 
-    - Changes your position in the court
-    - Positions: 'def', 'pro', 'hld', 'hlp', 'jud', 'wit'
+    - Changes your position in the court.
+    - Positions: 'def', 'pro', 'hld', 'hlp', 'jud', 'wit'.
 * **bg** "background" 
-    - Changes the current background
+    - Changes the current background.
 * **roll** "max" 
-    - Rolls a 1D6 if blank
+    - Rolls a 1D6 if blank.
+* **rolla_set** "set"
+    - Changes the current ability set.
+* **rolla**
+    - Rolls an ability depending on the current ability set.
+    - Details specified in the `dice.yaml` file.
 * **coinflip**
-    - Flips a coin
+    - Flips a coin.
+* **8ball** "question"
+    - Outputs a random answer to a given question.
+    - Replies can be changed in the `dice.yaml` file.
 * **currentmusic** 
-    - Displays the current music
+    - Displays the current music.
 * **evi_swap** <id1> <id2>
     - Swaps <id1> and <id2> evidence.
 * **cm**
@@ -89,21 +97,22 @@ Requires Python 3.7+ and PyYAML.
     - Adds target in invite list of your area.
 * **uninvite** "ID"
     - Removes target from invite list of your area.
-* **forcepos** "position" [target]
-    - Forcibly change [target]'s position. Leave blank to affect everyone in area.
+* **forcepos** "position" "target"
+    - Forcibly change target's position. Leave blank to affect everyone in area.
     - Positions: 'def', 'pro', 'hld', 'hlp', 'jud', 'wit'
 ### Mod Commands
 * **login** "Password"
+    - Logs you in as a moderator.
 * **gm** "Message" 
-    - Sends a serverwide message with mod tag
+    - Sends a serverwide message with mod tag.
 * **lm** "Message" 
-    - Sends an area OOC message with mod tag
+    - Sends an area OOC message with mod tag.
 * **play** "song.mp3" 
-    - Plays a song
+    - Plays a song.
 * **judgelog** 
-    - Displays the last judge actions in the current area
+    - Displays the last judge actions in the current area.
 * **announce** "Message" 
-    - Sends a serverwide announcement
+    - Sends a serverwide announcement.
 * **charselect** "ID"
     - Kicks a player back to the character select screen. If no ID was entered then target yourself.
 * **kick** "IPID" 
@@ -113,31 +122,31 @@ Requires Python 3.7+ and PyYAML.
 * **ban** "IPID" 
     - Bans the IPID (hdid is linked to ipid so all bans happens in a same time).
 * **unban** "IPID" 
-    - Unbans the specified IPID .
+    - Unbans the specified IPID.
 * **mute** "Target" 
-    - Mutes the target from all IC actions, can be IP or Character name
+    - Mutes the target from all IC actions, can be IP or Character name.
 * **unmute** "Target","all" 
-    - Unmutes the target, "all" will unmute all muted clients
+    - Unmutes the target, "all" will unmute all muted clients.
 * **oocmute** "Target" 
     - Mutes the target from all OOC actions via OOC-name.
 * **oocunmute** "Target" 
     - Unmutes the target.
 * **bglock** 
-    - Toggles the background lock in the current area
+    - Toggles the background lock in the current area.
 * **disemvowel** "Target"
-    - Removes the vowels from everything said by the target
+    - Removes the vowels from everything said by the target.
 * **undisemvowel** "Target"
-    - Lifts the disemvowel curse from the target
+    - Lifts the disemvowel curse from the target.
 * **blockdj** "target"
-    - Mutes the target from changing music. 
+    - Blocks the target from changing music.
 * **unblockdj** "target"
-    - Undo previous command.
+    - Unblocks the target from changing music.
 * **blockwtce** "target"
     - Blocks the target from using Witness Testimony/Cross Examination signs.
 * **unblockwtce** "target"
-    - Undo previous command.
+    - Unblocks the target from using Witness Testimony/Cross Examination signs.
 * **evidence_mod** <MOD>
-    - Changes evidence_mod in this area. Possible values: FFA, CM, HiddenCM, Mods
+    - Changes evidence_mod in this area. Possible values: FFA, CM, HiddenCM, Mods.
         * **FFA**
             - Everyone can add, edit and remove evidence.
         * **Mods**
