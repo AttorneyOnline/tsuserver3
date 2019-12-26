@@ -319,6 +319,7 @@ class ClientManager:
             Get information about a specific area.
             :param area_id: area ID
             :param mods: limit player list to mods
+            :param afk_check: Limit player list to afks
             :returns: information as a string
             """
             info = '\r\n'
@@ -334,18 +335,18 @@ class ClientManager:
                 area.Locked.SPECTATABLE: '[SPECTATABLE]',
                 area.Locked.LOCKED: '[LOCKED]'
             }
-            if afk_check == True:
-                list1 = area.afkers
+            if afk_check:
+                player_list = area.afkers
             else:
-                list1 = area.clients
-            info += f'[{area.abbreviation}]: [{len(list1)} users][{area.status}]{lock[area.is_locked]}'
+                player_list = area.clients
+            info += f'[{area.abbreviation}]: [{len(player_list)} users][{area.status}]{lock[area.is_locked]}'
             
             sorted_clients = []
-            for client in list1:
+            for client in player_list:
                 if (not mods) or client.is_mod:
                     sorted_clients.append(client)
             for owner in area.owners:
-                if not (mods or owner in list1):
+                if not (mods or owner in player_list):
                     sorted_clients.append(owner)
             if not sorted_clients:
                 return ''
@@ -354,7 +355,7 @@ class ClientManager:
             for c in sorted_clients:
                 info += '\r\n'
                 if c in area.owners:
-                    if not c in list1:
+                    if not c in player_list:
                         info += '[RCM]'
                     else:
                         info += '[CM]'
@@ -370,6 +371,7 @@ class ClientManager:
             Send information over OOC about a specific area.
             :param area_id: area ID
             :param mods: limit player list to mods
+            :param afk_check: Limit player list to afks
             """
             # if area_id is -1 then return all areas. If mods is True then return only mods
             info = ''
@@ -378,34 +380,34 @@ class ClientManager:
                 cnt = 0
                 info = '\n== Area List =='
                 for i in range(len(self.server.area_manager.areas)):
-                    if afk_check == True:
-                        client_list1 = self.server.area_manager.areas[i].afkers
-                        get_area1 = self.get_area_info(i, mods, True)
+                    client_list = self.server.area_manager.areas[i]
+                    if afk_check:
+                        client_list = client_list.afkers
                     else:
-                        client_list1 = self.server.area_manager.areas[i].clients
-                        get_area1 = self.get_area_info(i, mods, False)
-                    if len(client_list1) > 0 or len(
+                        client_list = client_list.clients
+                    area_info = self.get_area_info(i, mods, afk_check)
+                    if len(client_list) > 0 or len(
                                self.server.area_manager.areas[i].owners) > 0:
-                        cnt += len(client_list1)
-                        info += f'{get_area1}'
-                if afk_check == True:
+                        cnt += len(client_list)
+                        info += f'{area_info}'
+                if afk_check:
                     info = f'Current AFK-ers: {cnt}{info}'
                 else:
                     info = f'Current online: {cnt}{info}'
             else:
                 try:
-                    if afk_check == True:
-                        client_list2 = self.server.area_manager.areas[area_id].afkers
-                        get_area2 = self.get_area_info(area_id, mods, True)
+                    client_list = self.server.area_manager.areas[area_id]
+                    if afk_check:
+                        client_list = client_list.afkers
                     else:
-                        client_list2 = self.server.area_manager.areas[area_id].clients
-                        get_area2 = self.get_area_info(area_id, mods, False)
-                    area_client_cnt = len(client_list2)
-                    if afk_check == True:
+                        client_list = client_list.clients
+                    area_info = self.get_area_info(area_id, mods, afk_check)
+                    area_client_cnt = len(client_list)
+                    if afk_check:
                         info = f'People AFK-ing in this area: {area_client_cnt}'
                     else:
                         info = f'People in this area: {area_client_cnt}'
-                    info += get_area2
+                    info += area_info
 
                 except AreaError:
                     raise

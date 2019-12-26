@@ -227,15 +227,10 @@ def ooc_cmd_8ball(client, arg):
     Usage: /8ball <question>
     """
     
-    try:
-        arg = arg.strip()
-        if len(arg) == 0:
-            raise ArgumentError('You need to ask a question')
-        rolla_reload(client.area)
-        ability_dice = client.area.ability_dice['8ball']
-        client.area.broadcast_ooc('{} asked a question: {} and the answer is: {}.'.format(
-            client.char_name, arg, rolla(ability_dice)[2]))
-    except Exception as error:
-        error_mes = ", ".join([str(s) for s in error.args])
-        raise ClientError(error_mes)
-        
+    arg = arg.strip()
+    if len(arg) == 0:
+        raise ArgumentError('You need to ask a question')
+    rolla_reload(client.area)
+    ability_dice = client.area.ability_dice['8ball']
+    client.area.broadcast_ooc('{} asked a question: {} and the answer is: {}.'.format(
+        client.char_name, arg, rolla(ability_dice)[2]))
