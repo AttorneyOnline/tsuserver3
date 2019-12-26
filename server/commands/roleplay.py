@@ -15,7 +15,8 @@ __all__ = [
     'ooc_cmd_rolla_reload',
     'ooc_cmd_rolla_set',
     'ooc_cmd_rolla',
-    'ooc_cmd_coinflip'
+    'ooc_cmd_coinflip',
+    'ooc_cmd_8ball'
 ]
 
 
@@ -181,6 +182,13 @@ def ooc_cmd_rolla_set(client, arg):
     client.send_ooc(f"Set ability set to {arg}.")
 
 
+def rolla(ability_dice):
+    max_roll = ability_dice['max'] if 'max' in ability_dice else 6
+    roll = random.randint(1, max_roll)
+    ability = ability_dice[roll] if roll in ability_dice else "Nothing happens"
+    return (roll, max_roll, ability)
+
+
 def ooc_cmd_rolla(client, arg):
     """
     Roll a specially labeled set of dice (ability dice).
@@ -192,9 +200,7 @@ def ooc_cmd_rolla(client, arg):
         raise ClientError(
             'You must set your ability set using /rolla_set <name>.')
     ability_dice = client.area.ability_dice[client.ability_dice_set]
-    max_roll = ability_dice['max'] if 'max' in ability_dice else 6
-    roll = random.randint(1, max_roll)
-    ability = ability_dice[roll] if roll in ability_dice else "Nothing happens"
+    roll, max_roll, ability = rolla(ability_dice)
     client.area.broadcast_ooc('{} rolled a {} (out of {}): {}.'.format(
         client.char_name, roll, max_roll, ability))
     database.log_room('rolla', client, client.area,
@@ -213,3 +219,19 @@ def ooc_cmd_coinflip(client, arg):
     client.area.broadcast_ooc('{} flipped a coin and got {}.'.format(
         client.char_name, flip))
     database.log_room('coinflip', client, client.area, message=flip)
+
+
+def ooc_cmd_8ball(client, arg):
+    """
+    Answers a question. The result is shown publicly.
+    Usage: /8ball <question>
+    """
+    
+    arg = arg.strip()
+    if len(arg) == 0:
+        raise ArgumentError('You need to ask a question')
+    rolla_reload(client.area)
+    ability_dice = client.area.ability_dice['8ball']
+    client.area.broadcast_ooc('{} asked a question: {} and the answer is: {}.'.format(
+        client.char_name, arg, rolla(ability_dice)[2]))
+        
