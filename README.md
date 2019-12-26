@@ -46,6 +46,12 @@ Requires Python 3.7+ and PyYAML.
     - Shows the current characters in your area.
 * **getareas** 
     - Shows all characters in all areas.
+* **afk**
+    - Gives you the afk status.
+* **getafk**
+    - Displays players with the afk status in the current area.
+* **getafks**
+    - Displays players with the afk status in all areas.
 * **doc** "url" 
     - Gives the doc url if blank, updates the doc url.
 * **cleardoc** 
