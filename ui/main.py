@@ -31,6 +31,7 @@ def hack_etv(etv: EditableTreeview):
     updateWnds = etv._EditableTreeview__updateWnds
     etv._EditableTreeview__updateWnds = lambda: None
     etv.bind('<Double-Button-1>', updateWnds)
+    etv.bind('<Return>', updateWnds)
     etv.forceUpdateWnds = updateWnds
 
     def inplace_widget(self, col):
@@ -168,11 +169,11 @@ class TsuserverConfig:
             }
 
             if isinstance(v, dict):
-                values = ('', desc)
+                values = ('')
             elif isinstance(v, list):
-                values = ('', desc)
-            else:   
-                values = (v, desc)
+                values = ('')
+            else:
+                values = (v,)
 
             self.etv.insert(parent, tk.END, id, text=name, values=values)
 
@@ -216,7 +217,7 @@ class TsuserverConfig:
                     }
                     self.unpack_dict(option.value, item)
                     values = self.etv.item(item, 'values')
-                    values = ('<object>', *values[1:])
+                    values = ('', *values[1:])
                     self.etv.item(item, values=values)
                     self._check_config()
                 else:
@@ -226,8 +227,7 @@ class TsuserverConfig:
                     return
 
             # Show a button.
-            self.etv.inplace_custom(col, item, ttk.Button(self.etv, text='+'))
-            def add_mod_entry(_event):
+            def add_mod_entry():
                 msg = _('Enter the profile name of the mod:')
                 profile = tk.simpledialog.askstring(_('New Mod'), msg)
                 if profile is None:
@@ -249,22 +249,42 @@ class TsuserverConfig:
                 }, item)
                 self._check_config()
 
-            self.etv.inplace_widget(col).bind('<Button-1>', add_mod_entry)
+            self.etv.inplace_custom(col, item, ttk.Button(self.etv, text='+', command=add_mod_entry))
             self.etv.forceUpdateWnds()
         elif edit_type == 'object':
             # Special case for mod entries: Add a minus button.
             up = '/'.join(item.split('/')[:-1])
             if up != '' and self.etv_meta_dict[up]['type'] == 'mod':
-                self.etv.inplace_custom(col, item, ttk.Button(self.etv, text='-'))
-                def remove_mod_entry(_event):
+                def remove_mod_entry():
                     profile = item.split('/')[-1]
                     msg = _(f'Mod profile \'{profile}\' will be deleted.')
                     if tk.messagebox.askokcancel('Delete Mod', msg):
                         self.etv.delete(item)
                     self._check_config()
 
-                self.etv.inplace_widget(col).bind('<Button-1>', remove_mod_entry)
+                self.etv.inplace_custom(col, item, ttk.Button(self.etv, text='-', command=remove_mod_entry))
                 self.etv.forceUpdateWnds()
+        elif edit_type == 'multiline':
+            def edit_multiline():
+                option = walk(self.options, item)
+                class MultilineDialog(tk.simpledialog.Dialog):
+                    def body(self, master):
+                        self.text = tk.Text(master, width=50, height=12, wrap=tk.WORD)
+                        self.text.grid(row=0)
+                        self.text.insert(tk.END, option.value)
+                        return self.text
+
+                    def apply(self):
+                        self.result = self.text.get(1.0, tk.END)
+
+                dialog = MultilineDialog(self.main_window, title='Edit Multiline')
+                if dialog.result is not None:
+                    option.value = dialog.result.strip()
+                    self.etv._inplace_vars[col].set(option.value)
+                    self.etv.item(item, values=(option.value,))
+                    self._check_config()
+
+            self.etv.inplace_custom(col, item, ttk.Button(self.etv, text='...', command=edit_multiline))
         else:
             warnings.warn(f'options dict has invalid edit type {edit_type}')
 
