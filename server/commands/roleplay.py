@@ -185,7 +185,7 @@ def ooc_cmd_rolla_set(client, arg):
 def rolla(ability_dice):
     max_roll = ability_dice['max'] if 'max' in ability_dice else 6
     roll = random.randint(1, max_roll)
-    ability = ability_dice[roll] if roll in ability_dice else "Nothing happens"
+    ability = ability_dice[roll] if roll in ability_dice else "Nothing happens."
     return (roll, max_roll, ability)
 
 
