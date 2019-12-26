@@ -92,9 +92,9 @@ class TsuserverConfig:
         self.options_orig = {
             '$config': { 'name': 'General' },
             'config': yaml.safe_load(open('config/config.yaml')),
-            '$music': { 'name': 'Music' },
+            '$music': { 'name': 'Music', 'type': 'music' },
             'music': yaml.safe_load(open('config/music.yaml')),
-            '$areas': { 'name': 'Rooms' },
+            '$areas': { 'name': 'Rooms', 'type': 'rooms' },
             'areas': yaml.safe_load(open('config/areas.yaml')),
             '$backgrounds': { 'name': 'Backgrounds' },
             'backgrounds': yaml.safe_load(open('config/backgrounds.yaml')),
@@ -125,11 +125,14 @@ class TsuserverConfig:
         self.btn_apply.state(state)
         self.btn_revert.state(state)
 
-    def unpack_items(self, it: Iterable, *args, **kwargs):
-        kv = dict(
-            **{str(k): v for k, v in enumerate(it)},
-            **{f'${str(k)}': { 'style': 'array_index' } for k, v in enumerate(it)}
-        )
+    def unpack_items(self, it: Iterable, *args, key_name=None, **kwargs):
+        if key_name is not None:
+            kv = dict(
+                **{str(k): v for k, v in enumerate(it)},
+                **{f'${k}': { 'name': v[key_name] } for k, v in enumerate(it)}
+            )
+        else:
+            kv = {str(k): v for k, v in enumerate(it)}
         return self.unpack_dict(kv, *args, **kwargs)
 
     def unpack_dict(self, d: dict, parent=''):
@@ -140,6 +143,7 @@ class TsuserverConfig:
             id = f'{parent}/{k}'
             name = k
             desc = ''
+            key_name = None
 
             edit_types = {
                 str: 'string',
@@ -157,15 +161,25 @@ class TsuserverConfig:
                     edit_type = metadata['type']
                 if 'name' in metadata:
                     name = metadata['name']
+                if 'key_name' in metadata:
+                    key_name = metadata['key_name']
             except KeyError:
                 pass
             except TypeError: # when the iterable is not a dictionary
                 pass
 
+            if edit_type == 'music':
+                key_name = 'category'
+                for category in v:
+                    category['$songs'] = { 'key_name': 'name' }
+            elif edit_type == 'rooms':
+                key_name = 'area'
+
             self.etv_meta_dict[id] = {
                 'name': name,
                 'desc': desc,
-                'type': edit_type
+                'type': edit_type,
+                'key_name': key_name
             }
 
             if isinstance(v, dict):
@@ -180,7 +194,7 @@ class TsuserverConfig:
             if isinstance(v, dict):
                 self.unpack_dict(v, parent=id)
             elif isinstance(v, list):
-                self.unpack_items(v, parent=id)
+                self.unpack_items(v, key_name=key_name, parent=id)
 
     def _on_inplace_edit(self, _event):
         """Called when an value is activated for editing."""

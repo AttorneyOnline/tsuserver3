@@ -996,18 +996,6 @@
                     <property name="width">100</property>
                   </object>
                 </child>
-                <child>
-                  <object class="ttk.Treeview.Column" id="col_desc">
-                    <property name="column_anchor">e</property>
-                    <property name="heading_anchor">w</property>
-                    <property name="minwidth">20</property>
-                    <property name="stretch">true</property>
-                    <property name="text" translatable="yes">Description</property>
-                    <property name="tree_column">false</property>
-                    <property name="visible">true</property>
-                    <property name="width">200</property>
-                  </object>
-                </child>
               </object>
             </child>
           </object>
