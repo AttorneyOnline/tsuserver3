@@ -48,10 +48,9 @@ Requires Python 3.7+ and PyYAML.
     - Shows all characters in all areas.
 * **afk**
     - Toggles the afk status on and off.
-* **getafk**
-    - Displays players with the afk status in the current area.
-* **getafks**
-    - Displays players with the afk status in all areas.
+* **getafk** [all]
+    - Displays players with the afk status in the current area when   
+    blank, the [all] argument displays afkers in all areas.
 * **doc** "url" 
     - Gives the doc url if blank, updates the doc url.
 * **cleardoc** 
