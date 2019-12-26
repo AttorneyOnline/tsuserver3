@@ -3,6 +3,7 @@ import warnings
 import yaml
 from copy import deepcopy
 from types import MethodType
+from typing import Iterable
 
 import pygubu
 from pygubu.widgets.editabletreeview import EditableTreeview
@@ -67,9 +68,6 @@ class TsuserverConfig:
         hack_etv(self.etv)
         builder.connect_callbacks(self)
 
-        # self.etv.insert('', tk.END, '/', text="Root", values=("root",))
-        # self.etv.insert('/', tk.END, '/hello', text="Hello", values=("hello",))
-        # self.etv.insert('/', tk.END, '/world', text="World", values=("world",))
         self._reload_config()
         self.etv.bind('<<TreeviewInplaceEdit>>', self._on_inplace_edit)
         #self.etv.bind('<Double-Button-1>', self._on_inplace_edit)
@@ -90,7 +88,18 @@ class TsuserverConfig:
         self._delete_inplace_widgets()
 
         self.etv_meta_dict = {}
-        self.options_orig = yaml.safe_load(open('config/config.yaml'))
+        self.options_orig = {
+            '$config': { 'name': 'General' },
+            'config': yaml.safe_load(open('config/config.yaml')),
+            '$music': { 'name': 'Music' },
+            'music': yaml.safe_load(open('config/music.yaml')),
+            '$areas': { 'name': 'Rooms' },
+            'areas': yaml.safe_load(open('config/areas.yaml')),
+            '$backgrounds': { 'name': 'Backgrounds' },
+            'backgrounds': yaml.safe_load(open('config/backgrounds.yaml')),
+            '$characters': { 'name': 'Characters' },
+            'characters': yaml.safe_load(open('config/characters.yaml'))
+        }
         self.options = deepcopy(self.options_orig)
         self.unpack_dict(self.options)
         self._check_config()
@@ -115,6 +124,13 @@ class TsuserverConfig:
         self.btn_apply.state(state)
         self.btn_revert.state(state)
 
+    def unpack_items(self, it: Iterable, *args, **kwargs):
+        kv = dict(
+            **{str(k): v for k, v in enumerate(it)},
+            **{f'${str(k)}': { 'style': 'array_index' } for k, v in enumerate(it)}
+        )
+        return self.unpack_dict(kv, *args, **kwargs)
+
     def unpack_dict(self, d: dict, parent=''):
         for k, v in d.items():
             if k[0] == '$':
@@ -128,7 +144,8 @@ class TsuserverConfig:
                 str: 'string',
                 int: 'number',
                 dict: 'object',
-                bool: 'boolean'
+                bool: 'boolean',
+                list: 'list'
             }
             edit_type = edit_types[type(v)]
             try:
@@ -141,6 +158,8 @@ class TsuserverConfig:
                     name = metadata['name']
             except KeyError:
                 pass
+            except TypeError: # when the iterable is not a dictionary
+                pass
 
             self.etv_meta_dict[id] = {
                 'name': name,
@@ -149,14 +168,18 @@ class TsuserverConfig:
             }
 
             if isinstance(v, dict):
-                values = ('<object>', desc)
-            else:
+                values = ('', desc)
+            elif isinstance(v, list):
+                values = ('', desc)
+            else:   
                 values = (v, desc)
 
             self.etv.insert(parent, tk.END, id, text=name, values=values)
 
             if isinstance(v, dict):
                 self.unpack_dict(v, parent=id)
+            elif isinstance(v, list):
+                self.unpack_items(v, parent=id)
 
     def _on_inplace_edit(self, _event):
         """Called when an value is activated for editing."""
@@ -231,7 +254,7 @@ class TsuserverConfig:
         elif edit_type == 'object':
             # Special case for mod entries: Add a minus button.
             up = '/'.join(item.split('/')[:-1])
-            if self.etv_meta_dict[up]['type'] == 'mod':
+            if up != '' and self.etv_meta_dict[up]['type'] == 'mod':
                 self.etv.inplace_custom(col, item, ttk.Button(self.etv, text='-'))
                 def remove_mod_entry(_event):
                     profile = item.split('/')[-1]
