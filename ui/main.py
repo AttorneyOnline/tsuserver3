@@ -11,10 +11,9 @@ from pygubu.widgets.editabletreeview import EditableTreeview
 import jsonpatch
 
 import tkinter as tk
-import tkinter.ttk as ttk
 import tkinter.messagebox
-import tkinter.simpledialog
 
+from . import edittypes
 
 t = gettext.translation("tsuserver_config", "translations")
 _ = t.gettext
@@ -55,6 +54,9 @@ def walk(d: dict, path):
         @value.setter
         def value(self, val):
             elem[path[-1]] = val
+        @value.deleter
+        def value(self):
+            del elem[path[-1]]
 
     return DictValue()
 
@@ -105,8 +107,28 @@ class TsuserverConfig:
         self.unpack_dict(self.options)
         self._check_config()
 
+    def _make_patch(self):
+        patch = jsonpatch.make_patch(self.options_orig,
+                                     deepcopy(self.options)).patch
+
+        # Ignore all patches involving metadata
+        patch = [p for p in patch if '/$' not in p['path']]
+        def prune_dollars(d: dict):
+            for k, v in list(d.items()):
+                if isinstance(k, str) and k[0] == '$':
+                    del d[k]
+                elif isinstance(v, dict):
+                    prune_dollars(v)
+                elif isinstance(v, list):
+                    prune_dollars(enumerate(v))
+        for p in patch:
+            if 'value' in p:
+                prune_dollars(p['value'])
+
+        return patch
+
     def _apply_changes(self):
-        patch = jsonpatch.make_patch(self.options_orig, self.options).patch
+        patch = self._make_patch()
         changes_str = ''
         msg = _('The following changes will be COMMITTED:\n')
         for entry in patch:
@@ -120,7 +142,7 @@ class TsuserverConfig:
             self.options_orig = deepcopy(self.options)
 
     def _check_config(self):
-        patch = jsonpatch.make_patch(self.options_orig, self.options).patch
+        patch = self._make_patch()
         state = ['!disabled' if len(patch) > 0 else 'disabled']
         self.btn_apply.state(state)
         self.btn_revert.state(state)
@@ -145,35 +167,26 @@ class TsuserverConfig:
             desc = ''
             key_name = None
 
-            edit_types = {
-                str: 'string',
-                int: 'number',
-                dict: 'object',
-                bool: 'boolean',
-                list: 'list'
-            }
-            edit_type = edit_types[type(v)]
             try:
                 metadata = d['$' + k]
-                if 'desc' in metadata:
-                    desc = metadata['desc']
-                if 'type' in metadata:
-                    edit_type = metadata['type']
-                if 'name' in metadata:
-                    name = metadata['name']
-                if 'key_name' in metadata:
-                    key_name = metadata['key_name']
             except KeyError:
-                pass
-            except TypeError: # when the iterable is not a dictionary
-                pass
+                metadata = {}
+            try:
+                edit_type = metadata['type']
+            except KeyError:
+                edit_type = type(v)
 
-            if edit_type == 'music':
-                key_name = 'category'
-                for category in v:
-                    category['$songs'] = { 'key_name': 'name' }
-            elif edit_type == 'rooms':
-                key_name = 'area'
+            edit_type = edittypes.get(edit_type)(self.etv, metadata)
+
+            edit_type.preprocess(v)
+
+            if 'desc' in metadata:
+                desc = metadata['desc']
+            if 'name' in metadata:
+                name = metadata['name']
+            if 'key_name' in metadata:
+                key_name = metadata['key_name']
+
 
             self.etv_meta_dict[id] = {
                 'name': name,
@@ -182,14 +195,8 @@ class TsuserverConfig:
                 'key_name': key_name
             }
 
-            if isinstance(v, dict):
-                values = ('')
-            elif isinstance(v, list):
-                values = ('')
-            else:
-                values = (v,)
-
-            self.etv.insert(parent, tk.END, id, text=name, values=values)
+            self.etv.insert(parent, tk.END, id, text=name,
+                            values=edit_type.row(v))
 
             if isinstance(v, dict):
                 self.unpack_dict(v, parent=id)
@@ -206,101 +213,28 @@ class TsuserverConfig:
 
         meta = self.etv_meta_dict[item]
         edit_type = meta['type']
-        if edit_type == 'string':
-            self.etv.inplace_entry(col, item)
-        elif edit_type == 'number':
-            self.etv.inplace_spinbox(col, item, 0, 65536, 1)
-        elif edit_type == 'boolean':
-            self.etv.inplace_checkbutton(col, item)
-        elif edit_type == 'none':
-            pass
-        elif edit_type == 'mod':
-            option = walk(self.options, item)
-            if isinstance(option.value, str):
-                # Old-style modpass. Ask if user wants to convert it to a
-                # new-style pass.
-                msg = _('You have an old-style modpass. Do you wish to convert ' \
-                        'it to a multi-profile modpass?')
-                if 'ignore_prompt' not in meta and \
-                        tk.messagebox.askyesno(message=msg, icon='warning'):
-                    modpass = option.value
-                    option.value = {
-                        'default': {
-                            'password': modpass
-                        }
-                    }
-                    self.unpack_dict(option.value, item)
-                    values = self.etv.item(item, 'values')
-                    values = ('', *values[1:])
-                    self.etv.item(item, values=values)
-                    self._check_config()
-                else:
-                    # Fine. Screw you then.
-                    meta['ignore_prompt'] = True
-                    self.etv.inplace_entry(col, item)
-                    return
 
-            # Show a button.
-            def add_mod_entry():
-                msg = _('Enter the profile name of the mod:')
-                profile = tk.simpledialog.askstring(_('New Mod'), msg)
-                if profile is None:
-                    return
-                profile = profile.strip()
-                if profile == '':
-                    return
+        me = self
+        class Proxy:
+            def unpack_dict(self, d, item):
+                me.unpack_dict(d, item)
+                me._check_config()
 
-                modpass_list = walk(self.options, item).value
-                if profile in modpass_list:
-                    msg = _('That profile already exists.')
-                    tk.messagebox.showerror(_('New Mod'), msg)
+            @property
+            def option(self):
+                return walk(me.options, item).value
 
-                modpass_list[profile] = {
-                    'password': 'modpass'
-                }
-                self.unpack_dict({
-                    profile: modpass_list[profile]
-                }, item)
-                self._check_config()
+            @option.setter
+            def option(self, value):
+                walk(me.options, item).value = value
+                me._check_config()
 
-            self.etv.inplace_custom(col, item, ttk.Button(self.etv, text='+', command=add_mod_entry))
-            self.etv.forceUpdateWnds()
-        elif edit_type == 'object':
-            # Special case for mod entries: Add a minus button.
-            up = '/'.join(item.split('/')[:-1])
-            if up != '' and self.etv_meta_dict[up]['type'] == 'mod':
-                def remove_mod_entry():
-                    profile = item.split('/')[-1]
-                    msg = _(f'Mod profile \'{profile}\' will be deleted.')
-                    if tk.messagebox.askokcancel('Delete Mod', msg):
-                        self.etv.delete(item)
-                    self._check_config()
+            @option.deleter
+            def option(self):
+                del walk(me.options, item).value
+                me._check_config()
 
-                self.etv.inplace_custom(col, item, ttk.Button(self.etv, text='-', command=remove_mod_entry))
-                self.etv.forceUpdateWnds()
-        elif edit_type == 'multiline':
-            def edit_multiline():
-                option = walk(self.options, item)
-                class MultilineDialog(tk.simpledialog.Dialog):
-                    def body(self, master):
-                        self.text = tk.Text(master, width=50, height=12, wrap=tk.WORD)
-                        self.text.grid(row=0)
-                        self.text.insert(tk.END, option.value)
-                        return self.text
-
-                    def apply(self):
-                        self.result = self.text.get(1.0, tk.END)
-
-                dialog = MultilineDialog(self.main_window, title='Edit Multiline')
-                if dialog.result is not None:
-                    option.value = dialog.result.strip()
-                    self.etv._inplace_vars[col].set(option.value)
-                    self.etv.item(item, values=(option.value,))
-                    self._check_config()
-
-            self.etv.inplace_custom(col, item, ttk.Button(self.etv, text='...', command=edit_multiline))
-        else:
-            warnings.warn(f'options dict has invalid edit type {edit_type}')
+        edit_type.on_edit(col, item, Proxy())
 
         try:
             self.etv.inplace_widget(col).focus_force()
@@ -313,19 +247,11 @@ class TsuserverConfig:
 
         val = self.etv.item(item, 'values')[0]
         edit_type = self.etv_meta_dict[item]['type']
-        if edit_type == 'string':
-            pass
-        elif edit_type == 'number':
-            val = int(val)
-        elif edit_type == 'boolean':
-            val = True if val == 'True' else False
-        elif edit_type == 'mod' and type(val) == str:
-            pass
-        else:
+        real_val = edit_type.value(val)
+        if real_val is None:
             return
 
-        walk(self.options, item).value = val
-
+        walk(self.options, item).value = real_val
         self._check_config()
 
     def _delete_inplace_widgets(self):
