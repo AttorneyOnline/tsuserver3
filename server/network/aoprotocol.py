@@ -107,7 +107,11 @@ class AOProtocol(asyncio.Protocol):
 
         :param transport: the transport object
         """
-        self.client = self.server.new_client(transport)
+        try:
+            self.client = self.server.new_client(transport)
+        except ClientError:
+            return
+
         if not self.server.client_manager.new_client_preauth(transport):
             self.client.send_command('BD', 'DOS Prevention. Maximum clients reached. \n Disconnect one of your clients to continue')
             self.client.disconnect()
@@ -127,8 +131,10 @@ class AOProtocol(asyncio.Protocol):
         :param exc: reason
 
         """
-        self.server.remove_client(self.client)
-        self.ping_timeout.cancel()
+        if self.client is not None:
+            self.server.remove_client(self.client)
+        if self.ping_timeout is not None:
+            self.ping_timeout.cancel()
 
     def get_messages(self):
         """Parses out full messages from the buffer.
