@@ -123,8 +123,10 @@ class TsuserverConfig:
                     prune_dollars(enumerate(v))
         for p in patch:
             if 'value' in p:
-                prune_dollars(p['value'])
-
+                if isinstance(p['value'], dict):
+                    prune_dollars(p['value'])
+                elif isinstance(p['value'], list):
+                    prune_dollars(enumerate(p['value']))
         return patch
 
     def _apply_changes(self):
