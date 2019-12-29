@@ -551,9 +551,15 @@ class ClientManager:
         Create a new client, add it to the list, and assign it a player ID.
         :param transport: asyncio transport
         """
+        try:
+            user_id = heappop(self.cur_id)
+        except IndexError:
+            transport.write('KK#This server is full.')
+            transport.close()
+            return
 
         c = self.Client(
-            self.server, transport, heappop(self.cur_id),
+            self.server, transport, user_id,
             database.ipid(transport.get_extra_info('peername')[0]))
         self.clients.add(c)
         temp_ipid = c.ipid
