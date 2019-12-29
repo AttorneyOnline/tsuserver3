@@ -554,9 +554,8 @@ class ClientManager:
         try:
             user_id = heappop(self.cur_id)
         except IndexError:
-            transport.write('KK#This server is full.')
-            transport.close()
-            return
+            transport.write(b'BD#This server is full.#%')
+            raise ClientError
 
         c = self.Client(
             self.server, transport, user_id,
