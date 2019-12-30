@@ -132,8 +132,10 @@ Requires Python 3.7+ and PyYAML.
     - Kicks the targets with this IPID.
 * **area_kick** "ID" [area]
     - Kicks target and all of their multi-accs from your area to area 0 or specified [area] and removes them from invite-list should the area be locked.
-* **ban** "IPID" 
-    - Bans the IPID (hdid is linked to ipid so all bans happens in a same time).
+* **banhdid** "IPID" "reason" "duration"
+    - Bans the HDID (HDID is linked to ipid so both bans happens in a same time).
+* **ban** "IPID" "reason" "duration"
+    - Bans the IPID.
 * **unban** "IPID" 
     - Unbans the specified IPID.
 * **mute** "Target" 
