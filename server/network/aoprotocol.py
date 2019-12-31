@@ -110,6 +110,7 @@ class AOProtocol(asyncio.Protocol):
         try:
             self.client = self.server.new_client(transport)
         except ClientError:
+            transport.close()
             return
 
         if not self.server.client_manager.new_client_preauth(transport):
