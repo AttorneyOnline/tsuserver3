@@ -104,6 +104,8 @@ class AreaManager:
         def remove_client(self, client):
             """Remove a disconnected client from the area."""
             self.clients.remove(client)
+            if client in self.afkers:
+                self.afkers.remove(client)
             if len(self.clients) == 0:
                 self.change_status('IDLE')
             if client.char_id != -1:
