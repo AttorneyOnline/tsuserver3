@@ -15,23 +15,51 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-def reload():
-    """Reload all submodules."""
-    import sys, inspect, importlib
+def submodules():
+    """Get all command-related submodules."""
+    import sys, inspect
     me = sys.modules[__name__]
     for _, v in inspect.getmembers(me):
         if inspect.ismodule(v):
-            m = importlib.reload(v)
-            for f in m.__all__:
-                me.__dict__[f] = m.__dict__[f]
+            yield v
+
+
+def reload():
+    """Reload all submodules."""
+    import sys, importlib
+    me = sys.modules[__name__]
+    for module in submodules():
+        m = importlib.reload(module)
+        for f in m.__all__:
+            me.__dict__[f] = m.__dict__[f]
 
 
 def help(command):
-    import sys
+    import sys, inspect
     try:
-        return getattr(sys.modules[__name__], command).__doc__
+        doc = inspect.getdoc(getattr(sys.modules[__name__], command))
     except AttributeError:
-        return 'No help found for that command.'
+        doc = None
+    return doc or 'No help found for that command.'
+
+
+def list_commands():
+    """Lists all known commands."""
+    import inspect
+    cmds = ''
+    for module in submodules():
+        for func in module.__all__:
+            doc = inspect.getdoc(module.__dict__[func])
+            if doc is None:
+                doc = '(no docs)'
+            else:
+                # Find the first sentence (assuming it ends in a period).
+                doc = doc[:doc.find('.') + 1]
+            prefix = 'ooc_cmd_'
+            if func.startswith(prefix):
+                func = func[len(prefix):]
+            cmds += f'{func} - {doc}\n'
+    return cmds
 
 
 def mod_only(area_owners=False):
