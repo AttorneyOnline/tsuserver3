@@ -148,7 +148,7 @@ def ooc_cmd_getarea(client, arg):
     Show information about the current area.
     Usage: /getarea
     """
-    client.send_area_info(client.area.id, False, False)
+    client.send_area_info(client.area.id, False)
 
 
 def ooc_cmd_getareas(client, arg):
@@ -156,7 +156,7 @@ def ooc_cmd_getareas(client, arg):
     Show information about all areas.
     Usage: /getareas
     """
-    client.send_area_info(-1, False, False)
+    client.send_area_info(-1, False)
 
 
 def ooc_cmd_getafk(client, arg):
@@ -170,8 +170,8 @@ def ooc_cmd_getafk(client, arg):
         arg = client.area.id
     else:
         raise ArgumentError('There is only one optional argument [all].')
-    client.send_area_info(arg, False, True)
-    
+    client.send_area_info(arg, False, afk_check=True)
+
 
 def ooc_cmd_area_lock(client, arg):
     """
