@@ -20,7 +20,7 @@
 
 # Install dependencies in case one is missing
 
-import sys, subprocess
+import sys, subprocess, os
 
 def check_deps():
     py_version = sys.version_info
@@ -55,5 +55,10 @@ def main():
 
 if __name__ == '__main__':
     print('tsuserver3 - an Attorney Online server')
-    check_deps()
-    main()
+    try:
+        check_deps()
+        main()
+    except SystemExit:
+        # Truly idiotproof
+        if os.name == 'nt':
+            input('(Press Enter to exit)')

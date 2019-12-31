@@ -619,7 +619,7 @@ class AOProtocol(asyncio.Protocol):
                 else:
                     getattr(commands, called_function)(self.client, arg)
             except AttributeError:
-                print('Attribute error with ' + called_function)
+                logger.warn('Attribute error with ' + called_function)
                 self.client.send_ooc('Invalid command.')
             except (ClientError, AreaError, ArgumentError, ServerError) as ex:
                 self.client.send_ooc(ex)

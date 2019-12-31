@@ -16,7 +16,6 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import sys
-import os
 import importlib
 
 import asyncio
@@ -70,9 +69,15 @@ class TsuServer3:
             print('There was a syntax error parsing a configuration file:')
             print(exc)
             print('Please revise your syntax and restart the server.')
-            # Truly idiotproof
-            if os.name == 'nt':
-                input('(Press Enter to exit)')
+            sys.exit(1)
+        except OSError as exc:
+            print('There was an error opening or writing to a file:')
+            print(exc)
+            sys.exit(1)
+        except Exception as exc:
+            print('There was a configuration error:')
+            print(exc)
+            print('Please check sample config files for the correct format.')
             sys.exit(1)
 
         self.client_manager = ClientManager(self)
@@ -160,9 +165,16 @@ class TsuServer3:
 
     def load_config(self):
         """Load the main server configuration from a YAML file."""
-        with open('config/config.yaml', 'r', encoding='utf-8') as cfg:
-            self.config = yaml.safe_load(cfg)
-            self.config['motd'] = self.config['motd'].replace('\\n', ' \n')
+        try:
+            with open('config/config.yaml', 'r', encoding='utf-8') as cfg:
+                self.config = yaml.safe_load(cfg)
+                self.config['motd'] = self.config['motd'].replace('\\n', ' \n')
+        except OSError:
+            print('error: config/config.yaml wasn\'t found.')
+            print('You are either running from the wrong directory, or')
+            print('you forgot to rename config_sample (read the instructions).')
+            sys.exit(1)
+
         if 'music_change_floodguard' not in self.config:
             self.config['music_change_floodguard'] = {
                 'times_per_interval': 1,
