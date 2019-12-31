@@ -68,7 +68,7 @@ def mod_only(area_owners=False):
     def decorator(func):
         @functools.wraps(func)
         def wrapper_mod_only(client, arg, *args, **kwargs):
-            if not client.is_mod and (not area_owners or not client in area_owners):
+            if not client.is_mod and (not area_owners or not client in client.area.owners):
                 raise ClientError('You must be authorized to do that.')
             func(client, arg, *args, **kwargs)
         return wrapper_mod_only
