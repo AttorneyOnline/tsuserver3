@@ -18,7 +18,7 @@
 import re
 import time
 from heapq import heappop, heappush
-
+from datetime import datetime
 from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, AreaError
@@ -131,6 +131,9 @@ class ClientManager:
             """Send the message of the day to the client."""
             motd = self.server.config['motd']
             self.send_ooc(f'=== MOTD ===\r\n{motd}\r\n=============')
+            datenow = datetime.now()
+            if self.server.config['special_message_date'] in str(datenow):
+                self.send_ooc(self.server.config['special_message_title'] + f'\r\n' +self.server.config['special_message_content'] + f'\r\n============='
 
         def send_player_count(self):
             """
@@ -340,7 +343,7 @@ class ClientManager:
             else:
                 player_list = area.clients
             info += f'[{area.abbreviation}]: [{len(player_list)} users][{area.status}]{lock[area.is_locked]}'
-            
+
             sorted_clients = []
             for client in player_list:
                 if (not mods) or client.is_mod:
@@ -644,7 +647,7 @@ class ClientManager:
             if client.is_ooc_muted:
                 clients.append(client)
         return clients
-        
+
     def toggle_afk(self, client):
             if client in client.area.afkers:
                     client.area.broadcast_ooc('{} is no longer AFK.'.format(client.char_name))
