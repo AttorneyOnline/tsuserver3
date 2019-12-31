@@ -54,10 +54,17 @@ class AOProtocol(asyncio.Protocol):
 
     def dezalgo(self, input):
         """
-        Turns any string into a de-zalgo'd version, with a tolerance to allow for special language characters.
+        Turns any string into a de-zalgo'd version, with a tolerance to allow for normal diacritic use.
+
+        The following Unicode blocks are scrubbed:
+        U+0300 - U+036F - COMBINING DIACRITICAL MARKS
+        U+1AB0 - U+1AFF - COMBINING DIACRITICAL MARKS EXTENDED
+        U+1DC0 - U+1DFF - COMBINING DIACRITICAL MARKS SUPPLEMENT
+        U+20D0 - U+20FF - COMBINING DIACRITICAL MARKS FOR SYMBOLS
+        U+FE20 - U+FE2F - COMBINING HALF MARKS
         """
-        print(self.server.zalgo_tolerance)
-        filtered = re.sub('([\u0300\u036f\u1ab0\u1aff\u1dc0\u1dff\u20d0\u20ff\ufe20\ufe2f]' +
+
+        filtered = re.sub('([\u0300-\u036f\u1ab0-\u1aff\u1dc0-\u1dff\u20d0-\u20ff\ufe20-\ufe2f]' +
                           '{' + re.escape(str(self.server.zalgo_tolerance)) + ',})',
                           '', input)
         return filtered
