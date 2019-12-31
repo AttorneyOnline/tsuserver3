@@ -366,7 +366,7 @@ class ClientManager:
                     info += f' ({c.ipid}): {c.name}'
             return info
 
-        def send_area_info(self, area_id, mods, afk_check):
+        def send_area_info(self, area_id, mods, afk_check=False):
             """
             Send information over OOC about a specific area.
             :param area_id: area ID
