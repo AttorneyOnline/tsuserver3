@@ -50,6 +50,14 @@ masterserver_port: 27016
 masterserver_name: My First Server
 masterserver_description: This is my flashy new server
 
+# Allows remote administration.
+use_remote_admin: true
+
+# Port for the admin console. Do NOT forward this port - anyone who
+# connects to it will be able to view and modify settings!
+# (Hint: use SSH forwarding instead)
+admin_port: 50002
+
 # Timeout for dead connections (in seconds).
 # To prevent issues, this value should be greater than 60.
 timeout: 250

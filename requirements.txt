@@ -4,3 +4,4 @@ arrow
 timeparse-plus
 pygubu
 jsonpatch
+protobuf

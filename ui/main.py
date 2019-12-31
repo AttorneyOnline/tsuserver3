@@ -1,23 +1,32 @@
+import asyncio
 import gettext
 import warnings
 import yaml
 from copy import deepcopy
 from types import MethodType
 from typing import Iterable
+from threading import Thread
+
+import jsonpatch
 
 import pygubu
 from pygubu.widgets.editabletreeview import EditableTreeview
 
-import jsonpatch
-
 import tkinter as tk
+import tkinter.ttk as ttk
 import tkinter.messagebox
 
 from . import edittypes
+from .remoteadmin import RemoteAdmin
 
 t = gettext.translation("tsuserver_config", "translations")
 _ = t.gettext
 
+loop = asyncio.get_event_loop()
+def loop_func():
+    asyncio.set_event_loop(loop)
+    loop.run_forever()
+loop_thread = Thread(target=loop_func, daemon=True)
 
 def hack_etv(etv: EditableTreeview):
     """Hack up Pygubu's half-decent EditableTreeview in various ways:
@@ -62,12 +71,16 @@ def walk(d: dict, path):
 
 class TsuserverConfig:
     def __init__(self):
+        loop.call_soon_threadsafe(asyncio.ensure_future, self.start_client())
+
         self.builder = builder = pygubu.Builder(_)
         builder.add_from_file("ui/main.ui")
         self.main_window = builder.get_object("tsuserver_config_toplevel")
         self.etv: EditableTreeview = builder.get_object("etv")
         self.btn_apply = builder.get_object('btn_apply')
         self.btn_revert = builder.get_object('btn_revert')
+        self.lbl_server_status: tk.Label = builder.get_object('lbl_server_status')
+        self.lbl_ms_status = builder.get_object('lbl_ms_status')
         hack_etv(self.etv)
         builder.connect_callbacks(self)
 
@@ -75,6 +88,13 @@ class TsuserverConfig:
         self.etv.bind('<<TreeviewInplaceEdit>>', self._on_inplace_edit)
         #self.etv.bind('<Double-Button-1>', self._on_inplace_edit)
         self.etv.bind('<<TreeviewCellEdited>>', self._on_cell_edited)
+
+    async def start_client(self):
+        self.client = RemoteAdmin()
+        try:
+            await self.client.connect('ws://localhost:50003/')
+        except OSError:
+            self.lbl_server_status.config(text='Error connecting. Too bad.')
 
     def run(self):
         self.main_window.mainloop()
@@ -268,5 +288,7 @@ class TsuserverConfig:
             pass
 
 def main():
+    loop_thread.start()
     application = TsuserverConfig()
     application.run()
+    loop.stop()

@@ -63,8 +63,11 @@
                 </child>
                 <child>
                   <object class="ttk.Label" id="slogan">
+                    <property name="compound">top</property>
+                    <property name="cursor">arrow</property>
                     <property name="font">{Helvetica} 10 {}</property>
-                    <property name="text" translatable="yes">The server software you can fix™</property>
+                    <property name="takefocus">true</property>
+                    <property name="text" translatable="yes">The server software you can't fix™</property>
                     <layout>
                       <property name="column">0</property>
                       <property name="propagate">True</property>
@@ -93,34 +96,12 @@
                       </columns>
                     </layout>
                     <child>
-                      <object class="ttk.Label" id="icon_server_status">
-                        <property name="image">circle_green_16.png</property>
-                        <layout>
-                          <property name="column">0</property>
-                          <property name="propagate">True</property>
-                          <property name="row">1</property>
-                          <property name="sticky">w</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
                       <object class="ttk.Label" id="lbl_server_status">
                         <property name="text" translatable="yes">Server is listening at 127.0.0.1</property>
                         <layout>
                           <property name="column">1</property>
                           <property name="propagate">True</property>
                           <property name="row">1</property>
-                          <property name="sticky">w</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="ttk.Label" id="icon_ms_status">
-                        <property name="image">circle_red_16.png</property>
-                        <layout>
-                          <property name="column">0</property>
-                          <property name="propagate">True</property>
-                          <property name="row">2</property>
                           <property name="sticky">w</property>
                         </layout>
                       </object>

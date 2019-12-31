@@ -36,6 +36,7 @@ from server.exceptions import ServerError
 from server.network.aoprotocol import AOProtocol
 from server.network.aoprotocol_ws import new_websocket_client
 from server.network.masterserverclient import MasterServerClient
+from server.network.remoteadmin import RemoteAdmin
 import server.logger
 
 class TsuServer3:
@@ -103,6 +104,13 @@ class TsuServer3:
         if self.config['zalgo_tolerance']:
             self.zalgo_tolerance = self.config['zalgo_tolerance']
 
+        if self.config['use_remote_admin']:
+            admin_server = RemoteAdmin(self)
+            admin_port = self.config['admin_port']
+            admin_server = loop.run_until_complete(admin_server.serve(admin_port))
+            print(f'Remote admin server started and is listening '
+                  f'on port {admin_port}')
+
         asyncio.ensure_future(self.schedule_unbans())
 
         database.log_misc('start')
@@ -115,6 +123,12 @@ class TsuServer3:
             pass
 
         database.log_misc('stop')
+
+        try:
+            admin_server.close()
+            loop.run_until_complete(admin_server.wait_closed())
+        except UnboundLocalError:
+            pass
 
         ao_server.close()
         loop.run_until_complete(ao_server.wait_closed())
@@ -183,6 +197,10 @@ class TsuServer3:
             self.config['modpass'] = {'default': {'password': self.config['modpass']}}
         if 'multiclient_limit' not in self.config:
             self.config['multiclient_limit'] = 16
+        if 'use_remote_admin' not in self.config:
+            self.config['use_remote_admin'] = True
+        if 'admin_port' not in self.config:
+            self.config['admin_port'] = 50002
 
     def load_characters(self):
         """Load the character list from a YAML file."""
