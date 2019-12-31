@@ -939,6 +939,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.set_mod_call_delay()
             database.log_room('modcall', self.client, self.client.area)
         else:
+            args[0] = self.dezalgo(args[0])
             self.server.send_all_cmd_pred(
                 'ZZ',
                 '[{}] {} ({}) in {} with reason: {}'.format(
