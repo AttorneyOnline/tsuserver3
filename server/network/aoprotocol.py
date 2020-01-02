@@ -120,10 +120,11 @@ class AOProtocol(asyncio.Protocol):
             transport.close()
             return
 
-        if not self.server.client_manager.new_client_preauth(transport):
-            self.client.send_command('BD', 'DOS Prevention. Maximum clients reached. \n Disconnect one of your clients to continue')
+        if not self.server.client_manager.new_client_preauth(self.client):
+            self.client.send_command('BD', 'Maximum clients reached.\nDisconnect one of your clients to continue.')
             self.client.disconnect()
             return
+
         # Client needs to send CHECK#% within the timeout - otherwise,
         # it will be automatically dropped.
         self.ping_timeout = asyncio.get_event_loop().call_later(
@@ -140,6 +141,7 @@ class AOProtocol(asyncio.Protocol):
 
         """
         if self.client is not None:
+            logger.debug(f'{self.client.ipid} disconnected.')
             self.server.remove_client(self.client)
         if self.ping_timeout is not None:
             self.ping_timeout.cancel()

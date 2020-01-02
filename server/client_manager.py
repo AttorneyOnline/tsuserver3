@@ -537,15 +537,14 @@ class ClientManager:
         self.cur_id = [i for i in range(self.server.config['playerlimit'])]
 
 
-    def new_client_preauth(self,transport): #future pre authentication methods for security concerns should go here
-
+    def new_client_preauth(self, client):
         maxclients = self.server.config['multiclient_limit']
-        temp_ipid = database.ipid(transport.get_extra_info('peername')[0])
-        for client in self.server.client_manager.clients:
-            if client.ipid == temp_ipid:
-                if client.clientscon > maxclients:
-                    return False #More than 4 clients have connected, yeet the client
-        return True #Client is all good
+        for c in self.server.client_manager.clients:
+            if c.ipid == client.ipid:
+                if c.clientscon > maxclients:
+                    return False
+        return True
+
     def new_client(self, transport):
         """
         Create a new client, add it to the list, and assign it a player ID.
@@ -583,9 +582,9 @@ class ClientManager:
                         a.unlock()
         heappush(self.cur_id, client.id)
         temp_ipid = client.ipid
-        for client in self.server.client_manager.clients:
-            if client.ipid == temp_ipid:
-                client.clientscon -= 1
+        for c in self.server.client_manager.clients:
+            if c.ipid == temp_ipid:
+                c.clientscon -= 1
         self.clients.remove(client)
     def get_targets(self, client, key, value, local=False, single=False):
         """
