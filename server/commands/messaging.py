@@ -106,7 +106,7 @@ def ooc_cmd_m(client, arg):
 @mod_only()
 def ooc_cmd_lm(client, arg):
     """
-    Send a message to all moderators in the current area.
+    Send a message to everyone in the current area, speaking officially.
     Usage: /lm <message>
     """
     if len(arg) == 0:
