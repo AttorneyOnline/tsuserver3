@@ -31,6 +31,8 @@ def ooc_cmd_a(client, arg):
 
     try:
         area = client.server.area_manager.get_area_by_id(int(arg[0]))
+    except ValueError:
+        raise ArgumentError('The first argument must be an area ID.')
     except AreaError:
         raise
 
