@@ -32,7 +32,7 @@ from server import database
 from server.area_manager import AreaManager
 from server.client_manager import ClientManager
 from server.emotes import Emotes
-from server.exceptions import ServerError
+from server.exceptions import ClientError,ServerError
 from server.network.aoprotocol import AOProtocol
 from server.network.aoprotocol_ws import new_websocket_client
 from server.network.masterserverclient import MasterServerClient
@@ -139,6 +139,18 @@ class TsuServer3:
         :param transport: asyncio transport
         :returns: created client object
         """
+        peername = transport.get_extra_info('peername')[0]
+        for line,rangeBan in enumerate(self.ipRange_bans):
+            if peername.startswith(rangeBan):
+                msg =   'BD#'
+                msg +=  'Abuse\r\n'
+                msg += f'ID: {line}\r\n'
+                msg +=  'Until: N/A'
+                msg +=  '#%'
+
+                transport.write(msg.encode('utf-8'))
+                raise ClientError
+
         c = self.client_manager.new_client(transport)
         c.server = self
         c.area = self.area_manager.default_area()
