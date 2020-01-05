@@ -56,6 +56,7 @@ class TsuServer3:
         self.music_pages_ao1 = None
         self.backgrounds = None
         self.zalgo_tolerance = None
+        self.ipRange_bans = []
 
         self.ms_client = None
 
@@ -66,6 +67,7 @@ class TsuServer3:
             self.load_characters()
             self.load_music()
             self.load_backgrounds()
+            self.load_ipranges()
         except yaml.YAMLError as exc:
             print('There was a syntax error parsing a configuration file:')
             print(exc)
@@ -211,6 +213,15 @@ class TsuServer3:
                 self.allowed_iniswaps = yaml.safe_load(iniswaps)
         except:
             logger.debug('Cannot find iniswaps.yaml')
+
+    def load_ipranges(self):
+        """Load a list of banned IP ranges."""
+        try:
+            with open('config/iprange_ban.txt', 'r',
+                      encoding='utf-8') as ipranges:
+                self.ipRange_bans = ipranges.readlines()
+        except:
+            logger.debug('Cannot find iprange_ban.txt')
 
     def build_char_pages_ao1(self):
         """
