@@ -132,7 +132,6 @@ Good-to-know commands are marked with a :star:.
     - Usage 2: `/ban <ipid> <ban_id>`
 * **banhdid**
     - Ban both a user's HDID and IPID.
-    - **DANGER:** Banning webAO users by HDID has unintended consequences.
 * **unban** <ban_id...>
     - Unban a list of users.
     - You need a ban ID to unban a user. Ban IDs are automatically included in ban reasons. Use `/baninfo <ban_id>` for more information about a ban.
