@@ -323,6 +323,8 @@ class ClientManager:
             self.send_command('HP', 1, self.area.hp_def)
             self.send_command('HP', 2, self.area.hp_pro)
             self.send_command('BN', self.area.background, self.pos)
+            if len(self.area.pos_lock) > 0:
+                self.send_command('SD', '*'.join(self.area.pos_lock)) #set that juicy pos dropdown
             self.send_command('LE', *self.area.get_evidence_list(self))
             if self.area.desc != '':
                 desc = self.area.desc[:128]
@@ -412,6 +414,8 @@ class ClientManager:
                 if c.is_cm:
                     info += '[CM]'
                 info += '[{}] {}'.format(c.id, c.get_char_name(True))
+                if len(area.pos_lock) != 1 and c.pos != "": #we're not on a single-pos area
+                    info += ' <{}>'.format(c.pos)
                 if self.is_mod:
                     info += ' ({})'.format(c.ipid)
                 if c.hidden:
@@ -426,7 +430,6 @@ class ClientManager:
             if area_id == -1:
                 # all areas info
                 cnt = 0
-                msg = '\n=== Areas for Hub [{}]: {} ==='.format(self.hub.id, self.hub.name)
                 for i in range(len(self.hub.areas)):
                     if len(self.hub.areas[i].clients) > 0:
                         cnt += len(self.hub.areas[i].clients)
@@ -469,6 +472,8 @@ class ClientManager:
             self.send_command('HP', 1, self.area.hp_def)
             self.send_command('HP', 2, self.area.hp_pro)
             self.send_command('BN', self.area.background, self.pos)
+            if len(self.area.pos_lock) > 0:
+                self.send_command('SD', '*'.join(self.area.pos_lock)) #set that juicy pos dropdown
             self.send_command('LE', *self.area.get_evidence_list(self))
             self.send_command('MM', 1)
 

@@ -354,7 +354,7 @@ def ooc_cmd_pos(client, arg):
     if len(client.area.pos_lock) > 0 and arg.lower() not in client.area.pos_lock:
         raise ClientError('Intended position is locked.')
     if len(arg) == 0:
-        client.change_position()
+        client.send_host_message('Current position: {}.'.format(client.pos))
     else:
         try:
             client.change_position(arg)
@@ -382,6 +382,7 @@ def ooc_cmd_poslock(client, arg):
        
     client.area.pos_lock = positions
     client.area.send_host_message('Locked pos into {}.'.format(positions))
+    client.area.send_command('SD', '*'.join(client.area.pos_lock)) #set that juicy pos dropdown
 
 def ooc_cmd_forcepos(client, arg):
     if not client.is_cm and not client.is_mod:
@@ -1081,6 +1082,8 @@ def ooc_cmd_area_remove(client, arg):
         raise ArgumentError('Invalid number of arguments. Use /area <id>.')
 
 def ooc_cmd_area_swap(client, arg):
+    if not client.is_mod and not client.is_cm:
+        raise ClientError('You must be authorized to do that.')
     args = arg.split(' ')
     if len(args) != 2:
         raise ClientError("You must specify 2 numbers.")
