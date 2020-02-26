@@ -86,3 +86,4 @@ from .fun import *
 from .messaging import *
 from .music import *
 from .roleplay import *
+from .gamemodes import *
