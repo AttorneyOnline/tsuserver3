@@ -42,7 +42,7 @@ Requires Python 3.6+ and PyYAML.
     - Toggles adverts on and off
 * **hub** "hub number" OR "hub name"
     - Displays all hubs when blank, swaps to hub with number/name
-* **area** <number> OR <name>
+* **area** "number" OR "name"
     - Displays all areas when blank, swaps to area with number/name
 * **getarea** 
     - Shows the current characters in your area
@@ -52,8 +52,8 @@ Requires Python 3.6+ and PyYAML.
     - Gives the doc url/text if blank, updates the doc url/text in current hub if provided
 * **cleardoc** 
     - Clears the doc url/text
-* **desc** <string>
-    - Display the area description if blank, set that area's description to <desc> otherwise.
+* **desc** "string"
+    - Display the area description if blank, set that area's description to "desc" otherwise.
 * **status** "status" 
     - Shows current areas status if blank, updates the status if filled
     - Statuses: 'idle', 'building-open', 'building-full', 'casing-open', 'casing-full', 'recess'
@@ -78,63 +78,63 @@ Requires Python 3.6+ and PyYAML.
     - Flips a coin
 * **currentmusic** 
     - Displays the current music
-* **evi_swap** <id1> <id2>
-    - Swaps <id1> and <id2> evidence.
-* **evi_edit** <id: int> <name: string> <description: string> <image: string>
+* **evi_swap** "id1" "id2"
+    - Swaps "id1" and "id2" evidence.
+* **evi_edit** "id: int" "name: string" "description: string" "image: string"
     - [DEPRECATED] A command emulating the in-client editing interface. Replace string with . (period) if you wish to keep original data.
-* **sneak** <on/off or blank>
+* **sneak** "on/off or blank"
     - Toggles whether or not you transfering areas will be announced in local area chat, e.g. "Gym: Phoenix leaves to Hallway." "Hallway: Phoenix enters from Gym."
-* **peek** <number> OR <name>
+* **peek** "number" OR "name"
     - Peek inside the target area to see characters inside of it. Must be accessible from your current area. If the area is locked, people will be alerted of your attempt to see inside. CM's, mods and spectators are ignored.
 
 ### CM Commands
-* **cm** <id1>
-    - Makes you a CM of this area. As a Master CM you can also assign co-cm's with <id1>
+* **cm** "id1"
+    - Makes you a CM of this area. As a Master CM you can also assign co-cm's with "id1"
 * **cms**
     - Shows you the list of CMs in this hub.
 * **uncm**
     - Removes your CM status
-* **cmlogs** <on/off or blank>
+* **cmlogs** "on/off or blank"
     - Changes whether or not you can see CM-related logging features. Useful for alt. clients which you want to keep clean of OOC logging or if you don't need to meticulously track everyone down in the first place.
-* **cleanup** <yes>
+* **cleanup** "yes"
     - Cleans up the hub completely, restoring it to a pristine state. Use this to clean up after RP's. Warning: all unsaved data will be lost!
-* **lock** <id1> <id2> <idx>
-    - Locks your area (or list of areas if you provide <id1> <id2> <idx>), preventing anyone outside of the invite list from speaking IC.
-* **unlock** <id1> <id2> <idx>
-    - Unlocks your area (or list of areas if you provide <id1> <id2> <idx>).
+* **lock** "id1" "id2" "idx"
+    - Locks your area (or list of areas if you provide "id1" "id2" "idx"), preventing anyone outside of the invite list from speaking IC.
+* **unlock** "id1" "id2" "idx"
+    - Unlocks your area (or list of areas if you provide "id1" "id2" "idx").
 * **forcepos** "position" [target]
     - Forcibly change [target]'s position. Leave blank to affect everyone in area.
     - Positions: 'def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'jur', 'sea'
-* **follow** <id> or blank
-    - Follow specified character <id> when they move areas or display who you're following if left blank.
+* **follow** "id" or blank
+    - Follow specified character "id" when they move areas or display who you're following if left blank.
 * **unfollow**
     - Stop following.
-* **hide** <id>
-    - Hide specified character <id> from /getarea
-* **unhide** <id>
-    - Unhide specified character <id> for /getarea
-* **blind** <id>
-    - Make specified character <id> unable to see or speak ICly unless receiving a /broadcast_ic message. Also disallow usage of /getarea.
-* **unblind** <id>
-    - Undo the /blind command for specified <id>
-* **broadcast_ic** <id1> <id2> <idx> or <clear>
-    - Blank to display the list of areas currently broadcasting your IC messages to. <idx> to add area(s) to the list. <clear> to reset the list.
-* **iclogs** <numlines> <id>
-    - Display last <numlines> of logged IC lines in area <id> in OOC. Max 50
+* **hide** "id"
+    - Hide specified character "id" from /getarea
+* **unhide** "id"
+    - Unhide specified character "id" for /getarea
+* **blind** "id"
+    - Make specified character "id" unable to see or speak ICly unless receiving a /broadcast_ic message. Also disallow usage of /getarea.
+* **unblind** "id"
+    - Undo the /blind command for specified "id"
+* **broadcast_ic** "id1" "id2" "idx" or "clear"
+    - Blank to display the list of areas currently broadcasting your IC messages to. "idx" to add area(s) to the list. "clear" to reset the list.
+* **iclogs** "numlines" "id"
+    - Display last "numlines" of logged IC lines in area "id" in OOC. Max 50
 * **savehub**
     - Save the area save data as an evidence file in area 0 of the hub.
 * **loadhub**
     - Display instructions on how to load area save data using the evidence system.
-* **akick** <id> <area#> (<hub#>)
-    - Kicks target and all of their multi-accs from your area to area 0 or specified <area#> in same hub (or specified <hub#> if you're a mod)
-* **player_move_delay** <id> (<delay>)
-    - Sets the movement delay in seconds for the player. <delay> must be a value from 0 to 1800 in seconds. Leave blank to check current value.
-* **area_move_delay** (<delay>)
-    - Sets the movement delay in seconds for the area you're in. <delay> must be a value from 0 to 1800 in seconds. Leave blank to check current value.
-* **hub_move_delay** (<delay>)
-    - Sets the movement delay in seconds for the hub you're in. <delay> must be a value from 0 to 1800 in seconds. Leave blank to check current value.
-* **maxplayers** (<num>)
-    - Sets the amount of maximum possible player characters for the area. CM's, mods, spectators are ignored. <num> must be from -1 to 99, where -1 is infinite while 0 is allow only CM's, mods, spectators. Leave blank to check current value.
+* **akick** "id" "area#" ("hub#")
+    - Kicks target and all of their multi-accs from your area to area 0 or specified "area#" in same hub (or specified "hub#" if you're a mod)
+* **player_move_delay** "id" ("delay")
+    - Sets the movement delay in seconds for the player. "delay" must be a value from 0 to 1800 in seconds. Leave blank to check current value.
+* **area_move_delay** ("delay")
+    - Sets the movement delay in seconds for the area you're in. "delay" must be a value from 0 to 1800 in seconds. Leave blank to check current value.
+* **hub_move_delay** ("delay")
+    - Sets the movement delay in seconds for the hub you're in. "delay" must be a value from 0 to 1800 in seconds. Leave blank to check current value.
+* **maxplayers** ("num")
+    - Sets the amount of maximum possible player characters for the area. CM's, mods, spectators are ignored. "num" must be from -1 to 99, where -1 is infinite while 0 is allow only CM's, mods, spectators. Leave blank to check current value.
 * **toggleooc**
     - Turn hub chat on/off.
    
@@ -143,21 +143,21 @@ Requires Python 3.6+ and PyYAML.
     - Changes the current background
 * **area_add**
     - Add an area at the end of the area list
-* **area_remove** <id>
+* **area_remove** "id"
     - Remove specified area while updating all existing access references to match.
-* **area_swap** <id1> <id2>
+* **area_swap** "id1" "id2"
     - Swaps first area ID with the second area ID while updating all existing access references to match.
-* **poslock** <def> <hld> <pro> <hlp> <wit> <jud> <jur> <sea> <clear>
-    - Lock the position of current area into provided pos. <clear> to unlock.
-* **rename** <text>
-    - Rename current area's display name to <text>
-* **area_access** <id1> <id2> <idx>
+* **poslock** "def" "hld" "pro" "hlp" "wit" "jud" "jur" "sea" "clear"
+    - Lock the position of current area into provided pos. "clear" to unlock.
+* **rename** "text"
+    - Rename current area's display name to "text"
+* **area_access** "id1" "id2" "idx"
     - Display area access numbers if blank, or set which areas are accessible from your area for movement. /area_access clear to clear the area access. Use area_link/area_unlink for two-way paths instead.
-* **area_link** <id1> <id2> <idx>
+* **area_link** "id1" "id2" "idx"
     - Set up a two-way accessibility from and to your current area for listed ID's.
-* **area_unlink** <id1> <id2> <idx>
+* **area_unlink** "id1" "id2" "idx"
     - Unlink specified areas from the area you're in.
-* **evidence_mod** <MOD>
+* **evidence_mod** "MOD"
     - Changes evidence_mod in this area. Possible values: FFA, CM, HiddenCM, Mods
         * **FFA**
             - Everyone can add, edit and remove evidence.
@@ -173,10 +173,10 @@ Requires Python 3.6+ and PyYAML.
 * **allow_iniswap**
     - Toggle allow_iniswap var in this area. 
     - Even if iniswap at all is forbidden you can configure all-time allowed iniswaps in *iniswaps.yaml*
-* **akick** <id> <area#> (<hub#>)
-    - Kicks target and all of their multi-accs from your area to area 0 or specified <area#> in same hub (or specified <hub#> if you're a mod)
-* **masskick** <area1> <area2>
-    - Kicks all people from <area1> to <area2>.
+* **akick** "id" "area#" ("hub#")
+    - Kicks target and all of their multi-accs from your area to area 0 or specified "area#" in same hub (or specified "hub#" if you're a mod)
+* **masskick** "area1" "area2"
+    - Kicks all people from "area1" to "area2".
 
 ### Mod Commands
 * **login** "Password"
