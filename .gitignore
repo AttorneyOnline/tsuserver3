@@ -77,3 +77,12 @@ coverage.xml
 
 ### VSCode
 .vscode/
+_Saved_Logs/
+config_dro/
+config_kfo/
+config_testserver/
+config_vanilla/
+config_zeo/
+logs/
+storage/
+configo/

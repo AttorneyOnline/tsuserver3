@@ -53,7 +53,7 @@ def ooc_cmd_help(client, arg):
     If you don't understand a specific core feature, check the official
     repository for more information:
 
-    https://github.com/AttorneyOnline/tsuserver3
+    https://github.com/AttorneyOnline/tsuserver3 
 
     Commands:
     ''')
