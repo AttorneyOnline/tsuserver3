@@ -17,8 +17,12 @@ def ooc_cmd_yttd(client, arg):
     starts the YTTD game mode in the area
     """
     if client.area.gamemode:
+        print("Cancelling round")
         client.area.gamemode.round_end()
-        del client.area.gamemode
+        client.area.gamemode = None
+        return
+
+    print("Starting new round")
     GamemodeYTTD(client.area)
     client.area.gamemode.start_building()
 
