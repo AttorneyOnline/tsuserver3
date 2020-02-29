@@ -2,8 +2,9 @@
 # Sensitive data
 config/
 storage/**/*.json
-storage/db.sqlite3
+storage/db.sqlite*
 logs/**/*.log
+logs/*
 
 ### Python related
 # Virtual environments
