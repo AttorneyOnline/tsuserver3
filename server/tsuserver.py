@@ -22,6 +22,8 @@ import importlib
 import asyncio
 import websockets
 
+import geoip2.database
+
 import json
 import yaml
 
@@ -57,6 +59,8 @@ class TsuServer3:
         self.backgrounds = None
         self.zalgo_tolerance = None
         self.ipRange_bans = []
+
+        self.geoIpReader = geoip2.database.Reader('./storage/GeoLite2-ASN.mmdb')
 
         self.ms_client = None
 
@@ -140,8 +144,15 @@ class TsuServer3:
         :returns: created client object
         """
         peername = transport.get_extra_info('peername')[0]
+        try:
+            geoIpResponse = self.geoIpReader.asn(peername)
+            asn = str(geoIpResponse.autonomous_system_number)
+        except geoip2.errors.AddressNotFoundError:
+            asn = "Loopback"
+            pass
+
         for line,rangeBan in enumerate(self.ipRange_bans):
-            if peername.startswith(rangeBan):
+            if peername.startswith(rangeBan) or asn == rangeBan:
                 msg =   'BD#'
                 msg +=  'Abuse\r\n'
                 msg += f'ID: {line}\r\n'
@@ -231,7 +242,7 @@ class TsuServer3:
         try:
             with open('config/iprange_ban.txt', 'r',
                       encoding='utf-8') as ipranges:
-                self.ipRange_bans = ipranges.readlines()
+                self.ipRange_bans = ipranges.read().splitlines()
         except:
             logger.debug('Cannot find iprange_ban.txt')
 
