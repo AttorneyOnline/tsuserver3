@@ -442,6 +442,7 @@ class TsuServer3:
          - Music
          - Backgrounds
          - Commands
+         - Banlists
         """
         with open('config/config.yaml', 'r') as cfg:
             cfg_yaml = yaml.safe_load(cfg)
@@ -471,6 +472,7 @@ class TsuServer3:
         self.load_iniswaps()
         self.load_music()
         self.load_backgrounds()
+        self.load_ipranges()
 
         import server.commands
         importlib.reload(server.commands)
