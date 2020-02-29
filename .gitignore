@@ -3,6 +3,7 @@
 config/
 storage/**/*.json
 storage/db.sqlite3
+storage/GeoLite*
 logs/**/*.log
 
 ### Python related
