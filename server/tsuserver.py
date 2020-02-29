@@ -61,6 +61,7 @@ class TsuServer3:
         self.ipRange_bans = []
 
         self.geoIpReader = geoip2.database.Reader('./storage/GeoLite2-ASN.mmdb')
+        # on debian systems you can use /usr/share/GeoIP/GeoIPASNum.dat if the geoip-database-extra package is installed
 
         self.ms_client = None
 
