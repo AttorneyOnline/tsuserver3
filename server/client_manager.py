@@ -564,9 +564,8 @@ class ClientManager:
         self.clients.add(c)
         temp_ipid = c.ipid
         for client in self.server.client_manager.clients:
-            if c.ipid == temp_ipid:
-                c.clientscon += 1
-
+            if client.ipid == temp_ipid:
+                client.clientscon += 1
         return c
 
     def remove_client(self, client):
