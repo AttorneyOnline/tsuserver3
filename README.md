@@ -71,9 +71,13 @@ Requires Python 3.6+ and PyYAML.
     - Randomly chooses a character
 * **pos** "position" 
     - Changes your position in the court
-    - Positions: 'def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'jur', 'sea'
-* **roll** "max" 
+    - Usual Positions: 'def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'jur', 'sea'
+    - You can set your position to a custom one if the area allows it and your bg folder has the image, e.g. 'night'.
+* **roll** "max" OR "2d6" "+5"/"-5"/"*5"/"/5"
+    - Example: /roll 2d6 +5 would roll two 6-sided die and add 5 to every result.
     - Rolls a 1D6 if blank
+* **rollp** "max" OR "2d6" "+5"/"-5"/"*5"/"/5"
+    - Same as /roll but the result is hidden from everyone else but you and the CM.
 * **coinflip**
     - Flips a coin
 * **currentmusic** 
@@ -82,10 +86,12 @@ Requires Python 3.6+ and PyYAML.
     - Swaps "id1" and "id2" evidence.
 * **evi_edit** "id: int" "name: string" "description: string" "image: string"
     - [DEPRECATED] A command emulating the in-client editing interface. Replace string with . (period) if you wish to keep original data.
-* **sneak** "on/off or blank"
+* **sneak** "on/off" OR blank
     - Toggles whether or not you transfering areas will be announced in local area chat, e.g. "Gym: Phoenix leaves to Hallway." "Hallway: Phoenix enters from Gym."
 * **peek** "number" OR "name"
     - Peek inside the target area to see characters inside of it. Must be accessible from your current area. If the area is locked, people will be alerted of your attempt to see inside. CM's, mods and spectators are ignored.
+* **listenpos** "on/off" OR blank
+    - If you want to only see the IC chat for your given pos, turn this "on". All chat outside of your current pos will be forwarded to OOC instead.
 
 ### CM Commands
 * **cm** "id1"

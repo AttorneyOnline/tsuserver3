@@ -68,6 +68,7 @@ class ClientManager:
             self.blinded_by = None
             self.following = None
             self.sneak = False
+            self.listenpos = False
             self.waiting_for_schedule = None
             self.ambience_editing = False
 
@@ -111,6 +112,12 @@ class ClientManager:
                 if command == 'MS':
                     if self.blinded and args[0] != 'broadcast':
                         return #Don't receive any chat messages when blinded that are not broadcast_ic'ed
+                    if self.listenpos and args[5] != self.pos: #pos doesn't match our current pos, we're not listening so make this an OOC message instead
+                        name = self.server.char_list[args[8]]
+                        if len(args[15]) > 0: #showname
+                            name = args[15]
+                        self.send_command('CT', f'<{args[5]}> {name}', args[4]) #send the mesage as OOC
+                        return
                     if args[0] == 'broadcast':
                         lst = list(args)
                         lst[0] = '0'
@@ -210,7 +217,7 @@ class ClientManager:
             msg = 'no longer'
             if tog:
                 msg = 'now'
-            self.send_host_message('You are {} hidden from /getarea.'.format(msg))
+            self.send_host_message('You are {} hidden from the area.'.format(msg))
 
         def blind(self, tog=True):
             self.blinded = tog
@@ -218,7 +225,7 @@ class ClientManager:
             if tog:
                 msg = 'now'
             self.send_host_message(
-                'You are {} blinded from /getarea and seeing non-broadcasted IC messages.'.format(msg))
+                'You are {} blinded from the area and seeing non-broadcasted IC messages.'.format(msg))
             self.area.update_evidence_list(self)
 
         def wtce_mute(self):

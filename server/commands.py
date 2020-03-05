@@ -106,25 +106,6 @@ def ooc_cmd_bglock(client,arg):
     client.area.send_host_message('A mod has set the background lock to {}.'.format(client.area.bg_lock))
     logger.log_server('Changed bglock to {}'.format(client.area.bg_lock), client)
 
-def ooc_cmd_evidence_mod(client, arg):
-    if not client.is_mod and not client.is_cm:
-        raise ClientError('You must be authorized to do that.')
-    if not arg:
-        client.send_host_message('current evidence mod: {}'.format(client.area.evidence_mod))
-        return
-    if arg in ['FFA', 'Mods', 'CM', 'HiddenCM']:
-        if arg == client.area.evidence_mod:
-            client.send_host_message('Current evidence mod is already {}.'.format(client.area.evidence_mod))
-            return
-        if client.area.evidence_mod == 'HiddenCM':
-            for i in range(len(client.area.evi_list.evidences)):
-                client.area.evi_list.evidences[i].pos = 'all'
-        client.area.evidence_mod = arg
-        client.send_host_message('Set current evidence mod to {}.'.format(client.area.evidence_mod))
-        return
-    else:
-        raise ArgumentError('Wrong Argument. Use /evidence_mod <MOD>. Possible values: FFA, CM, Mods, HiddenCM')
-
 def ooc_cmd_allow_iniswap(client, arg):
     if not client.is_mod and not client.is_cm:
         raise ClientError('You must be authorized to do that.')
@@ -221,6 +202,7 @@ def rtd(arg):
         num_dice,chosen_max,modifiers = 1,6,'' #Default
 
     roll = ''
+    Sum = 0
     
     for i in range(num_dice):
         divzero_attempts = 0
@@ -263,6 +245,7 @@ def rtd(arg):
             break
 
         final_roll = mid_roll #min(chosen_max,max(1,mid_roll))
+        Sum += final_roll
         if final_roll != mid_roll:
             final_roll = "|"+str(final_roll) #This visually indicates the roll was capped off due to exceeding the acceptable roll range
         else:
@@ -274,21 +257,21 @@ def rtd(arg):
     if num_dice > 1:
         roll = '(' + roll + ')'
     
-    return roll, num_dice, chosen_max, modifiers
+    return roll, num_dice, chosen_max, modifiers, Sum
     
 def ooc_cmd_roll(client, arg):
-    roll, num_dice, chosen_max, modifiers = rtd(arg)
+    roll, num_dice, chosen_max, modifiers, Sum = rtd(arg)
 
-    client.area.send_host_message('[{}]{} rolled {} out of {}.'.format(
-        client.id, client.get_char_name(True), roll, chosen_max))
+    client.area.send_host_message('[{}]{} rolled {} out of {}.\nThe total sum is {}.'.format(
+        client.id, client.get_char_name(True), roll, chosen_max, Sum))
     client.hub.send_to_cm('RollLog', '[{}][{}]{} used /roll and got {} out of {}.'.format(
         client.area.id, client.id, client.get_char_name(True), roll, chosen_max), client)
     logger.log_server('Used /roll and got {} out of {}.'.format(roll, chosen_max), client)
     
 def ooc_cmd_rollp(client, arg):
-    roll, num_dice, chosen_max, modifiers = rtd(arg)
+    roll, num_dice, chosen_max, modifiers, Sum = rtd(arg)
 
-    client.send_host_message('[Hidden] You rolled {} out of {}.'.format(roll, chosen_max))
+    client.send_host_message('[Hidden] You rolled {} out of {}.\nThe total sum is {}.'.format(roll, chosen_max, Sum))
     client.hub.send_to_cm('RollLog', '[A{}][ID{}]{} used /rollp and got {} out of {}.'.format(client.area.id, client.id, client.get_char_name(True), roll, chosen_max), client)
     logger.log_server('Used /rollp and got {} out of {}.'.format(roll, chosen_max), client)
 
@@ -1533,8 +1516,7 @@ def ooc_cmd_cm(client, arg):
                 c.send_host_message(
                     'You have been made a co-CM of hub {} by {}.'.format(client.hub.name, client.name))
             c.area.update_area_list(c)
-            if c.area.evidence_mod == 'HiddenCM':
-                c.area.update_evidence_list(c)
+            c.area.update_evidence_list(c)
         except:
             raise ClientError('You must specify a target. Use /cm <id>')
     else:
@@ -1546,8 +1528,7 @@ def ooc_cmd_cm(client, arg):
             client.is_cm = True
             client.hub.send_host_message('{} is master CM in this hub now.'.format(client.name))
             client.area.update_area_list(client)
-            if client.area.evidence_mod == 'HiddenCM':
-                client.area.update_evidence_list(client)
+            client.area.update_evidence_list(client)
         else:
             raise ClientError('Master CM exists. Use /cm <id>')
     #If we got past the errors we're going to tell the server to update itself.
@@ -1844,6 +1825,23 @@ def ooc_cmd_sneak(client, arg):
     if client.sneak:
         stat = 'now'
     client.send_host_message('You are {} sneaking.'.format(stat))
+
+def ooc_cmd_listenpos(client, arg):
+    if len(arg.split()) > 1:
+        raise ArgumentError("This command can only take one argument ('on' or 'off') or no arguments at all!")
+    if arg:
+        if arg == 'on':
+            client.listenpos = True
+        elif arg == 'off':
+            client.listenpos = False
+        else:
+            raise ArgumentError("Invalid argument: {}".format(arg))
+    else:
+        client.listenpos = not client.listenpos
+    stat = 'no longer'
+    if client.listenpos:
+        stat = 'now'
+    client.send_host_message('You are {} listening to your current pos.'.format(stat))
 
 def ooc_cmd_unmod(client, arg):
     client.is_mod = False
@@ -2513,3 +2511,4 @@ def ooc_cmd_judgelog(client, arg):
         client.send_host_message(jlog_msg)
     else:
         raise ServerError('There have been no judge actions in this area since start of session.')
+    
