@@ -1,0 +1,14 @@
+version: "3.3"
+services:
+    tsuserver:
+        build: .
+        image: tsuserver
+        ports:
+            - 27016:27016
+            - 50001:50001
+        volumes:
+            - ./storage:/app/storage
+            - ./logs:/app/logs
+            - ./config:/app/config
+        restart: unless-stopped
+
