@@ -157,19 +157,6 @@ Requires Python 3.6+ and PyYAML.
     - Set up a two-way accessibility from and to your current area for listed ID's.
 * **area_unlink** "id1" "id2" "idx"
     - Unlink specified areas from the area you're in.
-* **evidence_mod** "MOD"
-    - Changes evidence_mod in this area. Possible values: FFA, CM, HiddenCM, Mods
-        * **FFA**
-            - Everyone can add, edit and remove evidence.
-        * **Mods**
-            - Only moderators can add, edit or remove evidence.
-        * **CM**
-            - Only CM (case-maker, look at /cm for more info) or moderators can add, edit or remove evidence.
-        * **HiddenCM**
-            - Same as CM, but every evidence has a preset "owner's position" which can be set by a CM or moderator, such that only one side/position of the court may see the evidence.
-            Possible positions include def (defense), hld (defense help), pro (prosecution), hlp (prosecution help), wit (witness), jud (judge), sea (seance), jur (jury), as well as
-            pos (hidden from everyone), and all (everyone can see the evidence).
-            There are also shorthands - defense (will display to def and hld), prosecution (will display to pro and hlp), benches (includes defense and prosecution), witness (includes wit and sea), and judge (includes jud and jur).
 * **allow_iniswap**
     - Toggle allow_iniswap var in this area. 
     - Even if iniswap at all is forbidden you can configure all-time allowed iniswaps in *iniswaps.yaml*

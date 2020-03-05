@@ -53,34 +53,22 @@ class EvidenceList:
         return False
 
     def login(self, client):
-        if client.area.evidence_mod == 'FFA':
+        if client.is_cm or client.is_mod:
             return True
-        if client.area.evidence_mod == 'Mods':
-            if client.is_mod:
-                return True
-        if client.area.evidence_mod == 'CM':
-            if client.is_cm or client.is_mod:
-                return True
-        if client.area.evidence_mod == 'HiddenCM':
-            if client.is_cm or client.is_mod:
-                return True
         return False
 
     def correct_format(self, client, desc):
-        if client.area.evidence_mod != 'HiddenCM':
+        # correct format: <owner=pos,pos,pos>\ndesc
+        lines = desc.split('\n')
+        cmd = lines[0].strip(' ') #remove all whitespace
+        if cmd[:7] == '<owner=' and cmd.endswith('>'):
+            # poses = cmd[7:-1]
+            #broken with extra shorthands
+            # for pos in poses.strip(' ').split(','):
+            #     if not (pos in self.poses['all']) and pos != 'pos':
+            #         return False
             return True
-        else:
-            # correct format: <owner=pos,pos,pos>\ndesc
-            lines = desc.split('\n')
-            cmd = lines[0].strip(' ') #remove all whitespace
-            if cmd[:7] == '<owner=' and cmd.endswith('>'):
-                # poses = cmd[7:-1]
-                #broken with extra shorthands
-                # for pos in poses.strip(' ').split(','):
-                #     if not (pos in self.poses['all']) and pos != 'pos':
-                #         return False
-                return True
-            return False
+        return False
 
     def add_evidence(self, client, name, description, image, pos='all'):
         if len(self.evidences) >= self.limit:
@@ -88,13 +76,15 @@ class EvidenceList:
                 'You can\'t have more than {} evidence items at a time.'.format(self.limit))
             return
         if self.login(client):
-            if client.area.evidence_mod == 'HiddenCM':
-                pos = 'pos'
+            pos = 'pos'
             self.evidences.append(self.Evidence(
                 name, description, image, pos))
-        elif client.area.evidence_mod == 'HiddenCM':
+        else:
             if not client.hub.status.lower().startswith('rp-strict'):
-                pos = client.pos
+                if len(client.area.pos_lock) > 0:
+                    pos = client.pos
+                else:
+                    pos = 'all'
                 self.evidences.append(self.Evidence(
                     name, description, image, pos))
 
@@ -106,7 +96,7 @@ class EvidenceList:
         evi_list = []
         nums_list = [0]
         for i in range(len(self.evidences)):
-            if client.area.evidence_mod == 'HiddenCM' and self.login(client):
+            if self.login(client):
                 nums_list.append(i+1)
                 evi = self.evidences[i]
                 evi_list.append(self.Evidence(evi.name, '<owner={}>\n{}'.format(evi.pos, evi.desc), evi.image,
@@ -124,7 +114,7 @@ class EvidenceList:
     def del_evidence(self, client, id):
         if self.login(client):
             self.evidences.pop(id)
-        elif client.area.evidence_mod == 'HiddenCM':
+        else:
             if not client.hub.status.lower().startswith('rp-strict'):
                 # Are you serious? This is absolutely fucking mental.
                 # Server sends evidence to client in an indexed list starting from 1.
@@ -136,18 +126,18 @@ class EvidenceList:
 
     def edit_evidence(self, client, id, arg):
         if self.login(client):
-            if client.area.evidence_mod == 'HiddenCM':
-                if self.correct_format(client, arg[1]):
-                    lines = arg[1].split('\n')
-                    cmd = lines[0].strip(' ')  # remove all whitespace
-                    poses = cmd[7:-1]
-                    self.evidences[id] = self.Evidence(arg[0], '\n'.join(lines[1:]), arg[2], poses)
-                else:
-                    client.send_host_message('You entered a bad pos.')
-                    return
+            # if client.area.evidence_mod == 'HiddenCM':
+            if self.correct_format(client, arg[1]):
+                lines = arg[1].split('\n')
+                cmd = lines[0].strip(' ')  # remove all whitespace
+                poses = cmd[7:-1]
+                self.evidences[id] = self.Evidence(arg[0], '\n'.join(lines[1:]), arg[2], poses)
             else:
-                self.evidences[id] = self.Evidence(arg[0], arg[1], arg[2], arg[3])
-        elif client.area.evidence_mod == 'HiddenCM':
+                client.send_host_message('You entered a bad pos.')
+                return
+            # else:
+            #     self.evidences[id] = self.Evidence(arg[0], arg[1], arg[2], arg[3])
+        else:
             if not client.hub.status.lower().startswith('rp-strict'):
                 # Are you serious? This is absolutely fucking mental.
                 # Server sends evidence to client in an indexed list starting from 1.

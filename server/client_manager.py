@@ -522,8 +522,7 @@ class ClientManager:
             self.pos = pos
             self.send_host_message('Position set to {}.'.format(pos))
             self.send_command('SP', self.pos) #Send a "Set Position" packet
-            if self.area.evidence_mod == 'HiddenCM':
-                self.area.update_evidence_list(self) #Receive evidence for areas that are HiddenCM
+            self.area.update_evidence_list(self) #Receive evidence
 
         def set_mod_call_delay(self):
             self.mod_call_time = round(time.time() * 1000.0 + 30000)
