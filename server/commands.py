@@ -1041,7 +1041,10 @@ def ooc_cmd_area_add(client, arg):
             'New area created! ({}/{})'.format(client.hub.cur_id, client.hub.max_areas))
     else:
         raise AreaError('Too many areas! ({}/{})'.format(client.hub.cur_id, client.hub.max_areas))
-    
+
+def ooc_cmd_area_create(client, arg):
+    return ooc_cmd_area_add(client, arg)
+
 def ooc_cmd_area_remove(client, arg):
     if not client.is_mod and not client.is_cm:
         raise ClientError('You must be authorized to do that.')
