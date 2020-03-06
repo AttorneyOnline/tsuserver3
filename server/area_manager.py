@@ -48,7 +48,7 @@ class AreaManager:
                      shouts_allowed=True,
                      jukebox=False,
                      abbreviation='',
-                     non_int_pres_only=False):
+                     noninterrupting_pres=False):
             self.iniswap_allowed = iniswap_allowed
             self.clients = set()
             self.invite_list = {}
@@ -85,7 +85,7 @@ class AreaManager:
 
             self.is_locked = self.Locked.FREE
             self.blankposting_allowed = True
-            self.non_int_pres_only = non_int_pres_only
+            self.noninterrupting_pres = noninterrupting_pres
             self.jukebox = jukebox
             self.jukebox_votes = []
             self.jukebox_prev_char_id = -1

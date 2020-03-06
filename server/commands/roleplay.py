@@ -88,11 +88,10 @@ def ooc_cmd_rollp(client, arg):
     client.send_ooc('{} rolled {} out of {}.'.format(
         client.char_name, roll, val[0]))
 
-    client.area.broadcast_ooc('{} rolled in secret.'.format(
-        client.char_name))
-    for c.is_gm:
-        c.send_ooc('[{}]{} secretly rolled {} out of {}.'.format(
-            client.area.abbreviation, client.char_name, roll, val[0]))
+    client.area.broadcast_ooc(f'{client.char_name} rolled in secret.')
+    # for c.is_gm:
+    #     c.send_ooc('[{}]{} secretly rolled {} out of {}.'.format(
+    #         client.area.abbreviation, client.char_name, roll, val[0]))
 
     database.log_room('rollp', client, client.area, message=f'{roll} out of {val[0]}')
 

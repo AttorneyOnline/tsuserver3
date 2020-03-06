@@ -63,7 +63,7 @@ class TsuServer3:
 
         try:
             self.load_config()
-            self.area_manager = AreaManager(self)
+            self.hub_manager = HubManager(self)
             self.load_iniswaps()
             self.load_characters()
             self.load_music()

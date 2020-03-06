@@ -140,17 +140,17 @@ def ooc_cmd_allow_shouts(client, arg):
     client.hub.shouts_allowed = not client.hub.shouts_allowed
     answer = {True: 'allowed', False: 'forbidden'}
     client.hub.send_host_message('{} [{}] has set interjections in the hub to {}.'.format(client.name, client.id,
-                                                                                answer[client.hub.non_int_pres_only]))
+                                                                                answer[client.hub.noninterrupting_pres]))
     return
 
 def ooc_cmd_force_nonint_pres(client, arg):
     if not client.is_mod and not client.is_gm:
         raise ClientError('You must be authorized to do that.')
-    client.hub.non_int_pres_only = not client.hub.non_int_pres_only
+    client.hub.noninterrupting_pres = not client.hub.noninterrupting_pres
     answer = {True: 'non-interrupting only', False: 'non-interrupting or interrupting as you choose'}
     client.hub.send_host_message('{} [{}] has set pres in the hub to be {}.'.format(client.name, client.id,
                                                                                       answer[
-                                                                                          client.hub.non_int_pres_only]))
+                                                                                          client.hub.noninterrupting_pres]))
     return
 
 def rtd(arg):

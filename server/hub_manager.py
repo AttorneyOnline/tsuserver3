@@ -423,7 +423,7 @@ class HubManager:
 			# 	return msg
 
 		def __init__(self, hub_id, server, name, allow_cm=False, max_areas=1, doc='No document.', status='IDLE', showname_changes_allowed=False,
-						shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation='',
+						shouts_allowed=True, noninterrupting_pres=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation='',
 						move_delay=0, keys=[], music_ref=''):
 			self.server = server
 			self.id = hub_id
@@ -440,10 +440,10 @@ class HubManager:
 			self.music_list = []
 			self.cur_sched = [i for i in range(20)] #Max 20 schedules per hub
 			self.update(name, allow_cm, max_areas, doc, status, showname_changes_allowed,
-							shouts_allowed, non_int_pres_only, iniswap_allowed, blankposting_allowed, abbreviation, move_delay, keys, music_ref)
+							shouts_allowed, noninterrupting_pres, iniswap_allowed, blankposting_allowed, abbreviation, move_delay, keys, music_ref)
 
 		def update(self, name, allow_cm=False, max_areas=1, doc='No document.', status='IDLE', showname_changes_allowed=False,
-					 shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation='',
+					 shouts_allowed=True, noninterrupting_pres=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation='',
 					 move_delay=0, keys=[], music_ref=''):
 			self.name = name
 			self.allow_cm = allow_cm
@@ -452,7 +452,7 @@ class HubManager:
 			self.status = status
 			self.showname_changes_allowed = showname_changes_allowed
 			self.shouts_allowed = shouts_allowed
-			self.non_int_pres_only = non_int_pres_only
+			self.noninterrupting_pres = noninterrupting_pres
 			self.iniswap_allowed = iniswap_allowed
 			self.blankposting_allowed = blankposting_allowed
 			self.move_delay = move_delay
@@ -476,7 +476,7 @@ class HubManager:
 			data['status'] = self.status
 			data['showname_changes_allowed'] = self.showname_changes_allowed
 			data['shouts_allowed'] = self.shouts_allowed
-			data['noninterrupting_pres'] = self.non_int_pres_only
+			data['noninterrupting_pres'] = self.noninterrupting_pres
 			data['iniswap_allowed'] = self.iniswap_allowed
 			data['blankposting_allowed'] = self.blankposting_allowed
 			data['move_delay'] = self.move_delay

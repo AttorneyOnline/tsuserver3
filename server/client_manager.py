@@ -350,7 +350,7 @@ class ClientManager:
             self.hub = hub
             self.change_area(hub.default_area())
 
-        def change_area(self, area):
+        def change_area(self, area, hidden):
             """
             Switch the client to another area, unless the area is locked.
             :param area: area to switch to
@@ -398,7 +398,7 @@ class ClientManager:
                         c.send_ooc(
                             f'Following [{self.id}] {self.get_char_name(True)} to {area.name}. [HUB: {area.hub.abbreviation}]')
 
-            if not self.sneak and not self.hidden and not self.get_char_name() == "Spectator":
+            if not self.sneak and not hidden and not self.get_char_name() == "Spectator":
                 old_area.broadcast_ooc(f'[{self.id}]{self.get_char_name(True)} leaves to [{area.id}] {area.name}. [HUB: {area.hub.abbreviation}]')
                 area.broadcast_ooc(f'[{self.id}]{self.get_char_name(True)} enters from [{old_area.id}] {old_area.name}. [HUB: {old_area.hub.abbreviation}]')
             else:

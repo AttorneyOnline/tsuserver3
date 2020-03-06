@@ -567,7 +567,7 @@ class AOProtocol(asyncio.Protocol):
             return
         if sfx_delay < 0:
             return
-        if '4' in button and "<and>" not in button:
+        if '4' in str(button) and "<and>" not in str(button):
             if not button.isdigit():
                return
         if evidence < 0:
@@ -585,7 +585,7 @@ class AOProtocol(asyncio.Protocol):
                     anim_type = 0
                 elif anim_type == 6:
                     anim_type = 5
-        if self.client.hub.non_int_pres_only:
+        if self.client.hub.noninterrupting_pres:
             if anim_type == 1 or anim_type == 2:
                 anim_type = 0
                 nonint_pre = 1
@@ -774,7 +774,7 @@ class AOProtocol(asyncio.Protocol):
                 self.client.fake_name = args[0]
             else:
                 self.client.fake_name = args[0]
-        self.client.name = re.sub('\s+', ' ', self.client.name).strip() #Strip the name of any excess whitespace
+        self.client.name = re.sub(r'\s+', ' ', self.client.name).strip() #Strip the name of any excess whitespace
         if self.client.name == '':
             self.client.send_ooc(
                 'You must insert a name with at least one letter')
@@ -935,8 +935,7 @@ class AOProtocol(asyncio.Protocol):
                         self.client.area.play_music(name, self.client.char_id, length)
                     # self.client.area.add_music_playing(self.client, name)
 
-                logger.log_server('[MUS]Changed music to {}.'.format(name), self.client)
-                logger.log_demo('[MUS]{}'.format(name), self.client)
+                database.log_room('music', self.client, self.client.area, message=name)
             except ServerError:
                 self.client.send_ooc('Error: song {} isn\'t recognized by server!'.format(args[0]))
         except ClientError as ex:
@@ -1004,8 +1003,6 @@ class AOProtocol(asyncio.Protocol):
                 self.client.area.send_command('RT', args[0], args[1])
             self.client.area.add_to_judgelog(self.client, f'used {sign}')
             database.log_room('wtce', self.client, self.client.area, message=sign)
-
-        logger.log_server('[WTCE]Used WT/CE.', self.client)
 
     def net_cmd_setcase(self, args):
         """Sets the casing preferences of the given client.
