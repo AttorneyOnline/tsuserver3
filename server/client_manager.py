@@ -62,7 +62,7 @@ class ClientManager:
             self.last_showname = ''
 
             #CMing stuff
-            self.is_cm = False
+            self.is_gm = False
             self.cm_log_type = ['MoveLog', 'RollLog', 'PMLog', 'CharLog'] # If we're CM, we'll receive CM-related shenanigans
             self.broadcast_ic = []
             self.assigned_areas = [] #For /lock-ing and other fancy things as a normal player (still needs proximity w/ area access)
@@ -206,7 +206,7 @@ class ClientManager:
             """
             if not self.server.is_valid_char_id(char_id):
                 raise ClientError('Invalid Character ID.')
-            allowed = self.is_cm or self.is_mod or self.get_char_name() == "Spectator" or self.server.char_list[char_id] == "Spectator"
+            allowed = self.is_gm or self.is_mod or self.get_char_name() == "Spectator" or self.server.char_list[char_id] == "Spectator"
             if len(self.charcurse) > 0:
                 if not char_id in self.charcurse:
                     raise ClientError('Character not available.')
@@ -243,7 +243,7 @@ class ClientManager:
             Check if the client can change music or not.
             :returns: how many seconds the client must wait to change music
             """
-            if self.is_mod or self.is_cm:
+            if self.is_mod or self.is_gm:
                 return 0
             if self.mus_mute_time:
                 if time.time() - self.mus_mute_time < self.server.config[
@@ -287,7 +287,7 @@ class ClientManager:
             Check if the client can use WT/CE or not.
             :returns: how many seconds the client must wait to use WT/CE
             """
-            if self.is_mod or self.is_cm:
+            if self.is_mod or self.is_gm:
                 return 0
             if self.wtce_mute_time:
                 if time.time() - self.wtce_mute_time < self.server.config[
@@ -370,7 +370,7 @@ class ClientManager:
             #     self.area.remove_jukebox_vote(self, True)
 
             old_area = self.area
-            allowed = self.is_cm or self.is_mod or self.get_char_name() == "Spectator"
+            allowed = self.is_gm or self.is_mod or self.get_char_name() == "Spectator"
             if not allowed and not area.is_char_available(self.char_id):
                 try:
                     new_char_id = area.get_rand_avail_char_id()
@@ -498,14 +498,14 @@ class ClientManager:
             
             sorted_clients = []
             for client in area.clients:
-                if (not client.hidden and client.get_char_name() != "Spectator") or self.is_cm or self.is_mod or self.get_char_name() == "Spectator":
+                if (not client.hidden and client.get_char_name() != "Spectator") or self.is_gm or self.is_mod or self.get_char_name() == "Spectator":
                     sorted_clients.append(client)
             sorted_clients = sorted(sorted_clients, key=lambda x: x.get_char_name(True))
             for c in sorted_clients:
                 info += '\r\n'
                 if c == self:
                     info += '[*]'
-                if c.is_cm:
+                if c.is_gm:
                     info += '[CM]'
                 info += '[{}] {}'.format(c.id, c.get_char_name(True))
                 if len(area.pos_lock) != 1 and c.pos != "": #we're not on a single-pos area

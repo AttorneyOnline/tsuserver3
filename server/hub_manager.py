@@ -264,7 +264,7 @@ class HubManager:
 					clients.append(client)
 
 				for c in clients:
-					allowed = c.is_cm or c.is_mod or c.get_char_name() == "Spectator"
+					allowed = c.is_gm or c.is_mod or c.get_char_name() == "Spectator"
 					rpmode = not allowed and c.hub.rpmode
 					c.reload_area_list([a.name for a in c.get_area_list(rpmode, rpmode)])
 
@@ -368,7 +368,7 @@ class HubManager:
 				return 0
 
 			def cannot_ic_interact(self, client):
-				return self.mute_ic and (not client.is_cm and not client.is_mod)
+				return self.mute_ic and (not client.is_gm and not client.is_mod)
 
 			def change_hp(self, side, val):
 				if not 0 <= val <= 10:
@@ -610,8 +610,8 @@ class HubManager:
 			self.refresh_music([client])
 
 		def remove_client(self, client):
-			if client.is_cm:
-				client.is_cm = False
+			if client.is_gm:
+				client.is_gm = False
 				client.broadcast_ic.clear()
 				if self.master == client:
 					self.master = None
@@ -715,14 +715,14 @@ class HubManager:
 				exceptions = [exceptions]
 			for area in self.areas:
 				for client in area.clients:
-					if not (client in exceptions) and client.is_cm and T in client.cm_log_type:
+					if not (client in exceptions) and client.is_gm and T in client.cm_log_type:
 						client.broadcast_ooc('$CM[{}]{}'.format(T, msg))
 
 		def get_cm_list(self):
 			cms = []
 			for area in self.areas:
 				for client in area.clients:
-					if client.is_cm:
+					if client.is_gm:
 						cms.append(client)
 			
 			return cms

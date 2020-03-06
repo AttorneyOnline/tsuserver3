@@ -46,7 +46,7 @@ def ooc_cmd_s(client, arg):
     """
     areas = []
     for a in client.server.area_manager.areas:
-        if client in a.owners:
+        if client.is_gm:
             areas.append(a)
     if not areas:
         client.send_ooc('You aren\'t a CM in any area!')
@@ -56,7 +56,7 @@ def ooc_cmd_s(client, arg):
 
 def message_areas_cm(client, areas, message):
     for a in areas:
-        if not client in a.owners:
+        if not client.is_gm:
             client.send_ooc(f'You are not a CM in {a.name}!')
             return
         a.send_command('CT', client.name, message)

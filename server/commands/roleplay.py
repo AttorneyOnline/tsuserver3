@@ -90,7 +90,7 @@ def ooc_cmd_rollp(client, arg):
 
     client.area.broadcast_ooc('{} rolled in secret.'.format(
         client.char_name))
-    for c in client.area.owners:
+    for c.is_gm:
         c.send_ooc('[{}]{} secretly rolled {} out of {}.'.format(
             client.area.abbreviation, client.char_name, roll, val[0]))
 

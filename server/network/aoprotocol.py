@@ -346,7 +346,7 @@ class AOProtocol(asyncio.Protocol):
 
         """
         song_list = []
-        allowed = self.client.is_cm or self.client.is_mod or self.client.get_char_name() == "Spectator"
+        allowed = self.client.is_gm or self.client.is_mod or self.client.get_char_name() == "Spectator"
         rpmode = not allowed and self.client.hub.rpmode
         song_list += [a.name for a in self.client.get_area_list(rpmode, rpmode)]
         
@@ -694,7 +694,7 @@ class AOProtocol(asyncio.Protocol):
         # database.log_ic(self.client, self.client.area, showname, msg)
 
         #to be rewritten
-        # if self.client.is_cm and self.client.waiting_for_schedule != None:
+        # if self.client.is_gm and self.client.waiting_for_schedule != None:
         #     args = msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid, sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname, charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip, nonint_pre
         #     schedule = self.client.hub.find_schedule(self.client.waiting_for_schedule)
         #     if schedule:
@@ -706,7 +706,7 @@ class AOProtocol(asyncio.Protocol):
         #     self.client.waiting_for_schedule = None
         #     return
 
-        if self.client.is_cm and len(self.client.broadcast_ic) > 0:
+        if self.client.is_gm and len(self.client.broadcast_ic) > 0:
             i = 0
             for b in self.client.broadcast_ic:
                 area = self.client.hub.get_area_by_id(b)
@@ -794,7 +794,7 @@ class AOProtocol(asyncio.Protocol):
             return
         ooc_name = self.client.name
         prefix = ''
-        if self.client.is_cm:
+        if self.client.is_gm:
             prefix = '[CM]'
         if self.client.is_mod:
             prefix = '[MOD]'
@@ -825,7 +825,7 @@ class AOProtocol(asyncio.Protocol):
                 logger.exception('Exception while running a command')
         else:
             args[1] = self.dezalgo(args[1])
-            # if self.client.is_cm and self.client.waiting_for_schedule != None:
+            # if self.client.is_gm and self.client.waiting_for_schedule != None:
             #     schedule = self.client.hub.find_schedule(self.client.waiting_for_schedule)
             #     if schedule:
             #         schedule.msgtype = 'ooc'
@@ -893,7 +893,7 @@ class AOProtocol(asyncio.Protocol):
                 else:
                     name, length = self.server.get_song_data(self.server.music_list + self.client.hub.music_list, args[0])
 
-                if (self.client.is_mod or self.client.is_cm) and self.client.ambience_editing:
+                if (self.client.is_mod or self.client.is_gm) and self.client.ambience_editing:
                     self.client.area.set_ambience(name)
                     self.client.send_ooc(
                         'Setting current area\'s ambience to {}.'.format(name))
@@ -908,7 +908,7 @@ class AOProtocol(asyncio.Protocol):
                     if len(args) > 3:
                         effects = int(args[3])
 
-                    if self.client.is_cm and len(self.client.broadcast_ic) > 0:
+                    if self.client.is_gm and len(self.client.broadcast_ic) > 0:
                         i = 0
                         for b in self.client.broadcast_ic:
                             area = self.client.hub.get_area_by_id(b)
@@ -921,7 +921,7 @@ class AOProtocol(asyncio.Protocol):
                     else:
                         self.client.area.play_music(name, self.client.char_id, length, showname, effects)
                 else:
-                    if self.client.is_cm and len(self.client.broadcast_ic) > 0:
+                    if self.client.is_gm and len(self.client.broadcast_ic) > 0:
                         i = 0
                         for b in self.client.broadcast_ic:
                             area = self.client.hub.get_area_by_id(b)
@@ -983,7 +983,7 @@ class AOProtocol(asyncio.Protocol):
                 'You used witness testimony/cross examination signs too many times. Please try again after {} seconds.'
                 .format(int(self.client.wtce_mute())))
             return
-        if self.client.is_cm and len(self.client.broadcast_ic) > 0:
+        if self.client.is_gm and len(self.client.broadcast_ic) > 0:
             i = 0
             for b in self.client.broadcast_ic:
                 area = self.client.hub.get_area_by_id(b)
@@ -1034,7 +1034,7 @@ class AOProtocol(asyncio.Protocol):
         if not self.client.is_checked:
             return
         # if self.client in self.client.area.owners:
-        if self.client.is_cm:
+        if self.client.is_gm:
             if not self.client.can_call_case():
                 self.client.send_ooc(
                     'Please wait 60 seconds between case announcements!')
