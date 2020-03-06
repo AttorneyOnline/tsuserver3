@@ -29,7 +29,7 @@ import logging
 logger = logging.getLogger('debug')
 
 from server import database
-from server.area_manager import AreaManager
+from server.hub_manager import HubManager
 from server.client_manager import ClientManager
 from server.emotes import Emotes
 from server.exceptions import ServerError
@@ -41,6 +41,7 @@ import server.logger
 class TsuServer3:
     """The main class for tsuserver3 server software."""
     def __init__(self):
+        self.hub_manager = None
         self.software = 'tsuserver3'
         self.release = 3
         self.major_version = 3
@@ -51,9 +52,10 @@ class TsuServer3:
         self.char_list = None
         self.char_emotes = None
         self.char_pages_ao1 = None
-        self.music_list = None
+        self.music_list = []
         self.music_list_ao2 = None
         self.music_pages_ao1 = None
+        self.bglock = False
         self.backgrounds = None
         self.zalgo_tolerance = None
 
@@ -105,6 +107,8 @@ class TsuServer3:
 
         asyncio.ensure_future(self.schedule_unbans())
 
+        self.hub_manager = HubManager(self)
+
         database.log_misc('start')
         print('Server started and is listening on port {}'.format(
             self.config['port']))
@@ -139,7 +143,8 @@ class TsuServer3:
         """
         c = self.client_manager.new_client(transport)
         c.server = self
-        c.area = self.area_manager.default_area()
+        c.hub = self.hub_manager.default_hub()
+        c.area = c.hub.default_area()
         c.area.new_client(c)
         return c
 
@@ -150,6 +155,7 @@ class TsuServer3:
 
         """
         client.area.remove_client(client)
+        client.hub.remove_client(client)
         self.client_manager.remove_client(client)
 
     @property
@@ -192,11 +198,9 @@ class TsuServer3:
         self.char_emotes = {char: Emotes(char) for char in self.char_list}
 
     def load_music(self):
-        """Load the music list from a YAML file."""
-        with open('config/music.yaml', 'r', encoding='utf-8') as music:
-            self.music_list = yaml.safe_load(music)
-        self.build_music_pages_ao1()
-        self.build_music_list_ao2()
+        self.build_music_list()
+        self.music_pages_ao1 = self.build_music_pages_ao1(self.music_list)
+        self.music_list_ao2 = self.build_music_list_ao2(self.music_list)
 
     def load_backgrounds(self):
         """Load the backgrounds list from a YAML file."""
@@ -224,45 +228,33 @@ class TsuServer3:
             self.char_pages_ao1[i // 10][i % 10] = '{}#{}&&0&&&0&'.format(
                 i, self.char_list[i])
 
-    def build_music_pages_ao1(self):
-        """
-        Cache a list of tracks that can be used for the
-        AO1 connection handshake.
-        """
-        self.music_pages_ao1 = []
-        index = 0
-        # add areas first
-        for area in self.area_manager.areas:
-            self.music_pages_ao1.append(f'{index}#{area.name}')
-            index += 1
-        # then add music
-        for item in self.music_list:
-            self.music_pages_ao1.append('{}#{}'.format(index,
-                                                       item['category']))
-            index += 1
-            for song in item['songs']:
-                self.music_pages_ao1.append('{}#{}'.format(
-                    index, song['name']))
-                index += 1
-        self.music_pages_ao1 = [
-            self.music_pages_ao1[x:x + 10]
-            for x in range(0, len(self.music_pages_ao1), 10)
-        ]
+    def build_music_list(self):
+        with open('config/music.yaml', 'r', encoding='utf-8') as music:
+            self.music_list = yaml.safe_load(music)
 
-    def build_music_list_ao2(self):
-        """
-        Cache a list of tracks that can be used for the
-        AO2 connection handshake.
-        """
-        self.music_list_ao2 = []
-        # add areas first
-        for area in self.area_manager.areas:
-            self.music_list_ao2.append(area.name)
-            # then add music
-        for item in self.music_list:
-            self.music_list_ao2.append(item['category'])
+    def build_music_pages_ao1(self, music_list):
+        song_list = []
+        index = 0
+        for item in music_list:
+            if 'category' not in item:
+                continue
+            song_list.append('{}#{}'.format(index, item['category']))
+            index += 1
             for song in item['songs']:
-                self.music_list_ao2.append(song['name'])
+                song_list.append('{}#{}'.format(index, song['name']))
+                index += 1
+        song_list = [song_list[x:x + 10] for x in range(0, len(song_list), 10)]
+        return song_list
+
+    def build_music_list_ao2(self, music_list):
+        song_list = []
+        for item in music_list:
+            if 'category' not in item: #skip settings n stuff
+                continue
+            song_list.append(item['category'])
+            for song in item['songs']:
+                song_list.append(song['name'])
+        return song_list
 
     def is_valid_char_id(self, char_id):
         """
@@ -285,14 +277,17 @@ class TsuServer3:
                 return i
         raise ServerError('Character not found.')
 
-    def get_song_data(self, music):
+    def get_song_data(self, music_list, music):
         """
         Get information about a track, if exists.
+        :param music_list: music list to search
         :param music: track name
         :returns: tuple (name, length or -1)
         :raises: ServerError if track not found
         """
-        for item in self.music_list:
+        for item in music_list:
+            if 'category' not in item: #skip settings n stuff
+                continue
             if item['category'] == music:
                 return item['category'], -1
             for song in item['songs']:
@@ -322,7 +317,7 @@ class TsuServer3:
 
         """
         char_name = client.char_name
-        ooc_name = '{}[{}][{}]'.format('<dollar>G', client.area.abbreviation,
+        ooc_name = '{}[{}][{}]'.format('~G', client.area.abbreviation,
                                        char_name)
         if as_mod:
             ooc_name += '[M]'
@@ -352,13 +347,13 @@ class TsuServer3:
 
         """
         char_name = client.char_name
-        area_name = client.area.name
-        area_id = client.area.abbreviation
+        hub_name = client.hub.name
+        hub_id = client.area.abbreviation
         self.send_all_cmd_pred(
             'CT',
             '{}'.format(self.config['hostname']),
             '=== Advert ===\r\n{} in {} [{}] needs {}\r\n==============='.
-            format(char_name, area_name, area_id, msg),
+            format(char_name, hub_name, hub_id, msg),
             '1',
             pred=lambda x: not x.muted_adverts)
 

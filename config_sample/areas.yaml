@@ -1,22 +1,70 @@
-- area: Basement
-  background: gs4
-  bglock: true
-  evidence_mod: FFA
-- area: Courtroom 1
-  background: gs4
-  bglock: false
-  evidence_mod: CM
-  locking_allowed: true
-  iniswap_allowed: false
-- area: Courtroom 2
-  background: gs4
-  bglock: false
-  evidence_mod: Mods
-  locking_allowed: true
-  iniswap_allowed: false
-- area: Courtroom 3
-  background: gs4
-  bglock: false
-  evidence_mod: HiddenCM
-  locking_allowed: false
-  iniswap_allowed: false
+- hub: Main
+  allow_cm: false
+  doc: 'Welcome! Please use /motd'
+  iniswap_allowed: true
+  showname_changes_allowed: true
+  shouts_allowed: true
+  iniswap_allowed: true
+  blankposting_allowed: true
+  music_ref: legacy
+  areas:
+    - area: Lobby
+      background: OCCourtNew
+      desc: 'This is where you end up when you first join the server. Enjoy your stay!'
+      bglock: false
+      poslock: None
+      can_rename: false
+      evidence_mod: FFA
+      locking_allowed: false
+    - area: Lounge
+      background: OCCourtCafe
+      desc: 'The place where you literally chill out.'
+      bglock: false
+      poslock: None
+      can_rename: false
+      evidence_mod: FFA
+      locking_allowed: false
+    - area: Laboratory
+      background: default
+      desc: 'Place where you test stuff.'
+      bglock: false
+      poslock: None
+      can_rename: false
+      evidence_mod: FFA
+      locking_allowed: false
+    - area: Arcade 1
+      background: OCArcade
+      desc: 'This is where you play your mafias or whatever.'
+      bglock: false
+      poslock: None
+      can_rename: false
+      evidence_mod: FFA
+      locking_allowed: false
+    - area: Arcade 2
+      background: OCArcade
+      desc: 'This is where you play your mafias or whatever.'
+      bglock: false
+      poslock: None
+      can_rename: false
+      evidence_mod: FFA
+      locking_allowed: false
+- hub: Roleplay
+  allow_cm: true
+  max_areas: 100
+  doc: 'A roleplay zone'
+  iniswap_allowed: true
+  showname_changes_allowed: true
+  shouts_allowed: true
+  iniswap_allowed: true
+  blankposting_allowed: true
+  music_ref: legacy
+  areas:
+    - area: Lobby
+      background: OCCourtNew
+      desc: 'The main dropzone for the RP.'
+      bglock: false
+      poslock: None
+      can_rename: false
+      can_remove: false
+      evidence_mod: FFA
+      locking_allowed: false

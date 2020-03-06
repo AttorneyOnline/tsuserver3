@@ -1,0 +1,28 @@
+CaseyMayCazy#5850's idea for area locking/unlocking:
+Area tags. Example being, you can tag areas and anyone inside the area when said tag changed can only move to areas with the same tag. Example:
+[?] = tag name
+@ = player
+
+@ [W]Hallway -> [W]Bedroom -> [W]Bathroom
+
+Player can move to bedroom from hallway and to bathroom from bedroom without issue.
+
+[W]Hallway ->[R] @ Bedroom -> [R]Bathroom
+
+Player can only move between Bedroom and Bathroom, not the hallway.
+
+[W]Hallway ->[R] Bedroom -> [B] @ Bathroom
+
+Player can only stay in the bathroom. He can't move to bedroom nor hallway.
+
+This represents the fact that you can lock your bedroom and additionally lock yourself in the bathroom.
+
+A famous man's wise words:
+I think eating exotic high-end seafood is very cathartic and inhumane
+lobsters, crabs and most other sorts of foods you get beyond fish are made fresh
+you take them out the bucket with cuffs on their claws and stab them in the brain then boil their body so they stay fresh
+it just feels like taking them out of their habitat and leaving them alive only to kill them immediately after releasing them is harsh
+dunno
+like with animals it just doesnt feel as bad to kill a pig or rooster that was raised to be turned into food
+but when you fish a lobster out of the water than drag it back to a kitchen and cram a blade down its skin and throw it in a cauldron
+that just feels ew

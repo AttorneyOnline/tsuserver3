@@ -18,14 +18,10 @@
 import asyncio
 import time
 
-import logging
-logger = logging.getLogger('debug')
-
-from server import database
+from server import logger
 
 
 class MasterServerClient:
-    """Advertises information about this server to the master server."""
     def __init__(self, server):
         self.server = server
         self.reader = None
@@ -35,25 +31,25 @@ class MasterServerClient:
         loop = asyncio.get_event_loop()
         while True:
             try:
-                self.reader, self.writer = await asyncio.open_connection(
-                    self.server.config['masterserver_ip'],
-                    self.server.config['masterserver_port'],
-                    loop=loop)
+                self.reader, self.writer = await asyncio.open_connection(self.server.config['masterserver_ip'],
+                                                                         self.server.config['masterserver_port'],
+                                                                         loop=loop)
                 await self.handle_connection()
-            except (ConnectionRefusedError, TimeoutError,
-                ConnectionResetError, asyncio.IncompleteReadError):
-                logger.debug('Connection error occurred.')
+            except (ConnectionRefusedError, TimeoutError):
+                pass
+            except (ConnectionResetError, asyncio.IncompleteReadError):
                 self.writer = None
                 self.reader = None
             finally:
-                logger.debug('Retrying MS connection in 30 seconds.')
+                logger.log_debug(
+                    "Couldn't connect to the master server, retrying in 30 seconds.")
+                print("Couldn't connect to the master server, retrying in 30 seconds.")
                 await asyncio.sleep(30)
 
     async def handle_connection(self):
-        logger.debug('Master server connected.')
-        print('Master server connected ({}:{})'.format(
-            self.server.config['masterserver_ip'],
-            self.server.config['masterserver_port']))
+        logger.log_debug('Master server connected.')
+        print('Master server connected ({}:{})'.format(self.server.config['masterserver_ip'],
+                                                       self.server.config['masterserver_port']))
 
         await self.send_server_info()
         ping_timeout = False
@@ -68,13 +64,13 @@ class MasterServerClient:
                     raw_msg = data.decode()
                     cmd, *args = raw_msg.split('#')
                     if cmd != 'CHECK' and cmd != 'PONG':
-                        logger.debug(f'Incoming: {raw_msg}')
+                        logger.log_debug(
+                            '[MASTERSERVER][INC][RAW]{}'.format(raw_msg))
                     elif cmd == 'CHECK':
                         await self.send_raw_message('PING#%')
                     elif cmd == 'PONG':
                         ping_timeout = False
                     elif cmd == 'NOSERV':
-                        logger.debug('MS does not have our server. Readvertising.')
                         await self.send_server_info()
             if time.time() - last_ping > 10:
                 if ping_timeout:
@@ -86,16 +82,17 @@ class MasterServerClient:
             await asyncio.sleep(1)
 
     async def send_server_info(self):
-        logger.debug('Advertising to MS')
         cfg = self.server.config
         port = str(cfg['port'])
         if cfg['use_websockets']:
             port += '&{}'.format(cfg['websocket_port'])
-        msg = 'SCC#{}#{}#{}#{}#%'.format(port, cfg['masterserver_name'],
-                                         cfg['masterserver_description'],
+        msg = 'SCC#{}#{}#{}#{}#%'.format(port, cfg['masterserver_name'], cfg['masterserver_description'],
                                          self.server.software)
         await self.send_raw_message(msg)
 
     async def send_raw_message(self, msg):
-        self.writer.write(msg.encode())
-        await self.writer.drain()
+        try:
+            self.writer.write(msg.encode())
+            await self.writer.drain()
+        except ConnectionResetError:
+            return

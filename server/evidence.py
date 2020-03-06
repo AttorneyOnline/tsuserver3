@@ -43,21 +43,18 @@ class EvidenceList:
             sequence = (self.name, self.desc, self.image)
             return '&'.join(sequence)
 
+        def to_dict(self):
+            return {'name': self.name, 'desc': self.desc, 'image': self.image, 'pos': self.pos}
+
     def __init__(self):
         self.evidences = []
-        self.poses = {
-            'def': ['def', 'hld'],
-            'pro': ['pro', 'hlp'],
-            'wit': ['wit', 'sea'],
-            'sea': ['sea', 'wit'],
-            'hlp': ['hlp', 'pro'],
-            'hld': ['hld', 'def'],
-            'jud': ['jud', 'jur'],
-            'jur': ['jur', 'jud'],
-            'all':
-            ['hlp', 'hld', 'wit', 'jud', 'pro', 'def', 'jur', 'sea', ''],
-            'pos': []
-        }
+
+    def can_see(self, evi, pos):  # used with hiddenCM ebidense
+        pos = pos.strip(' ')
+        for p in evi.pos.strip(' ').split(','):
+            if p == 'all' or (pos != '' and pos == p):
+                return True
+        return False
 
     def login(self, client):
         """
@@ -65,19 +62,9 @@ class EvidenceList:
         :param client: origin
 
         """
-        if client.area.evidence_mod == 'FFA':
+        if client.is_cm or client.is_mod:
             return True
-        elif client.area.evidence_mod == 'Mods' and \
-            not client.is_mod:
-            return False
-        elif client.area.evidence_mod == 'CM' and \
-            not client in client.area.owners and not client.is_mod:
-            return False
-        elif client.area.evidence_mod == 'HiddenCM' and \
-            not client in client.area.owners and not client.is_mod:
-            return False
-        else:
-            return True
+        return False
 
     def correct_format(self, client, desc):
         """
@@ -87,14 +74,17 @@ class EvidenceList:
         :param desc: evidence description
 
         """
-        if client.area.evidence_mod != 'HiddenCM':
+        # correct format: <owner=pos,pos,pos>\ndesc
+        lines = desc.split('\n')
+        cmd = lines[0].strip(' ') #remove all whitespace
+        if cmd[:7] == '<owner=' and cmd.endswith('>'):
+            # poses = cmd[7:-1]
+            #broken with extra shorthands
+            # for pos in poses.strip(' ').split(','):
+            #     if not (pos in self.poses['all']) and pos != 'pos':
+            #         return False
             return True
-        elif desc[:9] == '<owner = ' and desc[9:12] in self.poses and desc[
-                12:14] == '>\n':
-            # correct format: <owner = pos>\ndesc
-            return True
-        else:
-            return False
+        return False
 
     def add_evidence(self, client, name, description, image, pos='all'):
         """
@@ -107,17 +97,23 @@ class EvidenceList:
         (Default value = 'all')
 
         """
-        if not self.login(client):
-            return
-
-        if client.area.evidence_mod == 'HiddenCM':
-            pos = 'pos'
         if len(self.evidences) >= self.limit:
             client.send_ooc(
                 f'You can\'t have more than {self.limit} evidence items at a time.'
             )
+            return
+        if self.login(client):
+            pos = 'pos'
+            self.evidences.append(self.Evidence(
+                name, description, image, pos))
         else:
-            self.evidences.append(self.Evidence(name, description, image, pos))
+            if not client.hub.status.lower().startswith('rp-strict'):
+                if len(client.area.pos_lock) > 0:
+                    pos = client.pos
+                else:
+                    pos = 'all'
+                self.evidences.append(self.Evidence(
+                    name, description, image, pos))
 
     def evidence_swap(self, client, id1, id2):
         """
@@ -142,16 +138,21 @@ class EvidenceList:
         evi_list = []
         nums_list = [0]
         for i in range(len(self.evidences)):
-            if client.area.evidence_mod == 'HiddenCM' and self.login(client):
-                nums_list.append(i + 1)
+            if self.login(client):
+                nums_list.append(i+1)
                 evi = self.evidences[i]
                 evi_list.append(
-                    self.Evidence(evi.name, f'<owner = {evi.pos}>\n{evi.desc}',
+                    self.Evidence(evi.name, '<owner={}>\n{}'.format(evi.pos, evi.desc),
                                   evi.image, evi.pos).to_string())
-            elif client.pos in self.poses[self.evidences[i].pos]:
-                nums_list.append(i + 1)
+            elif self.can_see(self.evidences[i], client.pos):
+                nums_list.append(i+1)
                 evi_list.append(self.evidences[i].to_string())
         return nums_list, evi_list
+
+    def import_evidence(self, data):
+        for evi in data:
+            name, description, image, pos = evi['name'], evi['desc'], evi['image'], evi['pos']
+            self.evidences.append(self.Evidence(name, description, image, pos))
 
     def del_evidence(self, client, id):
         """
@@ -160,10 +161,17 @@ class EvidenceList:
         :param id: evidence ID
 
         """
-        if not self.login(client):
-            return
-
-        self.evidences.pop(id)
+        if self.login(client):
+            self.evidences.pop(id)
+        else:
+            if not client.hub.status.lower().startswith('rp-strict'):
+                # Are you serious? This is absolutely fucking mental.
+                # Server sends evidence to client in an indexed list starting from 1.
+                # Client sends evidence updates to server using an index starting from 0.
+                # This needs a complete overhaul.
+                idx = client.evi_list[id+1]-1
+                # self.evidences[idx].pos = 'pos' #simply hide it lo
+                self.evidences.pop(idx)
 
     def edit_evidence(self, client, id, arg):
         """
@@ -173,14 +181,24 @@ class EvidenceList:
         :param arg: evidence information
 
         """
-        if not self.login(client):
-            return
-
-        if client.area.evidence_mod == 'HiddenCM' and self.correct_format(
-                client, arg[1]):
-            self.evidences[id] = self.Evidence(arg[0], arg[1][14:], arg[2],
-                                               arg[1][9:12])
-        elif client.area.evidence_mod == 'HiddenCM':
-            client.send_ooc('You entered a wrong pos.')
+        if self.login(client):
+            # if client.area.evidence_mod == 'HiddenCM':
+            if self.correct_format(client, arg[1]):
+                lines = arg[1].split('\n')
+                cmd = lines[0].strip(' ')  # remove all whitespace
+                poses = cmd[7:-1]
+                self.evidences[id] = self.Evidence(arg[0], '\n'.join(lines[1:]), arg[2], poses)
+            else:
+                client.send_host_message('You entered a bad pos.')
+                return
+            # else:
+            #     self.evidences[id] = self.Evidence(arg[0], arg[1], arg[2], arg[3])
         else:
-            self.evidences[id] = self.Evidence(arg[0], arg[1], arg[2], arg[3])
+            if not client.hub.status.lower().startswith('rp-strict'):
+                # Are you serious? This is absolutely fucking mental.
+                # Server sends evidence to client in an indexed list starting from 1.
+                # Client sends evidence updates to server using an index starting from 0.
+                # This needs a complete overhaul.
+                idx = client.evi_list[id+1]-1
+                self.evidences[idx] = self.Evidence(
+                    arg[0], arg[1], arg[2], self.evidences[idx].pos)
