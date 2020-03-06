@@ -432,7 +432,7 @@ class AOProtocol(asyncio.Protocol):
             # 1.3.0 validation monstrosity.
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname = args
             if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
-                self.client.send_host_message("Showname changes are forbidden in this hub!")
+                self.client.send_ooc("Showname changes are forbidden in this hub!")
                 return
         elif self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
                                    self.ArgType.STR,
@@ -443,7 +443,7 @@ class AOProtocol(asyncio.Protocol):
             # 1.3.5 validation monstrosity.
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair = args
             if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
-                self.client.send_host_message("Showname changes are forbidden in this hub!")
+                self.client.send_ooc("Showname changes are forbidden in this hub!")
                 return
         elif self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
                                    self.ArgType.STR,
@@ -454,7 +454,7 @@ class AOProtocol(asyncio.Protocol):
             # 1.4.0 validation monstrosity.
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre = args
             if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
-                self.client.send_host_message("Showname changes are forbidden in this hub!")
+                self.client.send_ooc("Showname changes are forbidden in this hub!")
                 return
         elif self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
                                    self.ArgType.STR,
@@ -466,7 +466,7 @@ class AOProtocol(asyncio.Protocol):
             # Looping sfx and frame shenanigans validation monstrosity.
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive = args
             if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
-                self.client.send_host_message("Showname changes are forbidden in this hub!")
+                self.client.send_ooc("Showname changes are forbidden in this hub!")
                 return
         elif self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
                                    self.ArgType.STR,
@@ -479,7 +479,7 @@ class AOProtocol(asyncio.Protocol):
             # Looping sfx and frame shenanigans validation monstrosity, effect and pair order edition
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive, effect = args
             if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
-                self.client.send_host_message("Showname changes are forbidden in this hub!")
+                self.client.send_ooc("Showname changes are forbidden in this hub!")
                 return
         elif self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
                                    self.ArgType.STR,
@@ -496,12 +496,12 @@ class AOProtocol(asyncio.Protocol):
             if (len(pair_args) > 1):
                 pair_order = pair_args[1]
             if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
-                self.client.send_host_message("Showname changes are forbidden in this hub!")
+                self.client.send_ooc("Showname changes are forbidden in this hub!")
                 return
         else:
             return
         if self.client.hub.is_iniswap(self.client, pre, anim, folder) and folder != self.client.get_char_name():
-            self.client.send_host_message("Iniswap is blocked in this area")
+            self.client.send_ooc("Iniswap is blocked in this area")
             return
         if len(self.client.charcurse) > 0 and \
             folder != self.client.char_name:
@@ -509,17 +509,17 @@ class AOProtocol(asyncio.Protocol):
                 "You may not iniswap while you are charcursed!")
             return
         if self.client.get_char_name() == "Spectator":
-            self.client.send_host_message("You may not use ic chat when you are a Spectator!")
+            self.client.send_ooc("You may not use ic chat when you are a Spectator!")
             return
         if self.client.blinded:
-            self.client.send_host_message("You may not use ic chat when you are blinded!")
+            self.client.send_ooc("You may not use ic chat when you are blinded!")
             return
         if not self.client.hub.blankposting_allowed:
             if text == ' ':
-                self.client.send_host_message("Blankposting is forbidden in this hub!")
+                self.client.send_ooc("Blankposting is forbidden in this hub!")
                 return
             if text.isspace():
-                self.client.send_host_message(
+                self.client.send_ooc(
                     "Blankposting is forbidden in this hub, and putting more spaces in does not make it not blankposting.")
                 return
             if len(re.sub(r'[{}\\`|(~~)]', '', text).replace(
@@ -553,7 +553,7 @@ class AOProtocol(asyncio.Protocol):
         #         return
         #     text = ' '.join(part[1:])
         if text.lstrip().startswith('(('):
-            self.client.send_host_message("Please, *please* use the OOC chat instead of polluting IC. Normal OOC is local to area. You can use /h to talk hub-wide or /g to talk across the entire server.")
+            self.client.send_ooc("Please, *please* use the OOC chat instead of polluting IC. Normal OOC is local to area. You can use /h to talk hub-wide or /g to talk across the entire server.")
             return
         if msg_type not in ('chat', '0', '1'):
             return
@@ -730,7 +730,7 @@ class AOProtocol(asyncio.Protocol):
                                 current_time, self.client.id, self.client.get_char_name(), msg))
                             #self.client.area.recorded_messages.append(args)
                     i += 1
-            self.client.send_host_message(
+            self.client.send_ooc(
                 'Broadcasting message to {} areas.'.format(len(self.client.broadcast_ic)))
         else:
             if len(self.client.area.pos_lock) > 0 and pos not in self.client.area.pos_lock:
@@ -790,7 +790,7 @@ class AOProtocol(asyncio.Protocol):
                 return
         if self.client.name.startswith(self.server.config['hostname']) or self.client.name.startswith(
                 '<dollar>G') or self.client.name.startswith('CM') or self.client.name.startswith('GM') or self.client.name.startswith('MOD'):
-            self.client.send_host_message('That name is reserved!')
+            self.client.send_ooc('That name is reserved!')
             return
         ooc_name = self.client.name
         prefix = ''
@@ -830,9 +830,9 @@ class AOProtocol(asyncio.Protocol):
             #     if schedule:
             #         schedule.msgtype = 'ooc'
             #         schedule.message = args[1]
-            #         self.client.send_host_message('You have succesfully updated the schedule message.')
+            #         self.client.send_ooc('You have succesfully updated the schedule message.')
             #     else:
-            #         self.client.send_host_message('The schedule no longer exists. Schedule message edit cancelled.')
+            #         self.client.send_ooc('The schedule no longer exists. Schedule message edit cancelled.')
             #     self.client.waiting_for_schedule = None
             #     return
             if self.client.shaken:
@@ -895,13 +895,13 @@ class AOProtocol(asyncio.Protocol):
 
                 if (self.client.is_mod or self.client.is_cm) and self.client.ambience_editing:
                     self.client.area.set_ambience(name)
-                    self.client.send_host_message(
+                    self.client.send_ooc(
                         'Setting current area\'s ambience to {}.'.format(name))
                     return
                 if len(args) > 2:
                     showname = args[2]
                     if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
-                        self.client.send_host_message("Showname changes are forbidden in this hub!")
+                        self.client.send_ooc("Showname changes are forbidden in this hub!")
                         return
 
                     effects = 0
@@ -916,7 +916,7 @@ class AOProtocol(asyncio.Protocol):
                                 area.play_music(
                                     name, self.client.char_id, length, showname, effects)
                                 i += 1
-                        self.client.send_host_message(
+                        self.client.send_ooc(
                             'Broadcasting music to {} areas.'.format(len(self.client.broadcast_ic)))
                     else:
                         self.client.area.play_music(name, self.client.char_id, length, showname, effects)
@@ -929,7 +929,7 @@ class AOProtocol(asyncio.Protocol):
                                 area.play_music(
                                     name, self.client.char_id, length)
                                 i += 1
-                        self.client.send_host_message(
+                        self.client.send_ooc(
                             'Broadcasting music to {} areas.'.format(len(self.client.broadcast_ic)))
                     else:
                         self.client.area.play_music(name, self.client.char_id, length)
@@ -938,7 +938,7 @@ class AOProtocol(asyncio.Protocol):
                 logger.log_server('[MUS]Changed music to {}.'.format(name), self.client)
                 logger.log_demo('[MUS]{}'.format(name), self.client)
             except ServerError:
-                self.client.send_host_message('Error: song {} isn\'t recognized by server!'.format(args[0]))
+                self.client.send_ooc('Error: song {} isn\'t recognized by server!'.format(args[0]))
         except ClientError as ex:
             self.client.send_ooc(ex)
 
@@ -995,7 +995,7 @@ class AOProtocol(asyncio.Protocol):
                     area.add_to_judgelog(self.client, f'used {sign}')
                     database.log_room('wtce', self.client, area, message=sign)
                     i += 1
-            self.client.send_host_message(
+            self.client.send_ooc(
                 'Broadcasting judge animation to {} areas.'.format(len(self.client.broadcast_ic)))
         else:
             if len(args) == 1:

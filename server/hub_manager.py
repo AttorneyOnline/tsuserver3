@@ -274,20 +274,20 @@ class HubManager:
 				by = ''
 				if self.locked_by != None:
 					by = ' by {}'.format(client.get_char_name())
-				self.send_host_message('This area is now locked{}.'.format(by))
+				self.broadcast_ooc('This area is now locked{}.'.format(by))
 
 			def unlock(self):
 				self.is_locked = False
 				self.locked_by = None
-				self.send_host_message('This area is now open.')
+				self.broadcast_ooc('This area is now open.')
 
 			def hide(self):
 				self.is_hidden = True
-				self.send_host_message('This area is now hidden.')
+				self.broadcast_ooc('This area is now hidden.')
 
 			def unhide(self):
 				self.is_hidden = False
-				self.send_host_message('This area is now unhidden.')
+				self.broadcast_ooc('This area is now unhidden.')
 
 			def is_char_available(self, char_id):
 				return char_id not in [x.char_id for x in self.clients]
@@ -302,8 +302,16 @@ class HubManager:
 				for c in self.clients:
 					c.send_command(cmd, *args)
 
-			def send_host_message(self, msg):
+			def broadcast_ooc(self, msg):
+				"""
+				Broadcast an OOC message to all clients in the area.
+				:param msg: message
+				"""
 				self.send_command('CT', self.server.config['hostname'], msg)
+				# self.send_owner_command(
+				# 	'CT',
+				# 	'[' + self.abbreviation + ']' + self.server.config['hostname'],
+				# 	msg, '1')
 
 			def set_next_msg_delay(self, delay):
 				delay = min(3000, 100 + delay) #100ms lag margin
@@ -347,7 +355,7 @@ class HubManager:
 
 			def can_send_message(self, client):
 				if self.cannot_ic_interact(client):
-					client.send_host_message('You are unable to speak in this area.')
+					client.broadcast_ooc('You are unable to speak in this area.')
 					return False
 				return (time.time() * 1000.0 - self.next_message_time) > 0
 
@@ -670,7 +678,7 @@ class HubManager:
 				area.recorded_messages.clear()
 			
 			if announce:
-				self.send_host_message('Clearing IC records for {} areas.'.format(len(self.areas)))
+				self.broadcast_ooc('Clearing IC records for {} areas.'.format(len(self.areas)))
 
 		def start_recording(self, announce=False, clear=False):
 			msg = ''
@@ -686,7 +694,7 @@ class HubManager:
 				msg = ' (Clearing records for {} areas)'.format(i)
 
 			if announce:
-				self.send_host_message('Starting IC records for {} areas{}.'.format(len(self.areas), msg))
+				self.broadcast_ooc('Starting IC records for {} areas{}.'.format(len(self.areas), msg))
 
 		def stop_recording(self, announce=False):
 			i = 0
@@ -696,11 +704,11 @@ class HubManager:
 					i += 1
 
 			if announce and i > 0:
-				self.send_host_message('Stopping IC records for {} areas.'.format(i))
+				self.broadcast_ooc('Stopping IC records for {} areas.'.format(i))
 
-		def send_host_message(self, msg):
+		def broadcast_ooc(self, msg):
 			for area in self.areas:
-				area.send_host_message(msg)
+				area.broadcast_ooc(msg)
 
 		def send_to_cm(self, T, msg, exceptions):
 			if type(exceptions) != list:
@@ -708,7 +716,7 @@ class HubManager:
 			for area in self.areas:
 				for client in area.clients:
 					if not (client in exceptions) and client.is_cm and T in client.cm_log_type:
-						client.send_host_message('$CM[{}]{}'.format(T, msg))
+						client.broadcast_ooc('$CM[{}]{}'.format(T, msg))
 
 		def get_cm_list(self):
 			cms = []

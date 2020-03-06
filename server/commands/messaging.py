@@ -60,7 +60,7 @@ def message_areas_cm(client, areas, message):
             client.send_ooc(f'You are not a CM in {a.name}!')
             return
         a.send_command('CT', client.name, message)
-        a.send_owner_command('CT', client.name, message)
+        # a.send_owner_command('CT', client.name, message)
         database.log_room('chat.cm', client, a, message=message)
 
 

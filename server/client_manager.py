@@ -226,15 +226,14 @@ class ClientManager:
             self.area.send_command('CharsCheck', *self.get_available_char_list())
             database.log_room('char.change', self, self.area,
                 message={'from': old_char, 'to': self.char_name})
-            self.hub.send_to_cm('CharLog', '[{}][{}]Changed character from {} to {}.'
-                                .format(self.id, self.name, old_char, self.get_char_name()), self)
+            self.hub.send_to_cm('CharLog', f'[{self.id}][{self.name}]Changed character from {old_char} to {self.get_char_name()}.', self)
 
             if self.following != None:
                 try:
                     c = self.server.client_manager.get_targets(
                         self, TargetType.ID, int(self.following), False)[0]
-                    self.send_host_message(
-                        'You are no longer following [{}] {}.'.format(c.id, c.get_char_name(True)))
+                    self.send_ooc(
+                        f'You are no longer following [{c.id}] {c.get_char_name(True)}.')
                     self.following = None
                 except:
                     self.following = None
@@ -272,15 +271,15 @@ class ClientManager:
             msg = 'no longer'
             if tog:
                 msg = 'now'
-            self.send_host_message('You are {} hidden from the area.'.format(msg))
+            self.send_ooc(f'You are {msg} hidden from the area.')
 
         def blind(self, tog=True):
             self.blinded = tog
             msg = 'no longer'
             if tog:
                 msg = 'now'
-            self.send_host_message(
-                'You are {} blinded from the area and seeing non-broadcasted IC messages.'.format(msg))
+            self.send_ooc(
+                f'You are {msg} blinded from the area and seeing non-broadcasted IC messages.')
             self.area.update_evidence_list(self)
 
         def wtce_mute(self):
@@ -399,7 +398,7 @@ class ClientManager:
                         c.send_ooc(
                             f'Following [{self.id}] {self.get_char_name(True)} to {area.name}. [HUB: {area.hub.abbreviation}]')
 
-            if not self.sneak and not hidden and not self.get_char_name() == "Spectator":
+            if not self.sneak and not self.hidden and not self.get_char_name() == "Spectator":
                 old_area.broadcast_ooc(f'[{self.id}]{self.get_char_name(True)} leaves to [{area.id}] {area.name}. [HUB: {area.hub.abbreviation}]')
                 area.broadcast_ooc(f'[{self.id}]{self.get_char_name(True)} enters from [{old_area.id}] {old_area.name}. [HUB: {old_area.hub.abbreviation}]')
             else:
@@ -419,7 +418,7 @@ class ClientManager:
                 desc = self.area.desc[:128]
                 if len(self.area.desc) > len(desc):
                     desc += "... Use /desc to read the rest."
-                self.send_host_message('Area Description: {}'.format(desc))
+                self.send_ooc(f'Area Description: {desc}')
 
         def get_area_list(self, hidden=False, accessible=False):
             area_list = []
@@ -441,7 +440,7 @@ class ClientManager:
             acc = ''
             if accessible:
                 acc = 'Accessible '
-            msg = '=== {}Areas for Hub [{}]: {} ==='.format(acc, self.hub.id, self.hub.name)
+            msg = f'=== {acc}Areas for Hub [{self.hub.id}]: {self.hub.name} ==='
             lock = {True: '[L]', False: ''}
             hide = {True: '[H]', False: ''}
             mute = {True: '[M]', False: ''}
@@ -468,19 +467,17 @@ class ClientManager:
                     mu = mute[area.mute_ic]
                     me = '[*]'
 
-                msg += '\r\n{}Area {}: {}{} {}{}{}{}'.format(
-                    me, area.id, acc, area.name, users, lo, hi, mu)
+                msg += f'\r\n{me}Area {area.id}: {acc}{area.name} {users}{lo}{hi}{mu}'
             self.send_ooc(msg)
 
         def send_hub_list(self):
-            """Send a list of areas over OOC."""
-            msg = '=== Hubs ==='.format(self.hub.name)
+            """Send a list of hubs over OOC."""
+            msg = '=== Hubs ==='
             for i, hub in enumerate(self.server.hub_manager.hubs):
                 owner = 'FREE'
                 if hub.master:
-                    owner = 'MASTER: {}'.format(hub.master.name)
-                msg += '\r\nHub {}: {} (users: {}) [{}][{}]'.format(
-                    i, hub.name, len(hub.clients()), hub.status, owner)
+                    owner = f'MASTER: {hub.master.name}'
+                msg += f'\r\nHub {i}: {hub.name} (users: {len(hub.clients())}) [{hub.status}][{owner}]'
                 if self.hub == hub:
                     msg += ' [*]'
             self.send_ooc(msg)
@@ -645,7 +642,7 @@ class ClientManager:
             #         f'Invalid position. Possible values: {", ".join(positions)}'
             #     )
             self.pos = pos
-            self.send_host_message('Position set to {}.'.format(pos))
+            self.send_ooc(f'Position set to {pos}.')
             self.send_command('SP', self.pos) #Send a "Set Position" packet
             self.area.update_evidence_list(self) #Receive evidence
 

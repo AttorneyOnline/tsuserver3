@@ -189,7 +189,7 @@ class EvidenceList:
                 poses = cmd[7:-1]
                 self.evidences[id] = self.Evidence(arg[0], '\n'.join(lines[1:]), arg[2], poses)
             else:
-                client.send_host_message('You entered a bad pos.')
+                client.send_ooc('You entered a bad pos.')
                 return
             # else:
             #     self.evidences[id] = self.Evidence(arg[0], arg[1], arg[2], arg[3])
