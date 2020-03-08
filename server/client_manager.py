@@ -63,7 +63,7 @@ class ClientManager:
 
             #CMing stuff
             self.is_gm = False
-            self.cm_log_type = ['MoveLog', 'RollLog', 'PMLog', 'CharLog'] # If we're CM, we'll receive CM-related shenanigans
+            self.gm_log_type = ['MoveLog', 'RollLog', 'PMLog', 'CharLog'] # If we're GM, we'll receive GM-related shenanigans
             self.broadcast_ic = []
             self.assigned_areas = [] #For /lock-ing and other fancy things as a normal player (still needs proximity w/ area access)
             self.hidden = False
@@ -110,7 +110,7 @@ class ClientManager:
             ]
             #security stuff
             self.clientscon = 0
-            self.cm_save_time = 0
+            self.gm_save_time = 0
 
             self.last_move_time = 0
             self.move_delay = 0
@@ -506,7 +506,7 @@ class ClientManager:
                 if c == self:
                     info += '[*]'
                 if c.is_gm:
-                    info += '[CM]'
+                    info += '[GM]'
                 info += '[{}] {}'.format(c.id, c.get_char_name(True))
                 if len(area.pos_lock) != 1 and c.pos != "": #we're not on a single-pos area
                     info += ' <{}>'.format(c.pos)
@@ -563,7 +563,7 @@ class ClientManager:
 
             # self.server.hub_manager.send_arup_players()
             # self.server.hub_manager.send_arup_status()
-            # self.server.hub_manager.send_arup_cms()
+            # self.server.hub_manager.send_arup_gms()
             # self.server.hub_manager.send_arup_lock()
 
             self.send_command('DONE')
@@ -719,7 +719,7 @@ class ClientManager:
         # for a in self.server.area_manager.areas:
         #     if client in a.owners:
         #         a.owners.remove(client)
-        #         client.server.area_manager.send_arup_cms()
+        #         client.server.area_manager.send_arup_gms()
         #         if len(a.owners) == 0:
         #             if a.is_locked != a.Locked.FREE:
         #                 a.unlock()

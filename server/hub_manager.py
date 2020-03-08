@@ -414,7 +414,7 @@ class HubManager:
 				for client in self.clients:
 					client.send_command('LE', *self.get_evidence_list(client))
 
-			# def get_cms(self):
+			# def get_gms(self):
 			# 	msg = ''
 			# 	for i in self.owners:
 			# 		msg = msg + '[' + str(i.id) + '] ' + i.get_char_name() + ', '
@@ -715,17 +715,17 @@ class HubManager:
 				exceptions = [exceptions]
 			for area in self.areas:
 				for client in area.clients:
-					if not (client in exceptions) and client.is_gm and T in client.cm_log_type:
-						client.broadcast_ooc('$CM[{}]{}'.format(T, msg))
+					if not (client in exceptions) and client.is_gm and T in client.gm_log_type:
+						client.broadcast_ooc('$GM[{}]{}'.format(T, msg))
 
-		def get_cm_list(self):
-			cms = []
+		def get_gm_list(self):
+			gms = []
 			for area in self.areas:
 				for client in area.clients:
 					if client.is_gm:
-						cms.append(client)
+						gms.append(client)
 			
-			return cms
+			return gms
 
 		def send_command(self, cmd, *args):
 			for area in self.areas:
@@ -959,14 +959,14 @@ class HubManager:
 			status_list.append(hub.status)
 		self.server.send_arup(status_list)
 
-	def send_arup_cms(self):
-		cms_list = [2]
+	def send_arup_gms(self):
+		gms_list = [2]
 		for hub in self.hubs:
-			cm = 'FREE'
+			GM = 'FREE'
 			if hub.master != None:
-				cm = hub.master.name
-			cms_list.append(cm)
-		self.server.send_arup(cms_list)
+				GM = hub.master.name
+			gms_list.append(GM)
+		self.server.send_arup(gms_list)
 
 	def send_arup_lock(self):
 		lock_list = [3]

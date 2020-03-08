@@ -98,7 +98,7 @@ def ooc_cmd_rollp(client, arg):
 
 def ooc_cmd_notecard(client, arg):
     """
-    Write a notecard that can only be revealed by a CM.
+    Write a notecard that can only be revealed by a GM.
     Usage: /notecard <message>
     """
     if len(arg) == 0:

@@ -55,12 +55,12 @@ def ooc_cmd_evidence_mod(client, arg):
     """
     Change the evidence privilege mode. Refer to the documentation
     for more information on the function of each mode.
-    Usage: /evidence_mod <FFA|Mods|CM|HiddenCM>
+    Usage: /evidence_mod <FFA|Mods|GM|HiddenCM>
     """
     if not arg or arg == client.area.evidence_mod:
         client.send_ooc(
             f'current evidence mod: {client.area.evidence_mod}')
-    elif arg in ['FFA', 'Mods', 'CM', 'HiddenCM']:
+    elif arg in ['FFA', 'Mods', 'GM', 'HiddenCM']:
         if client.area.evidence_mod == 'HiddenCM':
             for i in range(len(client.area.evi_list.evidences)):
                 client.area.evi_list.evidences[i].pos = 'all'
@@ -70,7 +70,7 @@ def ooc_cmd_evidence_mod(client, arg):
         database.log_room('evidence_mod', client, client.area, message=arg)
     else:
         raise ArgumentError(
-            'Wrong Argument. Use /evidence_mod <MOD>. Possible values: FFA, CM, Mods, HiddenCM'
+            'Wrong Argument. Use /evidence_mod <MOD>. Possible values: FFA, GM, Mods, HiddenCM'
         )
 
 
@@ -92,22 +92,22 @@ def ooc_cmd_evi_swap(client, arg):
 def ooc_cmd_cm(client, arg):
     """
     Add a case manager for the current room.
-    Usage: /cm <id>
+    Usage: /GM <id>
     """
-    if 'CM' not in client.area.evidence_mod:
-        raise ClientError('You can\'t become a CM in this area')
+    if 'GM' not in client.area.evidence_mod:
+        raise ClientError('You can\'t become a GM in this area')
     if len(client.area.owners) == 0:
         if len(arg) > 0:
             raise ArgumentError(
-                'You cannot \'nominate\' people to be CMs when you are not one.'
+                'You cannot \'nominate\' people to be GMs when you are not one.'
             )
         client.area.owners.append(client)
         if client.area.evidence_mod == 'HiddenCM':
             client.area.broadcast_evidence_list()
-        client.server.area_manager.send_arup_cms()
-        client.area.broadcast_ooc('{} [{}] is CM in this area now.'.format(
+        client.server.area_manager.send_arup_gms()
+        client.area.broadcast_ooc('{} [{}] is GM in this area now.'.format(
             client.char_name, client.id))
-        database.log_room('cm.add', client, client.area, target=client, message='self-added')
+        database.log_room('GM.add', client, client.area, target=client, message='self-added')
     elif client in client.area.owners:
         if len(arg) > 0:
             arg = arg.split(' ')
@@ -118,21 +118,21 @@ def ooc_cmd_cm(client, arg):
                     client, TargetType.ID, id, False)[0]
                 if not c in client.area.clients:
                     raise ArgumentError(
-                        'You can only \'nominate\' people to be CMs when they are in the area.'
+                        'You can only \'nominate\' people to be GMs when they are in the area.'
                     )
                 elif c in client.area.owners:
                     client.send_ooc(
-                        '{} [{}] is already a CM here.'.format(
+                        '{} [{}] is already a GM here.'.format(
                             c.char_name, c.id))
                 else:
                     client.area.owners.append(c)
                     if client.area.evidence_mod == 'HiddenCM':
                         client.area.broadcast_evidence_list()
-                    client.server.area_manager.send_arup_cms()
+                    client.server.area_manager.send_arup_gms()
                     client.area.broadcast_ooc(
-                        '{} [{}] is CM in this area now.'.format(
+                        '{} [{}] is GM in this area now.'.format(
                             c.char_name, c.id))
-                    database.log_room('cm.add', client, client.area, target=c)
+                    database.log_room('GM.add', client, client.area, target=c)
             except:
                 client.send_ooc(
                     f'{id} does not look like a valid ID.')
@@ -157,14 +157,14 @@ def ooc_cmd_uncm(client, arg):
                 client, TargetType.ID, id, False)[0]
             if c in client.area.owners:
                 client.area.owners.remove(c)
-                client.server.area_manager.send_arup_cms()
+                client.server.area_manager.send_arup_gms()
                 client.area.broadcast_ooc(
-                    '{} [{}] is no longer CM in this area.'.format(
+                    '{} [{}] is no longer GM in this area.'.format(
                         c.char_name, c.id))
-                database.log_room('cm.remove', client, client.area, target=c)
+                database.log_room('GM.remove', client, client.area, target=c)
             else:
                 client.send_ooc(
-                    'You cannot remove someone from CMing when they aren\'t a CM.'
+                    'You cannot remove someone from CMing when they aren\'t a GM.'
                 )
         except:
             client.send_ooc(
@@ -234,7 +234,7 @@ def ooc_cmd_anncase(client, arg):
             database.log_room('case', client, client.area, message=log_data)
     else:
         raise ClientError(
-            'You cannot announce a case in an area where you are not a CM!')
+            'You cannot announce a case in an area where you are not a GM!')
 
 
 @mod_only()

@@ -51,7 +51,7 @@ from server.pastebin_api import paste_it
 #         if client in a.owners:
 #             areas.append(a)
 #     if not areas:
-#         client.send_host_message('You aren\'t a CM in any area!')
+#         client.send_host_message('You aren\'t a GM in any area!')
 #         return
 #     message_areas_cm(client, areas, arg)
 
@@ -59,7 +59,7 @@ from server.pastebin_api import paste_it
 # def message_areas_cm(client, areas, message):
 #     for a in areas:
 #         if not client in a.owners:
-#             client.send_host_message('You are not a CM in {}!'.format(a.name))
+#             client.send_host_message('You are not a GM in {}!'.format(a.name))
 #             return
 #         a.send_command('CT', client.name, message)
 #         a.send_owner_command('CT', client.name, message)
@@ -82,7 +82,7 @@ def ooc_cmd_switch(client, arg):
 def ooc_cmd_bg(client, arg):
     if client.hub.status.lower().startswith('rp-strict') and not client.is_mod and not client.is_gm:
         raise AreaError(
-            'Hub is {} - only the CM or mods can change /bg.'.format(client.hub.status))
+            'Hub is {} - only the GM or mods can change /bg.'.format(client.hub.status))
     if len(arg) == 0:
         raise ArgumentError('You must specify a name. Use /bg <background>.')
     if not client.is_mod and not client.is_gm and client.area.bg_lock == True:
@@ -639,18 +639,18 @@ def ooc_cmd_h(client, arg):
         client.send_host_message("OOC is muted in this hub!")
         return
 
-    cm = ''
+    GM = ''
     if client.is_gm:
-        cm = '[CM]'
+        GM = '[GM]'
     elif client.is_mod:
-        cm = '[MOD]'
+        GM = '[MOD]'
 
     # name = client.get_char_name()
     # if client.hidden:
     #     name = 'HIDDEN'
-    #     cm = ''
+    #     GM = ''
 
-    client.hub.send_command('CT', '~H{}[{}]'.format(cm, client.name), arg)
+    client.hub.send_command('CT', '~H{}[{}]'.format(GM, client.name), arg)
     logger.log_server('[HUB] "{}"'.format(arg), client)
 
 def ooc_cmd_gm(client, arg):
@@ -742,7 +742,7 @@ def ooc_cmd_doc(client, arg):
     else:
         if client.hub.status.lower().startswith('rp-strict') and not client.is_gm:
             raise AreaError(
-                'Hub is {} - only the CM can change /doc.'.format(client.hub.status))
+                'Hub is {} - only the GM can change /doc.'.format(client.hub.status))
         client.hub.change_doc(arg)
         client.hub.send_host_message('[{}]{} changed the doc link.'.format(client.id, client.get_char_name(True)))
         logger.log_server('Changed document to: {}'.format(arg))
@@ -756,7 +756,7 @@ def ooc_cmd_desc(client, arg):
     else:
         if client.hub.status.lower().startswith('rp-strict') and not client.is_gm:
             raise AreaError(
-                'Hub is {} - only the CM can change /desc for this area.'.format(client.hub.status))
+                'Hub is {} - only the GM can change /desc for this area.'.format(client.hub.status))
         client.area.set_desc(arg)
         desc = arg[:128]
         if len(arg) > len(desc):
@@ -770,7 +770,7 @@ def ooc_cmd_descadd(client, arg):
 
     if client.hub.status.lower().startswith('rp-strict') and not client.is_gm:
         raise AreaError(
-            'Hub is {} - only the CM can change /descadd for this area.'.format(client.hub.status))
+            'Hub is {} - only the GM can change /descadd for this area.'.format(client.hub.status))
     client.area.desc += arg
     client.area.send_host_message('[{}]{} added to the area description.'.format(
         client.id, client.get_char_name(True)))
@@ -790,7 +790,7 @@ def ooc_cmd_status(client, arg):
         client.send_host_message('Current status: {}'.format(client.hub.status))
     else:
         if not client.is_gm and not client.is_mod:
-            raise ClientError('Only CM or mods can change status.')
+            raise ClientError('Only GM or mods can change status.')
         try:
             client.hub.change_status(arg)
             client.hub.send_host_message('{} changed status to {}.'.format(client.name, client.hub.status))
@@ -1105,8 +1105,8 @@ def ooc_cmd_pm(client, arg):
         raise ArgumentError('Not enough arguments. use /pm <target> <message>. Target should be ID, OOC-name or char-name. Use /getarea for getting info like "[ID] char-name".')
 
     targets = []
-    if args[0].lower()[:2] in ['cm', 'gm']:
-        targets = client.hub.get_cm_list()
+    if args[0].lower()[:2] in ['GM', 'gm']:
+        targets = client.hub.get_gm_list()
         key = TargetType.ID
     if len(targets) == 0:
         targets = client.server.client_manager.get_targets(client, TargetType.CHAR_NAME, arg, False)
@@ -1332,7 +1332,7 @@ def convert_string_to_seconds(s):
 
 def ooc_cmd_schedules(client, arg):
     if not client.is_gm and not client.is_mod:
-        raise ClientError('Only CM or mods can see currently running schedules.')
+        raise ClientError('Only GM or mods can see currently running schedules.')
     
     msg = "Current schedules:"
     for schedule in client.hub.schedules:
@@ -1345,7 +1345,7 @@ def ooc_cmd_schedules(client, arg):
 
 def ooc_cmd_timer(client, arg):
     if not client.is_gm and not client.is_mod:
-        raise ClientError('Only CM or mods can create schedules.')
+        raise ClientError('Only GM or mods can create schedules.')
     args = arg.split(' ')
     try:
         if len(args) < 1:
@@ -1376,7 +1376,7 @@ def ooc_cmd_timer(client, arg):
 
 def ooc_cmd_schedule(client, arg):
     if not client.is_gm and not client.is_mod:
-        raise ClientError('Only CM or mods can create schedules.')
+        raise ClientError('Only GM or mods can create schedules.')
     args = arg.split(' ')
     try:
         if len(args) < 2:
@@ -1407,7 +1407,7 @@ def ooc_cmd_schedule(client, arg):
 
 def ooc_cmd_editschedule(client, arg):
     if not client.is_gm and not client.is_mod:
-        raise ClientError('Only CM or mods can edit schedules.')
+        raise ClientError('Only GM or mods can edit schedules.')
     args = arg.split(' ')
     try:
         if len(args) != 1:
@@ -1421,7 +1421,7 @@ def ooc_cmd_editschedule(client, arg):
 
 def ooc_cmd_startschedule(client, arg):
     if not client.is_gm and not client.is_mod:
-        raise ClientError('Only CM or mods can start schedules.')
+        raise ClientError('Only GM or mods can start schedules.')
 
     try:
         targets = []
@@ -1442,7 +1442,7 @@ def ooc_cmd_startschedule(client, arg):
 
 # def ooc_cmd_stopschedule(client, arg):
 #     if not client.is_gm and not client.is_mod:
-#         raise ClientError('Only CM or mods can stop schedules.')
+#         raise ClientError('Only GM or mods can stop schedules.')
 
 #     try:
 #         client.hub.stop_schedule(int(arg))
@@ -1452,7 +1452,7 @@ def ooc_cmd_startschedule(client, arg):
 
 def ooc_cmd_destroyschedule(client, arg):
     if not client.is_gm and not client.is_mod:
-        raise ClientError('Only CM or mods can destroy schedules.')
+        raise ClientError('Only GM or mods can destroy schedules.')
 
     try:
         client.hub.destroy_schedule(int(arg))
@@ -1462,7 +1462,7 @@ def ooc_cmd_destroyschedule(client, arg):
 
 def ooc_cmd_runschedule(client, arg):
     if not client.is_gm and not client.is_mod:
-        raise ClientError('Only CM or mods can run schedules.')
+        raise ClientError('Only GM or mods can run schedules.')
 
     try:
         client.hub.schedule_finish(int(arg))
@@ -1472,7 +1472,7 @@ def ooc_cmd_runschedule(client, arg):
 
 def ooc_cmd_displayschedule(client, arg):
     if not client.is_gm and not client.is_mod:
-        raise ClientError('Only CM or mods can display schedules.')
+        raise ClientError('Only GM or mods can display schedules.')
     args = arg.split(' ')
 
     try:
@@ -1501,50 +1501,50 @@ def ooc_cmd_evi_swap(client, arg):
 def ooc_cmd_cm(client, arg):
     if len(arg) > 0:
         if not client.is_gm or client.hub.master != client:
-            raise ClientError('You must be the master CM to promote co-CM\'s.')
+            raise ClientError('You must be the master GM to promote co-GM\'s.')
         try:
             c = client.server.client_manager.get_targets(
                 client, TargetType.ID, int(arg), False)[0]
             if c == client:
                 raise
             if c.is_gm:
-                client.send_host_message('Target is already a CM.')
+                client.send_host_message('Target is already a GM.')
                 return
             else:
                 c.is_gm = True
-                client.send_host_message('{} has been made a co-CM.'.format(c.name))
+                client.send_host_message('{} has been made a co-GM.'.format(c.name))
                 c.send_host_message(
-                    'You have been made a co-CM of hub {} by {}.'.format(client.hub.name, client.name))
+                    'You have been made a co-GM of hub {} by {}.'.format(client.hub.name, client.name))
             c.area.update_area_list(c)
             c.area.update_evidence_list(c)
         except:
-            raise ClientError('You must specify a target. Use /cm <id>')
+            raise ClientError('You must specify a target. Use /GM <id>')
     else:
-        if not client.hub.allow_cm:
-            client.send_host_message('You can\'t become a master CM in this hub')
+        if not client.hub.allow_gm:
+            client.send_host_message('You can\'t become a master GM in this hub')
             return
-        if not client.hub.master and (len(client.hub.get_cm_list()) <= 0 or client.is_gm):
+        if not client.hub.master and (len(client.hub.get_gm_list()) <= 0 or client.is_gm):
             client.hub.master = client
             client.is_gm = True
-            client.hub.send_host_message('{} is master CM in this hub now.'.format(client.name))
+            client.hub.send_host_message('{} is master GM in this hub now.'.format(client.name))
             client.area.update_area_list(client)
             client.area.update_evidence_list(client)
         else:
-            raise ClientError('Master CM exists. Use /cm <id>')
+            raise ClientError('Master GM exists. Use /GM <id>')
     #If we got past the errors we're going to tell the server to update itself.
-    # client.server.hub_manager.send_arup_cms()
+    # client.server.hub_manager.send_arup_gms()
 
-def ooc_cmd_cms(client, arg):
-    client.send_host_message('=CM\'s in this hub:=')
-    for cm in client.hub.get_cm_list():
+def ooc_cmd_gms(client, arg):
+    client.send_host_message('=GM\'s in this hub:=')
+    for GM in client.hub.get_gm_list():
         m = 'co-'
-        if client.hub.master == cm:
+        if client.hub.master == GM:
             m = 'Master '
-        client.send_host_message('=>{}CM [{}] {}'.format(m, cm.id, cm.get_char_name(True)))
+        client.send_host_message('=>{}GM [{}] {}'.format(m, GM.id, GM.get_char_name(True)))
 
 def ooc_cmd_uncm(client, arg):
     if not client.is_gm and not client.is_mod:
-        raise ClientError('Only master CM or mods can use /uncm.')
+        raise ClientError('Only master GM or mods can use /uncm.')
 
     try:
         if arg == "":
@@ -1553,24 +1553,24 @@ def ooc_cmd_uncm(client, arg):
             target = client.server.client_manager.get_targets(
                 client, TargetType.ID, int(arg), False)[0]
         else:
-            client.send_host_message('You must be the master CM to remove CM status of other CM\'s.')
+            client.send_host_message('You must be the master GM to remove GM status of other GM\'s.')
             return
     except:
-        raise ArgumentError('Please provide target ID or blank to remove CM status.')
+        raise ArgumentError('Please provide target ID or blank to remove GM status.')
 
     if target:
         if not target.is_gm:
-            raise ClientError('Target is not a CM.')
+            raise ClientError('Target is not a GM.')
 
         if target.hub.master == target:
             target.hub.master = None
-            target.hub.send_host_message('{} is no longer the master CM in this hub.'.format(target.name))
+            target.hub.send_host_message('{} is no longer the master GM in this hub.'.format(target.name))
         target.is_gm = False
         target.send_host_message(
-            'You are no longer a CM of hub {}.'.format(target.hub.name))
+            'You are no longer a GM of hub {}.'.format(target.hub.name))
         client.send_host_message(
-            '{} is no longer a CM of hub {}.'.format(target.name, target.hub.name))
-        # target.server.hub_manager.send_arup_cms()
+            '{} is no longer a GM of hub {}.'.format(target.name, target.hub.name))
+        # target.server.hub_manager.send_arup_gms()
         target.area.update_area_list(client)
         target.area.update_evidence_list(target)
 
@@ -1578,30 +1578,30 @@ def ooc_cmd_cmlogs(client, arg):
     logtypes = ['MoveLog', 'RollLog', 'PMLog', 'CharLog']
     args = arg.split()
     if len(args) <= 0:
-        raise ArgumentError("Current logs: {}. Available log types: {}.".format(client.cm_log_type, logtypes))
+        raise ArgumentError("Current logs: {}. Available log types: {}.".format(client.gm_log_type, logtypes))
 
     if arg == 'on':
-        client.cm_log_type = ['MoveLog', 'RollLog', 'PMLog', 'CharLog']
+        client.gm_log_type = ['MoveLog', 'RollLog', 'PMLog', 'CharLog']
     elif arg == 'off':
-        client.cm_log_type = []
+        client.gm_log_type = []
     else:
         try:
             for a in args:
                 if not a in logtypes:
                     raise
-                if a in client.cm_log_type:
-                    client.cm_log_type.remove(a)
+                if a in client.gm_log_type:
+                    client.gm_log_type.remove(a)
                 else:
-                    client.cm_log_type.append(a)
+                    client.gm_log_type.append(a)
         except:
             raise ArgumentError("Invalid argument: {}".format(arg))
 
     client.send_host_message(
-        'You will now see cm logs for: {}.'.format(client.cm_log_type))
+        'You will now see GM logs for: {}.'.format(client.gm_log_type))
 
 def ooc_cmd_broadcast_ic(client, arg):
     if not client.is_gm and not client.is_mod:
-        raise ClientError('Only CM or mods can broadcast IC.')
+        raise ClientError('Only GM or mods can broadcast IC.')
     if not arg or arg == 'clear':
         client.broadcast_ic.clear()
         client.send_host_message('You have cleared the broadcast_ic list.')
@@ -1626,7 +1626,7 @@ def ooc_cmd_area_access(client, arg):
         return
 
     if not client.is_gm and not client.is_mod:
-        raise ClientError('Only CM or mods can set area accessibility.')
+        raise ClientError('Only GM or mods can set area accessibility.')
 
     if arg == 'clear' or arg == 'all':
         client.area.accessible.clear()
@@ -1646,7 +1646,7 @@ def ooc_cmd_area_access(client, arg):
 
 def ooc_cmd_area_link(client, arg):
     if not client.is_gm and not client.is_mod:
-        raise ClientError('Only CM or mods can set area accessibility.')
+        raise ClientError('Only GM or mods can set area accessibility.')
     if not arg:
         raise ArgumentError(
             'Must provide valid args! Command usage: /area_link id1> (id2) (idx)')
@@ -1676,7 +1676,7 @@ def ooc_cmd_area_link(client, arg):
 
 def ooc_cmd_area_unlink(client, arg):
     if not client.is_gm and not client.is_mod:
-        raise ClientError('Only CM or mods can set area accessibility.')
+        raise ClientError('Only GM or mods can set area accessibility.')
     if not arg:
         raise ArgumentError(
             'Must provide valid args! Command usage: /area_unlink <id1> (id2) (idx)')
@@ -1712,7 +1712,7 @@ def ooc_cmd_key_add(client, arg):
         raise ArgumentError("Usage: /key_add [char_id] [area id(s)]. Allows the selected user to use /lock and /unlock functionality outside the area (must be accessible).")
 
     if not client.is_gm and not client.is_mod:
-        raise ClientError('Only CM or mods can assign areas.')
+        raise ClientError('Only GM or mods can assign areas.')
     args = arg.split(' ')
     if len(args) <= 1:
         raise ArgumentError("Please provide the area ID's to add. Usage: /key_add [char_id] [area id(s)].")
@@ -1740,7 +1740,7 @@ def ooc_cmd_key_set(client, arg):
         raise ArgumentError("Usage: /key_set [char_id] [area id(s)]. Allows the selected user to use /lock and /unlock functionality outside the area (must be accessible).")
 
     if not client.is_gm and not client.is_mod:
-        raise ClientError('Only CM or mods can assign areas.')
+        raise ClientError('Only GM or mods can assign areas.')
     args = arg.split(' ')
 
     try:
@@ -1767,7 +1767,7 @@ def ooc_cmd_key_remove(client, arg):
         raise ArgumentError("Usage: /key_remove [char_id] [area id(s)]. Removes the selected 'keys' from the user.")
 
     if not client.is_gm and not client.is_mod:
-        raise ClientError('Only CM or mods can assign areas.')
+        raise ClientError('Only GM or mods can assign areas.')
     args = arg.split(' ')
     if len(args) <= 1:
         raise ArgumentError("Please provide the area ID's to add. Usage: /key_add [char_id] [area id(s)].")
@@ -1911,7 +1911,7 @@ def ooc_cmd_lock(client, arg):
                 continue
             if not allowed:
                 if not (area.id in client.assigned_areas):
-                    raise ClientError('Only CM or mods can lock this area.')
+                    raise ClientError('Only GM or mods can lock this area.')
                 if not (client.area == area) and len(client.area.accessible) > 0 and not (area.id in client.area.accessible):
                     raise ClientError('That area is inaccessible from your current area.')
             if area.is_locked:
@@ -1949,7 +1949,7 @@ def ooc_cmd_unlock(client, arg):
                 continue
             if not allowed:
                 if not (area.id in client.assigned_areas):
-                    raise ClientError('Only CM or mods can lock this area.')
+                    raise ClientError('Only GM or mods can lock this area.')
                 if not (client.area == area) and len(client.area.accessible) > 0 and not (area.id in client.area.accessible):
                     raise ClientError('That area is inaccessible from your current area.')
             if not area.is_locked:
@@ -1961,7 +1961,7 @@ def ooc_cmd_unlock(client, arg):
 
 def ooc_cmd_maxplayers(client, arg):
     if not client.is_gm and not client.is_mod:
-        raise ClientError('Only CM or mods can change max players for the area.')
+        raise ClientError('Only GM or mods can change max players for the area.')
     if arg == '':
         client.send_host_message('Max amount of players for the area is {}.'.format(client.area.max_players))
         return
@@ -1978,11 +1978,11 @@ def ooc_cmd_maxplayers(client, arg):
         client.area.max_players = arg
         client.send_host_message('New max amount of players for the area is now {}.'.format(client.area.max_players))
     except:
-        raise ArgumentError('Invalid argument! Use /maxplayers and a number from -1 to 99 (-1 makes it unlimited. 0 only allows CMs, spectators and mods in the area).')
+        raise ArgumentError('Invalid argument! Use /maxplayers and a number from -1 to 99 (-1 makes it unlimited. 0 only allows GMs, spectators and mods in the area).')
 
 def ooc_cmd_area_hide(client, arg):
     if not client.is_gm and not client.is_mod:
-        raise ClientError('Only CM or mods can hide the area.')
+        raise ClientError('Only GM or mods can hide the area.')
     args = []
     if arg == 'all':
         for area in client.hub.areas:
@@ -2012,7 +2012,7 @@ def ooc_cmd_area_hide(client, arg):
 
 def ooc_cmd_area_unhide(client, arg):
     if not client.is_gm and not client.is_mod:
-        raise ClientError('Only CM or mods can unhide the area.')
+        raise ClientError('Only GM or mods can unhide the area.')
     args = []
     if arg == 'all':
         for area in client.hub.areas:
@@ -2043,7 +2043,7 @@ def ooc_cmd_area_unhide(client, arg):
 
 def ooc_cmd_area_mute(client, arg):
     if not client.is_gm and not client.is_mod:
-        raise ClientError('Only CM or mods can mute the area.')
+        raise ClientError('Only GM or mods can mute the area.')
     args = []
     if arg == 'all':
         for area in client.hub.areas:
@@ -2069,7 +2069,7 @@ def ooc_cmd_area_mute(client, arg):
 
 def ooc_cmd_area_unmute(client, arg):
     if not client.is_gm and not client.is_mod:
-        raise ClientError('Only CM or mods can unmute the area.')
+        raise ClientError('Only GM or mods can unmute the area.')
     args = []
     if arg == 'all':
         for area in client.hub.areas:
@@ -2107,16 +2107,16 @@ def ooc_cmd_listhubs(client, arg):
 
 def ooc_cmd_savehub(client, arg):
     if not client.is_gm and not client.is_mod:
-        raise ClientError('Only CM or mods can save the hub.')
+        raise ClientError('Only GM or mods can save the hub.')
     if arg == '':
         raise ClientError('No save name provided!')
     mute_length = 60 #one minute
-    if not client.is_mod and time.time() - client.cm_save_time < mute_length:
-        raise ClientError('You need to wait {} seconds to save the hub again.'.format(mute_length - int(time.time() - client.cm_save_time)))
+    if not client.is_mod and time.time() - client.gm_save_time < mute_length:
+        raise ClientError('You need to wait {} seconds to save the hub again.'.format(mute_length - int(time.time() - client.gm_save_time)))
 
     try:
         client.hub.yaml_dump(arg)
-        client.cm_save_time = time.time()
+        client.gm_save_time = time.time()
         client.send_host_message('The hub data has been saved on the server in a file named \'{}.yaml\'.'.format(arg))
         logger.log_server('Saving hub [{}] {} as {}.yaml.'.format(client.hub.id, client.hub.name, arg), client)
     except AreaError:
@@ -2124,7 +2124,7 @@ def ooc_cmd_savehub(client, arg):
 
 def ooc_cmd_loadhub(client, arg):
     if not client.is_gm and not client.is_mod:
-        raise ClientError('Only CM or mods can load the hub.')
+        raise ClientError('Only GM or mods can load the hub.')
     if arg == '':
         raise ClientError('No save name provided!')
 

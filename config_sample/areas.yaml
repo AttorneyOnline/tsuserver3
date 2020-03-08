@@ -1,5 +1,5 @@
 - hub: Main
-  allow_cm: false
+  allow_gm: false
   doc: 'Welcome! Please use /motd'
   iniswap_allowed: true
   showname_changes_allowed: true
@@ -49,7 +49,7 @@
       evidence_mod: FFA
       locking_allowed: false
 - hub: Roleplay
-  allow_cm: true
+  allow_gm: true
   max_areas: 100
   doc: 'A roleplay zone'
   iniswap_allowed: true

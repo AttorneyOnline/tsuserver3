@@ -22,7 +22,7 @@ __all__ = [
 
 def ooc_cmd_a(client, arg):
     """
-    Send a message to an area that you are a CM in.
+    Send a message to an area that you are a GM in.
     Usage: /a <area> <message>
     """
     if len(arg) == 0:
@@ -41,7 +41,7 @@ def ooc_cmd_a(client, arg):
 
 def ooc_cmd_s(client, arg):
     """
-    Send a message to all areas that you are a CM in.
+    Send a message to all areas that you are a GM in.
     Usage: /s <message>
     """
     areas = []
@@ -49,7 +49,7 @@ def ooc_cmd_s(client, arg):
         if client.is_gm:
             areas.append(a)
     if not areas:
-        client.send_ooc('You aren\'t a CM in any area!')
+        client.send_ooc('You aren\'t a GM in any area!')
         return
     message_areas_cm(client, areas, arg)
 
@@ -57,11 +57,11 @@ def ooc_cmd_s(client, arg):
 def message_areas_cm(client, areas, message):
     for a in areas:
         if not client.is_gm:
-            client.send_ooc(f'You are not a CM in {a.name}!')
+            client.send_ooc(f'You are not a GM in {a.name}!')
             return
         a.send_command('CT', client.name, message)
         # a.send_owner_command('CT', client.name, message)
-        database.log_room('chat.cm', client, a, message=message)
+        database.log_room('chat.GM', client, a, message=message)
 
 
 def ooc_cmd_g(client, arg):

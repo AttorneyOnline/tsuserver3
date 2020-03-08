@@ -789,13 +789,13 @@ class AOProtocol(asyncio.Protocol):
                     'You cannot use format characters in your name!')
                 return
         if self.client.name.startswith(self.server.config['hostname']) or self.client.name.startswith(
-                '<dollar>G') or self.client.name.startswith('CM') or self.client.name.startswith('GM') or self.client.name.startswith('MOD'):
+                '<dollar>G') or self.client.name.startswith('GM') or self.client.name.startswith('GM') or self.client.name.startswith('MOD'):
             self.client.send_ooc('That name is reserved!')
             return
         ooc_name = self.client.name
         prefix = ''
         if self.client.is_gm:
-            prefix = '[CM]'
+            prefix = '[GM]'
         if self.client.is_mod:
             prefix = '[MOD]'
         ooc_name = prefix + ooc_name
@@ -1007,7 +1007,7 @@ class AOProtocol(asyncio.Protocol):
     def net_cmd_setcase(self, args):
         """Sets the casing preferences of the given client.
 
-        SETCASE#<cases:string>#<will_cm:int>#<will_def:int>#<will_pro:int>#<will_judge:int>#<will_jury:int>#<will_steno:int>#%
+        SETCASE#<cases:string>#<will_gm:int>#<will_def:int>#<will_pro:int>#<will_judge:int>#<will_jury:int>#<will_steno:int>#%
 
         Note: Though all but the first arguments are ints, they technically behave as bools of 0 and 1 value.
 
@@ -1023,7 +1023,7 @@ class AOProtocol(asyncio.Protocol):
     def net_cmd_casea(self, args):
         """Announces a case with a title, and specific set of people to look for.
 
-        CASEA#<casetitle:string>#<need_cm:int>#<need_def:int>#<need_pro:int>#<need_judge:int>#<need_jury:int>#<need_steno:int>#%
+        CASEA#<casetitle:string>#<need_gm:int>#<need_def:int>#<need_pro:int>#<need_judge:int>#<need_jury:int>#<need_steno:int>#%
 
         Note: Though all but the first arguments are ints, they technically behave as bools of 0 and 1 value.
 
@@ -1063,7 +1063,7 @@ class AOProtocol(asyncio.Protocol):
             database.log_room('case', self.client, self.client.area, message=log_data)
         else:
             self.client.send_ooc(
-                'You cannot announce a case in an area where you are not a CM!'
+                'You cannot announce a case in an area where you are not a GM!'
             )
 
     def net_cmd_hp(self, args):

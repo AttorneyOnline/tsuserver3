@@ -355,7 +355,7 @@ class AreaManager:
             """
             if self.cannot_ic_interact(client):
                 client.send_ooc(
-                    'This is a locked area - ask the CM to speak.')
+                    'This is a locked area - ask the GM to speak.')
                 return False
             return (time.time() * 1000.0 - self.next_message_time) > 0
 
@@ -465,9 +465,9 @@ class AreaManager:
             for client in self.clients:
                 client.send_command('LE', *self.get_evidence_list(client))
 
-        def get_cms(self):
+        def get_gms(self):
             """
-            Get a list of CMs.
+            Get a list of GMs.
             :return: message
             """
             msg = ''
@@ -581,15 +581,15 @@ class AreaManager:
             status_list.append(area.status)
         self.server.send_arup(status_list)
 
-    def send_arup_cms(self):
-        """Broadcast ARUP packet containing area CMs."""
-        cms_list = [2]
+    def send_arup_gms(self):
+        """Broadcast ARUP packet containing area GMs."""
+        gms_list = [2]
         for area in self.areas:
-            cm = 'FREE'
+            GM = 'FREE'
             if len(area.owners) > 0:
-                cm = area.get_cms()
-            cms_list.append(cm)
-        self.server.send_arup(cms_list)
+                GM = area.get_gms()
+            gms_list.append(GM)
+        self.server.send_arup(gms_list)
 
     def send_arup_lock(self):
         """Broadcast ARUP packet containing the lock status of each area."""

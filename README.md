@@ -77,7 +77,7 @@ Requires Python 3.6+ and PyYAML.
     - Example: /roll 2d6 +5 would roll two 6-sided die and add 5 to every result.
     - Rolls a 1D6 if blank
 * **rollp** "max" OR "2d6" "+5"/"-5"/"*5"/"/5"
-    - Same as /roll but the result is hidden from everyone else but you and the CM.
+    - Same as /roll but the result is hidden from everyone else but you and the GM.
 * **coinflip**
     - Flips a coin
 * **currentmusic** 
@@ -89,19 +89,19 @@ Requires Python 3.6+ and PyYAML.
 * **sneak** "on/off" OR blank
     - Toggles whether or not you transfering areas will be announced in local area chat, e.g. "Gym: Phoenix leaves to Hallway." "Hallway: Phoenix enters from Gym."
 * **peek** "number" OR "name"
-    - Peek inside the target area to see characters inside of it. Must be accessible from your current area. If the area is locked, people will be alerted of your attempt to see inside. CM's, mods and spectators are ignored.
+    - Peek inside the target area to see characters inside of it. Must be accessible from your current area. If the area is locked, people will be alerted of your attempt to see inside. GM's, mods and spectators are ignored.
 * **listenpos** "on/off" OR blank
     - If you want to only see the IC chat for your given pos, turn this "on". All chat outside of your current pos will be forwarded to OOC instead.
 
-### CM Commands
-* **cm** "id1"
-    - Makes you a CM of this area. As a Master CM you can also assign co-cm's with "id1"
-* **cms**
-    - Shows you the list of CMs in this hub.
+### GM Commands
+* **GM** "id1"
+    - Makes you a GM of this area. As a Master GM you can also assign co-GM's with "id1"
+* **gms**
+    - Shows you the list of GMs in this hub.
 * **uncm**
-    - Removes your CM status
+    - Removes your GM status
 * **cmlogs** "on/off or blank"
-    - Changes whether or not you can see CM-related logging features. Useful for alt. clients which you want to keep clean of OOC logging or if you don't need to meticulously track everyone down in the first place.
+    - Changes whether or not you can see GM-related logging features. Useful for alt. clients which you want to keep clean of OOC logging or if you don't need to meticulously track everyone down in the first place.
 * **cleanup** "yes"
     - Cleans up the hub completely, restoring it to a pristine state. Use this to clean up after RP's. Warning: all unsaved data will be lost!
 * **lock** "id1" "id2" "idx"
@@ -140,7 +140,7 @@ Requires Python 3.6+ and PyYAML.
 * **hub_move_delay** ("delay")
     - Sets the movement delay in seconds for the hub you're in. "delay" must be a value from 0 to 1800 in seconds. Leave blank to check current value.
 * **maxplayers** ("num")
-    - Sets the amount of maximum possible player characters for the area. CM's, mods, spectators are ignored. "num" must be from -1 to 99, where -1 is infinite while 0 is allow only CM's, mods, spectators. Leave blank to check current value.
+    - Sets the amount of maximum possible player characters for the area. GM's, mods, spectators are ignored. "num" must be from -1 to 99, where -1 is infinite while 0 is allow only GM's, mods, spectators. Leave blank to check current value.
 * **toggleooc**
     - Turn hub chat on/off.
    

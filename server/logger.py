@@ -112,7 +112,7 @@ def parse_client_info(client):
     if client.is_mod:
         extra = '[MOD]'
     if client.is_gm:
-        extra = '[CM]'
+        extra = '[GM]'
 
     return '[{} {} {} H{} A{}][{}]{}'.format(info, client.id, client.name, client.hub.id, client.area.id, client.get_char_name(True), extra)
 

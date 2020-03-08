@@ -185,7 +185,7 @@ def ooc_cmd_lock(client, arg):
                 continue
             if not allowed:
                 if not (area.id in client.assigned_areas):
-                    raise ClientError('Only CM or mods can lock this area.')
+                    raise ClientError('Only GM or mods can lock this area.')
                 if not (client.area == area) and len(client.area.accessible) > 0 and not (area.id in client.area.accessible):
                     raise ClientError('That area is inaccessible from your current area.')
             if area.is_locked:
@@ -229,7 +229,7 @@ def ooc_cmd_unlock(client, arg):
                 continue
             if not allowed:
                 if not (area.id in client.assigned_areas):
-                    raise ClientError('Only CM or mods can lock this area.')
+                    raise ClientError('Only GM or mods can lock this area.')
                 if not (client.area == area) and len(client.area.accessible) > 0 and not (area.id in client.area.accessible):
                     raise ClientError('That area is inaccessible from your current area.')
             if not area.is_locked:
