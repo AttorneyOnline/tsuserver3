@@ -304,7 +304,7 @@ class HubManager:
 				if cmd in ['MS', 'CT']:
 					#/area_listen stuff
 					for c in self.hub.clients():
-						if c.area != self and c.is_cm and self.id in c.area_listen:
+						if c.area != self and (c.is_cm or c.is_mod) and self.id in c.area_listen:
 							if cmd == 'MS' and args[0] != 'broadcast': #Ignore broadcasts, they wreck shit
 								lst = list(args)
 								lst[4] = f'}}}}}}[A{self.id}] {{{{{{{lst[4]}'
