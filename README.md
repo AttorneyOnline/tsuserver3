@@ -123,8 +123,8 @@ Requires Python 3.6+ and PyYAML.
     - Make specified character "id" unable to see or speak ICly unless receiving a /broadcast_ic message. Also disallow usage of /getarea.
 * **unblind** "id"
     - Undo the /blind command for specified "id"
-* **broadcast_ic** "id1" "id2" "idx" or "clear"
-    - Blank to display the list of areas currently broadcasting your IC messages to. "idx" to add area(s) to the list. "clear" to reset the list.
+* **broadcast_ic** "all" or "id1" "id2" "idx" or "clear"
+    - Use this to transmit IC chat and music to the broadcasted areas. Blank to display the list of areas currently broadcasting your IC messages to. "all" to add all currently existing areas to the list. "idx" to add area(s) to the list. "clear" to reset the list.
 * **iclogs** "numlines" "id"
     - Display last "numlines" of logged IC lines in area "id" in OOC. Max 50
 * **savehub**
@@ -143,6 +143,8 @@ Requires Python 3.6+ and PyYAML.
     - Sets the amount of maximum possible player characters for the area. CM's, mods, spectators are ignored. "num" must be from -1 to 99, where -1 is infinite while 0 is allow only CM's, mods, spectators. Leave blank to check current value.
 * **toggleooc**
     - Turn hub chat on/off.
+* **area_listen** "all" or "id1" "id2" "idx" or "clear"
+    - Use this to receive IC and OOC messages from listed areas. Blank to display the list of areas you are currently listening to. "all" to add all currently existing areas to the list. "idx" to add area(s) to the list. "clear" to reset the list.
    
 ### Area Commands
 * **bg** "background" 
