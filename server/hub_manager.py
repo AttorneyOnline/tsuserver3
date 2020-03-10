@@ -301,6 +301,19 @@ class HubManager:
 			def send_command(self, cmd, *args):
 				for c in self.clients:
 					c.send_command(cmd, *args)
+				if cmd in ['MS', 'CT']:
+					#/area_listen stuff
+					for c in self.hub.clients():
+						if c.area != self and c.is_cm and self.id in c.area_listen:
+							if cmd == 'MS' and args[0] != 'broadcast': #Ignore broadcasts, they wreck shit
+								lst = list(args)
+								lst[4] = f'}}}}}}[A{self.id}] {{{{{{{lst[4]}'
+								args = tuple(lst)
+							elif cmd == 'CT':
+								lst = list(args)
+								lst[0] = f'[A{self.id}] {lst[0]}'
+								args = tuple(lst)
+							c.send_command(cmd, *args)
 
 			def send_host_message(self, msg):
 				self.send_command('CT', self.server.config['hostname'], msg)

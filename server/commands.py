@@ -2043,6 +2043,25 @@ def ooc_cmd_area_unhide(client, arg):
             i += 1
     client.send_host_message('Unhid {} areas.'.format(i))
 
+def ooc_cmd_area_listen(client, arg):
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can broadcast IC.')
+    if not arg or arg == 'clear':
+        client.area_listen.clear()
+        client.send_host_message('You have cleared the area_listen list.')
+    else:
+        if arg == 'all':
+            client.area_listen.clear()
+            for area in client.hub.areas:
+                client.area_listen.append(area.id)
+        else:
+            arg = arg.split()
+            for a in arg:
+                try:
+                    client.area_listen.append(int(a))
+                except:
+                    raise ClientError('Invalid area ID.')
+        client.send_host_message(f'You will listen to {len(client.area_listen)} areas in this hub.')
 
 def ooc_cmd_area_mute(client, arg):
     if not client.is_cm and not client.is_mod:

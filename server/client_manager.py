@@ -62,6 +62,7 @@ class ClientManager:
             self.is_cm = False
             self.cm_log_type = ['MoveLog', 'RollLog', 'PMLog', 'CharLog'] # If we're CM, we'll receive CM-related shenanigans
             self.broadcast_ic = []
+            self.area_listen = []
             self.assigned_areas = [] #For /lock-ing and other fancy things as a normal player (still needs proximity w/ area access)
             self.hidden = False
             self.blinded = False
