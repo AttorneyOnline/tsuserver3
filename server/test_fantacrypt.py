@@ -1,4 +1,4 @@
-from server.fantacrypt import fanta_decrypt, fanta_decrypt
+from server.fantacrypt import fanta_decrypt, fanta_encrypt
 
 def test_fanta_decrypt():
     assert fanta_decrypt("4D90") == "MS"
