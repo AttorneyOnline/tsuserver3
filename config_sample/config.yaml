@@ -72,3 +72,6 @@ zalgo_tolerance: 3
 
 # How many simultaneous connections an IP address can make to the server. (Default: 16)
 multiclient_limit: 16
+
+# Maximum number of characters can a message contain
+max_chars: 256
