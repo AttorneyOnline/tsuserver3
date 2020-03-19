@@ -21,8 +21,6 @@ import unicodedata
 
 import logging
 
-import re
-
 logger_debug = logging.getLogger('debug')
 logger = logging.getLogger('events')
 
@@ -363,13 +361,13 @@ class AOProtocol(asyncio.Protocol):
 
         target_area = []
         if self.validate_net_cmd(args, self.ArgType.STR, # msg_type
-                                 self.ArgType.STR_OR_EMPTY, self.ArgType.STR,#pre, folder
-                                 self.ArgType.STR, self.ArgType.STR,# anim, text
-                                 self.ArgType.STR, self.ArgType.STR,#pos, sfx
-                                 self.ArgType.INT, self.ArgType.INT,#anim_type, cid
-                                 self.ArgType.INT, self.ArgType.INT_OR_STR,#sfx_delay, button
-                                 self.ArgType.INT, self.ArgType.INT,#evidence, flip
-                                 self.ArgType.INT, self.ArgType.INT):#ding, color
+                                 self.ArgType.STR_OR_EMPTY, self.ArgType.STR,   # pre, folder
+                                 self.ArgType.STR, self.ArgType.STR,            # anim, text
+                                 self.ArgType.STR, self.ArgType.STR,            # pos, sfx
+                                 self.ArgType.INT, self.ArgType.INT,            # anim_type, cid
+                                 self.ArgType.INT, self.ArgType.INT_OR_STR,     # sfx_delay, button
+                                 self.ArgType.INT, self.ArgType.INT,            # evidence, flip
+                                 self.ArgType.INT, self.ArgType.INT):           # ding, color
             # Pre-2.6 validation monstrosity.
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color = args
             showname = ""
@@ -377,13 +375,13 @@ class AOProtocol(asyncio.Protocol):
             offset_pair = 0
             nonint_pre = 0
         elif self.validate_net_cmd(
-                args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,#msg_type, pre
-                self.ArgType.STR, self.ArgType.STR, self.ArgType.STR,#folder, anim, text
-                self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,# pos, sfx, anim_type
-                self.ArgType.INT, self.ArgType.INT, self.ArgType.INT_OR_STR,#cid, sfx_delay, button
-                self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,#evidence, flip, ding
-                self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.INT, #color, showname, charid_pair
-                self.ArgType.INT, self.ArgType.INT): #offset_pair, nonint_pre
+                args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,              # msg_type, pre
+                self.ArgType.STR, self.ArgType.STR, self.ArgType.STR,           # folder, anim, text
+                self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,           # pos, sfx, anim_type
+                self.ArgType.INT, self.ArgType.INT, self.ArgType.INT_OR_STR,    # cid, sfx_delay, button
+                self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,           # evidence, flip, ding
+                self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.INT,  # color, showname, charid_pair
+                self.ArgType.INT, self.ArgType.INT):                            # offset_pair, nonint_pre
             # 2.6+ validation monstrosity.
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre = args
             if len(showname
@@ -816,7 +814,7 @@ class AOProtocol(asyncio.Protocol):
             msg = '=== Case Announcement ===\r\n{} [{}] is hosting {}, looking for '.format(
                 self.client.char_name, self.client.id, args[0])
 
-            lookingfor = [p for p, q in \
+            lookingfor = [p for p, q in
                 zip(['defense', 'prosecutor', 'judge', 'juror', 'stenographer'], args[1:])
                 if q == '1']
 
@@ -828,13 +826,11 @@ class AOProtocol(asyncio.Protocol):
 
             self.client.set_case_call_delay()
 
-            log_data = {k: v for k, v in \
+            log_data = {k: v for k, v in
                 zip(('message', 'def', 'pro', 'jud', 'jur', 'steno'), args)}
             database.log_room('case', self.client, self.client.area, message=log_data)
         else:
-            self.client.send_ooc(
-                'You cannot announce a case in an area where you are not a CM!'
-            )
+            self.client.send_ooc('You cannot announce a case in an area where you are not a CM!')
 
     def net_cmd_hp(self, args):
         """Sets the penalty bar.
