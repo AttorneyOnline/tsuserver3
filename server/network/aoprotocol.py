@@ -503,6 +503,9 @@ class AOProtocol(asyncio.Protocol):
             if pos not in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'jur',
                            'sea'):
                 return
+        if len(text) > self.server.config['max_chars']:
+            return
+            
         msg = self.dezalgo(text)[:256]
         if self.client.shaken:
             msg = self.client.shake_message(msg)
