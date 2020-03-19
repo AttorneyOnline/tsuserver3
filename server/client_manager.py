@@ -91,8 +91,9 @@ class ClientManager:
                 for x in range(self.server.config['wtce_floodguard']
                                ['times_per_interval'])
             ]
-            #security stuff
+            # security stuff
             self.clientscon = 0
+
         def send_raw_message(self, msg):
             """
             Send a raw packet over TCP.
@@ -340,7 +341,7 @@ class ClientManager:
             else:
                 player_list = area.clients
             info += f'[{area.abbreviation}]: [{len(player_list)} users][{area.status}]{lock[area.is_locked]}'
-            
+
             sorted_clients = []
             for client in player_list:
                 if (not mods) or client.is_mod:
@@ -536,7 +537,6 @@ class ClientManager:
         self.server = server
         self.cur_id = [i for i in range(self.server.config['playerlimit'])]
 
-
     def new_client_preauth(self, client):
         maxclients = self.server.config['multiclient_limit']
         for c in self.server.client_manager.clients:
@@ -586,6 +586,7 @@ class ClientManager:
             if c.ipid == temp_ipid:
                 c.clientscon -= 1
         self.clients.remove(client)
+
     def get_targets(self, client, key, value, local=False, single=False):
         """
         Find players by a combination of identifying data.
@@ -627,7 +628,7 @@ class ClientManager:
                     if client.ipid == value:
                         targets.append(client)
                 elif key == TargetType.AFK:
-                     if client in area.afkers:
+                    if client in area.afkers:
                         targets.append(client)
         return targets
 
@@ -646,13 +647,13 @@ class ClientManager:
             if client.is_ooc_muted:
                 clients.append(client)
         return clients
-        
+
     def toggle_afk(self, client):
             if client in client.area.afkers:
-                    client.area.broadcast_ooc('{} is no longer AFK.'.format(client.char_name))
-                    client.send_ooc('You are no longer AFK. Welcome back!') #Making the server a bit friendly wouldn't hurt, right?
-                    client.area.afkers.remove(client)
+                client.area.broadcast_ooc('{} is no longer AFK.'.format(client.char_name))
+                client.send_ooc('You are no longer AFK. Welcome back!')  # Making the server a bit friendly wouldn't hurt, right?
+                client.area.afkers.remove(client)
             else:
-                    client.area.broadcast_ooc('{} is now AFK.'.format(client.char_name))
-                    client.send_ooc('You are now AFK. Have a good day!')
-                    client.area.afkers.append(client)
+                client.area.broadcast_ooc('{} is now AFK.'.format(client.char_name))
+                client.send_ooc('You are now AFK. Have a good day!')
+                client.area.afkers.append(client)

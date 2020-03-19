@@ -20,7 +20,9 @@
 
 # Install dependencies in case one is missing
 
-import sys, subprocess
+import sys
+import subprocess
+
 
 def check_deps():
     py_version = sys.version_info
@@ -37,7 +39,7 @@ def check_deps():
             subprocess.check_call([
                 sys.executable, '-m', 'pip', 'install', '--user', '-r',
                 'requirements.txt'
-            ])
+                ])
             print('If an import error occurs after the installation, try '
                 'restarting the server.')
         except subprocess.CalledProcessError:
