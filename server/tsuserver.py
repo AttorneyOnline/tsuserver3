@@ -59,9 +59,16 @@ class TsuServer3:
         self.backgrounds = None
         self.zalgo_tolerance = None
         self.ipRange_bans = []
+        self.geoIpReader = None
+        self.useGeoIp = False
 
-        self.geoIpReader = geoip2.database.Reader('./storage/GeoLite2-ASN.mmdb')
-        # on debian systems you can use /usr/share/GeoIP/GeoIPASNum.dat if the geoip-database-extra package is installed
+        try:
+            self.geoIpReader = geoip2.database.Reader('./storage/GeoLite2-ASN.mmdb')
+            self.useGeoIp = True
+            # on debian systems you can use /usr/share/GeoIP/GeoIPASNum.dat if the geoip-database-extra package is installed
+        except FileNotFoundError:
+            self.useGeoIp = False
+            pass
 
         self.ms_client = None
 
@@ -145,12 +152,16 @@ class TsuServer3:
         :returns: created client object
         """
         peername = transport.get_extra_info('peername')[0]
-        try:
-            geoIpResponse = self.geoIpReader.asn(peername)
-            asn = str(geoIpResponse.autonomous_system_number)
-        except geoip2.errors.AddressNotFoundError:
+
+        if self.useGeoIp:
+            try:
+                geoIpResponse = self.geoIpReader.asn(peername)
+                asn = str(geoIpResponse.autonomous_system_number)
+            except geoip2.errors.AddressNotFoundError:
+                asn = "Loopback"
+                pass
+        else:
             asn = "Loopback"
-            pass
 
         for line,rangeBan in enumerate(self.ipRange_bans):
             if peername.startswith(rangeBan) or asn == rangeBan:
