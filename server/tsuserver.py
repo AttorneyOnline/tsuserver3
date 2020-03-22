@@ -49,7 +49,7 @@ class TsuServer3:
         self.load_iniswaps()
         self.client_manager = ClientManager(self)
         self.area_manager = AreaManager(self)
-        self.ban_manager = BanManager()
+        #self.ban_manager = BanManager()
         self.serverpoll_manager = ServerpollManager(self)
         self.software = 'tsuserver3'
         self.release = 3
@@ -68,17 +68,16 @@ class TsuServer3:
         self.load_characters()
         self.load_music()
         self.load_backgrounds()
-        self.load_ids()
+        #self.load_ids()
         self.load_gimps()
-        self.load_data()
+        #self.load_data()
         self.district_client = None
         self.ms_client = None
         self.rp_mode = False
         self.runner = False
         self.runtime = 0
-        logger.setup_logger(debug=self.config['debug'], log_size=self.config['log_size'],
-                            log_backups=self.config['log_backups'], areas=self.area_manager.areas)
-        self.stats_manager = Database(self)
+        #logger.setup_logger(debug=self.config['debug'], log_size=self.config['log_size'],log_backups=self.config['log_backups'], areas=self.area_manager.areas)
+        #self.stats_manager = Database(self)
 
         try:
             self.load_config()
@@ -97,7 +96,7 @@ class TsuServer3:
             sys.exit(1)
 
         self.client_manager = ClientManager(self)
-        server.logger.setup_logger(debug=self.config['debug'])
+        #server.logger.setup_logger(debug=self.config['debug'])
 
     def start(self):
         """Start the server."""
@@ -133,7 +132,7 @@ class TsuServer3:
             loop.run_forever()
         except KeyboardInterrupt:
             pass
-        self.stats_manager.save_alldata()
+        #self.stats_manager.save_alldata()
         print("Saved all data.")
         logger.log_debug('Server shutting down.')
         for c in self.client_manager.clients:
@@ -144,6 +143,10 @@ class TsuServer3:
         loop.run_until_complete(ao_server.wait_closed())
         loop.close()
         
+    async def schedule_unbans(self):
+        while True:
+            database.schedule_unbans()
+            await asyncio.sleep(3600 * 12)    
     def get_version_string(self):
         return str(self.release) + '.' + str(self.major_version) + '.' + str(self.minor_version)
 

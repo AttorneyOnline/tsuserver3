@@ -35,7 +35,6 @@ class ClientManager:
         def __init__(self, server, transport, user_id, ipid):
             self.is_checked = False
             self.transport = transport
-            self.real_ip = real_ip
             self.hdid = ''
             self.id = user_id
             self.char_id = -1
