@@ -501,7 +501,14 @@ class AOProtocol(asyncio.Protocol):
             if pos not in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'jur',
                            'sea'):
                 return
-        if len(text) > self.server.config['max_chars']:
+
+        max_char = 0
+        try:
+            max_char = int(self.server.config['max_chars'])
+        except:
+            max_char = 256
+
+        if len(text) > max_char:
             return
             
         msg = self.dezalgo(text)[:256]
