@@ -164,7 +164,7 @@ class TsuServer3:
             asn = "Loopback"
 
         for line,rangeBan in enumerate(self.ipRange_bans):
-            if peername.startswith(rangeBan) or asn == rangeBan:
+            if rangeBan != "" and peername.startswith(rangeBan) or asn == rangeBan:
                 msg =   'BD#'
                 msg +=  'Abuse\r\n'
                 msg += f'ID: {line}\r\n'
