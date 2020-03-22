@@ -556,9 +556,11 @@ class ClientManager:
             transport.write(b'BD#This server is full.#%')
             raise ClientError
 
+        peername = transport.get_extra_info('peername')[0]
+        
         c = self.Client(
             self.server, transport, user_id,
-            database.ipid(transport.get_extra_info('peername')[0]))
+            database.ipid(peername))
         self.clients.add(c)
         temp_ipid = c.ipid
         for client in self.server.client_manager.clients:
