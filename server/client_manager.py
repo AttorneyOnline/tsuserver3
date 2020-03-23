@@ -17,6 +17,7 @@
 
 import re
 import time
+import random
 from heapq import heappop, heappush
 
 from server import logger
@@ -26,9 +27,10 @@ from server.exceptions import ClientError, AreaError
 
 class ClientManager:
     class Client:
-        def __init__(self, server, transport, user_id, ipid):
+        def __init__(self, server, transport, user_id, ipid, real_ip):
             self.is_checked = False
             self.transport = transport
+            self.real_ip = real_ip
             self.hdid = ''
             self.pm_mute = False
             self.id = user_id
@@ -44,6 +46,7 @@ class ClientManager:
             self.evi_list = []
             self.disemvowel = False
             self.shaken = False
+            self.gimp = False
             self.charcurse = []
             self.muted_global = False
             self.muted_adverts = False
@@ -80,6 +83,8 @@ class ClientManager:
             self.wtce_mute_time = 0
             self.wtce_time = [x * self.server.config['wtce_floodguard']['interval_length'] for x in
                               range(self.server.config['wtce_floodguard']['times_per_interval'])]
+            self.voting = 0
+            self.voting_at = 0
 
         def send_raw_message(self, msg):
             self.transport.write(msg.encode('utf-8'))
@@ -120,7 +125,7 @@ class ClientManager:
         def disconnect(self):
             self.transport.close()
 
-        def change_character(self, char_id, force=False):
+        def change_character(self, char_id, force=False, switch=False):
             if not self.server.is_valid_char_id(char_id):
                 raise ClientError('Invalid Character ID.')
             if len(self.charcurse) > 0:
@@ -137,7 +142,8 @@ class ClientManager:
             old_char = self.get_char_name()
             self.char_id = char_id
             self.pos = ''
-            self.send_command('PV', self.id, 'CID', self.char_id)
+            self.area.shadow_status[self.char_id] = [self.ipid, self.hdid]
+            self.send_command('PV', self.id, 'CID', self.char_id, switch)
             self.area.send_command('CharsCheck', *self.get_available_char_list())
             logger.log_server('[{}]Changed character from {} to {}.'
                               .format(self.area.abbreviation, old_char, self.get_char_name()), self)
@@ -216,6 +222,7 @@ class ClientManager:
                 '[{}]Changed area from {} ({}) to {} ({}).'.format(self.get_char_name(), old_area.name, old_area.id,
                                                                    self.area.name, self.area.id), self)
             self.area.send_command('CharsCheck', *self.get_available_char_list())
+            self.area.shadow_status[self.char_id] = [self.ipid, self.hdid]
             self.send_command('HP', 1, self.area.hp_def)
             self.send_command('HP', 2, self.area.hp_pro)
             self.send_command('BN', self.area.background)
@@ -348,6 +355,7 @@ class ClientManager:
             if password == self.server.config['modpass']:
                 self.is_mod = True
             else:
+                self.send_command("FAILEDLOGIN");
                 raise ClientError('Invalid password.')
 
         def get_ip(self):
@@ -385,6 +393,10 @@ class ClientManager:
             random.shuffle(parts)
             return ' '.join(parts)
 
+        def gimp_message(self, message):
+            message = self.server.gimp_list
+            return random.choice(message)
+
     def __init__(self, server):
         self.clients = set()
         self.server = server
@@ -393,7 +405,7 @@ class ClientManager:
 
     def new_client(self, transport):
         c = self.Client(self.server, transport, heappop(self.cur_id),
-                        self.server.get_ipid(transport.get_extra_info('peername')[0]))
+                        self.server.get_ipid(transport.get_extra_info('peername')[0]), transport.get_extra_info('peername')[0])
         self.clients.add(c)
         return c
 

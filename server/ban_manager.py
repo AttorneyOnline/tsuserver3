@@ -16,6 +16,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import json
+import yaml
 
 from server.exceptions import ServerError
 
@@ -24,6 +25,8 @@ class BanManager:
     def __init__(self):
         self.bans = {} # "ipid": {"Reason": "reason"}
         self.load_banlist()
+        self.hdid_exempt = {}
+        self.load_hdidexceptions()
 
     def load_banlist(self):
         try:
@@ -70,3 +73,7 @@ class BanManager:
             return self.bans[ipid]["Reason"]
         else:
             raise ServerError('This IPID is not banned.')
+
+    def load_hdidexceptions(self):
+        with open('config/hdid_exceptions.yaml', 'r', encoding='utf-8') as hdid:
+            self.hdid_exempt = yaml.load(hdid)

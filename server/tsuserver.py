@@ -17,7 +17,7 @@
 
 import asyncio
 import json
-
+import hashlib
 import websockets
 import yaml
 
@@ -30,7 +30,8 @@ from server.network.aoprotocol import AOProtocol
 from server.network.aoprotocol_ws import new_websocket_client
 from server.network.districtclient import DistrictClient
 from server.network.masterserverclient import MasterServerClient
-
+from server.serverpoll_manager import ServerpollManager
+from server.database import Database
 
 class TsuServer3:
     def __init__(self):
@@ -41,6 +42,7 @@ class TsuServer3:
         self.client_manager = ClientManager(self)
         self.area_manager = AreaManager(self)
         self.ban_manager = BanManager()
+        self.serverpoll_manager = ServerpollManager(self)
         self.software = 'tsuserver3'
         self.version = 'vanilla'
         self.release = 3
@@ -58,14 +60,19 @@ class TsuServer3:
         self.load_music()
         self.load_backgrounds()
         self.load_ids()
+        self.load_gimps()
+        self.load_data()
         self.district_client = None
         self.ms_client = None
         self.rp_mode = False
-        logger.setup_logger(debug=self.config['debug'])
+        self.runner = False
+        self.runtime = 0
+        logger.setup_logger(debug=self.config['debug'], log_size=self.config['log_size'],
+                            log_backups=self.config['log_backups'], areas=self.area_manager.areas)
+        self.stats_manager = Database(self)
 
     def start(self):
         loop = asyncio.get_event_loop()
-
         bound_ip = '0.0.0.0'
         if self.config['local']:
             bound_ip = '127.0.0.1'
@@ -92,13 +99,17 @@ class TsuServer3:
             loop.run_forever()
         except KeyboardInterrupt:
             pass
-
+        self.stats_manager.save_alldata()
+        print("Saved all data.")
         logger.log_debug('Server shutting down.')
-
+        for c in self.client_manager.clients:
+            c.send_command('KK', 'Server shutting down')
+            c.disconnect()
+        self.runner = False
         ao_server.close()
         loop.run_until_complete(ao_server.wait_closed())
         loop.close()
-
+        
     def get_version_string(self):
         return str(self.release) + '.' + str(self.major_version) + '.' + str(self.minor_version)
 
@@ -137,6 +148,10 @@ class TsuServer3:
             self.music_list = yaml.load(music)
         self.build_music_pages_ao1()
         self.build_music_list_ao2()
+        
+    def load_gimps(self):
+        with open('config/gimp.yaml', 'r', encoding='utf-8') as cfg:
+            self.gimp_list = yaml.load(cfg)
 
     def load_ids(self):
         self.ipid_list = {}
@@ -163,6 +178,11 @@ class TsuServer3:
             json.dump(self.hdid_list, whole_list)
 
     def get_ipid(self, ip):
+        if 'server_number' in self.config:
+            x = ip + str(self.config['server_number'])
+            hash_object = hashlib.sha256(x.encode('utf-8'))
+            hash = hash_object.hexdigest()[:12]
+            return hash
         if not (ip in self.ipid_list):
             self.ipid_list[ip] = len(self.ipid_list)
             self.dump_ipids()
@@ -206,10 +226,21 @@ class TsuServer3:
         for area in self.area_manager.areas:
             self.music_list_ao2.append(area.name)
             # then add music
+        self.music_list_ao2.append("===MUSIC START===.mp3") #>lol lets just have the music and area lists be the same fucking thing, the mp3 is there for older clients who aren't looking for this to determine the start of the music list
         for item in self.music_list:
             self.music_list_ao2.append(item['category'])
-            for song in item['songs']:
-                self.music_list_ao2.append(song['name'])
+            try:
+                if not item['mod'] == 1:
+                    for song in item['songs']:
+                        if not song['mod'] == 1:
+                            self.music_list_ao2.append(song['name'])
+            except KeyError:
+                for song in item['songs']:
+                    try:
+                        if not song['mod'] == 1:
+                            self.music_list_ao2.append(song['name'])
+                    except KeyError:
+                        self.music_list_ao2.append(song['name'])
 
     def is_valid_char_id(self, char_id):
         return len(self.char_list) > char_id >= 0
@@ -223,13 +254,16 @@ class TsuServer3:
     def get_song_data(self, music):
         for item in self.music_list:
             if item['category'] == music:
-                return item['category'], -1
+                return item['category'], -1, -1
             for song in item['songs']:
                 if song['name'] == music:
                     try:
-                        return song['name'], song['length']
+                        return song['name'], song['length'], song['mod']
                     except KeyError:
-                        return song['name'], -1
+                        try:
+                            return song['name'], song['length'], -1
+                        except KeyError:
+                            return song['name'], -1, -1
         raise ServerError('Music not found.')
 
     def send_all_cmd_pred(self, cmd, *args, pred=lambda x: True):
@@ -311,3 +345,11 @@ class TsuServer3:
         self.build_music_list_ao2()
         with open('config/backgrounds.yaml', 'r') as bgs:
             self.backgrounds = yaml.load(bgs)
+
+    def load_data(self):
+        with open('config/data.yaml', 'r') as data:
+            self.data = yaml.load(data)
+
+    def save_data(self):
+        with open('config/data.yaml', 'w') as data:
+            json.dump(self.data, data)
