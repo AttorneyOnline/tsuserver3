@@ -66,6 +66,7 @@ class TsuServer3:
             self.load_characters()
             self.load_music()
             self.load_backgrounds()
+            self.load_gimps()
         except yaml.YAMLError as exc:
             print('There was a syntax error parsing a configuration file:')
             print(exc)
@@ -211,6 +212,10 @@ class TsuServer3:
                 self.allowed_iniswaps = yaml.safe_load(iniswaps)
         except:
             logger.debug('Cannot find iniswaps.yaml')
+
+    def load_gimps(self):
+        with open('config/gimp.yaml', 'r', encoding='utf-8') as cfg:
+            self.gimp_list = yaml.load(cfg)
 
     def build_char_pages_ao1(self):
         """

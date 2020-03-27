@@ -17,6 +17,7 @@
 
 import re
 import time
+import random
 from heapq import heappop, heappush
 
 from server import database
@@ -49,6 +50,7 @@ class ClientManager:
             self.evi_list = []
             self.disemvowel = False
             self.shaken = False
+            self.gimp = False
             self.charcurse = []
             self.muted_global = False
             self.muted_adverts = False
@@ -530,6 +532,9 @@ class ClientManager:
             parts = message.split()
             random.shuffle(parts)
             return ' '.join(parts)
+        def gimp_message(self, message):
+            message = self.server.gimp_list
+            return random.choice(message)
 
     def __init__(self, server):
         self.clients = set()

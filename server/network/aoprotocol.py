@@ -403,6 +403,7 @@ class AOProtocol(asyncio.Protocol):
                                    self.ArgType.INT, self.ArgType.INT, self.ArgType.INT_OR_STR, self.ArgType.INT,
                                    self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR_OR_EMPTY,
                                    self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.STR_OR_EMPTY, self.ArgType.STR_OR_EMPTY):
+                                   #2.7 AOV hell check
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre, looping_sfx, screenshake, frame_screenshake, frame_realization, frame_sfx = args
             if len(showname) > 0 and not self.client.area.showname_changes_allowed:
                 self.client.send_host_message("Showname changes are forbidden in this area!")                       
@@ -531,6 +532,8 @@ class AOProtocol(asyncio.Protocol):
         msg = self.dezalgo(text)[:256]
         if self.client.shaken:
             msg = self.client.shake_message(msg)
+        if self.client.gimp:  # If you're gimped, gimp message.
+            msg = self.client.gimp_message(msg)
         if self.client.disemvowel:
             msg = self.client.disemvowel_message(msg)
         self.client.pos = pos
@@ -577,7 +580,7 @@ class AOProtocol(asyncio.Protocol):
                                       button, self.client.evi_list[evidence],
                                       flip, ding, color, showname, charid_pair,
                                       other_folder, other_emote, offset_pair,
-                                      other_offset, other_flip, nonint_pre)
+                                      other_offset, other_flip, nonint_pre, looping_sfx, screenshake, frame_screenshake, frame_realization, frame_sfx)
 
         self.client.area.send_owner_command('MS', msg_type, pre, folder, anim,
                                             '[' + self.client.area.abbreviation + ']' + msg, pos, sfx, anim_type, cid,
