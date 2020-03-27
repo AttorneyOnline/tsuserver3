@@ -80,19 +80,19 @@ def ooc_cmd_switch(client, arg):
 
 
 def ooc_cmd_bg(client, arg):
+    if len(arg) == 0:
+        raise ArgumentError(f'Current BG: {client.area.background}. Use /bg <background> to change it.')
     if client.hub.status.lower().startswith('rp-strict') and not client.is_mod and not client.is_cm:
         raise AreaError(
             'Hub is {} - only the CM or mods can change /bg.'.format(client.hub.status))
-    if len(arg) == 0:
-        raise ArgumentError('You must specify a name. Use /bg <background>.')
     if not client.is_mod and not client.is_cm and client.area.bg_lock == True:
         raise AreaError("This area's background is locked")
     try:
         client.area.change_background(arg, client.is_mod)
     except AreaError:
         raise
-    client.area.send_host_message('[{}]{} changed the background to {}.'.format(client.id, client.get_char_name(True), arg))
-    logger.log_server('Changed background to {}'.format(arg), client)
+    client.area.send_host_message(f'[{client.id}]{client.get_char_name(True)} changed the background to {arg}.')
+    logger.log_server(f'Changed background to {arg}', client)
 
 def ooc_cmd_bglock(client,arg):
     if not client.is_mod and not client.is_cm:
