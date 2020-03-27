@@ -10,7 +10,8 @@ __all__ = [
     'ooc_cmd_jukebox',
     'ooc_cmd_play',
     'ooc_cmd_blockdj',
-    'ooc_cmd_unblockdj'
+    'ooc_cmd_unblockdj',
+    'ooc_cmd_modplay'
 ]
 
 
@@ -129,13 +130,15 @@ def ooc_cmd_jukebox(client, arg):
             f'The jukebox has the following songs in it:{message}')
 
 
-@mod_only()
+
 def ooc_cmd_play(client, arg):
     """
     Play a track.
     Usage: /play <name>
     """
-    if len(arg) == 0:
+    if client not in client.area.owners:
+        raise ClientError('You must be a CM.')
+    elif len(arg) == 0:
         raise ArgumentError('You must specify a song.')
     client.area.play_music(arg, client.char_id, -1)
     client.area.add_music_playing(client, arg)
@@ -189,3 +192,15 @@ def ooc_cmd_unblockdj(client, arg):
         database.log_room('unblockdj', client, client.area, target=target)
     client.send_ooc('Unblockdj\'d {}.'.format(
         targets[0].char_name))
+
+@mod_only()
+def ooc_cmd_modplay(client, arg):
+    """
+    Play a track.
+    Usage: /play <name>
+    """
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a song.')
+    client.area.play_music(arg, client.char_id, -1)
+    client.area.add_music_playing(client, arg)
+    database.log_room('play', client, client.area, message=arg)

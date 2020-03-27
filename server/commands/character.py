@@ -15,7 +15,8 @@ __all__ = [
     'ooc_cmd_charcurse',
     'ooc_cmd_uncharcurse',
     'ooc_cmd_charids',
-    'ooc_cmd_reload'
+    'ooc_cmd_reload',
+    'ooc_cmd_kickother'
 ]
 
 
@@ -56,7 +57,7 @@ def ooc_cmd_pos(client, arg):
         client.send_ooc('Position changed.')
 
 
-@mod_only(area_owners=True)
+
 def ooc_cmd_forcepos(client, arg):
     """
     Set the place another character resides in the room.
@@ -64,7 +65,9 @@ def ooc_cmd_forcepos(client, arg):
     """
     args = arg.split()
 
-    if len(args) < 1:
+    if client not in client.area.owners:
+        raise ClientError ('You are not a CM.')
+    elif len(args) < 1:
         raise ArgumentError(
             'Not enough arguments. Use /forcepos <pos> <target>. Target should be ID, OOC-name or char-name. Use /getarea for getting info like "[ID] char-name".'
         )
@@ -77,7 +80,7 @@ def ooc_cmd_forcepos(client, arg):
             client, TargetType.CHAR_NAME, " ".join(args[1:]), True)
         if len(targets) == 0 and args[1].isdigit():
             targets = client.server.client_manager.get_targets(
-                client, TargetType.ID, int(args[1]), True)
+                client, TargetType.ID, int(arg[1]), True)
         if len(targets) == 0:
             targets = client.server.client_manager.get_targets(
                 client, TargetType.OOC_NAME, " ".join(args[1:]), True)
@@ -242,3 +245,10 @@ def ooc_cmd_reload(client, arg):
     except ClientError:
         raise
     client.send_ooc('Character reloaded.')
+
+def ooc_cmd_kickother(client, arg):
+    targets = client.server.client_manager.get_targets(client, TargetType.IPID, client.ipid, False)
+    for target in targets:
+        if target != client:
+            target.disconnect()
+    client.send_ooc('Kicked other instances of client.')

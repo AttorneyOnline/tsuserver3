@@ -124,7 +124,6 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_command('BD', 'Maximum clients reached.\nDisconnect one of your clients to continue.')
             self.client.disconnect()
             return
-
         # Client needs to send CHECK#% within the timeout - otherwise,
         # it will be automatically dropped.
         self.ping_timeout = asyncio.get_event_loop().call_later(
@@ -145,6 +144,7 @@ class AOProtocol(asyncio.Protocol):
             self.server.remove_client(self.client)
         if self.ping_timeout is not None:
             self.ping_timeout.cancel()
+
 
     def get_messages(self):
         """Parses out full messages from the buffer.
@@ -459,7 +459,7 @@ class AOProtocol(asyncio.Protocol):
             return
         if color not in (0, 1, 2, 3, 4, 5, 6, 7, 8):
             return
-        if len(showname) > 15:
+        if len(showname) > 20:
             self.client.send_ooc("Your IC showname is way too long!")
             return
         if nonint_pre == 1:
@@ -625,10 +625,11 @@ class AOProtocol(asyncio.Protocol):
                 called_function = f'ooc_cmd_{cmd}'
                 if cmd == 'help' and arg != '':
                     self.client.send_ooc(commands.help(f'ooc_cmd_{arg}'))
-                elif not hasattr(commands, called_function):
-                    self.client.send_ooc('Invalid command.')
                 else:
                     getattr(commands, called_function)(self.client, arg)
+            except AttributeError:
+                print('Attribute error with ' + called_function)
+                self.client.send_ooc('Invalid command.')
             except (ClientError, AreaError, ArgumentError, ServerError) as ex:
                 self.client.send_ooc(ex)
             except Exception as ex:
@@ -690,7 +691,7 @@ class AOProtocol(asyncio.Protocol):
 
                 if self.client.area.jukebox:
                     showname = ''
-                    if len(args) > 3:
+                    if len(args)>3:
                         showname = args[2]
                         if len(
                                 showname
@@ -941,7 +942,6 @@ class AOProtocol(asyncio.Protocol):
             self.client.set_mod_call_delay()
             database.log_room('modcall', self.client, self.client.area)
         else:
-            args[0] = self.dezalgo(args[0])
             self.server.send_all_cmd_pred(
                 'ZZ',
                 '[{}] {} ({}) in {} with reason: {}'.format(

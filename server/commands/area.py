@@ -14,13 +14,18 @@ __all__ = [
     'ooc_cmd_area',
     'ooc_cmd_getarea',
     'ooc_cmd_getareas',
-    'ooc_cmd_area_lock',
-    'ooc_cmd_area_spectate',
-    'ooc_cmd_area_unlock',
+    'ooc_cmd_lock',
+	'ooc_cmd_unlock',
+	'ooc_cmd_modlock',
+	'ooc_cmd_modunlock',
+    'ooc_cmd_spectatable',
+    'ooc_cmd_modspectatable',
     'ooc_cmd_invite',
     'ooc_cmd_uninvite',
     'ooc_cmd_area_kick',
-    'ooc_cmd_getafk'
+    'ooc_cmd_mod_areakick',
+    'ooc_cmd_uninviteall',
+    'ooc_cmd_iclock'
 ]
 
 
@@ -159,24 +164,10 @@ def ooc_cmd_getareas(client, arg):
     client.send_area_info(-1, False)
 
 
-def ooc_cmd_getafk(client, arg):
-    """
-    Show currently AFK-ing players in the current area or in all areas.
-    Usage: /getafk [all]
-    """
-    if arg == 'all':
-        arg = -1
-    elif len(arg) == 0:
-        arg = client.area.id
-    else:
-        raise ArgumentError('There is only one optional argument [all].')
-    client.send_area_info(arg, False, afk_check=True)
-
-
-def ooc_cmd_area_lock(client, arg):
+def ooc_cmd_lock(client, arg):
     """
     Prevent users from joining the current area.
-    Usage: /area_lock
+    Usage: /lock
     """
     if not client.area.locking_allowed:
         client.send_ooc('Area locking is disabled in this area.')
@@ -187,11 +178,34 @@ def ooc_cmd_area_lock(client, arg):
     else:
         raise ClientError('Only CM can lock the area.')
 
+@mod_only()
+def ooc_cmd_modlock(client, arg):
+    """
+    Allows a mod to prevent users from joining the current area without needing to be the area owner.
+    Usage: /modlock
+    """
+    if not client.area.is_locked == client.area.Locked.LOCKED:
+        client.send_ooc('Area is already locked.')
+    else:
+        client.area.lock()
 
-def ooc_cmd_area_spectate(client, arg):
+
+@mod_only()
+def ooc_cmd_modunlock(client, arg):
+    """
+    Allows a mod to unlock the area without needing to be the area owner.
+    Usage: /modunlock
+    """
+    if client.area.is_locked == client.area.Locked.FREE:
+        raise ClientError('Area is already unlocked.')
+    else:
+        client.area.unlock()
+        client.send_ooc('Area is unlocked.')
+
+def ooc_cmd_spectatable(client, arg):
     """
     Allow users to join the current area, but only as spectators.
-    Usage: /area_spectate
+    Usage: /spectatable
     """
     if not client.area.locking_allowed:
         client.send_ooc('Area locking is disabled in this area.')
@@ -203,7 +217,7 @@ def ooc_cmd_area_spectate(client, arg):
         raise ClientError('Only CM can make the area spectatable.')
 
 
-def ooc_cmd_area_unlock(client, arg):
+def ooc_cmd_unlock(client, arg):
     """
     Allow anyone to freely join the current area.
     Usage: /area_unlock
@@ -215,8 +229,18 @@ def ooc_cmd_area_unlock(client, arg):
     client.area.unlock()
     client.send_ooc('Area is unlocked.')
 
+@mod_only()
+def ooc_cmd_modspectatable(client, arg):
+    """
+    Allows a mod to set the area to spectatable without needing to be the area owner.
+    Usage: /modspectatable
+    """
+    if client.area.is_locked == client.area.Locked.SPECTATABLE:
+        client.send_ooc('Area is already spectatable.')
+    else:
+        client.area.spectator()
 
-@mod_only(area_owners=True)
+
 def ooc_cmd_invite(client, arg):
     """
     Allow a particular user to join a locked or spectator-only area.
@@ -226,6 +250,8 @@ def ooc_cmd_invite(client, arg):
         raise ClientError('You must specify a target. Use /invite <id>')
     elif client.area.is_locked == client.area.Locked.FREE:
         raise ClientError('Area isn\'t locked.')
+    elif client not in client.area.owners:
+        raise ClientError ('You are not a CM.')
     try:
         c = client.server.client_manager.get_targets(client, TargetType.ID,
                                                      int(arg), False)[0]
@@ -239,7 +265,6 @@ def ooc_cmd_invite(client, arg):
         raise ClientError('You must specify a target. Use /invite <id>')
 
 
-@mod_only(area_owners=True)
 def ooc_cmd_uninvite(client, arg):
     """
     Revoke an invitation for a particular user.
@@ -249,6 +274,9 @@ def ooc_cmd_uninvite(client, arg):
         raise ClientError('Area isn\'t locked.')
     elif not arg:
         raise ClientError('You must specify a target. Use /uninvite <id>')
+    elif client not in client.area.owners:
+        raise ClientError ('You are not a CM.')
+
     arg = arg.split(' ')
     targets = client.server.client_manager.get_targets(client, TargetType.ID,
                                                        int(arg[0]), True)
@@ -271,7 +299,6 @@ def ooc_cmd_uninvite(client, arg):
         client.send_ooc("No targets found.")
 
 
-@mod_only()
 def ooc_cmd_area_kick(client, arg):
     """
     Remove a user from the current area and move them to another area.
@@ -279,6 +306,8 @@ def ooc_cmd_area_kick(client, arg):
     """
     if client.area.is_locked == client.area.Locked.FREE:
         raise ClientError('Area isn\'t locked.')
+    if client not in client.area.owners:
+        raise ClientError ('You are not a CM.')
     if not arg:
         raise ClientError(
             'You must specify a target. Use /area_kick <id> [destination #]')
@@ -319,3 +348,97 @@ def ooc_cmd_area_kick(client, arg):
             raise
     else:
         client.send_ooc("No targets found.")
+
+@mod_only()
+def ooc_cmd_mod_areakick(client, arg):
+    """
+    Remove a user from the current area and move them to another area.
+    Usage: /area_kick <id> [destination]
+    """
+    if client.area.is_locked == client.area.Locked.FREE:
+        raise ClientError('Area isn\'t locked.')
+    if client not in client.area.owners:
+        raise ClientError ('You are not a CM.')
+    if not arg:
+        raise ClientError(
+            'You must specify a target. Use /area_kick <id> [destination #]')
+    arg = arg.split(' ')
+    if arg[0] == 'afk':
+        trgtype = TargetType.AFK
+        argi = arg[0]
+    else:
+        trgtype = TargetType.ID
+        argi = int(arg[0])
+    targets = client.server.client_manager.get_targets(client, trgtype,
+                                                       argi, False)
+    if targets:
+        try:
+            for c in targets:
+                if len(arg) == 1:
+                    area = client.server.area_manager.get_area_by_id(int(0))
+                    output = 0
+                else:
+                    try:
+                        area = client.server.area_manager.get_area_by_id(
+                            int(arg[1]))
+                        output = arg[1]
+                    except AreaError:
+                        raise
+                client.send_ooc(
+                    "Attempting to kick {} to area {}.".format(
+                        c.char_name, output))
+                c.change_area(area)
+                c.send_ooc(
+                    f"You were kicked from the area to area {output}.")
+                database.log_room('area_kick', client, client.area, target=c, message=output)
+                if client.area.is_locked != client.area.Locked.FREE:
+                    client.area.invite_list.pop(c.id)
+        except AreaError:
+            raise
+        except ClientError:
+            raise
+    else:
+        client.send_ooc("No targets found.")
+
+def ooc_cmd_uninviteall(client, arg):
+    """
+    Revoke an invitation for a particular user.
+    Usage: /uninvite <id>
+    """
+    if client not in client.area.owners:
+        raise ClientError ('You are not a CM.')
+    else:
+        client.area.invite_list = {}
+        client.send_ooc("Invitelist cleared.")
+
+def ooc_cmd_iclock(client, arg):
+    """
+    Revoke an invitation for a particular user.
+    Usage: /uninvite <id>
+    """
+    if client.area.is_locked == client.area.Locked.FREE:
+        raise ClientError('Area isn\'t locked.')
+    elif arg:
+        raise ClientError('You cannot specify targets for this command')
+    elif client not in client.area.owners:
+        raise ClientError ('You are not a CM.')
+    targets = client.server.client_manager.get_targets(client, TargetType.ID,
+                                                       int(arg[0]), True)
+    if targets:
+        try:
+            for c in targets:
+                client.send_ooc(
+                    "You have removed {} from the whitelist.".format(
+                        c.char_name))
+                c.send_ooc(
+                    "You were removed from the area whitelist.")
+                database.log_room('uninvite', client, client.area, target=c)
+                if client.area.is_locked != client.area.Locked.FREE:
+                    client.area.invite_list.pop(c.id)
+        except AreaError:
+            raise
+        except ClientError:
+            raise
+    else:
+        client.send_ooc("No targets found.")
+

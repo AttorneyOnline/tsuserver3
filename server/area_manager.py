@@ -97,7 +97,8 @@ class AreaManager:
         def new_client(self, client):
             """Add a client to the area."""
             self.clients.add(client)
-            self.server.area_manager.send_arup_players()
+            if not client.ghost:
+                self.server.area_manager.send_arup_players()
             if client.char_id != -1:
                 database.log_room('area.join', client, self)
 
@@ -563,7 +564,11 @@ class AreaManager:
         """Broadcast ARUP packet containing player counts."""
         players_list = [0]
         for area in self.areas:
-            players_list.append(len(area.clients))
+            count = 0
+            for client in area.clients:
+                if not client.ghost:
+                    count += 1
+            players_list.append(count)
         self.server.send_arup(players_list)
 
     def send_arup_status(self):

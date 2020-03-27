@@ -66,7 +66,7 @@ def parse_client_info(client):
     if client is None:
         return ''
     ipid = client.ip
-    prefix = f'[{ipid:<15}][{client.id:<3}][{client.name}]'
+    prefix = f'[{ipid:<15}][{client.id:<3}][{client.name}][{client.clientscon}]'
     if client.is_mod:
         prefix += '[MOD]'
     return prefix
