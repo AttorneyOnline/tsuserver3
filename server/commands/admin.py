@@ -439,6 +439,7 @@ def ooc_cmd_gimp(client, arg):
         client.send_ooc('Gimped {} targets.'.format(len(targets)))
     else:
         client.send_ooc('No targets found.')
+
 def ooc_cmd_ungimp(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
