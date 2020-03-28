@@ -832,8 +832,7 @@ class AOProtocol(asyncio.Protocol):
                     'Please wait 60 seconds between case announcements!')
                 return
 
-            if not args[1] == "1" and not args[2] == "1" and not args[
-                    3] == "1" and not args[4] == "1" and not args[5] == "1" and not args[6] == "1":
+            if not ("1" in args[1:]):
                 self.client.send_ooc(
                     'You should probably announce the case to at least one person.'
                 )

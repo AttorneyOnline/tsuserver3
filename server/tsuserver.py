@@ -490,7 +490,7 @@ class TsuServer3:
         self.load_music()
         self.load_backgrounds()
         self.load_ipranges()
-
+        self.load_gimps()
         import server.commands
         importlib.reload(server.commands)
         server.commands.reload()
