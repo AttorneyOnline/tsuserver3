@@ -428,7 +428,7 @@ def ooc_cmd_gimp(client, arg):
         elif len(arg) < 12 and arg.isdigit():
             targets = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), False)
         else:
-            raise ArgumentError()
+            raise ArgumentError
     except:
         raise ArgumentError('You must specify a target. Use /gimp <id> or <ipid>.')
     if targets:
@@ -459,4 +459,3 @@ def ooc_cmd_ungimp(client, arg):
         client.send_ooc('Ungimped {} targets.'.format(len(targets)))
     else:
         client.send_ooc('No targets found.')
-
