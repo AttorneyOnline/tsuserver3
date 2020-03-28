@@ -533,6 +533,7 @@ class ClientManager:
             parts = message.split()
             random.shuffle(parts)
             return ' '.join(parts)
+
         def gimp_message(self, message):
             message = self.server.gimp_list
             return random.choice(message)
