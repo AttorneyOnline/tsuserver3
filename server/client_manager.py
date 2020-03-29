@@ -103,7 +103,7 @@ class ClientManager:
             self.cm_save_time = 0
 
             self.last_move_time = 0
-            self.move_delay = 0
+            self.move_delay = -1
 
         def send_raw_message(self, msg):
             self.transport.write(msg.encode('utf-8'))

@@ -665,6 +665,10 @@ class AOProtocol(asyncio.Protocol):
                                         sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
                                         charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
                                         nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive, effect)
+            self.client.area.send_listen('MS', msg_type, pre, folder, anim, f'}}}}}}[A{self.client.area.id}] {{{{{{{msg}', pos, sfx, anim_type, cid,
+                                        sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
+                                        charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
+                                        nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive, effect)
             self.client.area.set_next_msg_delay(self.parse_msg_delay(msg))
             self.client.area.last_speaker = self.client
             
@@ -755,6 +759,7 @@ class AOProtocol(asyncio.Protocol):
             if self.client.disemvowel:
                 args[1] = self.client.disemvowel_message(args[1])
             self.client.area.send_command('CT', ooc_name, args[1])
+            self.client.area.send_listen('CT', f'[A{self.client.area.id}] {ooc_name}', args[1])
             # self.client.area.send_owner_command('CT', '[' + self.client.hub.abbreviation + ']' + ooc_name,
             #                                     args[1])
             logger.log_server('[OOC] "{}"'.format(args[1]), self.client)

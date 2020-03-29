@@ -85,7 +85,7 @@ class HubManager:
 
 		class Area:
 			def __init__(self, area_id, server, hub, name, can_rename=True, background='default', bg_lock=False, pos_lock=None, evidence_mod = 'FFA',
-						locking_allowed = False, can_remove = False, accessible = None, desc = '', locked=False, hidden=False, max_players=-1, move_delay=0, ambience=''):
+						locking_allowed = False, can_remove = False, accessible = None, desc = '', locked=False, hidden=False, max_players=-1, move_delay=-1, ambience=''):
 				self.id = area_id
 				self.server = server
 				self.hub = hub
@@ -113,7 +113,7 @@ class HubManager:
 
 			def update(self, name, can_rename=True, background='default', bg_lock=False, pos_lock=None, evidence_mod = 'FFA',
 						locking_allowed = False, can_remove = False, accessible = None, desc = '', locked=False, hidden=False,
-						max_players=-1, move_delay=0, ambience=''):
+						max_players=-1, move_delay=-1, ambience=''):
 				self.name = name
 				self.can_rename = can_rename
 				self.background = background
@@ -301,19 +301,11 @@ class HubManager:
 			def send_command(self, cmd, *args):
 				for c in self.clients:
 					c.send_command(cmd, *args)
-				if cmd in ['MS', 'CT']:
-					#/area_listen stuff
-					for c in self.hub.clients():
-						if c.area != self and (c.is_cm or c.is_mod) and self.id in c.area_listen:
-							if cmd == 'MS' and args[0] != 'broadcast': #Ignore broadcasts, they wreck shit
-								lst = list(args)
-								lst[4] = f'}}}}}}[A{self.id}] {{{{{{{lst[4]}'
-								args = tuple(lst)
-							elif cmd == 'CT':
-								lst = list(args)
-								lst[0] = f'[A{self.id}] {lst[0]}'
-								args = tuple(lst)
-							c.send_command(cmd, *args)
+			
+			def send_listen(self, cmd, *args):
+				for c in self.hub.clients():
+					if c.area != self and (c.is_cm or c.is_mod) and self.id in c.area_listen:
+						c.send_command(cmd, *args)
 
 			def send_host_message(self, msg):
 				self.send_command('CT', self.server.config['hostname'], msg)
@@ -366,7 +358,9 @@ class HubManager:
 
 			def time_until_move(self, client):
 				secs = round(time.time() * 1000.0 - client.last_move_time)
-				highest = max(client.move_delay, self.move_delay, self.hub.move_delay)
+				#Move Delay priority: client move delay -> area move delay -> hub move delay
+				delays = [client.move_delay, self.move_delay, self.hub.move_delay]
+				highest = next((item for item in delays if item is not -1), 0)
 				test = highest * 1000.0 - secs
 				if test > 0:
 					return test
@@ -429,7 +423,7 @@ class HubManager:
 
 		def __init__(self, hub_id, server, name, allow_cm=False, max_areas=1, doc='No document.', status='IDLE', showname_changes_allowed=False,
 						shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation='',
-						move_delay=0, keys=[], music_ref=''):
+						move_delay=-1, keys=[], music_ref=''):
 			self.server = server
 			self.id = hub_id
 
@@ -449,7 +443,7 @@ class HubManager:
 
 		def update(self, name, allow_cm=False, max_areas=1, doc='No document.', status='IDLE', showname_changes_allowed=False,
 					 shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation='',
-					 move_delay=0, keys=[], music_ref=''):
+					 move_delay=-1, keys=[], music_ref=''):
 			self.name = name
 			self.allow_cm = allow_cm
 			self.max_areas = max_areas
