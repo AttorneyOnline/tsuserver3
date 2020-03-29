@@ -85,7 +85,7 @@ class HubManager:
 
 		class Area:
 			def __init__(self, area_id, server, hub, name, can_rename=True, background='default', bg_lock=False, pos_lock=None, evidence_mod = 'FFA',
-						locking_allowed = False, can_remove = False, accessible = None, desc = '', locked=False, hidden=False, max_players=-1, move_delay=-1, ambience=''):
+						locking_allowed = False, can_remove = False, accessible = None, desc = '', locked=False, hidden=False, max_players=-1, move_delay=0, ambience=''):
 				self.id = area_id
 				self.server = server
 				self.hub = hub
@@ -113,7 +113,7 @@ class HubManager:
 
 			def update(self, name, can_rename=True, background='default', bg_lock=False, pos_lock=None, evidence_mod = 'FFA',
 						locking_allowed = False, can_remove = False, accessible = None, desc = '', locked=False, hidden=False,
-						max_players=-1, move_delay=-1, ambience=''):
+						max_players=-1, move_delay=0, ambience=''):
 				self.name = name
 				self.can_rename = can_rename
 				self.background = background
@@ -357,11 +357,13 @@ class HubManager:
 				return (time.time() * 1000.0 - self.next_message_time) > 0
 
 			def time_until_move(self, client):
+				# Sum up the movement delays. For example,
+				# if client has 1s move delay, area has 3s move delay, and hub has 2s move delay,
+				# the resulting delay will be 1+3+2=6 seconds.
+				# Negative numbers are allowed.
 				secs = round(time.time() * 1000.0 - client.last_move_time)
-				#Move Delay priority: client move delay -> area move delay -> hub move delay
-				delays = [client.move_delay, self.move_delay, self.hub.move_delay]
-				highest = next((item for item in delays if item is not -1), 0)
-				test = highest * 1000.0 - secs
+				total = sum([client.move_delay, self.move_delay, self.hub.move_delay]) 
+				test = total * 1000.0 - secs
 				if test > 0:
 					return test
 				return 0
@@ -423,7 +425,7 @@ class HubManager:
 
 		def __init__(self, hub_id, server, name, allow_cm=False, max_areas=1, doc='No document.', status='IDLE', showname_changes_allowed=False,
 						shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation='',
-						move_delay=-1, keys=[], music_ref=''):
+						move_delay=0, keys=[], music_ref=''):
 			self.server = server
 			self.id = hub_id
 
@@ -443,7 +445,7 @@ class HubManager:
 
 		def update(self, name, allow_cm=False, max_areas=1, doc='No document.', status='IDLE', showname_changes_allowed=False,
 					 shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation='',
-					 move_delay=-1, keys=[], music_ref=''):
+					 move_delay=0, keys=[], music_ref=''):
 			self.name = name
 			self.allow_cm = allow_cm
 			self.max_areas = max_areas
