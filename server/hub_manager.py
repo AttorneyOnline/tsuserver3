@@ -497,12 +497,12 @@ class HubManager:
 				path) if os.path.isfile(os.path.join(path, f))])
 			if (num_files >= 100): #yikes
 				raise AreaError('Server storage full! Please contact the server host to resolve this issue.')
-			with open('{}/{}.yaml'.format(path, name), 'w') as stream:
+			with open('{}/{}.yaml'.format(path, name), 'w', encoding='utf-8') as stream:
 				yaml.dump(self.yaml_save(), stream, default_flow_style=False)
 
 		def yaml_load(self, name=''):
 			path = 'storage/hubs'
-			with open('{}/{}.yaml'.format(path, name), 'r') as stream:
+			with open('{}/{}.yaml'.format(path, name), 'r', encoding='utf-8') as stream:
 				hub = yaml.safe_load(stream)
 
 			self.update_from_yaml(hub)
@@ -760,7 +760,7 @@ class HubManager:
 			try:
 				path = 'storage/musiclists'
 				self.music_list.clear()
-				with open('{}/{}.yaml'.format(path, music_ref), 'r') as stream:
+				with open('{}/{}.yaml'.format(path, music_ref), 'r', encoding='utf-8') as stream:
 					self.music_list = yaml.safe_load(stream)
 
 				prepath = ''
@@ -911,7 +911,7 @@ class HubManager:
 		self.load_hubs()
 
 	def load_hubs(self):
-		with open('config/areas.yaml', 'r') as chars:
+		with open('config/areas.yaml', 'r', encoding='utf-8') as chars:
 			hubs = yaml.safe_load(chars)
 
 		for hub in hubs:

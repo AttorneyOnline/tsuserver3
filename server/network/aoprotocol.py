@@ -573,13 +573,10 @@ class AOProtocol(asyncio.Protocol):
         if self.client.disemvowel:
             msg = self.client.disemvowel_message(msg)
 
-        #FUCK YOU
-        #I SPENT AN HOUR TRYING TO DEBUG WHY HIDDEN EVIDENCE BECAME UNHIDDEN YOU FUCK
-        #WHY DID YOU DO THIS TO ME
-        # if evidence:
-        #     if self.client.area.evi_list.evidences[self.client.evi_list[evidence] - 1].pos != 'all':
-        #         self.client.area.evi_list.evidences[self.client.evi_list[evidence] - 1].pos = 'all'
-        #         self.client.area.broadcast_evidence_list()
+        if evidence:
+            if evidence >= len(self.client.evi_list):
+                evidence = 0
+                
 
         # Here, we check the pair stuff, and save info about it to the client.
         # Notably, while we only get a charid_pair and an offset, we send back a chair_pair, an emote, a talker offset

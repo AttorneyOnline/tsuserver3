@@ -2476,7 +2476,7 @@ def ooc_cmd_rolla_reload(client, arg):
 def rolla_reload(area):
     try:
         import yaml
-        with open('config/dice.yaml', 'r') as dice:
+        with open('config/dice.yaml', 'r', encoding='utf-8') as dice:
             area.ability_dice = yaml.safe_load(dice)
     except:
         raise ServerError('There was an error parsing the ability dice configuration. Check your syntax.')
