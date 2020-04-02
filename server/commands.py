@@ -81,7 +81,9 @@ def ooc_cmd_switch(client, arg):
 
 def ooc_cmd_bg(client, arg):
     if len(arg) == 0:
-        raise ArgumentError(f'Current BG: {client.area.background}. Use /bg <background> to change it.')
+        client.send_host_message(f'Current BG: {client.area.background}. Use /bg <background> to change it.')
+        client.send_command('BN', client.area.background, client.pos) #Display the BG in full if the client wants to examine it
+        return
     if client.hub.status.lower().startswith('rp-strict') and not client.is_mod and not client.is_cm:
         raise AreaError(
             'Hub is {} - only the CM or mods can change /bg.'.format(client.hub.status))
@@ -494,17 +496,6 @@ def ooc_cmd_unban(client, arg):
         logger.log_mod('Unbanned {}.'.format(raw_ipid), client)
         client.send_host_message('Unbanned {}'.format(raw_ipid))
 
-
-def ooc_cmd_play(client, arg):
-    if not client.is_mod:
-        raise ClientError('You must be authorized to do that.')
-    if len(arg) == 0:
-        raise ArgumentError('You must specify a song.')
-    client.area.play_music(arg, client.char_id)
-    # client.area.add_music_playing(client, arg)
-    logger.log_server('Changed music to {}.'.format(arg), client)
-
-
 def ooc_cmd_mute(client, arg):
     if not client.is_mod:
         raise ClientError('You must be authorized to do that.')
@@ -557,6 +548,19 @@ def ooc_cmd_unmute(client, arg):
                 client.send_host_message("No targets found. Use /unmute <ipid> <ipid> ... for unmute.")
         else:
             client.send_host_message('{} does not look like a valid IPID.'.format(raw_ipid))
+
+def ooc_cmd_play(client, arg):
+    if not client.is_mod and not client.is_cm:
+        raise ClientError('You must be authorized to do that.')
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a song.')
+    if not client.is_mod and arg.lower().startswith('[mod]'):
+        raise ClientError('This is a mod song!')
+
+    client.area.play_music(arg, client.char_id)
+    # client.area.add_music_playing(client, arg)
+    logger.log_server('Changed music to {}.'.format(arg), client)
+
 
 def ooc_cmd_iclogs(client, arg):
     if not client.is_mod and not client.is_cm:
