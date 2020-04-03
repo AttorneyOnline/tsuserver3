@@ -1,0 +1,14 @@
+# List allowed iniswaps here.
+# Each element contains a list of characters that can be swapped with each
+# other.
+
+-
+  - Apollo
+  - Apollo Leg
+  - ApolloDD
+-
+  - Athena Maid W
+  - AthenaCykesSOJ
+-
+  - Butz
+  - ButzEdgeworth
