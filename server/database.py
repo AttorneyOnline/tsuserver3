@@ -268,9 +268,9 @@ class Database:
                 FROM (
                     SELECT ban_id FROM ip_bans WHERE ipid = ?
                     UNION SELECT ban_id FROM hdid_bans WHERE hdid = ?
-                    UNION SELECT ban_id FROM bans WHERE unbanned = 0 AND ban_id = ?
+                    UNION SELECT ban_id FROM bans WHERE ban_id = ?
                 )
-                JOIN bans USING (ban_id)
+                JOIN bans USING (ban_id) WHERE unbanned = 0
                 '''), (ipid, hdid, ban_id)).fetchone()
             if ban is not None:
                 return Database.Ban(**ban)
