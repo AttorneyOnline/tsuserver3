@@ -1,4 +1,4 @@
-ALTER TABLE bans ADD unbanned BOOL DEFAULT false;
+ALTER TABLE bans ADD unbanned INTEGER DEFAULT 0;
 
 VACUUM;
 

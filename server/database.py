@@ -267,7 +267,7 @@ class Database:
                 FROM (
                     SELECT ban_id FROM ip_bans WHERE ipid = ?
                     UNION SELECT ban_id FROM hdid_bans WHERE hdid = ?
-                    UNION SELECT ban_id FROM bans WHERE ban_id = ? AND unbanned = false
+                    UNION SELECT ban_id FROM bans WHERE unbanned = 0 AND ban_id = ?
                 )
                 JOIN bans USING (ban_id)
                 '''), (ipid, hdid, ban_id)).fetchone()
@@ -281,7 +281,7 @@ class Database:
         event_logger.info(f'Unbanning {ban_id}')
         with self.db as conn:
             unbans = conn.execute(dedent('''
-                UPDATE bans SET unbanned = true WHERE ban_id = ?
+                UPDATE bans SET unbanned = 1 WHERE ban_id = ?
                 '''), (ban_id,)).rowcount
             return unbans > 0
 
@@ -298,7 +298,7 @@ class Database:
         with self.db as conn:
             dated_bans = conn.execute(dedent('''
                 SELECT ban_id FROM bans
-                WHERE unban_date IS NOT NULL AND unbanned = false AND
+                WHERE unban_date IS NOT NULL AND unbanned = 0 AND
                     datetime(unban_date) < datetime(?, '+12 hours')
                 '''), (arrow.utcnow().datetime,)).fetchall()
 
@@ -308,7 +308,7 @@ class Database:
     def _schedule_unban(self, ban_id):
         with self.db as conn:
             ban = conn.execute(dedent('''
-                SELECT unban_date FROM bans WHERE ban_id = ? AND unbanned = false
+                SELECT unban_date FROM bans WHERE unbanned = 0 AND ban_id = ?
                 '''), (ban_id,)).fetchone()
             time_to_unban = (arrow.get(ban['unban_date']) - arrow.utcnow()).total_seconds()
 
