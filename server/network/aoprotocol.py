@@ -25,6 +25,8 @@ logger_debug = logging.getLogger('debug')
 logger = logging.getLogger('events')
 
 from enum import Enum
+
+import arrow
 from time import localtime, strftime
 
 from server import database
@@ -196,13 +198,13 @@ class AOProtocol(asyncio.Protocol):
         ban = database.find_ban(ipid, hdid)
         if ban is not None:
             if ban.unban_date is not None:
-                unban_date = ban.unban_date.date().isoformat()
+                unban_date = arrow.get(ban.unban_date)
             else:
                 unban_date = 'N/A'
 
             msg = f'{ban.reason}\r\n'
             msg += f'ID: {ban.ban_id}\r\n'
-            msg += f'Until: {unban_date}'
+            msg += f'Until: {unban_date.humanize()}'
 
             database.log_connect(self.client, failed=True)
             self.client.send_command('BD', msg)
