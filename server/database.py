@@ -216,6 +216,7 @@ class Database:
         unban_date: datetime
         banned_by: int
         reason: str
+        unbanned: int
 
         def __post_init__(self):
             self.ban_date = arrow.get(self.ban_date).datetime
