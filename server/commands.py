@@ -266,7 +266,7 @@ def ooc_cmd_roll(client, arg):
 
     client.area.send_host_message('[{}]{} rolled {} out of {}.\nThe total sum is {}.'.format(
         client.id, client.get_char_name(True), roll, chosen_max, Sum))
-    client.hub.send_to_cm('RollLog', '[{}][{}]{} used /roll and got {} out of {}.'.format(
+    client.hub.send_to_cm('ActionLog', '[{}][{}]{} used /roll and got {} out of {}.'.format(
         client.area.id, client.id, client.get_char_name(True), roll, chosen_max), client)
     logger.log_server('Used /roll and got {} out of {}.'.format(roll, chosen_max), client)
     
@@ -274,7 +274,7 @@ def ooc_cmd_rollp(client, arg):
     roll, num_dice, chosen_max, modifiers, Sum = rtd(arg)
 
     client.send_host_message('[Hidden] You rolled {} out of {}.\nThe total sum is {}.'.format(roll, chosen_max, Sum))
-    client.hub.send_to_cm('RollLog', '[A{}][ID{}]{} used /rollp and got {} out of {}.'.format(client.area.id, client.id, client.get_char_name(True), roll, chosen_max), client)
+    client.hub.send_to_cm('ActionLog', '[A{}][ID{}]{} used /rollp and got {} out of {}.'.format(client.area.id, client.id, client.get_char_name(True), roll, chosen_max), client)
     logger.log_server('Used /rollp and got {} out of {}.'.format(roll, chosen_max), client)
 
 def ooc_cmd_music(client, arg):
@@ -324,7 +324,7 @@ def ooc_cmd_coinflip(client, arg):
     flip = random.choice(coin)
     client.area.send_host_message(
         '[{}]{} flipped a coin and got {}.'.format(client.id, client.get_char_name(True), flip))
-    client.hub.send_to_cm('RollLog', '[A{}][ID{}]{} used /coinflip and got {}.'.format(
+    client.hub.send_to_cm('ActionLog', '[A{}][ID{}]{} used /coinflip and got {}.'.format(
         client.area.id, client.id, client.get_char_name(True), flip), client)
     logger.log_server('Used /coinflip and got {}.'.format(flip), client)
 
@@ -1007,12 +1007,14 @@ def ooc_cmd_peek(client, arg): #peek into a room to see if there's people in it 
             raise AreaError(
                 'Area ID not accessible from your current area!')
         if client.area.is_locked:
-            raise ClientError("You are in a locked area, glancing impossible.")
+            raise ClientError('You are in a locked area, glancing impossible.')
+
+        client.hub.send_to_cm('ActionLog', f'[{client.area.id}][{client.id}]{client.get_char_name(True)} used /peek for [{area.id}] {area.name}.')
         if area.is_locked:
-            area.send_host_message("Someone tried to enter from [{}] {} but it is locked!".format(
-                client.area.id, client.area.name))
+            client.hub.send_host_message(f'[{client.id}] {client.get_char_name(True)} tries to peek into [{area.id}] {area.name} but it\'s locked.')
+            area.send_host_message(f'Someone tried to enter from [{client.area.id}] {client.area.name} but it\'s locked!')
             raise ClientError(
-                "That area is locked and anyone inside was alerted someone tried to enter!")
+                'That area is locked and anyone inside was alerted someone tried to enter!')
 
         sorted_clients = []
         for c in area.clients:
@@ -1029,7 +1031,8 @@ def ooc_cmd_peek(client, arg): #peek into a room to see if there's people in it 
 
         if len(sorted_clients) <= 0:
             sorted_clients = 'nobody'
-        client.send_host_message("There's {} in [{}] {}.".format(sorted_clients, area.id, area.name))
+        client.hub.send_host_message(f'[{client.id}] {client.get_char_name(True)} peeks into [{area.id}] {area.name}...')
+        client.send_host_message(f'There\'s {sorted_clients} in [{area.id}] {area.name}.')
     except ValueError:
         raise ArgumentError('Area ID must be a number or name.')
     except (AreaError, ClientError):
@@ -1582,13 +1585,13 @@ def ooc_cmd_uncm(client, arg):
         target.area.update_evidence_list(target)
 
 def ooc_cmd_cmlogs(client, arg):
-    logtypes = ['MoveLog', 'RollLog', 'PMLog', 'CharLog']
+    logtypes = ['MoveLog', 'ActionLog', 'PMLog', 'CharLog']
     args = arg.split()
     if len(args) <= 0:
         raise ArgumentError("Current logs: {}. Available log types: {}.".format(client.cm_log_type, logtypes))
 
     if arg == 'on':
-        client.cm_log_type = ['MoveLog', 'RollLog', 'PMLog', 'CharLog']
+        client.cm_log_type = ['MoveLog', 'ActionLog', 'PMLog', 'CharLog']
     elif arg == 'off':
         client.cm_log_type = []
     else:
@@ -1797,7 +1800,7 @@ def ooc_cmd_key_remove(client, arg):
 
 def ooc_cmd_keys(client, arg):
     args = arg.split(' ')
-    if len(args) <= 1:
+    if len(args) < 1:
         client.send_host_message("Your current keys are {}".format(client.assigned_areas))
         return
     elif len(args) == 1:
@@ -1831,7 +1834,8 @@ def ooc_cmd_sneak(client, arg):
     stat = 'no longer'
     if client.sneak:
         stat = 'now'
-    client.send_host_message('You are {} sneaking.'.format(stat))
+    client.hub.send_to_cm('ActionLog', f'[{client.area.id}][{client.id}]{client.get_char_name(True)} is {stat} sneaking.')
+    client.send_host_message(f'You are {stat} sneaking.')
 
 def ooc_cmd_listenpos(client, arg):
     if len(arg.split()) > 1:

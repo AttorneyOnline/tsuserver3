@@ -60,7 +60,7 @@ class ClientManager:
 
             #CMing stuff
             self.is_cm = False
-            self.cm_log_type = ['MoveLog', 'RollLog', 'PMLog', 'CharLog'] # If we're CM, we'll receive CM-related shenanigans
+            self.cm_log_type = ['MoveLog', 'ActionLog', 'PMLog', 'CharLog'] # If we're CM, we'll receive CM-related shenanigans
             self.broadcast_ic = []
             self.area_listen = []
             self.assigned_areas = [] #For /lock-ing and other fancy things as a normal player (still needs proximity w/ area access)
@@ -421,11 +421,20 @@ class ClientManager:
                     info += '[*]'
                 if c.is_cm:
                     info += '[CM]'
-                info += '[{}] {}'.format(c.id, c.get_char_name(True))
+                if self.is_cm or self.is_mod:
+                    info += '[{}] {}'.format(c.id, c.get_char_name(False))
+                    if c.get_char_name() != c.get_char_name(True):
+                        info += f' / {c.get_char_name(True)}'
+                else:
+                    info += '[{}] {}'.format(c.id, c.get_char_name(True))
+                    if c.sneak: #alert the poor lad he got spotted
+                        c.send_host_message(f'You\'ve been spotted by [{c.id}] {c.get_char_name(True)}!')
                 if len(area.pos_lock) != 1 and c.pos != "": #we're not on a single-pos area
                     info += ' <{}>'.format(c.pos)
                 if self.is_mod:
                     info += ' ({})'.format(c.ipid)
+                if c.sneak:
+                    info += ' [S]'
                 if c.hidden:
                     info += ' [H]'
                 if c.blinded:
