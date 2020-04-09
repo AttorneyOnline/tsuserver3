@@ -1009,7 +1009,7 @@ def ooc_cmd_peek(client, arg): #peek into a room to see if there's people in it 
         if client.area.is_locked:
             raise ClientError('You are in a locked area, glancing impossible.')
 
-        client.hub.send_to_cm('ActionLog', f'[{client.area.id}][{client.id}]{client.get_char_name(True)} used /peek for [{area.id}] {area.name}.')
+        client.hub.send_to_cm('ActionLog', f'[{client.area.id}][{client.id}]{client.get_char_name(True)} used /peek for [{area.id}] {area.name}.', client)
         if area.is_locked:
             client.hub.send_host_message(f'[{client.id}] {client.get_char_name(True)} tries to peek into [{area.id}] {area.name} but it\'s locked.')
             area.send_host_message(f'Someone tried to enter from [{client.area.id}] {client.area.name} but it\'s locked!')
@@ -1834,7 +1834,7 @@ def ooc_cmd_sneak(client, arg):
     stat = 'no longer'
     if client.sneak:
         stat = 'now'
-    client.hub.send_to_cm('ActionLog', f'[{client.area.id}][{client.id}]{client.get_char_name(True)} is {stat} sneaking.')
+    client.hub.send_to_cm('ActionLog', f'[{client.area.id}][{client.id}]{client.get_char_name(True)} is {stat} sneaking.', client)
     client.send_host_message(f'You are {stat} sneaking.')
 
 def ooc_cmd_listenpos(client, arg):

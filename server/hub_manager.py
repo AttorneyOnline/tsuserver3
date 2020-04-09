@@ -85,7 +85,8 @@ class HubManager:
 
 		class Area:
 			def __init__(self, area_id, server, hub, name, can_rename=True, background='default', bg_lock=False, pos_lock=None, evidence_mod = 'FFA',
-						locking_allowed = False, can_remove = False, accessible = None, desc = '', locked=False, hidden=False, max_players=-1, move_delay=0, ambience=''):
+						locking_allowed = False, can_remove = False, accessible = None, desc = '', locked=False, hidden=False, max_players=-1, move_delay=0,
+						ambience=''):
 				self.id = area_id
 				self.server = server
 				self.hub = hub
@@ -109,7 +110,9 @@ class HubManager:
 				self.evi_list = EvidenceList()
 				self.locked_by = None
 
-				self.update(name, can_rename, background, bg_lock, pos_lock, evidence_mod, locking_allowed, can_remove, accessible, desc, locked, hidden, max_players, move_delay, ambience)
+				self.update(
+					name, can_rename, background, bg_lock, pos_lock, evidence_mod, locking_allowed, can_remove,
+					accessible, desc, locked, hidden, max_players, move_delay, ambience)
 
 			def update(self, name, can_rename=True, background='default', bg_lock=False, pos_lock=None, evidence_mod = 'FFA',
 						locking_allowed = False, can_remove = False, accessible = None, desc = '', locked=False, hidden=False,
@@ -425,7 +428,7 @@ class HubManager:
 
 		def __init__(self, hub_id, server, name, allow_cm=False, max_areas=1, doc='No document.', status='IDLE', showname_changes_allowed=False,
 						shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation='',
-						move_delay=0, keys=[], music_ref=''):
+						move_delay=0, character_data={}, music_ref=''):
 			self.server = server
 			self.id = hub_id
 
@@ -441,11 +444,11 @@ class HubManager:
 			self.music_list = []
 			self.cur_sched = [i for i in range(20)] #Max 20 schedules per hub
 			self.update(name, allow_cm, max_areas, doc, status, showname_changes_allowed,
-							shouts_allowed, non_int_pres_only, iniswap_allowed, blankposting_allowed, abbreviation, move_delay, keys, music_ref)
+							shouts_allowed, non_int_pres_only, iniswap_allowed, blankposting_allowed, abbreviation, move_delay, character_data, music_ref)
 
 		def update(self, name, allow_cm=False, max_areas=1, doc='No document.', status='IDLE', showname_changes_allowed=False,
 					 shouts_allowed=True, non_int_pres_only=False, iniswap_allowed=True, blankposting_allowed=True, abbreviation='',
-					 move_delay=0, keys=[], music_ref=''):
+					 move_delay=0, character_data={}, music_ref=''):
 			self.name = name
 			self.allow_cm = allow_cm
 			self.max_areas = max_areas
@@ -457,7 +460,7 @@ class HubManager:
 			self.iniswap_allowed = iniswap_allowed
 			self.blankposting_allowed = blankposting_allowed
 			self.move_delay = move_delay
-			self.keys = keys
+			self.character_data = character_data #ex. {"character1": {"keys": [1, 2, 3, 5], "fatigue": 100.0, "hunger": 34.0}, "character2": {"keys": [4, 6, 8]}}
 			self.abbreviation = abbreviation
 			self.music_ref = music_ref
 
@@ -481,6 +484,7 @@ class HubManager:
 			data['iniswap_allowed'] = self.iniswap_allowed
 			data['blankposting_allowed'] = self.blankposting_allowed
 			data['move_delay'] = self.move_delay
+			data['character_data'] = self.character_data
 			data['music_ref'] = self.music_ref
 			areas = []
 			for area in self.areas:
@@ -532,12 +536,14 @@ class HubManager:
 				hub['blankposting_allowed'] = False
 			if 'move_delay' not in hub:
 				hub['move_delay'] = 0
+			if 'character_data' not in hub:
+				hub['character_data'] = {}
 			if 'music_ref' not in hub:
 				hub['music_ref'] = ''
 
 			self.update(hub['hub'], hub['allow_cm'], hub['max_areas'], hub['doc'], hub['status'], hub['showname_changes_allowed'],
 							hub['shouts_allowed'], hub['noninterrupting_pres'], hub['iniswap_allowed'], hub['blankposting_allowed'],
-							hub['abbreviation'], hub['move_delay'], [], hub['music_ref'])
+							hub['abbreviation'], hub['move_delay'], hub['character_data'], hub['music_ref'])
 
 			while len(self.areas) < len(hub['areas']):
 				self.create_area('Area {}'.format(self.cur_id))
@@ -711,7 +717,7 @@ class HubManager:
 			for area in self.areas:
 				area.send_host_message(msg)
 
-		def send_to_cm(self, T, msg, exceptions):
+		def send_to_cm(self, T, msg, exceptions=[]):
 			if type(exceptions) != list:
 				exceptions = [exceptions]
 			for area in self.areas:
