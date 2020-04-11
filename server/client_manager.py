@@ -321,8 +321,8 @@ class ClientManager:
                             'Following [{}] {} to {}. [HUB: {}]'.format(self.id, self.get_char_name(True), area.name, area.hub.abbreviation))
 
             if not self.sneak and not hidden and not self.get_char_name() == "Spectator":
-                old_area.send_host_message('[{}]{} leaves to [{}] {}. [HUB: {}]'.format(self.id, self.get_char_name(True), area.id, area.name, area.hub.abbreviation))
-                area.send_host_message('[{}]{} enters from [{}] {}. [HUB: {}]'.format(self.id, self.get_char_name(True), old_area.id, old_area.name, old_area.hub.abbreviation))
+                old_area.send_host_message('[{}] {} leaves to [{}] {}. [HUB: {}]'.format(self.id, self.get_char_name(True), area.id, area.name, area.hub.abbreviation))
+                area.send_host_message('[{}] {} enters from [{}] {}. [HUB: {}]'.format(self.id, self.get_char_name(True), old_area.id, old_area.name, old_area.hub.abbreviation))
             else:
                 self.send_host_message('You moved to [{}] {} unannounced. [HUB: {}]'.format(area.id, area.name, area.hub.abbreviation))
 

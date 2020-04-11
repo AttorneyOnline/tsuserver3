@@ -873,12 +873,12 @@ def ooc_cmd_player_move_delay(client, arg):
             client, TargetType.ID, int(args[0]), False)
     except:
         raise ArgumentError(
-            'You must specify a target. Use /player_move_delay <id> [delay from 0 to 1800 in seconds or empty to check]')
+            'You must specify a target. Use /player_move_delay <id> [delay from -1800 to 1800 in seconds or empty to check]')
 
     try:
         if len(args) > 1:
             move_delay = int(args[1])
-            if move_delay < 0 or move_delay > 1800:
+            if move_delay < -1800 or move_delay > 1800:
                 raise
             for c in targets:
                 c.move_delay = move_delay
@@ -888,7 +888,7 @@ def ooc_cmd_player_move_delay(client, arg):
                 client.send_host_message('Current move delay for [{}]{} is {}.'.format(c.id, c.get_char_name(True), move_delay))
     except:
         raise ArgumentError(
-            'You must specify a target. Use /player_move_delay <id> [delay from 0 to 1800 in seconds or empty to check]')
+            'You must specify a target. Use /player_move_delay <id> [delay from -1800 to 1800 in seconds or empty to check]')
 
 def ooc_cmd_area_move_delay(client, arg):
     if not client.is_mod and not client.is_cm:
@@ -896,14 +896,14 @@ def ooc_cmd_area_move_delay(client, arg):
 
     try:
         arg = int(arg)
-        if arg < 0 or arg > 1800:
+        if arg < -1800 or arg > 1800:
             raise
         client.area.move_delay = arg
         client.send_host_message(
             'Set area\'s movement delay to {} seconds.'.format(arg))
     except:
         raise ArgumentError(
-            'Current movement delay is {}. Use /area_move_delay [delay from 0 to 1800 in seconds or empty to check]'.format(client.area.move_delay))
+            'Current movement delay is {}. Use /area_move_delay [delay from -1800 to 1800 in seconds or empty to check]'.format(client.area.move_delay))
 
 def ooc_cmd_hub_move_delay(client, arg):
     if not client.is_mod and not client.is_cm:
@@ -911,7 +911,7 @@ def ooc_cmd_hub_move_delay(client, arg):
 
     try:
         arg = int(arg)
-        if arg < 0 or arg > 1800:
+        if arg < -1800 or arg > 1800:
             raise
         client.hub.move_delay = arg
         client.send_host_message(
@@ -1011,7 +1011,7 @@ def ooc_cmd_peek(client, arg): #peek into a room to see if there's people in it 
 
         client.hub.send_to_cm('ActionLog', f'[{client.area.id}][{client.id}]{client.get_char_name(True)} used /peek for [{area.id}] {area.name}.', client)
         if area.is_locked:
-            client.hub.send_host_message(f'[{client.id}] {client.get_char_name(True)} tries to peek into [{area.id}] {area.name} but it\'s locked.')
+            client.area.send_host_message(f'[{client.id}] {client.get_char_name(True)} tries to peek into [{area.id}] {area.name} but it\'s locked.')
             area.send_host_message(f'Someone tried to enter from [{client.area.id}] {client.area.name} but it\'s locked!')
             raise ClientError(
                 'That area is locked and anyone inside was alerted someone tried to enter!')
@@ -1031,7 +1031,7 @@ def ooc_cmd_peek(client, arg): #peek into a room to see if there's people in it 
 
         if len(sorted_clients) <= 0:
             sorted_clients = 'nobody'
-        client.hub.send_host_message(f'[{client.id}] {client.get_char_name(True)} peeks into [{area.id}] {area.name}...')
+        client.area.send_host_message(f'[{client.id}] {client.get_char_name(True)} peeks into [{area.id}] {area.name}...')
         client.send_host_message(f'There\'s {sorted_clients} in [{area.id}] {area.name}.')
     except ValueError:
         raise ArgumentError('Area ID must be a number or name.')
