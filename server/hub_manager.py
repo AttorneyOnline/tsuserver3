@@ -552,6 +552,18 @@ class HubManager:
 				self.areas[aid].update_from_yaml(area)
 				aid += 1
 
+		def get_character_data(self, char_folder, key, default_value = None):
+			if char_folder not in self.character_data:
+				return default_value
+			if key not in self.character_data[char_folder]:
+				return default_value
+			return self.character_data[char_folder][key]
+
+		def set_character_data(self, char_folder, key, value):
+			if char_folder not in self.character_data:
+				self.character_data[char_folder] = {}
+			self.character_data[char_folder][key] = value
+
 		def create_area(self, name, can_rename=True, bg='default', bglock=False, poslock=None, evimod='FFA', lockallow=True, removable=True, accessible=None, desc='', locked=False, hidden=False):
 			self.areas.append(
 				self.Area(self.cur_id, self.server, self, name, can_rename, bg, bglock, poslock, evimod, lockallow, removable, accessible, desc, locked, hidden))
