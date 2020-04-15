@@ -32,7 +32,7 @@ def check_deps():
         sys.exit(1)
 
     try:
-        import arrow
+        import geoip2
     except ModuleNotFoundError:
         print('Installing dependencies for you...')
         try:
