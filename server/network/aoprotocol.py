@@ -71,7 +71,7 @@ class AOProtocol(asyncio.Protocol):
 
     def data_received(self, data):
         """Handles any data received from the network.
-
+        
         Receives data, parses them into a command and passes it
         to the command handler.
 
@@ -589,6 +589,7 @@ class AOProtocol(asyncio.Protocol):
         CT#<name:string>#<message:string>#%
 
         """
+
         if not self.client.is_checked:
             return
         if self.client.is_ooc_muted:  # Checks to see if the client has been muted by a mod
@@ -620,10 +621,16 @@ class AOProtocol(asyncio.Protocol):
                     '<dollar>G') or self.client.name.startswith('<dollar>M'):
             self.client.send_ooc('That name is reserved!')
             return
+        max_char = 0
+        try:
+            max_char = int(self.server.config['max_chars'])
+        except:
+            max_char = 256
+        if len(args[1]) > max_char:
+            return
         if args[1].startswith(' /'):
             self.client.send_ooc(
-                'Your message was not sent for safety reasons: you left a space before that slash.'
-            )
+                'Your message was not sent for safety reasons: you left a space before that slash.')
             return
         if args[1].startswith('/'):
             spl = args[1][1:].split(' ', 1)
