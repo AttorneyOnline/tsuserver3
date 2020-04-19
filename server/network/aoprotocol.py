@@ -464,9 +464,9 @@ class AOProtocol(asyncio.Protocol):
             return
         if sfx_delay < 0:
             return
-       if button.startswith('4'):
-           if not (button == '4' or button.startswith('4<and>')):
-               return
+        if button.startswith('4'):
+            if not (button == '4' or button.startswith('4<and>')):
+                return
         if evidence < 0:
             return
         if ding not in (0, 1):
