@@ -427,7 +427,7 @@ class ClientManager:
                 else:
                     info += '[{}] {}'.format(c.id, c.get_char_name(True))
                     if c.sneak and c != self: #alert the poor lad he got spotted
-                        c.send_host_message(f'You\'ve been spotted by [{c.id}] {c.get_char_name(True)}!')
+                        c.send_host_message(f'You\'ve been spotted by [{self.id}] {self.get_char_name(True)}!')
                 if len(area.pos_lock) != 1 and c.pos != "": #we're not on a single-pos area
                     info += ' <{}>'.format(c.pos)
                 if self.is_mod:

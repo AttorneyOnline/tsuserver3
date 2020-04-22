@@ -1733,7 +1733,7 @@ def ooc_cmd_key_add(client, arg):
         else:
             raise ArgumentError('Target not found.')
         args = args[1:]
-        keys = client.hub.get_character_data(client.get_char_name(), 'keys', [])
+        keys = target.hub.get_character_data(target.get_char_name(), 'keys', [])
         if keys == None:
             keys = []
         for a in args:
@@ -1741,8 +1741,8 @@ def ooc_cmd_key_add(client, arg):
             area_to = target.hub.get_area_by_id(a) #Will throw an exception if the area doesn't exist
             if not (a in keys):
                 keys.append(a)
-        client.hub.set_character_data(client.get_char_name(), 'keys', keys)
-        client.send_host_message("Target's keys are updated: {}".format(client.hub.get_character_data(client.get_char_name(), 'keys', [])))
+        target.hub.set_character_data(target.get_char_name(), 'keys', keys)
+        client.send_host_message("Target's keys are updated: {}".format(target.hub.get_character_data(target.get_char_name(), 'keys', [])))
     except ValueError:
         raise ArgumentError('Area ID must be a number.')
     except (AreaError, ClientError):
@@ -1770,8 +1770,8 @@ def ooc_cmd_key_set(client, arg):
             area_to = target.hub.get_area_by_id(a) #Will throw an exception if the area doesn't exist
             if not (a in keys):
                 keys.append(a)
-        client.hub.set_character_data(client.get_char_name(), 'keys', keys)
-        client.send_host_message("Target's keys are updated: {}".format(client.hub.get_character_data(client.get_char_name(), 'keys', [])))
+        target.hub.set_character_data(target.get_char_name(), 'keys', keys)
+        client.send_host_message("Target's keys are updated: {}".format(target.hub.get_character_data(target.get_char_name(), 'keys', [])))
     except ValueError:
         raise ArgumentError('Area ID must be a number.')
     except (AreaError, ClientError):
@@ -1794,15 +1794,15 @@ def ooc_cmd_key_remove(client, arg):
         else:
             raise ArgumentError('Target not found.')
         args = args[1:]
-        keys = client.hub.get_character_data(client.get_char_name(), 'keys', [])
+        keys = target.hub.get_character_data(target.get_char_name(), 'keys', [])
         if keys == None:
             keys = []
         for a in args:
             a = int(a)
             if a in keys:
                 keys.remove(a)
-        client.hub.set_character_data(client.get_char_name(), 'keys', keys)
-        client.send_host_message("Target's keys are updated: {}".format(client.hub.get_character_data(client.get_char_name(), 'keys', [])))
+        target.hub.set_character_data(target.get_char_name(), 'keys', keys)
+        client.send_host_message("Target's keys are updated: {}".format(target.hub.get_character_data(target.get_char_name(), 'keys', [])))
     except ValueError:
         raise ArgumentError('Area ID must be a number.')
     except (AreaError, ClientError):
@@ -1813,14 +1813,16 @@ def ooc_cmd_keys(client, arg):
     if len(arg) < 1:
         client.send_host_message("Your current keys are {}".format(client.hub.get_character_data(client.get_char_name(), 'keys', [])))
         return
-    elif len(args) == 1:
+    if not client.is_mod and not client.is_cm:
+        raise ClientError('Only CM or mods can check other people\'s keys.')
+    if len(args) == 1:
         try:
             target = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), False)
             if target:
                 target = target[0]
             else:
                 raise ArgumentError('Target not found.')
-            client.send_host_message("Target's current keys are {}".format(client.hub.get_character_data(client.get_char_name(), 'keys', [])))
+            client.send_host_message("Target's current keys are {}".format(target.hub.get_character_data(target.get_char_name(), 'keys', [])))
         except:
             raise ArgumentError('Target not found.')
     else:
