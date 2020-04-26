@@ -81,7 +81,9 @@ Requires Python 3.6+ and PyYAML.
 * **coinflip**
     - Flips a coin
 * **currentmusic** 
-    - Displays the current music
+    - Displays the current music of the area
+* **getmusic** 
+    - Plays the current music of the area
 * **evi_swap** "id1" "id2"
     - Swaps "id1" and "id2" evidence.
 * **evi_edit** "id: int" "name: string" "description: string" "image: string"
