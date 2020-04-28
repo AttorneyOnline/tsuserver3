@@ -20,3 +20,13 @@
   evidence_mod: HiddenCM
   locking_allowed: false
   iniswap_allowed: false
+
+# Default options
+#item['evidence_mod'] = 'FFA'
+#item['locking_allowed'] = False
+#item['iniswap_allowed'] = True
+#item['showname_changes_allowed'] = True
+#item['shouts_allowed'] = True
+#item['jukebox'] = False
+#item['noninterrupting_pres'] = False
+#item['abbreviation'] = self.abbreviate(item['area'])
