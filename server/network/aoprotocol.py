@@ -93,7 +93,7 @@ class AOProtocol(asyncio.Protocol):
         self.buffer = self.buffer.translate({ord(c): None for c in '\0'})
 
         if len(self.buffer) > 8192:
-            self.client.disconnect()
+            self.client.disconnect('Data recieved from client was too large!')
         for msg in self.get_messages():
             if len(msg) < 2:
                 continue
@@ -121,8 +121,7 @@ class AOProtocol(asyncio.Protocol):
             return
 
         if not self.server.client_manager.new_client_preauth(self.client):
-            self.client.send_command('BD', 'Maximum clients reached.\nDisconnect one of your clients to continue.')
-            self.client.disconnect()
+            self.client.disconnect('Maximum clients reached.\nDisconnect one of your clients to continue.')
             return
 
         # Client needs to send CHECK#% within the timeout - otherwise,
@@ -238,7 +237,7 @@ class AOProtocol(asyncio.Protocol):
         self.client.send_command('CHECK')
         self.ping_timeout.cancel()
         self.ping_timeout = asyncio.get_event_loop().call_later(
-            self.server.config['timeout'], self.client.disconnect)
+            self.server.config['timeout'], self.client.disconnect('Timed out.'))
 
     def net_cmd_askchaa(self, _):
         """Ask for the counts of characters/evidence/music

@@ -155,8 +155,15 @@ class ClientManager:
                     return False
             return True
 
-        def disconnect(self):
-            """Disconnect the client gracefully."""
+        def disconnect(self, dc_info=None):
+            """
+            Disconnect the client gracefully, and give it some info.
+            :param dc_info: Small(!) string to be passed to the client describing why
+            it was disconnected. Set to None to disconnect immediately.
+            """
+            if dc_info != None:
+                self.send_command('DC', dc_info)
+            database.log_misc('disconnect', self, data={'info': dc_info})
             self.transport.close()
 
         def change_character(self, char_id, force=False):
