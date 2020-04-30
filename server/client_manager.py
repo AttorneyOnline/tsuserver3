@@ -157,12 +157,12 @@ class ClientManager:
 
         def disconnect(self, dc_info=None):
             """
-            Disconnect the client gracefully, and give it some info.
+            Disconnect the client gracefully, and give it some info. Reuses the kick packet.
             :param dc_info: Small(!) string to be passed to the client describing why
             it was disconnected. Set to None to disconnect immediately.
             """
             if dc_info != None:
-                self.send_command('DC', dc_info)
+                self.send_command('KK', dc_info)
             database.log_misc('disconnect', self, data={'info': dc_info})
             self.transport.close()
 

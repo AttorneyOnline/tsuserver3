@@ -99,7 +99,7 @@ def ooc_cmd_kick(client, arg):
             database.log_misc('kick', client, target=c, data={'reason': reason})
             client.send_ooc("{} was kicked.".format(
                 c.char_name))
-            c.send_command('KK', reason)
+            c.send_command('KK', 'You were kicked. Reason: {}'.format(reason))
             c.disconnect()
     else:
         client.send_ooc(
@@ -170,7 +170,7 @@ def kickban(client, arg, ban_hdid):
             for c in targets:
                 if ban_hdid:
                     database.ban(c.hdid, reason, ban_type='hdid', ban_id=ban_id)
-                c.send_command('KB', reason)
+                c.send_command('KB', 'You were banned. Reason: {}'.format(reason))
                 c.disconnect()
                 database.log_misc('ban', client, target=c, data={'reason': reason})
             client.send_ooc(f'{len(targets)} clients were kicked.')
