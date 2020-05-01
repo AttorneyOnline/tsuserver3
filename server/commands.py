@@ -2176,6 +2176,18 @@ def ooc_cmd_loadhub(client, arg):
     except:
         raise ClientError('No save of that name exists or the file is corrupted!')
 
+def ooc_cmd_loadmusic(client, arg):
+    if not client.is_cm and not client.is_mod:
+        raise ClientError('Only CM or mods can load music lists.')
+    if arg == '':
+        raise ClientError('No save name provided!')
+
+    try:
+        client.hub.load_music(arg)
+        client.send_host_message("Loading music list \'{}.yaml\'...".format(arg))
+    except:
+        raise ClientError('No save of that name exists or the file is corrupted!')
+
 def ooc_cmd_akick(client, arg):
     if not client.is_mod and not client.is_cm:
         raise ClientError('You must be authorized to do that.')
