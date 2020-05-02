@@ -934,7 +934,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_ooc('You are muted by a moderator.')
             return
 
-        if self.client.char_id is -1:
+        if self.client.char_id == -1:
             self.client.send_ooc(
                 "You cannot call a moderator while spectating.")
             return
