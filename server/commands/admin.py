@@ -28,7 +28,7 @@ __all__ = [
     'ooc_cmd_bans',
     'ooc_cmd_baninfo',
     'ooc_cmd_gimp',
-    'ooc_cmd_ungimp'
+    'ooc_cmd_ungimp',
     'ooc_cmd_ghost'
 ]
 
