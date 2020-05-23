@@ -17,6 +17,7 @@
 
 import re
 import time
+from datetime import datetime
 import random
 from heapq import heappop, heappush
 
@@ -95,7 +96,8 @@ class ClientManager:
             ]
             # security stuff
             self.clientscon = 0
-
+            #other stuff
+            self.ghost = False
         def send_raw_message(self, msg):
             """
             Send a raw packet over TCP.
@@ -134,7 +136,9 @@ class ClientManager:
             """Send the message of the day to the client."""
             motd = self.server.config['motd']
             self.send_ooc(f'=== MOTD ===\r\n{motd}\r\n=============')
-
+            datenow = datetime.now()
+            if self.server.config['special_message_date'] in str(datenow):
+                self.send_ooc(self.server.config['special_message_title'] + f'\r\n' +self.server.config['special_message_content'] + f'\r\n=============')
         def send_player_count(self):
             """
             Send a message stating the number of players currently online
@@ -270,7 +274,6 @@ class ClientManager:
                 self.send_ooc(
                     'This area is spectatable, but not free - you cannot talk in-character unless invited.'
                 )
-
             if self in self.area.afkers:
                 self.server.client_manager.toggle_afk(self)
             if self.area.jukebox:
@@ -317,12 +320,11 @@ class ClientManager:
                     msg += ' [*]'
             self.send_ooc(msg)
 
-        def get_area_info(self, area_id, mods, afk_check):
+        def get_area_info(self, area_id, mods):
             """
             Get information about a specific area.
             :param area_id: area ID
             :param mods: limit player list to mods
-            :param afk_check: Limit player list to afks
             :returns: information as a string
             """
             info = '\r\n'
@@ -338,18 +340,19 @@ class ClientManager:
                 area.Locked.SPECTATABLE: '[SPECTATABLE]',
                 area.Locked.LOCKED: '[LOCKED]'
             }
-            if afk_check:
-                player_list = area.afkers
-            else:
-                player_list = area.clients
-            info += f'[{area.abbreviation}]: [{len(player_list)} users][{area.status}]{lock[area.is_locked]}'
+            usr_count = 0
+            for user in area.clients:
+                if not user.ghost:
+                    usr_count += 1
+
+            info += f'[{area.abbreviation}]: [{usr_count} users][{area.status}]{lock[area.is_locked]}'
 
             sorted_clients = []
-            for client in player_list:
-                if (not mods) or client.is_mod:
+            for client in area.clients:
+                if ((not mods) or client.is_mod) and not client.ghost:
                     sorted_clients.append(client)
             for owner in area.owners:
-                if not (mods or owner in player_list):
+                if not (mods or owner in area.clients):
                     sorted_clients.append(owner)
             if not sorted_clients:
                 return ''
@@ -358,7 +361,7 @@ class ClientManager:
             for c in sorted_clients:
                 info += '\r\n'
                 if c in area.owners:
-                    if not c in player_list:
+                    if not c in area.clients:
                         info += '[RCM]'
                     else:
                         info += '[CM]'
@@ -369,12 +372,11 @@ class ClientManager:
                     info += f' ({c.ipid}): {c.name}'
             return info
 
-        def send_area_info(self, area_id, mods, afk_check=False):
+        def send_area_info(self, area_id, mods):
             """
             Send information over OOC about a specific area.
             :param area_id: area ID
             :param mods: limit player list to mods
-            :param afk_check: Limit player list to afks
             """
             # if area_id is -1 then return all areas. If mods is True then return only mods
             info = ''
@@ -383,34 +385,24 @@ class ClientManager:
                 cnt = 0
                 info = '\n== Area List =='
                 for i in range(len(self.server.area_manager.areas)):
-                    client_list = self.server.area_manager.areas[i]
-                    if afk_check:
-                        client_list = client_list.afkers
-                    else:
-                        client_list = client_list.clients
-                    area_info = self.get_area_info(i, mods, afk_check)
-                    if len(client_list) > 0 or len(
+                    if len(self.server.area_manager.areas[i].clients
+                           ) > 0 or len(
                                self.server.area_manager.areas[i].owners) > 0:
-                        cnt += len(client_list)
-                        info += f'{area_info}'
-                if afk_check:
-                    info = f'Current AFK-ers: {cnt}{info}'
-                else:
-                    info = f'Current online: {cnt}{info}'
+                        for client in self.server.area_manager.areas[i].clients:
+                            if not client.ghost:
+                                cnt += 1
+                        #cnt += len(self.server.area_manager.areas[i].clients)
+
+                        info += f'{self.get_area_info(i, mods)}'
+                info = f'Current online: {cnt}{info}'
             else:
                 try:
-                    client_list = self.server.area_manager.areas[area_id]
-                    if afk_check:
-                        client_list = client_list.afkers
-                    else:
-                        client_list = client_list.clients
-                    area_info = self.get_area_info(area_id, mods, afk_check)
-                    area_client_cnt = len(client_list)
-                    if afk_check:
-                        info = f'People AFK-ing in this area: {area_client_cnt}'
-                    else:
-                        info = f'People in this area: {area_client_cnt}'
-                    info += area_info
+                    area_client_cnt = 0
+                    for client in self.server.area_manager.areas[area_id].clients:
+                        if not client.ghost:
+                            area_client_cnt += 1
+                    info = f'People in this area: {area_client_cnt}'
+                    info += self.get_area_info(area_id, mods)
 
                 except AreaError:
                     raise
@@ -543,14 +535,15 @@ class ClientManager:
         self.server = server
         self.cur_id = [i for i in range(self.server.config['playerlimit'])]
 
-    def new_client_preauth(self, client):
+
+    def new_client_preauth(self,client): #future pre authentication methods for security concerns should go here
+
         maxclients = self.server.config['multiclient_limit']
         for c in self.server.client_manager.clients:
             if c.ipid == client.ipid:
                 if c.clientscon > maxclients:
                     return False
         return True
-
     def new_client(self, transport):
         """
         Create a new client, add it to the list, and assign it a player ID.
@@ -563,7 +556,7 @@ class ClientManager:
             raise ClientError
 
         peername = transport.get_extra_info('peername')[0]
-        
+
         c = self.Client(
             self.server, transport, user_id,
             database.ipid(peername))
@@ -594,7 +587,8 @@ class ClientManager:
             if c.ipid == temp_ipid:
                 c.clientscon -= 1
         self.clients.remove(client)
-
+        if client in client.area.afkers:
+            client.area.afkers.remove(client)
     def get_targets(self, client, key, value, local=False, single=False):
         """
         Find players by a combination of identifying data.
@@ -655,7 +649,6 @@ class ClientManager:
             if client.is_ooc_muted:
                 clients.append(client)
         return clients
-
     def toggle_afk(self, client):
             if client in client.area.afkers:
                 client.area.broadcast_ooc('{} is no longer AFK.'.format(client.char_name))

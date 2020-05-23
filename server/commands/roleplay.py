@@ -15,7 +15,10 @@ __all__ = [
     'ooc_cmd_rolla_set',
     'ooc_cmd_rolla',
     'ooc_cmd_coinflip',
-    'ooc_cmd_8ball'
+    'ooc_cmd_8ball',
+	'ooc_cmd_nat20',
+	'ooc_cmd_smellanto',
+	'ooc_cmd_broadcast'
 ]
 
 
@@ -123,12 +126,14 @@ def ooc_cmd_notecard_clear(client, arg):
         raise ClientError('You do not have a note card.')
 
 
-@mod_only(area_owners=True)
+
 def ooc_cmd_notecard_reveal(client, arg):
     """
     Reveal all notecards and their owners.
     Usage: /notecard_reveal
     """
+    if not client in client.area.owners:
+        raise ClientError('Only CM can reveal notecards.')
     if len(client.area.cards) == 0:
         raise ClientError('There are no cards to reveal in this area.')
     msg = 'Note cards have been revealed.\n'
@@ -181,13 +186,6 @@ def ooc_cmd_rolla_set(client, arg):
     client.send_ooc(f"Set ability set to {arg}.")
 
 
-def rolla(ability_dice):
-    max_roll = ability_dice['max'] if 'max' in ability_dice else 6
-    roll = random.randint(1, max_roll)
-    ability = ability_dice[roll] if roll in ability_dice else "Nothing happens."
-    return (roll, max_roll, ability)
-
-
 def ooc_cmd_rolla(client, arg):
     """
     Roll a specially labeled set of dice (ability dice).
@@ -199,7 +197,9 @@ def ooc_cmd_rolla(client, arg):
         raise ClientError(
             'You must set your ability set using /rolla_set <name>.')
     ability_dice = client.area.ability_dice[client.ability_dice_set]
-    roll, max_roll, ability = rolla(ability_dice)
+    max_roll = ability_dice['max'] if 'max' in ability_dice else 6
+    roll = random.randint(1, max_roll)
+    ability = ability_dice[roll] if roll in ability_dice else "Nothing happens"
     client.area.broadcast_ooc('{} rolled a {} (out of {}): {}.'.format(
         client.char_name, roll, max_roll, ability))
     database.log_room('rolla', client, client.area,
@@ -219,18 +219,47 @@ def ooc_cmd_coinflip(client, arg):
         client.char_name, flip))
     database.log_room('coinflip', client, client.area, message=flip)
 
-
 def ooc_cmd_8ball(client, arg):
+    if len(arg) != 0:
+        raise ArgumentError('This command has no arguments.')
+    coin = ['yes', 'no', 'maybe', 'I dont know', 'perhaps', 'please do not', 'try again', 'you shouldn\'t ask that', 'god no']
+    flip = random.choice(coin)
+    client.area.broadcast_ooc('The magic 8 ball says {}.'.format(flip))
+    database.log_room('8ball', client, client.area)
+
+@mod_only()
+def ooc_cmd_nat20(client, arg):
     """
-    Answers a question. The result is shown publicly.
-    Usage: /8ball <question>
+    Roll a die. The result is shown publicly.
+    Usage: /roll [max value] [rolls]
     """
-    
-    arg = arg.strip()
+    if len(arg) != 0:
+        raise ArgumentError(
+                'This command takes no arguments')
+    else:
+        client.area.broadcast_ooc('{} rolled 20 out of 20.'.format(
+            client.char_name))
+
+@mod_only()
+def ooc_cmd_smellanto(client, arg):
+    """
+    Roll a die. The result is shown publicly.
+    Usage: /roll [max value] [rolls]
+    """
+    if len(arg) != 0:
+        raise ArgumentError(
+                'This command takes no arguments')
+    else:
+        client.area.broadcast_ooc('smellanto')
+
+@mod_only()
+def ooc_cmd_broadcast(client, arg):
+    """
+    Roll a die. The result is shown publicly.
+    Usage: /roll [max value] [rolls]
+    """
     if len(arg) == 0:
-        raise ArgumentError('You need to ask a question')
-    rolla_reload(client.area)
-    ability_dice = client.area.ability_dice['8ball']
-    client.area.broadcast_ooc('{} asked a question: {} and the answer is: {}.'.format(
-        client.char_name, arg, rolla(ability_dice)[2]))
-        
+        raise ArgumentError(
+                'This command takes arguments')
+    else:
+        client.area.broadcast_ooc(arg)

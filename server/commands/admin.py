@@ -29,6 +29,7 @@ __all__ = [
     'ooc_cmd_baninfo',
     'ooc_cmd_gimp',
     'ooc_cmd_ungimp'
+    'ooc_cmd_ghost'
 ]
 
 
@@ -43,10 +44,6 @@ def ooc_cmd_motd(client, arg):
 
 
 def ooc_cmd_help(client, arg):
-    """
-    Show help for a command, or show general help.
-    Usage: /help
-    """
     import inspect
     msg = inspect.cleandoc('''
     Welcome to tsuserver3! You can use /help <command> on any known
@@ -307,7 +304,7 @@ def ooc_cmd_online(client, _):
     """
     client.send_player_count()
 
-
+@mod_only()
 def ooc_cmd_mods(client, arg):
     """
     Show a list of moderators online.
@@ -416,6 +413,13 @@ def ooc_cmd_baninfo(client, arg):
         else:
             msg += 'Unban date: N/A'
         client.send_ooc(msg)
+@mod_only()
+def ooc_cmd_ghost(client, arg):
+    """
+    Make the admin a ghost for spooky investigations. This bypasses the player count change and when /getarea is requested
+    """
+    client.ghost = not client.ghost
+    client.send_ooc('Ghosting is now: '+ str(client.ghost))
 
 def ooc_cmd_gimp(client, arg):
     if not client.is_mod:
@@ -458,7 +462,7 @@ def ooc_cmd_ungimp(client, arg):
         for c in targets:
             database.log_misc('ungimped',client, target=c,)
             c.gimp = False
-           
+
         client.send_ooc('Ungimped {} targets.'.format(len(targets)))
     else:
         client.send_ooc('No targets found.')

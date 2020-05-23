@@ -31,8 +31,6 @@ def ooc_cmd_a(client, arg):
 
     try:
         area = client.server.area_manager.get_area_by_id(int(arg[0]))
-    except ValueError:
-        raise ArgumentError('The first argument must be an area ID.')
     except AreaError:
         raise
 
@@ -106,7 +104,7 @@ def ooc_cmd_m(client, arg):
 @mod_only()
 def ooc_cmd_lm(client, arg):
     """
-    Send a message to everyone in the current area, speaking officially.
+    Send a message to all moderators in the current area.
     Usage: /lm <message>
     """
     if len(arg) == 0:

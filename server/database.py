@@ -142,11 +142,13 @@ class Database:
             ipid = conn.execute(dedent('''
                 SELECT ipid FROM ipids WHERE ip_address = ?
                 '''), (ip, )).fetchone()['ipid']
+            event_logger.info(f'IPID for {ip}: {ipid}')
             return ipid
 
     def add_hdid(self, ipid, hdid):
         """Associate an HDID with an IPID."""
         with self.db as conn:
+            event_logger.info(f'Associated {ipid} with {hdid}')
             conn.execute(dedent('''
                 INSERT OR IGNORE INTO hdids(hdid, ipid) VALUES (?, ?)
                 '''), (hdid, ipid))
