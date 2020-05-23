@@ -76,3 +76,6 @@ multiclient_limit: 16
 
 # Maximum number of characters can a message contain
 max_chars: 256
+
+#Whether to log the actual chat or not, should reduce db size if set to false.
+log_chat: true

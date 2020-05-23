@@ -614,7 +614,8 @@ class AOProtocol(asyncio.Protocol):
                                             )
 
         self.client.area.set_next_msg_delay(len(msg))
-        database.log_ic(self.client, self.client.area, showname, msg)
+        if(bool(self.server.config['log_chat'])):
+            database.log_ic(self.client, self.client.area, showname, msg)
 
         if (self.client.area.is_recording):
             self.client.area.recorded_messages.append(args)
