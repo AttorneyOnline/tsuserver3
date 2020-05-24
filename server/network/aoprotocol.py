@@ -698,8 +698,8 @@ class AOProtocol(asyncio.Protocol):
                 'CT',
                 '[' + self.client.area.abbreviation + ']' + self.client.name,
                 args[1])
-            database.log_room('ooc', self.client,
-                              self.client.area, message=args[1])
+            if(bool(self.server.config['log_chat'])):
+                database.log_room('ooc', self.client, self.client.area, message=args[1])
 
     def net_cmd_mc(self, args):
         """Play music.
