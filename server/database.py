@@ -39,6 +39,8 @@ class Database:
         self.db = sqlite3.connect(DB_FILE)
         self.db.execute('PRAGMA foreign_keys = ON')
         self.db.row_factory = sqlite3.Row
+        self.message_buffer = [None] * 501 
+        self.buffer_counter = 0
         if new:
             self.migrate_json_to_v1()
         self.migrate()
@@ -390,7 +392,22 @@ class Database:
                         ORDER BY ban_date DESC LIMIT ?)
                     ORDER BY ban_date ASC
                     '''), (count,)).fetchall()]
-
+    def log_buffer(self,message):
+        if self.buffer_counter == 500:
+            self.buffer_counter = 0
+        else:
+            self.buffer_counter = self.buffer_counter + 1
+        self.message_buffer[self.buffer_counter] = message
+    
+    def dump_log(self,area,reason,client):
+        with open('reports/' + str(datetime.now())[:-7] + '.txt', 'w') as f:
+            f.write('Mod call by: ' + client.char_name + ' aka ' + client.name + '\n')
+            f.write('Reason: ' + reason + '\n')
+            for log in self.message_buffer:
+                if not log == None and area in log:
+                    f.write(str(log + '\n'))
+                    
+        return
     def _subtype_atom(self, event_type, event_subtype):
         if event_type not in ('room', 'misc'):
             raise AssertionError()
@@ -404,3 +421,4 @@ class Database:
                 SELECT type_id FROM {event_type}_event_types
                 WHERE type_name = ?
                 '''), (event_subtype,)).fetchone()['type_id']
+    

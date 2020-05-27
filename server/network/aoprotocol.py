@@ -31,6 +31,13 @@ import logging
 logger_debug = logging.getLogger('debug')
 logger = logging.getLogger('events')
 
+from enum import Enum
+from time import localtime, strftime
+
+from server import database
+from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
+from server.fantacrypt import fanta_decrypt
+from .. import commands
 
 class AOProtocol(asyncio.Protocol):
     """The main class that deals with the AO protocol."""
@@ -616,7 +623,9 @@ class AOProtocol(asyncio.Protocol):
         self.client.area.set_next_msg_delay(len(msg))
         if(bool(self.server.config['log_chat'])):
             database.log_ic(self.client, self.client.area, showname, msg)
-
+        else:
+            database.log_buffer(f'[{self.client.area.abbreviation}] {showname}/{self.client.char_name}' +
+                          f'/{self.client.name} ({self.client.ipid}): {msg}')
         if (self.client.area.is_recording):
             self.client.area.recorded_messages.append(args)
 
@@ -700,7 +709,9 @@ class AOProtocol(asyncio.Protocol):
                 args[1])
             if(bool(self.server.config['log_chat'])):
                 database.log_room('ooc', self.client, self.client.area, message=args[1])
-
+            else:
+                database.log_buffer('[OOC]' + f'[{self.client.area.abbreviation}] {self.client.char_name}' +
+                          f'/{self.client.name} ({self.client.ipid}): {args[1]}')
     def net_cmd_mc(self, args):
         """Play music.
 
@@ -1014,8 +1025,8 @@ class AOProtocol(asyncio.Protocol):
                     args[0][:100]),
                 pred=lambda c: c.is_mod)
             self.client.set_mod_call_delay()
-            database.log_room('modcall', self.client,
-                              self.client.area, message=args[0])
+            database.log_room('modcall', self.client, self.client.area, message=args[0])
+        database.dump_log(self.client.area.abbreviation,args[0],self.client)
 
     def net_cmd_opKICK(self, args):
         """
