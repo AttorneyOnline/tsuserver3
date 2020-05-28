@@ -400,6 +400,8 @@ class Database:
         self.message_buffer[self.buffer_counter] = message
     
     def dump_log(self,area,reason,client):
+        if not os.path.exists('reports'):
+            os.mkdir('reports')
         with open( os.path.join('reports', str(datetime.now())[:-7].replace(':','-') + '.txt'), 'w') as f:
             f.write('Mod call by: ' + client.char_name + ' aka ' + client.name + '\n')
             f.write('Reason: ' + reason + '\n')
