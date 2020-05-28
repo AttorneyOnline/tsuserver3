@@ -74,7 +74,8 @@ def ooc_cmd_g(client, arg):
     if len(arg) == 0:
         raise ArgumentError("You can't send an empty message.")
     client.server.broadcast_global(client, arg)
-    database.log_room('chat.global', client, client.area, message=arg)
+    if(bool(client.server.config['log_chat'])):
+        database.log_room('chat.global', client, client.area, message=arg)
 
 
 @mod_only()
@@ -88,7 +89,8 @@ def ooc_cmd_gm(client, arg):
     if len(arg) == 0:
         raise ArgumentError("Can't send an empty message.")
     client.server.broadcast_global(client, arg, True)
-    database.log_room('chat.global-mod', client, client.area, message=arg)
+    if(bool(client.server.config['log_chat'])):
+         database.log_room('chat.global-mod', client, client.area, message=arg)
 
 
 @mod_only()
