@@ -400,7 +400,7 @@ class Database:
         self.message_buffer[self.buffer_counter] = message
     
     def dump_log(self,area,reason,client):
-        with open('reports/' + str(datetime.now())[:-7] + '.txt', 'w') as f:
+        with open( os.path.join('reports', str(datetime.now())[:-7].replace(':','-') + '.txt'), 'w') as f:
             f.write('Mod call by: ' + client.char_name + ' aka ' + client.name + '\n')
             f.write('Reason: ' + reason + '\n')
             for log in self.message_buffer:
