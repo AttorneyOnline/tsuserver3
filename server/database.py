@@ -405,9 +405,15 @@ class Database:
         with open( os.path.join('reports', str(datetime.now())[:-7].replace(':','-') + '.txt'), 'w') as f:
             f.write('Mod call by: ' + client.char_name + ' aka ' + client.name + '\n')
             f.write('Reason: ' + reason + '\n')
-            for log in self.message_buffer:
-                if not log == None and area in log:
-                    f.write(str(log + '\n'))
+             #cheap work arounds ahoy     
+            z = self.buffer_counter + 1
+            for x in range(z,501):
+                if not self.message_buffer[x] == None:
+                    f.write(str(self.message_buffer[x] + '\n'))
+            for x in range(0,z):
+                if not self.message_buffer[x] == None:
+                    f.write(str(self.message_buffer[x] + '\n'))
+            
                     
         return
     def _subtype_atom(self, event_type, event_subtype):
