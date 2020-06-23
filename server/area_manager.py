@@ -88,10 +88,6 @@ class AreaManager:
 
             self.owners = []
             self.afkers = []
-
-            # Gamemode stuff
-            self.gamemode = None
-
         class Locked(Enum):
             """Lock state of an area."""
             FREE = 1,
