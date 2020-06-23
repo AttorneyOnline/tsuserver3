@@ -484,6 +484,9 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_ooc('You don\'t any areas!')
                 return
             text = ' '.join(part[1:])
+        if text.lstrip().startswith('(('):
+            self.client.send_ooc("Please, *please* use the OOC chat instead of polluting IC. Normal OOC is local to area. You can use /h to talk hub-wide or /g to talk across the entire server.")
+            return
         if msg_type not in ('chat', '0', '1'):
             return
         if anim_type not in (0, 1, 2, 4, 5, 6):
@@ -626,6 +629,7 @@ class AOProtocol(asyncio.Protocol):
                 self.client.fake_name = args[0]
             else:
                 self.client.fake_name = args[0]
+        self.client.name = re.sub(r'\s+', ' ', self.client.name).strip() #Strip the name of any excess whitespace
         if self.client.name == '':
             self.client.send_ooc(
                 'You must insert a name with at least one letter')
