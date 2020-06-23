@@ -556,9 +556,7 @@ class AOProtocol(asyncio.Protocol):
         confirmed = False
         if charid_pair > -1:
             for target in self.client.area.clients:
-                if not confirmed and target.char_id == self.client.charid_pair and
-                          target.charid_pair == self.client.char_id and target != self.client and
-                          target.pos == self.client.pos:
+                if not confirmed and target.char_id == self.client.charid_pair and target.charid_pair == self.client.char_id and target != self.client and target.pos == self.client.pos:
                     confirmed = True
                     other_offset = target.offset_pair
                     other_emote = target.last_sprite
