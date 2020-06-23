@@ -323,6 +323,9 @@ class AreaManager:
             :param showname: showname of origin user
             :param effects: fade out/fade in/sync/etc. effect bitflags
             """
+            # Legacy music list formatting ('length' should be transitioned into 'loop' true/false in the future)
+            if length > 0:
+                length = -1
             self.send_command('MC', name, cid, showname, length, 0, effects)
 
         def can_send_message(self, client):
