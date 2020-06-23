@@ -727,45 +727,39 @@ class AOProtocol(asyncio.Protocol):
                 return
             if self.client.change_music_cd():
                 self.client.send_ooc(
-                    'You changed song too many times. Please try again after {} seconds.'
-                    .format(int(self.client.change_music_cd())))
+                    f'You changed song too many times. Please try again after {int(self.client.change_music_cd())} seconds.'
+                )
                 return
             try:
-                name, length = self.server.get_song_data(args[0])
+                name, length = self.server.get_song_data(self.server.music_list, args[0])
 
+                # Showname info
+                showname = ''
+                if len(args) > 2:
+                    showname = args[2]
+                    if len(showname) > 0 and not self.client.area.showname_changes_allowed:
+                        self.client.send_ooc(
+                            "Showname changes are forbidden in this area!"
+                        )
+                        return
+
+                # Effects info
+                effects = 0
+                if len(args) > 3:
+                    effects = int(args[3])
+                
+                # Jukebox check
                 if self.client.area.jukebox:
-                    showname = ''
-                    if len(args) > 3:
-                        showname = args[2]
-                        if len(
-                                showname
-                        ) > 0 and not self.client.area.showname_changes_allowed:
-                            self.client.send_ooc(
-                                "Showname changes are forbidden in this area!")
-                            return
                     self.client.area.add_jukebox_vote(self.client, name,
                                                       length, showname)
                     database.log_room('jukebox.vote', self.client, self.client.area, message=name)
                 else:
-                    if len(args) > 2:
-                        showname = args[2]
-                        if len(
-                                showname
-                        ) > 0 and not self.client.area.showname_changes_allowed:
-                            self.client.send_ooc(
-                                "Showname changes are forbidden in this area!")
-                            return
-                        self.client.area.play_music_shownamed(
-                            name, self.client.char_id, showname, length)
-                        self.client.area.add_music_playing_shownamed(
-                            self.client, showname, name)
-                    else:
-                        self.client.area.play_music(name, self.client.char_id,
-                                                    length)
-                        self.client.area.add_music_playing(self.client, name)
+                    self.client.area.play_music(name, self.client.char_id,
+                                                length, showname, effects)
+                    self.client.area.add_music_playing(self.client, name, showname)
                     database.log_room('music', self.client, self.client.area, message=name)
             except ServerError:
-                return
+                self.client.send_ooc('Error: song {} isn\'t recognized by server!'.format(args[0]))
         except ClientError as ex:
             self.client.send_ooc(ex)
 
