@@ -700,9 +700,8 @@ class AOProtocol(asyncio.Protocol):
         if not self.client.is_checked:
             return
         try:
-            area = self.client.hub.get_area_by_id_or_name(args[0])
-            called_function = 'ooc_cmd_area'
-            getattr(commands, called_function)(self.client, args[0])
+            area = self.server.area_manager.get_area_by_name(args[0])
+            self.client.change_area(area)
         except AreaError:
             if self.client.is_muted:  # Checks to see if the client has been muted by a mod
                 self.client.send_ooc(
