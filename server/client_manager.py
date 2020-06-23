@@ -324,9 +324,6 @@ class ClientManager:
 
             self.area.remove_client(self)
             self.area = area
-            if len(area.pos_lock) > 0:
-                #We're going to change to the "default" poslock no matter what for the sake of puzzle rooms or the like having a "starting position".
-                self.change_position(area.pos_lock[0])
             area.new_client(self)
 
             self.send_ooc(
@@ -337,8 +334,6 @@ class ClientManager:
             self.send_command('HP', 1, self.area.hp_def)
             self.send_command('HP', 2, self.area.hp_pro)
             self.send_command('BN', self.area.background, self.pos)
-            if len(self.area.pos_lock) > 0:
-                self.send_command('SD', '*'.join(self.area.pos_lock)) #set that juicy pos dropdown
             self.send_command('LE', *self.area.get_evidence_list(self))
 
         def send_area_list(self):
@@ -467,8 +462,6 @@ class ClientManager:
             self.send_command('HP', 1, self.area.hp_def)
             self.send_command('HP', 2, self.area.hp_pro)
             self.send_command('BN', self.area.background, self.pos)
-            if len(self.area.pos_lock) > 0:
-                self.send_command('SD', '*'.join(self.area.pos_lock)) #set that juicy pos dropdown
             self.send_command('LE', *self.area.get_evidence_list(self))
             self.send_command('MM', 1)
 
