@@ -172,7 +172,7 @@ class AOProtocol(asyncio.Protocol):
         if len(args) != len(types):
             return False
         for i, arg in enumerate(args):
-            if len(arg) == 0 and types[i] != self.ArgType.STR_OR_EMPTY:
+            if len(str(arg)) == 0 and types[i] != self.ArgType.STR_OR_EMPTY:
                 return False
             if types[i] == self.ArgType.INT:
                 try:
@@ -228,7 +228,8 @@ class AOProtocol(asyncio.Protocol):
         self.client.send_command('FL', 'yellowtext', 'customobjections',
                                  'flipping', 'fastloading', 'noencryption',
                                  'deskmod', 'evidence', 'modcall_reason',
-                                 'cccc_ic_support', 'arup', 'casing_alerts')
+                                 'cccc_ic_support', 'arup', 'casing_alerts',
+                                 'prezoom', 'looping_sfx', 'additive', 'effects')
 
     def net_cmd_ch(self, _):
         """Reset the client drop timeout (keepalive).
@@ -362,6 +363,18 @@ class AOProtocol(asyncio.Protocol):
             return
 
         target_area = []
+        showname = ""
+        charid_pair = -1
+        offset_pair = 0
+        nonint_pre = 0
+        sfx_looping = "0"
+        screenshake = 0
+        frames_shake = ""
+        frames_realization = ""
+        frames_sfx = ""
+        additive = 0
+        effect = ""
+        pair_order = 0
         if self.validate_net_cmd(args, self.ArgType.STR, # msg_type
                                  self.ArgType.STR_OR_EMPTY, self.ArgType.STR,   # pre, folder
                                  self.ArgType.STR, self.ArgType.STR,            # anim, text
@@ -372,10 +385,6 @@ class AOProtocol(asyncio.Protocol):
                                  self.ArgType.INT, self.ArgType.INT):           # ding, color
             # Pre-2.6 validation monstrosity.
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color = args
-            showname = ""
-            charid_pair = -1
-            offset_pair = 0
-            nonint_pre = 0
         elif self.validate_net_cmd(
                 args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,              # msg_type, pre
                 self.ArgType.STR, self.ArgType.STR, self.ArgType.STR,           # folder, anim, text
@@ -444,13 +453,13 @@ class AOProtocol(asyncio.Protocol):
             text = ' '.join(part[1:])
         if msg_type not in ('chat', '0', '1'):
             return
-        if anim_type not in (0, 1, 2, 5, 6):
+        if anim_type not in (0, 1, 2, 4, 5, 6):
             return
         if cid != self.client.char_id:
             return
         if sfx_delay < 0:
             return
-        if '4' in button and "<and>" not in button:
+        if '4' in str(button) and "<and>" not in str(button):
             if not button.isdigit():
                return
         if evidence < 0:
@@ -488,21 +497,6 @@ class AOProtocol(asyncio.Protocol):
         if color == 2 and not (self.client.is_mod
                                or self.client in self.client.area.owners):
             color = 0
-        if color == 6:
-            text = re.sub(r'[^\x00-\x7F]+', ' ',
-                          text)  # remove all unicode to prevent redtext abuse
-            if len(text.strip(' ')) == 1:
-                color = 0
-            else:
-                if text.strip(' ') in ('<num>', '<percent>', '<dollar>',
-                                       '<and>'):
-                    color = 0
-        if self.client.pos:
-            pos = self.client.pos
-        else:
-            if pos not in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'jur',
-                           'sea'):
-                return
 
         max_char = 0
         try:
@@ -518,7 +512,6 @@ class AOProtocol(asyncio.Protocol):
             msg = self.client.shake_message(msg)
         if self.client.disemvowel:
             msg = self.client.disemvowel_message(msg)
-        self.client.pos = pos
         if evidence:
             if self.client.area.evi_list.evidences[
                     self.client.evi_list[evidence] - 1].pos != 'all':
@@ -689,12 +682,13 @@ class AOProtocol(asyncio.Protocol):
                     "You are not on the area's invite list, and thus, you cannot change music!"
                 )
                 return
-            if not self.validate_net_cmd(
-                    args, self.ArgType.STR,
-                    self.ArgType.INT) and not self.validate_net_cmd(
-                        args, self.ArgType.STR, self.ArgType.INT,
-                        self.ArgType.STR):
-                return
+
+            if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT):
+                if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT, self.ArgType.STR_OR_EMPTY):
+                    if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.INT):
+                        if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.INT, self.ArgType.INT):
+                            return
+
             if args[1] != self.client.char_id:
                 return
             if self.client.change_music_cd():
