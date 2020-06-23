@@ -157,6 +157,39 @@ class AOProtocol(asyncio.Protocol):
             self.buffer = spl[1]
             yield spl[0]
 
+    def parse_msg_delay(self, msg):
+        """ Parses the correct delay for the message supporting escaped characters and }}} {{{ speed-ups/slowdowns (2.6.2+)
+
+        :param msg: the string
+        :return: delay integer in ms
+        """
+        #Fastest - Default - Slowest. These are default values in ms for KFO Client.
+        message_display_speed = [0, 10, 25, 40, 50, 70, 90]
+
+        #Starts in the middle of the messageDisplaySpeed list
+        current_display_speed = 3
+
+        #The 'meh' part of this is we can't exactly calculate accurately if color chars are used (as they could change clientside).
+        formatting_chars = "@$`|_~%\\}{" 
+
+        calculated_delay = 0
+
+        escaped = False
+
+        for symbol in msg:
+            if symbol in formatting_chars and not escaped:
+                if symbol == "\\":
+                    escaped = True
+                elif symbol == "{": #slow down
+                    current_display_speed = min(len(message_display_speed)-1, current_display_speed + 1)
+                elif symbol == "}": #speed up
+                    current_display_speed = max(0, current_display_speed - 1)
+                continue
+            elif escaped and symbol == "n": #Newline monstrosity
+                continue
+            calculated_delay += message_display_speed[current_display_speed]
+        return calculated_delay
+
     def validate_net_cmd(self, args, *types, needs_auth=True):
         """Makes sure the net command's arguments match expectations.
 
@@ -494,9 +527,6 @@ class AOProtocol(asyncio.Protocol):
             button = 0
             # Turn off the ding.
             ding = 0
-        if color == 2 and not (self.client.is_mod
-                               or self.client in self.client.area.owners):
-            color = 0
 
         max_char = 0
         try:
@@ -666,8 +696,9 @@ class AOProtocol(asyncio.Protocol):
         if not self.client.is_checked:
             return
         try:
-            area = self.server.area_manager.get_area_by_name(args[0])
-            self.client.change_area(area)
+            area = self.client.hub.get_area_by_id_or_name(args[0])
+            called_function = 'ooc_cmd_area'
+            getattr(commands, called_function)(self.client, args[0])
         except AreaError:
             if self.client.is_muted:  # Checks to see if the client has been muted by a mod
                 self.client.send_ooc(
@@ -916,6 +947,12 @@ class AOProtocol(asyncio.Protocol):
             self.client, self.client.evi_list[int(args[0])], evi)
         database.log_room('evidence.edit', self.client, self.client.area)
         self.client.area.broadcast_evidence_list()
+
+    def make_valid_string(self, name):
+        printable = string.ascii_letters + string.digits + string.punctuation
+        if not set(name).issubset(set(printable)):
+            name = re.sub('[{}]'.format(printable), '', name)
+        return name
 
     def net_cmd_zz(self, args):
         """Sent on mod call.
