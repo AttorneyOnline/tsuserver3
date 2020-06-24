@@ -50,6 +50,7 @@ def ooc_cmd_help(client, arg):
         msg = inspect.cleandoc('''
         Welcome to tsuserver3! You can use /help <command> on any known
         command to get up-to-date help on it.
+        You may also use /help <category> to see available commands for that category.
 
         If you don't understand a specific core feature, check the official
         repository for more information:
