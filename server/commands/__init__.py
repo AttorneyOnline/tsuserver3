@@ -39,15 +39,31 @@ def help(command):
     try:
         doc = inspect.getdoc(getattr(sys.modules[__name__], command))
     except AttributeError:
-        doc = None
-    return doc or 'No help found for that command.'
+        raise
+    return doc
 
+def list_submodules():
+    """
+    Lists all known submodules.
+    """
+    subm = ''
+    for module in submodules():
+        # Only return the name of the module and not the whole hierarchy
+        name = module.__name__.split('.')[-1]
+        subm += f'{name}\n'
+    return subm
 
-def list_commands():
-    """Lists all known commands."""
+def list_commands(submodule=''):
+    """
+    Lists all known commands.
+    :param submodule: Which submodule to search. Lists all commands if blank. Raises attribute error if submodule not found.
+    """
     import inspect
     cmds = ''
-    for module in submodules():
+    modules = [a for a in submodules() if submodule == '' or a.__name__.split('.')[-1] == submodule]
+    if len(modules) == 0:
+        raise AttributeError
+    for module in modules:
         for func in module.__all__:
             doc = inspect.getdoc(module.__dict__[func])
             if doc is None:
