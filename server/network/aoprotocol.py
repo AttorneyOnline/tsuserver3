@@ -314,7 +314,13 @@ class AOProtocol(asyncio.Protocol):
 
         """
 
-        self.client.send_command('SM', *self.server.music_list_ao2)
+        song_list = []
+        allowed = self.client in self.client.area.owners or self.client.is_mod
+        song_list += [a.name for a in self.server.area_manager.areas]
+        
+        song_list += self.server.music_list_ao2
+
+        self.client.send_command('SM', *song_list)
 
     def net_cmd_rd(self, _):
         """Asks for server metadata(charscheck, motd etc.) and a DONE#% signal(also best packet)
