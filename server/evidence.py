@@ -62,7 +62,7 @@ class EvidenceList:
         :param client: origin
 
         """
-        if client.is_gm or client.is_mod:
+        if client in client.area.owners or client.is_mod:
             return True
         return False
 
