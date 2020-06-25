@@ -40,7 +40,7 @@ def setup_logger(debug):
     debug_log = logging.getLogger('debug')
     debug_log.setLevel(logging.DEBUG)
 
-    debug_handler = logging.handlers.RotatingFileHandler('logs/debug.log',
+    debug_handler = logging.handlers.RotatingFileHandler('logs/debug.log', encoding='utf-8',
                                                             maxBytes=1024 * 1024 * 4)
     debug_handler.setLevel(logging.DEBUG)
     debug_handler.setFormatter(debug_formatter)
@@ -50,7 +50,7 @@ def setup_logger(debug):
     # use the database.
     info_log = logging.getLogger('events')
     info_log.setLevel(logging.INFO)
-    file_handler = logging.handlers.RotatingFileHandler('logs/server.log',
+    file_handler = logging.handlers.RotatingFileHandler('logs/server.log', encoding='utf-8',
                                                             maxBytes=1024 * 512)
     file_handler.setFormatter(logging.Formatter('[%(asctime)s UTC] %(message)s'))
     info_log.addHandler(file_handler)
