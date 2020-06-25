@@ -494,9 +494,6 @@ class AOProtocol(asyncio.Protocol):
             button = 0
             # Turn off the ding.
             ding = 0
-        if color == 2 and not (self.client.is_mod
-                               or self.client in self.client.area.owners):
-            color = 0
 
         max_char = 0
         try:
@@ -666,8 +663,8 @@ class AOProtocol(asyncio.Protocol):
         if not self.client.is_checked:
             return
         try:
-            area = self.server.area_manager.get_area_by_name(args[0])
-            self.client.change_area(area)
+            called_function = 'ooc_cmd_area'
+            getattr(commands, called_function)(self.client, args[0])
         except AreaError:
             if self.client.is_muted:  # Checks to see if the client has been muted by a mod
                 self.client.send_ooc(
