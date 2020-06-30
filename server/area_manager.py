@@ -310,19 +310,19 @@ class AreaManager:
             self.music_looper = asyncio.get_event_loop().call_later(
                 vote_picked.length, lambda: self.start_jukebox())
 
-        def play_music(self, name, cid, length=-1, showname="", effects=0):
+        def play_music(self, name, cid, loop=0, showname="", effects=0):
             """
             Play a track.
             :param name: track name
             :param cid: origin character ID
-            :param length: track length (Default value = -1)
+            :param loop: 1 for clientside looping, 0 for no looping (2.8)
             :param showname: showname of origin user
             :param effects: fade out/fade in/sync/etc. effect bitflags
             """
-            # Legacy music list formatting ('length' should be transitioned into 'loop' true/false in the future)
-            if length > 0:
-                length = -1
-            self.send_command('MC', name, cid, showname, length, 0, effects)
+            # If it's anything other than 0, it's looping. (Legacy music.yaml support)
+            if loop > 0:
+                loop = 1
+            self.send_command('MC', name, cid, showname, loop, 0, effects)
 
         def can_send_message(self, client):
             """
