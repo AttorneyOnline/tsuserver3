@@ -322,20 +322,20 @@ class HubManager:
 				#'name' = name of the ambience
 				#-1 = the character id (unused)
 				#"" = showname
-				#length = -1 means loop
+				#loop = 1 means loop
 				#1 means channel
 				#last arg is effects
 
-				length = -1 #confusing, but -1 means "loop this" and anything else means "don't".
+				loop = 1 #1 means "loop this" and anything else means "don't".
 				flags = int(MusicEffect.FADE_OUT | MusicEffect.FADE_IN | MusicEffect.SYNC_POS)
-				client.send_command('MC', self.current_ambience, -1, "", length, 1, flags)
+				client.send_command('MC', self.current_ambience, -1, "", loop, 1, flags)
 
 			def set_ambience(self, name):
 				self.current_ambience = name
 				flags = int(MusicEffect.FADE_OUT | MusicEffect.FADE_IN | MusicEffect.SYNC_POS)
-				self.send_command('MC', self.current_ambience, -1, "", -1, 1, flags)
+				self.send_command('MC', self.current_ambience, -1, "", 1, 1, flags)
 
-			def play_music(self, name, cid, length=-1, showname="", effects=0):
+			def play_music(self, name, cid, loop=0, showname="", effects=0):
 				for client in self.server.client_manager.clients:
 					if client.char_id == cid:
 						self.current_music_player = client.get_char_name(showname != "")
@@ -343,15 +343,10 @@ class HubManager:
 						break
 
 				self.current_music = name
-				if (length > 0):
-					length = -1 #That means the server defined the length for this file, aka it should loop.
+				if (loop != 0):
+					loop = 1 #That means the server defined the loop for this file, aka it should loop.
 
-				self.send_command('MC', name, cid, showname, length, 0, effects)
-				if self.music_looper:
-					self.music_looper.cancel()
-				if length > 0:
-					self.music_looper = asyncio.get_event_loop().call_later(length,
-																			lambda: self.play_music(name, -1, length))
+				self.send_command('MC', name, cid, showname, loop, 0, effects)
 
 			def can_send_message(self, client):
 				if self.cannot_ic_interact(client):

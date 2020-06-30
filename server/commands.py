@@ -557,8 +557,8 @@ def ooc_cmd_play(client, arg):
     if not client.is_mod and arg.lower().startswith('[mod]'):
         raise ClientError('This is a mod song!')
 
-    client.area.play_music(arg, client.char_id)
-    # client.area.add_music_playing(client, arg)
+    # loop by default for now until there's an option to tweak this
+    client.area.play_music(arg, client.char_id, loop=1)
     logger.log_server('Changed music to {}.'.format(arg), client)
 
 
