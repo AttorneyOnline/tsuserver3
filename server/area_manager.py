@@ -320,7 +320,7 @@ class AreaManager:
             :param effects: fade out/fade in/sync/etc. effect bitflags
             """
             # If it's anything other than 0, it's looping. (Legacy music.yaml support)
-            if loop > 0:
+            if loop != 0:
                 loop = 1
             self.send_command('MC', name, cid, showname, loop, 0, effects)
 
