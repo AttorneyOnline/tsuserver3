@@ -174,6 +174,10 @@ Requires Python 3.6+ and PyYAML.
     - Kicks target and all of their multi-accs from your area to area 0 or specified "area#" in same hub (or specified "hub#" if you're a mod)
 * **masskick** "area1" "area2"
     - Kicks all people from "area1" to "area2".
+* **area_mute** 
+    - Mutes the area preventing non-CMs from speaking IC and playing music. Muted areas appear with [M] in /area list.
+* **area_unmute**
+    - Unmutes the area.
 
 ### Mod Commands
 * **login** "Password"
