@@ -292,7 +292,7 @@ class ClientManager:
             self.send_command('FA', *area_list)
 
 
-        def change_area(self, area, hidden):
+        def change_area(self, area):
             """
             Switch the client to another area, unless the area is locked.
             :param area: area to switch to
