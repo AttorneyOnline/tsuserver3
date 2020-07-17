@@ -1,3 +1,5 @@
+import os
+
 from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, ArgumentError, AreaError
@@ -20,7 +22,10 @@ __all__ = [
     'ooc_cmd_invite',
     'ooc_cmd_uninvite',
     'ooc_cmd_area_kick',
-    'ooc_cmd_getafk'
+    'ooc_cmd_getafk',
+    'ooc_cmd_save_hub',
+    'ooc_cmd_load_hub',
+    'ooc_cmd_list_hubs',
 ]
 
 
@@ -322,3 +327,56 @@ def ooc_cmd_area_kick(client, arg):
             raise
     else:
         client.send_ooc("No targets found.")
+
+
+@mod_only()
+def ooc_cmd_save_hub(client, arg):
+    """
+    Save the current Hub in the server's storage/hubs/<name>.yaml file.
+    Usage: /save_hub <name>
+    """
+    if len(arg) < 3:
+        client.send_ooc("Filename must be at least 3 symbols long!")
+        return
+
+    try:
+        path = 'storage/hubs'
+        num_files = len([f for f in os.listdir(
+            path) if os.path.isfile(os.path.join(path, f))])
+        if (num_files >= 1000): #yikes
+            raise AreaError('Server storage full! Please contact the server host to resolve this issue.')
+        arg = f'{path}/{arg}.yaml'
+        client.server.area_manager.save_areas(arg)
+        client.send_ooc(f'Saving as {arg}...')
+    except AreaError:
+        raise
+
+
+@mod_only()
+def ooc_cmd_load_hub(client, arg):
+    """
+    Load Hub data from the server's storage/hubs/<name>.yaml file.
+    Usage: /load_hub <name>
+    """
+    try:
+        path = 'storage/hubs'
+        arg = f'{path}/{arg}.yaml'
+        client.server.area_manager.load_areas(arg)
+        client.send_ooc(f'Loading {arg}...')
+    except AreaError:
+        raise
+    
+
+
+@mod_only()
+def ooc_cmd_list_hubs(client, arg):
+    """
+    Show all the available hubs for loading in the storage/hubs/ folder.
+    Usage: /list_hubs
+    """
+    text = 'Available hubs:'
+    for F in os.listdir('storage/hubs/'):
+        if F.lower().endswith('.yaml'):
+            text += '\n- {}'.format(F[:-5])
+
+    client.send_ooc(text)

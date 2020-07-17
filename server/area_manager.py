@@ -20,7 +20,8 @@ import random
 import time
 from enum import Enum
 
-import yaml
+import oyaml as yaml #ordered yaml
+import os
 
 from server import database
 from server.evidence import EvidenceList
@@ -94,9 +95,15 @@ class AreaManager:
             if 'background' in area:
                 self.background = area['background']
 
-            # we gotta fix the sins of our forefathers
+            # We gotta fix the sins of our forefathers
             if 'bglock' in area:
-                area['bglock'] = area['bg_lock']
+                self.bg_lock = area['bglock']
+
+            # Legacy KFO support
+            if 'locked' in area:
+                self.is_locked = self.Locked.FREE
+                if area['locked'] == True:
+                    self.is_locked = self.Locked.LOCKED
 
             if 'bg_lock' in area:
                 self.bg_lock = area['bg_lock']
@@ -119,7 +126,7 @@ class AreaManager:
             if 'non_int_pres_only' in area:
                 self.non_int_pres_only = area['non_int_pres_only']
             if 'is_locked' in area:
-                self.is_locked = area['is_locked']
+                self.is_locked = self.Locked[area['is_locked']]
             if 'blankposting_allowed' in area:
                 self.blankposting_allowed = area['blankposting_allowed']
             if 'hp_def' in area:
@@ -136,7 +143,7 @@ class AreaManager:
                 self.evi_list.import_evidence(area['evidence'])
                 self.broadcast_evidence_list()
 
-        def get_save_dict(self):
+        def save(self):
             area = OrderedDict()
             area['area'] = self.name
             area['background'] = self.background
@@ -149,7 +156,7 @@ class AreaManager:
             area['jukebox'] = self.jukebox
             area['abbreviation'] = self.abbreviation
             area['non_int_pres_only'] = self.non_int_pres_only
-            area['is_locked'] = self.is_locked
+            area['is_locked'] = self.is_locked.name
             area['blankposting_allowed'] = self.blankposting_allowed
             area['hp_def'] = self.hp_def
             area['hp_pro'] = self.hp_pro
@@ -536,20 +543,37 @@ class AreaManager:
         self.areas = []
         self.load_areas()
 
-    def load_areas(self):
+    def load_areas(self, path='config/areas.yaml'):
         """Create all areas from a YAML file."""
-        with open('config/areas.yaml', 'r') as chars:
-            hub = yaml.safe_load(chars)
+        try:
+            with open(path, 'r') as chars:
+                hub = yaml.safe_load(chars)
+        except:
+            raise AreaError(f'File path {path} is invalid!')
 
-        while len(self.areas) < len(hub):
-            idx = len(self.areas)
-            # Make sure that the area manager contains enough areas to update with new information
-            self.areas.append(
-                self.Area(idx, self.server, f'Area {idx}')
-            )
+        try:
+            while len(self.areas) < len(hub):
+                idx = len(self.areas)
+                # Make sure that the area manager contains enough areas to update with new information
+                self.areas.append(
+                    self.Area(idx, self.server, f'Area {idx}')
+                )
 
-        for i, area in enumerate(hub):
-            self.areas[i].load(area)
+            for i, area in enumerate(hub):
+                self.areas[i].load(area)
+        except:
+            raise AreaError(f'Something went wrong while loading the areas!')
+
+    def save_areas(self, path='config/areas.yaml'):
+        """Save all areas to a YAML file."""
+        try:
+            with open(path, 'w', encoding='utf-8') as stream:
+                areas = []
+                for area in self.areas:
+                    areas.append(area.save())
+                yaml.dump(areas, stream, default_flow_style=False)
+        except:
+            raise AreaError(f'File path {path} is invalid!')
 
 
     def default_area(self):

@@ -1,4 +1,5 @@
 PyYAML
+oyaml
 websockets
 arrow
 timeparse-plus
