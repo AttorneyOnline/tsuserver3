@@ -294,7 +294,7 @@ def ooc_cmd_getmusic(client, arg):
     if client.area.current_music == '':
         raise ClientError('There is no music currently playing.')
     else:
-        client.send_command('MC', client.area.current_music, -1)
+        client.send_command('MC', client.area.current_music, 1)
         client.send_host_message('You changed your track to {}.'.format(client.area.current_music))
 
 def ooc_cmd_editambience(client, arg):
