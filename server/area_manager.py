@@ -26,6 +26,7 @@ from server import database
 from server.evidence import EvidenceList
 from server.exceptions import AreaError
 
+from collections import OrderedDict
 
 class AreaManager:
     """Holds the list of all areas."""
@@ -34,31 +35,34 @@ class AreaManager:
         def __init__(self,
                      area_id,
                      server,
-                     name,
-                     background,
-                     bg_lock,
-                     evidence_mod='FFA',
-                     locking_allowed=False,
-                     iniswap_allowed=True,
-                     showname_changes_allowed=True,
-                     shouts_allowed=True,
-                     jukebox=False,
-                     abbreviation='',
-                     non_int_pres_only=False):
-            self.iniswap_allowed = iniswap_allowed
+                     name):
             self.clients = set()
             self.invite_list = {}
             self.id = area_id
-            self.name = name
-            self.background = background
-            self.bg_lock = bg_lock
             self.server = server
-            self.music_looper = None
-            self.next_message_time = 0
+            self.name = name
+
+            # Initialize prefs
+            self.background = 'default'
+            self.bg_lock = False
+            self.evidence_mod = 'FFA'
+            self.locking_allowed = False
+            self.iniswap_allowed = True
+            self.showname_changes_allowed = True
+            self.shouts_allowed = True
+            self.jukebox = False
+            self.abbreviation = ''
+            self.non_int_pres_only = False
+            self.is_locked = self.Locked.FREE
+            self.blankposting_allowed = True
             self.hp_def = 10
             self.hp_pro = 10
             self.doc = 'No document.'
             self.status = 'IDLE'
+            # /prefs end
+
+            self.music_looper = None
+            self.next_message_time = 0
             self.judgelog = []
             self.current_music = ''
             self.current_music_player = ''
@@ -66,11 +70,6 @@ class AreaManager:
             self.evi_list = EvidenceList()
             self.is_recording = False
             self.recorded_messages = []
-            self.evidence_mod = evidence_mod
-            self.locking_allowed = locking_allowed
-            self.showname_changes_allowed = showname_changes_allowed
-            self.shouts_allowed = shouts_allowed
-            self.abbreviation = abbreviation
             self.cards = dict()
             """
             #debug
@@ -79,10 +78,6 @@ class AreaManager:
             self.evidence_list.append(Evidence("weeeeeew", "desc3", "3.png"))
             """
 
-            self.is_locked = self.Locked.FREE
-            self.blankposting_allowed = True
-            self.non_int_pres_only = non_int_pres_only
-            self.jukebox = jukebox
             self.jukebox_votes = []
             self.jukebox_prev_char_id = -1
 
@@ -93,6 +88,74 @@ class AreaManager:
             FREE = 1,
             SPECTATABLE = 2,
             LOCKED = 3
+
+        def load(self, area):
+            self.name = area['area']
+            if 'background' in area:
+                self.background = area['background']
+
+            # we gotta fix the sins of our forefathers
+            if 'bglock' in area:
+                area['bglock'] = area['bg_lock']
+
+            if 'bg_lock' in area:
+                self.bg_lock = area['bg_lock']
+            if 'evidence_mod' in area:
+                self.evidence_mod = area['evidence_mod']
+            if 'locking_allowed' in area:
+                self.locking_allowed = area['locking_allowed']
+            if 'iniswap_allowed' in area:
+                self.iniswap_allowed = area['iniswap_allowed']
+            if 'showname_changes_allowed' in area:
+                self.showname_changes_allowed = area['showname_changes_allowed']
+            if 'shouts_allowed' in area:
+                self.shouts_allowed = area['shouts_allowed']
+            if 'jukebox' in area:
+                self.jukebox = area['jukebox']
+            if 'abbreviation' in area:
+                self.abbreviation = area['abbreviation']
+            else:
+                self.abbreviation = self.abbreviate()
+            if 'non_int_pres_only' in area:
+                self.non_int_pres_only = area['non_int_pres_only']
+            if 'is_locked' in area:
+                self.is_locked = area['is_locked']
+            if 'blankposting_allowed' in area:
+                self.blankposting_allowed = area['blankposting_allowed']
+            if 'hp_def' in area:
+                self.hp_def = area['hp_def']
+            if 'hp_pro' in area:
+                self.hp_pro = area['hp_pro']
+            if 'doc' in area:
+                self.doc = area['doc']
+            if 'status' in area:
+                self.status = area['status']
+
+            if 'evidence' in area and len(area['evidence']) > 0:
+                self.evi_list.evidences.clear()
+                self.evi_list.import_evidence(area['evidence'])
+                self.broadcast_evidence_list()
+
+        def get_save_dict(self):
+            area = OrderedDict()
+            area['area'] = self.name
+            area['background'] = self.background
+            area['bg_lock'] = self.bg_lock
+            area['evidence_mod'] = self.evidence_mod
+            area['locking_allowed'] = self.locking_allowed
+            area['iniswap_allowed'] = self.iniswap_allowed
+            area['showname_changes_allowed'] = self.showname_changes_allowed
+            area['shouts_allowed'] = self.shouts_allowed
+            area['jukebox'] = self.jukebox
+            area['abbreviation'] = self.abbreviation
+            area['non_int_pres_only'] = self.non_int_pres_only
+            area['is_locked'] = self.is_locked
+            area['blankposting_allowed'] = self.blankposting_allowed
+            area['hp_def'] = self.hp_def
+            area['hp_pro'] = self.hp_pro
+            area['doc'] = self.doc
+            area['status'] = self.status
+            return area
 
         def new_client(self, client):
             """Add a client to the area."""
@@ -138,6 +201,19 @@ class AreaManager:
                 self.invite_list[i.id] = None
             self.server.area_manager.send_arup_lock()
             self.broadcast_ooc('This area is locked now.')
+
+        def abbreviate(self):
+            """Abbreviate our name."""
+            if self.name.lower().startswith("courtroom"):
+                return "CR" + self.name.split()[-1]
+            elif self.name.lower().startswith("area"):
+                return "A" + self.name.split()[-1]
+            elif len(self.name.split()) > 1:
+                return "".join(item[0].upper() for item in self.name.split())
+            elif len(self.name) > 3:
+                return self.name[:3].upper()
+            else:
+                return self.name.upper()
 
         def is_char_available(self, char_id):
             """
@@ -457,41 +533,24 @@ class AreaManager:
 
     def __init__(self, server):
         self.server = server
-        self.cur_id = 0
         self.areas = []
         self.load_areas()
 
     def load_areas(self):
         """Create all areas from a YAML file."""
         with open('config/areas.yaml', 'r') as chars:
-            areas = yaml.safe_load(chars)
-        for item in areas:
-            if 'evidence_mod' not in item:
-                item['evidence_mod'] = 'FFA'
-            if 'locking_allowed' not in item:
-                item['locking_allowed'] = False
-            if 'iniswap_allowed' not in item:
-                item['iniswap_allowed'] = True
-            if 'showname_changes_allowed' not in item:
-                item['showname_changes_allowed'] = True
-            if 'shouts_allowed' not in item:
-                item['shouts_allowed'] = True
-            if 'jukebox' not in item:
-                item['jukebox'] = False
-            if 'noninterrupting_pres' not in item:
-                item['noninterrupting_pres'] = False
-            if 'abbreviation' not in item:
-                item['abbreviation'] = self.abbreviate(
-                    item['area'])
+            hub = yaml.safe_load(chars)
+
+        while len(self.areas) < len(hub):
+            idx = len(self.areas)
+            # Make sure that the area manager contains enough areas to update with new information
             self.areas.append(
-                self.Area(self.cur_id, self.server, item['area'],
-                          item['background'], item['bglock'],
-                          item['evidence_mod'], item['locking_allowed'],
-                          item['iniswap_allowed'],
-                          item['showname_changes_allowed'],
-                          item['shouts_allowed'], item['jukebox'],
-                          item['abbreviation'], item['noninterrupting_pres']))
-            self.cur_id += 1
+                self.Area(idx, self.server, f'Area {idx}')
+            )
+
+        for i, area in enumerate(hub):
+            self.areas[i].load(area)
+
 
     def default_area(self):
         """Get the default area."""
@@ -510,19 +569,6 @@ class AreaManager:
             if area.id == num:
                 return area
         raise AreaError('Area not found.')
-
-    def abbreviate(self, name):
-        """Abbreviate the name of a room."""
-        if name.lower().startswith("courtroom"):
-            return "CR" + name.split()[-1]
-        elif name.lower().startswith("area"):
-            return "A" + name.split()[-1]
-        elif len(name.split()) > 1:
-            return "".join(item[0].upper() for item in name.split())
-        elif len(name) > 3:
-            return name[:3].upper()
-        else:
-            return name.upper()
 
     def send_remote_command(self, area_ids, cmd, *args):
         """

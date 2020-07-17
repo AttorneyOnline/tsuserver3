@@ -22,11 +22,19 @@
   iniswap_allowed: false
 
 # Default options
-## evidence_mod: FFA
-## locking_allowed: false
-## iniswap_allowed: true
-## showname_changes_allowed: true
-## shouts_allowed: true
-## jukebox: false
-## noninterrupting_pres: false
-## abbreviation: self.abbreviate(area)
+## background: 'default'
+## bg_lock: False
+## evidence_mod: 'FFA'
+## locking_allowed: False
+## iniswap_allowed: True
+## showname_changes_allowed: True
+## shouts_allowed: True
+## jukebox: False
+## abbreviation: ''
+## non_int_pres_only: False
+## is_locked: None
+## blankposting_allowed: True
+## hp_def: 10
+## hp_pro: 10
+## doc: 'No document.'
+## status: 'IDLE'
