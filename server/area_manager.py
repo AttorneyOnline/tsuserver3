@@ -656,7 +656,7 @@ class AreaManager:
     def get_area_by_name(self, name):
         """Get an area by name."""
         for area in self.areas:
-            if area.name == name:
+            if area.name.lower() == name.lower():
                 return area
         raise AreaError('Area not found.')
 
@@ -664,6 +664,13 @@ class AreaManager:
         """Get an area by ID."""
         for area in self.areas:
             if area.id == num:
+                return area
+        raise AreaError('Area not found.')
+
+    def get_area_by_abbreviation(self, abbr):
+        """Get an area by abbreviation."""
+        for area in self.areas:
+            if area.abbreviation.lower() == abbr.lower():
                 return area
         raise AreaError('Area not found.')
 

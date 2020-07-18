@@ -79,15 +79,17 @@ def ooc_cmd_area(client, arg):
 
     try:
         area = client.server.area_manager.get_area_by_id(int(args[0]))
-        client.change_area(area)
     except:
         try:
             area = client.server.area_manager.get_area_by_name(arg)
-            client.change_area(area)
-        except ValueError:
-            raise ArgumentError('Area ID must be a name or a number.')
-        except (AreaError, ClientError):
-            raise
+        except:
+            try:
+                area = client.server.area_manager.get_area_by_abbreviation(args[0])
+            except ValueError:
+                raise ArgumentError('Area ID must be a name or a number.')
+            except (AreaError, ClientError):
+                raise
+    client.change_area(area)
 
 
 def ooc_cmd_getarea(client, arg):
