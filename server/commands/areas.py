@@ -29,6 +29,9 @@ __all__ = [
     'ooc_cmd_area_rename',
     'ooc_cmd_area_swap',
     'ooc_cmd_area_pref',
+    # Area links system
+    'ooc_cmd_area_link',
+    'ooc_cmd_area_unlink',
 ]
 
 
@@ -444,5 +447,65 @@ def ooc_cmd_area_pref(client, arg):
         database.log_room(args[0], client, client.area, message=f'Setting preference to {tog}')
     except ValueError:
         raise ArgumentError('Invalid input.')
+    except (AreaError, ClientError):
+        raise
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_area_link(client, arg):
+    """
+    Set up a one-way link from your current area with a targeted area.
+    Usage:  /area_link <aid>
+    Alternatively, /area_link <aid_from> <aid_to>
+    """
+    args = arg.split()
+    if len(args) <= 0:
+        links = ', '.join([f for f in iter(client.area.links)])
+        client.send_ooc(f'Current area links are {links}. Use /area_link <aid>')
+        return
+    try:
+        links = []
+        for aid in args:
+            try:
+                target_area = client.server.area_manager.get_area_by_id(int(aid))
+            except:
+                target_area = client.server.area_manager.get_area_by_abbreviation(aid)
+            client.area.link(target_area.id)
+            links.append(target_area.id)
+        links = ', '.join(links)
+        client.send_ooc(f'Area {client.area.name} has been linked with Areas {links}.')
+    except ValueError:
+        raise ArgumentError('Area IDs must be a number.')
+    except (AreaError, ClientError):
+        raise
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_area_unlink(client, arg):
+    """
+    Remove a one-way link from your current area with a targeted area.
+    Usage:  /area_unlink <aid>
+    Alternatively, /area_unlink <aid_from> <aid_to>
+    """
+    args = arg.split()
+    if len(args) <= 0:
+        raise ArgumentError('Invalid number of arguments. Use /area_unlink <aid>')
+    try:
+        links = []
+        for aid in args:
+            try:
+                target_id = client.server.area_manager.get_area_by_abbreviation(aid).id
+            except:
+                target_id = int(aid)
+
+            try:
+                client.area.unlink(target_id)
+                links.append(target_id)
+            except:
+                continue
+        links = ', '.join(links)
+        client.send_ooc(f'Area {client.area.name} has been unlinked with Areas {links}.')
+    except ValueError:
+        raise ArgumentError('Area IDs must be a number.')
     except (AreaError, ClientError):
         raise

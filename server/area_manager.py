@@ -83,6 +83,10 @@ class AreaManager:
 
             self.owners = []
             self.afkers = []
+
+            # Dictionary of dictionaries with further info, examine def link for more info
+            self.links = {}
+
         class Locked(Enum):
             """Lock state of an area."""
             FREE = 1,
@@ -108,6 +112,19 @@ class AreaManager:
         def server(self):
             """Area's server. Accesses AreaManager's 'server' property"""
             return self.area_manager.server
+
+        def abbreviate(self):
+            """Abbreviate our name."""
+            if self.name.lower().startswith("courtroom"):
+                return "CR" + self.name.split()[-1]
+            elif self.name.lower().startswith("area"):
+                return "A" + self.name.split()[-1]
+            elif len(self.name.split()) > 1:
+                return "".join(item[0].upper() for item in self.name.split())
+            elif len(self.name) > 3:
+                return self.name[:3].upper()
+            else:
+                return self.name.upper()
 
         def load(self, area):
             self._name = area['area']
@@ -164,6 +181,9 @@ class AreaManager:
                 self.evi_list.import_evidence(area['evidence'])
                 self.broadcast_evidence_list()
 
+            if 'links' in area and len(area['links']) > 0:
+                self.links = area['links']
+
         def save(self):
             area = OrderedDict()
             area['area'] = self.name
@@ -184,6 +204,10 @@ class AreaManager:
             area['hp_pro'] = self.hp_pro
             area['doc'] = self.doc
             area['status'] = self.status
+            if len(self.evi_list.evidences) > 0:
+                area['evidence'] = [e.to_dict() for e in self.evi_list.evidences]
+            if len(self.links) > 0:
+                area['links'] = self.links
             return area
 
         def new_client(self, client):
@@ -230,19 +254,30 @@ class AreaManager:
                 self.invite_list[i.id] = None
             self.server.area_manager.send_arup_lock()
             self.broadcast_ooc('This area is locked now.')
+        
+        def link(self, target, locked=False, hidden=False, target_pos=''):
+            """
+            Sets up a one-way connection between this area and targeted area.
+            Returns the link dictionary.
+            :param target: the targeted Area ID to connect
+            :param locked: is the link unusable?
+            :param hidden: is the link  invisible?
+            :param target_pos: which position should we end up in when we come through
 
-        def abbreviate(self):
-            """Abbreviate our name."""
-            if self.name.lower().startswith("courtroom"):
-                return "CR" + self.name.split()[-1]
-            elif self.name.lower().startswith("area"):
-                return "A" + self.name.split()[-1]
-            elif len(self.name.split()) > 1:
-                return "".join(item[0].upper() for item in self.name.split())
-            elif len(self.name) > 3:
-                return self.name[:3].upper()
-            else:
-                return self.name.upper()
+            """
+            link = {
+                "locked": locked,
+                "hidden": hidden,
+                "target_pos": target_pos,
+            }
+            self.links[str(target)] = link
+            return link
+
+        def unlink(self, target):
+            try:
+                del self.links[str(target)]
+            except KeyError:
+                raise AreaError(f'Link {target} does not exist in Area {self.name}!')
 
         def is_char_available(self, char_id):
             """
