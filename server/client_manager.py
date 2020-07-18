@@ -545,6 +545,14 @@ class ClientManager:
                 return None
             return self.server.char_list[self.char_id]
 
+        def blind(self, tog=True):
+            self.blinded = tog
+            msg = 'no longer'
+            if tog:
+                msg = 'now'
+            self.send_ooc(f'You are {msg} blinded from the area and seeing non-broadcasted IC messages.')
+            self.send_command('LE', *self.area.get_evidence_list(self))
+
         def change_position(self, pos=''):
             """
             Change the character's current position in the area.

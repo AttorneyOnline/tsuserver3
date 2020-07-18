@@ -572,17 +572,15 @@ class AOProtocol(asyncio.Protocol):
         if not confirmed:
             charid_pair = -1
 
-        if self.client in self.client.area.afkers:
-            self.client.server.client_manager.toggle_afk(self.client)
-        self.client.area.send_command('MS', msg_type, pre, folder, anim, msg,
-                                      pos, sfx, anim_type, cid, sfx_delay,
-                                      button, self.client.evi_list[evidence],
-                                      flip, ding, color, showname, charid_pair,
-                                      other_folder, other_emote, offset_pair,
-                                      other_offset, other_flip, nonint_pre,
-                                      sfx_looping, screenshake, frames_shake,
-                                      frames_realization, frames_sfx,
-                                      additive, effect)
+        self.client.area.send_ic(self.client, msg_type, pre, folder, anim, msg,
+                                 pos, sfx, anim_type, cid, sfx_delay,
+                                 button, self.client.evi_list[evidence],
+                                 flip, ding, color, showname, charid_pair,
+                                 other_folder, other_emote, offset_pair,
+                                 other_offset, other_flip, nonint_pre,
+                                 sfx_looping, screenshake, frames_shake,
+                                 frames_realization, frames_sfx,
+                                 additive, effect)
 
         self.client.area.send_owner_command(
             'MS', msg_type, pre, folder, anim,

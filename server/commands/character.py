@@ -15,7 +15,9 @@ __all__ = [
     'ooc_cmd_charcurse',
     'ooc_cmd_uncharcurse',
     'ooc_cmd_charids',
-    'ooc_cmd_reload'
+    'ooc_cmd_reload',
+    'ooc_cmd_blind',
+    'ooc_cmd_unblind',
 ]
 
 
@@ -242,3 +244,61 @@ def ooc_cmd_reload(client, arg):
     except ClientError:
         raise
     client.send_ooc('Character reloaded.')
+
+
+@mod_only()
+def ooc_cmd_blind(client, arg):
+    """
+    Blind the targeted player(s) from being able to see or talk IC.
+    Usage: /blind <id> [id(s)]
+    """
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a target.')
+    try:
+        targets = []
+        ids = [int(s) for s in arg.split(' ')]
+        for targ_id in ids:
+            c = client.server.client_manager.get_targets(client, TargetType.ID, targ_id, False)
+            if c:
+                targets = targets + c
+    except:
+        raise ArgumentError('You must specify a target. Use /blind <id>.')
+
+    if targets:
+        for c in targets:
+            if c.blinded:
+                client.send_ooc(f'Client [{c.id}] {c.name} already blinded!')
+                continue
+            c.blind(True)
+            client.send_ooc(f'You have blinded [{c.id}] {c.name} from using /getarea and seeing non-broadcasted IC messages.')
+    else:
+        raise ArgumentError('No targets found.')
+
+
+@mod_only()
+def ooc_cmd_unblind(client, arg):
+    """
+    Undo effects of the /blind command.
+    Usage: /unblind <id> [id(s)]
+    """
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a target.')
+    try:
+        targets = []
+        ids = [int(s) for s in arg.split(' ')]
+        for targ_id in ids:
+            c = client.server.client_manager.get_targets(client, TargetType.ID, targ_id, False)
+            if c:
+                targets = targets + c
+    except:
+        raise ArgumentError('You must specify a target. Use /unblind <id>.')
+
+    if targets:
+        for c in targets:
+            if not c.blinded:
+                client.send_ooc(f'Client [{c.id}] {c.name} already unblinded!')
+                continue
+            c.blind(False)
+            client.send_ooc(f'You have unblinded [{c.id}] {c.name}.')
+    else:
+        raise ArgumentError('No targets found.')

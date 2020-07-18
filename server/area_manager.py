@@ -321,6 +321,28 @@ class AreaManager:
                 'CT',
                 '[' + self.abbreviation + ']' + self.server.config['hostname'],
                 msg, '1')
+        
+        def send_ic(self, client, *args):
+            """
+            Send an IC message from a client to all applicable clients in the area.
+            :param client: speaker
+            :param *args: arguments
+            """
+            if client in self.afkers:
+                client.server.client_manager.toggle_afk(client)
+            for c in self.clients:
+                # Blinded clients don't receive IC messages
+                if c.blinded:
+                    continue
+                c.send_command('MS', *args)
+
+            # args[4] = msg
+            # args[15] = showname
+            client.area.set_next_msg_delay(len(args[4]))
+            database.log_ic(client, client.area, args[15], args[4])
+
+            if (self.is_recording):
+                self.recorded_messages.append(args)
 
         def set_next_msg_delay(self, msg_length):
             """
@@ -564,6 +586,8 @@ class AreaManager:
             :param client: requester
             """
             client.evi_list, evi_list = self.evi_list.create_evi_list(client)
+            if client.blinded:
+                return [0]
             return evi_list
 
         def broadcast_evidence_list(self):
