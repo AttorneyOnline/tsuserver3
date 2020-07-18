@@ -299,6 +299,19 @@ class ClientManager:
             """
             if self.area == area:
                 raise ClientError('User already in specified area.')
+            target_pos = ''
+            if len(self.area.links) > 0:
+                if not str(area.id) in self.area.links and not self.is_mod and self not in area.owners and self not in self.area.owners:
+                    raise ClientError('That area is inaccessible from your area!')
+                # Get that link reference
+                link = self.area.links[str(area.id)]
+
+                # Our path is locked :(
+                if link["locked"]:
+                    raise ClientError('That path is locked - cannot access area!')
+
+                target_pos = link["target_pos"]
+
             if area.is_locked == area.Locked.LOCKED and not self.is_mod and not self.id in area.invite_list:
                 raise ClientError('That area is locked!')
             if area.is_locked == area.Locked.SPECTATABLE and not self.is_mod and not self.id in area.invite_list:
@@ -325,6 +338,8 @@ class ClientManager:
             self.area.remove_client(self)
             self.area = area
             area.new_client(self)
+            if target_pos != '':
+                self.pos = target_pos
 
             self.send_ooc(
                 f'Changed area to {area.name} [{self.area.status}].')
@@ -538,7 +553,7 @@ class ClientManager:
             self.pos = pos
             self.send_ooc(f'Position set to {pos}.')
             self.send_command('SP', self.pos) #Send a "Set Position" packet
-            self.area.broadcast_evidence_list(self) #Receive evidence
+            self.send_command('LE', *self.area.get_evidence_list(self))
 
         def set_mod_call_delay(self):
             """Begin the mod call cooldown."""
