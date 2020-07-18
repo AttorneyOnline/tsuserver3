@@ -23,9 +23,15 @@ __all__ = [
     'ooc_cmd_uninvite',
     'ooc_cmd_area_kick',
     'ooc_cmd_getafk',
+    # Hub system [TO BE MOVED]
     'ooc_cmd_save_hub',
     'ooc_cmd_load_hub',
     'ooc_cmd_list_hubs',
+    # Area Creation system
+    'ooc_cmd_area_create',
+    'ooc_cmd_area_remove',
+    'ooc_cmd_area_rename',
+    'ooc_cmd_area_swap',
 ]
 
 
@@ -56,11 +62,7 @@ def ooc_cmd_bglock(client, arg):
     """
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
-    # XXX: Okay, what?
-    if client.area.bg_lock == "true":
-        client.area.bg_lock = "false"
-    else:
-        client.area.bg_lock = "true"
+    client.area.bg_lock = not client.area.bg_lock
     client.area.broadcast_ooc(
         '{} [{}] has set the background lock to {}.'.format(
             client.char_name, client.id, client.area.bg_lock))
@@ -380,3 +382,73 @@ def ooc_cmd_list_hubs(client, arg):
             text += '\n- {}'.format(F[:-5])
 
     client.send_ooc(text)
+
+
+@mod_only()
+def ooc_cmd_area_create(client, arg):
+    """
+    Create a new area.
+    Usage: /area_create [name]
+    """
+    area = client.server.area_manager.create_area()
+    if arg != '':
+        area.name = arg
+    client.send_ooc(f'New area created! ({area.name})')
+
+
+@mod_only()
+def ooc_cmd_area_remove(client, arg):
+    """
+    Remove specified area by Area ID.
+    Usage: /area_remove <aid>
+    """
+    args = arg.split()
+
+    if len(args) == 1:
+        try:
+            area = client.server.area_manager.get_area_by_id(int(args[0]))
+            name = area.name
+            client.server.area_manager.remove_area(area)
+            client.send_ooc(f'Area {name} removed!')
+        except ValueError:
+            raise ArgumentError('Area ID must be a number.')
+        except (AreaError, ClientError):
+            raise
+    else:
+        raise ArgumentError('Invalid number of arguments. Use /area_remove <aid>.')
+
+@mod_only()
+def ooc_cmd_area_rename(client, arg):
+    """
+    Rename area you are currently in to <name>.
+    Usage: /area_rename <name>
+    """
+    if arg != '':
+        try:
+            client.area.rename_area(arg)
+        except ValueError:
+            raise ArgumentError('Area ID must be a number.')
+        except (AreaError, ClientError):
+            raise
+    else:
+        raise ArgumentError('Invalid number of arguments. Use /area_rename <name>.')
+
+@mod_only()
+def ooc_cmd_area_swap(client, arg):
+    """
+    Swap areas by Area IDs <aid1> and <aid2>.
+    Usage: /area_rename <aid1> <aid2>
+    """
+    args = arg.split()
+    if len(args) != 2:
+        raise ClientError("You must specify 2 numbers.")
+    try:
+        area1 = client.server.area_manager.get_area_by_id(int(args[0]))
+        area2 = client.server.area_manager.get_area_by_id(int(args[1]))
+        client.server.area_manager.swap_area(area1, area2)
+        client.send_ooc(f'Area {area1.name} has been swapped with Area {area2.name}!')
+    except ValueError:
+        raise ArgumentError('Area IDs must be a number.')
+    except (AreaError, ClientError):
+        raise
+

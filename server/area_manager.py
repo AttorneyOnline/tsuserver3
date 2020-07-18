@@ -34,14 +34,12 @@ class AreaManager:
     class Area:
         """Represents a single instance of an area."""
         def __init__(self,
-                     area_id,
-                     server,
+                     area_manager,
                      name):
             self.clients = set()
             self.invite_list = {}
-            self.id = area_id
-            self.server = server
-            self.name = name
+            self.area_manager = area_manager
+            self._name = name
 
             # Initialize prefs
             self.background = 'default'
@@ -52,7 +50,7 @@ class AreaManager:
             self.showname_changes_allowed = True
             self.shouts_allowed = True
             self.jukebox = False
-            self.abbreviation = ''
+            self.abbreviation = self.abbreviate()
             self.non_int_pres_only = False
             self.is_locked = self.Locked.FREE
             self.blankposting_allowed = True
@@ -90,8 +88,28 @@ class AreaManager:
             SPECTATABLE = 2,
             LOCKED = 3
 
+        @property
+        def name(self):
+            """Area's name string. Abbreviation is also updated according to this."""
+            return self._name
+
+        @name.setter
+        def name(self, value):
+            self._name = value
+            self.abbreviation = self.abbreviate()
+
+        @property
+        def id(self):
+            """Get area's index in the AreaManager's 'areas' list."""
+            return self.area_manager.areas.index(self)
+
+        @property
+        def server(self):
+            """Area's server. Accesses AreaManager's 'server' property"""
+            return self.area_manager.server
+
         def load(self, area):
-            self.name = area['area']
+            self._name = area['area']
             if 'background' in area:
                 self.background = area['background']
 
@@ -544,7 +562,11 @@ class AreaManager:
         self.load_areas()
 
     def load_areas(self, path='config/areas.yaml'):
-        """Create all areas from a YAML file."""
+        """
+        Create all areas from a YAML file.
+        :param path: filepath to the YAML file.
+
+        """
         try:
             with open(path, 'r') as chars:
                 hub = yaml.safe_load(chars)
@@ -553,11 +575,8 @@ class AreaManager:
 
         try:
             while len(self.areas) < len(hub):
-                idx = len(self.areas)
                 # Make sure that the area manager contains enough areas to update with new information
-                self.areas.append(
-                    self.Area(idx, self.server, f'Area {idx}')
-                )
+                self.create_area()
 
             for i, area in enumerate(hub):
                 self.areas[i].load(area)
@@ -565,7 +584,11 @@ class AreaManager:
             raise AreaError(f'Something went wrong while loading the areas!')
 
     def save_areas(self, path='config/areas.yaml'):
-        """Save all areas to a YAML file."""
+        """
+        Save all areas to a YAML file.
+        :param path: filepath to the YAML file.
+
+        """
         try:
             with open(path, 'w', encoding='utf-8') as stream:
                 areas = []
@@ -575,6 +598,52 @@ class AreaManager:
         except:
             raise AreaError(f'File path {path} is invalid!')
 
+    def create_area(self):
+        """Create a new area instance and return it."""
+        idx = len(self.areas)
+        area = self.Area(self, f'Area {idx}')
+        self.areas.append(area)
+        return area
+
+    def remove_area(self, area):
+        """
+        Remove an area instance.
+        :param area: target area instance.
+        
+        """
+        if not (area in self.areas):
+            raise AreaError('Area not found.')
+        # Make a copy because it can change size during iteration
+        # (causes runtime error otherwise)
+        clients = area.clients.copy()
+        if self.default_area() != area:
+            target_area = self.default_area()
+        else:
+            try:
+                target_area = self.get_area_by_id(1)
+            except:
+                raise AreaError('May not remove last existing area!')
+        for client in clients:
+            client.change_area(target_area)
+        self.areas.remove(area)
+
+    def swap_area(self, area1, area2):
+        """
+        Swap area instances area1 and area2.
+        :param area1: first area to swap.
+        :param area2: second area to swap.
+        
+        """
+        if not (area1 in self.areas):
+            raise AreaError('First area not found.')
+        if not (area2 in self.areas):
+            raise AreaError('Second area not found.')
+        a, b = self.areas.index(area1), self.areas.index(area2)
+        # Swap 'em good
+        self.areas[b], self.areas[a] = self.areas[a], self.areas[b]
+
+    def change_rpmode(self, value):
+        pass
 
     def default_area(self):
         """Get the default area."""
