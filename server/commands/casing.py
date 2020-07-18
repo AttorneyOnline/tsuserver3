@@ -94,7 +94,7 @@ def ooc_cmd_cm(client, arg):
     Add a case manager for the current room.
     Usage: /cm <id>
     """
-    if 'CM' not in client.area.evidence_mod:
+    if not client.area.can_cm:
         raise ClientError('You can\'t become a CM in this area')
     if len(client.area.owners) == 0:
         if len(arg) > 0:
@@ -150,11 +150,11 @@ def ooc_cmd_uncm(client, arg):
         arg = arg.split(' ')
     else:
         arg = [client.id]
-    for id in arg:
+    for _id in arg:
         try:
-            id = int(id)
+            _id = int(_id)
             c = client.server.client_manager.get_targets(
-                client, TargetType.ID, id, False)[0]
+                client, TargetType.ID, _id, False)[0]
             if c in client.area.owners:
                 client.area.owners.remove(c)
                 client.server.area_manager.send_arup_cms()
@@ -168,7 +168,7 @@ def ooc_cmd_uncm(client, arg):
                 )
         except:
             client.send_ooc(
-                f'{id} does not look like a valid ID.')
+                f'{_id} does not look like a valid ID.')
 
 
 # LEGACY

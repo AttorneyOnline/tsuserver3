@@ -45,6 +45,7 @@ class AreaManager:
             self.background = 'default'
             self.bg_lock = False
             self.evidence_mod = 'FFA'
+            self.can_cm = False
             self.locking_allowed = False
             self.iniswap_allowed = True
             self.showname_changes_allowed = True
@@ -127,6 +128,8 @@ class AreaManager:
                 self.bg_lock = area['bg_lock']
             if 'evidence_mod' in area:
                 self.evidence_mod = area['evidence_mod']
+            if 'can_cm' in area:
+                self.can_cm = area['can_cm']
             if 'locking_allowed' in area:
                 self.locking_allowed = area['locking_allowed']
             if 'iniswap_allowed' in area:
@@ -167,6 +170,7 @@ class AreaManager:
             area['background'] = self.background
             area['bg_lock'] = self.bg_lock
             area['evidence_mod'] = self.evidence_mod
+            area['can_cm'] = self.can_cm
             area['locking_allowed'] = self.locking_allowed
             area['iniswap_allowed'] = self.iniswap_allowed
             area['showname_changes_allowed'] = self.showname_changes_allowed

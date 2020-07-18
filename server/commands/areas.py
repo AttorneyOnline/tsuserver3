@@ -8,10 +8,6 @@ from . import mod_only
 
 __all__ = [
     'ooc_cmd_bg',
-    'ooc_cmd_bglock',
-    'ooc_cmd_allow_iniswap',
-    'ooc_cmd_allow_blankposting',
-    'ooc_cmd_force_nonint_pres',
     'ooc_cmd_status',
     'ooc_cmd_area',
     'ooc_cmd_getarea',
@@ -32,6 +28,7 @@ __all__ = [
     'ooc_cmd_area_remove',
     'ooc_cmd_area_rename',
     'ooc_cmd_area_swap',
+    'ooc_cmd_area_pref',
 ]
 
 
@@ -51,66 +48,6 @@ def ooc_cmd_bg(client, arg):
     client.area.broadcast_ooc(
         f'{client.char_name} changed the background to {arg}.')
     database.log_room('bg', client, client.area, message=arg)
-
-
-@mod_only()
-def ooc_cmd_bglock(client, arg):
-    """
-    Toggle whether or not non-moderators are allowed to change
-    the background of a room.
-    Usage: /bglock
-    """
-    if len(arg) != 0:
-        raise ArgumentError('This command has no arguments.')
-    client.area.bg_lock = not client.area.bg_lock
-    client.area.broadcast_ooc(
-        '{} [{}] has set the background lock to {}.'.format(
-            client.char_name, client.id, client.area.bg_lock))
-    database.log_room('bglock', client, client.area, message=client.area.bg_lock)
-
-
-@mod_only()
-def ooc_cmd_allow_iniswap(client, arg):
-    """
-    Toggle whether or not users are allowed to swap INI files in character
-    folders to allow playing as a character other than the one chosen in
-    the character list.
-    Usage: /allow_iniswap
-    """
-    client.area.iniswap_allowed = not client.area.iniswap_allowed
-    answer = 'allowed' if client.area.iniswap_allowed else 'forbidden'
-    client.send_ooc(f'Iniswap is {answer}.')
-    database.log_room('iniswap', client, client.area, message=client.area.iniswap_allowed)
-
-
-@mod_only(area_owners=True)
-def ooc_cmd_allow_blankposting(client, arg):
-    """
-    Toggle whether or not in-character messages purely consisting of spaces
-    are allowed.
-    Usage: /allow_blankposting
-    """
-    client.area.blankposting_allowed = not client.area.blankposting_allowed
-    answer = 'allowed' if client.area.blankposting_allowed else 'forbidden'
-    client.area.broadcast_ooc(
-        '{} [{}] has set blankposting in the area to {}.'.format(
-            client.char_name, client.id, answer))
-    database.log_room('blankposting', client, client.area, message=client.area.blankposting_allowed)
-
-
-@mod_only(area_owners=True)
-def ooc_cmd_force_nonint_pres(client, arg):
-    """
-    Toggle whether or not all pre-animations lack a delay before a
-    character begins speaking.
-    Usage: /force_nonint_pres
-    """
-    client.area.non_int_pres_only = not client.area.non_int_pres_only
-    answer = 'non-interrupting only' if client.area.non_int_pres_only else 'non-interrupting or interrupting as you choose'
-    client.area.broadcast_ooc(
-        '{} [{}] has set pres in the area to be {}.'.format(
-            client.char_name, client.id, answer))
-    database.log_room('force_nonint_pres', client, client.area, message=client.area.non_int_pres_only)
 
 
 def ooc_cmd_status(client, arg):
@@ -452,3 +389,58 @@ def ooc_cmd_area_swap(client, arg):
     except (AreaError, ClientError):
         raise
 
+@mod_only(area_owners=True)
+def ooc_cmd_area_pref(client, arg):
+    """
+    Toggle a preference on/off for a hub.
+    Usage:  /area_pref - display list of prefs
+            /area_pref <pref> - toggle pref on/off
+            /area_pref <pref> <on/true|off/false> - set pref to on or off
+    """
+    cm_allowed = [
+        # 'bg_lock',
+        'locking_allowed',
+        'iniswap_allowed',
+        'showname_changes_allowed',
+        'shouts_allowed',
+        'jukebox',
+        'non_int_pres_only',
+        'blankposting_allowed',
+    ]
+
+    if len(arg) == 0:
+        msg = 'Current preferences:'
+        for attri in client.area.__dict__.keys():
+            value = getattr(client.area, attri)
+            if not(type(value) is bool):
+                continue
+            mod = '[mod] ' if not (attri in cm_allowed) else ''
+            msg += f'\n* {mod}{attri}={value}'
+        client.send_ooc(msg)
+        return
+
+    args = arg.split()
+    if len(args) > 2:
+        raise ArgumentError("Usage: /area_pref | /area_pref <pref> | /area_pref <pref> <on|off>")
+
+    try:
+        attri = getattr(client.area, args[0].lower())
+        if not (type(attri) is bool):
+            raise ArgumentError("Preference is not a boolean.")
+        if not client.is_mod and not (args[0] in cm_allowed):
+            raise ClientError("You need to be a mod to modify this preference.")
+        tog = not attri
+        if len(args) > 1:
+            if args[1].lower() in ('on', 'true'):
+                tog = True
+            elif args[1].lower() in ('off', 'false'):
+                tog = False
+            else:
+                raise ArgumentError("Invalid argument: {}".format(arg))
+        client.send_ooc(f'Setting preference {args[0]} to {tog}...')
+        setattr(client.area, args[0], tog)
+        database.log_room(args[0], client, client.area, message=f'Setting preference to {tog}')
+    except ValueError:
+        raise ArgumentError('Invalid input.')
+    except (AreaError, ClientError):
+        raise
