@@ -247,7 +247,7 @@ class AreaManager:
 
             # Update everyone's available characters list
             self.send_command('CharsCheck',
-                              *self.server.client_manager.get_available_char_list())
+                              *client.get_available_char_list())
 
         def unlock(self):
             """Mark the area as unlocked."""
