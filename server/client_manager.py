@@ -617,6 +617,7 @@ class ClientManager:
             if tog:
                 msg = 'now'
             self.send_ooc(f'You are {msg} hidden from the area.')
+            self.area.area_manager.send_arup_players()
 
         def blind(self, tog=True):
             self.blinded = tog
