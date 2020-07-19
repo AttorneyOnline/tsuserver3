@@ -38,6 +38,9 @@ __all__ = [
     'ooc_cmd_link_hide',
     'ooc_cmd_link_unhide',
     'ooc_cmd_link_pos',
+    # pos stuff
+    'ooc_cmd_pos_lock',
+    'ooc_cmd_pos_lock_clear',
 ]
 
 
@@ -667,3 +670,44 @@ def ooc_cmd_link_pos(client, arg):
         raise ArgumentError('Area ID must be a number or abbreviation.')
     except (AreaError, ClientError):
         raise
+
+
+def ooc_cmd_pos_lock(client, arg):
+    """
+    Lock current area's available positions into a list of pos.
+    Usage:  /pos_lock <pos> [pos]
+    Use /pos_lock_clear to make the list empty.
+    """
+    if not arg:
+        if len(client.area.pos_lock) > 0:
+            pos = ' '.join(str(l) for l in client.area.pos_lock)
+            client.send_ooc(f'Pos_lock is currently "{pos}".')
+        else:
+            client.send_ooc('No pos lock set.')
+        return
+
+    if not client.is_mod and (client not in client.area.owners):
+        raise ClientError('You must be authorized to do that.')
+
+    args = arg.split()
+    args = sorted(set(args),key=args.index) #remove duplicates while preserving order
+    for pos in args:
+        if len(pos) < 3:
+            raise ClientError('Position names may not be shorter than 3 symbols!')
+    #     if pos not in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'sea', 'jur'):
+    #         raise ClientError('Invalid pos.')
+       
+    client.area.pos_lock = args
+    pos = ' '.join(str(l) for l in client.area.pos_lock)
+    client.area.broadcast_ooc(f'Locked pos into {pos}.')
+    client.area.send_command('SD', '*'.join(pos)) #set that juicy pos dropdown
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_pos_lock_clear(client, arg):
+    """
+    Clear the current area's position lock and make all positions available.
+    Usage:  /pos_lock_clear
+    """
+    client.area.pos_lock.clear()
+    client.area.broadcast_ooc('Position lock cleared.')

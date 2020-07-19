@@ -43,7 +43,7 @@ class AreaManager:
 
             # Initialize prefs
             self.background = 'default'
-            self.pos_lock = set()
+            self.pos_lock = []
             self.bg_lock = False
             self.evidence_mod = 'FFA'
             self.can_cm = False
@@ -153,8 +153,8 @@ class AreaManager:
                 self.pos_lock.clear()
                 for pos in _pos_lock:
                     pos = pos.lower()
-                    if pos != "none":
-                        self.pos_lock.add(pos)
+                    if pos != "none" and not (pos in self.pos_lock):
+                        self.pos_lock.append(pos)
 
             if 'evidence_mod' in area:
                 self.evidence_mod = area['evidence_mod']
