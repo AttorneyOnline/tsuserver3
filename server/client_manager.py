@@ -388,7 +388,7 @@ class ClientManager:
 
         def get_area_list(self, hidden=False, linked=False):
             area_list = []
-            for area in self.server.area_manager.areas:
+            for area in self.area.area_manager.areas:
                 if self.area != area and len(self.area.links) > 0:
                     if not (str(area.id) in self.area.links):
                         if linked:
@@ -438,7 +438,7 @@ class ClientManager:
             """
             info = '\r\n'
             try:
-                area = self.server.area_manager.get_area_by_id(area_id)
+                area = self.area.area_manager.get_area_by_id(area_id)
             except AreaError:
                 raise
             info += f'=== {area.name} ==='
@@ -497,15 +497,15 @@ class ClientManager:
                 # all areas info
                 cnt = 0
                 info = '\n== Area List =='
-                for i in range(len(self.server.area_manager.areas)):
-                    client_list = self.server.area_manager.areas[i]
+                for i in range(len(self.area.area_manager.areas)):
+                    client_list = self.area.area_manager.areas[i]
                     if afk_check:
                         client_list = client_list.afkers
                     else:
                         client_list = client_list.clients
                     area_info = self.get_area_info(i, mods, afk_check)
                     if len(client_list) > 0 or len(
-                               self.server.area_manager.areas[i].owners) > 0:
+                               self.area.area_manager.areas[i].owners) > 0:
                         cnt += len(client_list)
                         info += f'{area_info}'
                 if afk_check:
@@ -514,7 +514,7 @@ class ClientManager:
                     info = f'Current online: {cnt}{info}'
             else:
                 try:
-                    client_list = self.server.area_manager.areas[area_id]
+                    client_list = self.area.area_manager.areas[area_id]
                     if afk_check:
                         client_list = client_list.afkers
                     else:
@@ -544,10 +544,10 @@ class ClientManager:
             self.send_command('LE', *self.area.get_evidence_list(self))
             self.send_command('MM', 1)
 
-            self.server.area_manager.send_arup_players()
-            self.server.area_manager.send_arup_status()
-            self.server.area_manager.send_arup_cms()
-            self.server.area_manager.send_arup_lock()
+            self.area.area_manager.send_arup_players()
+            self.area.area_manager.send_arup_status()
+            self.area.area_manager.send_arup_cms()
+            self.area.area_manager.send_arup_lock()
 
             self.send_command('DONE')
 
@@ -707,10 +707,10 @@ class ClientManager:
         """
         if client.area.jukebox:
             client.area.remove_jukebox_vote(client, True)
-        for a in self.server.area_manager.areas:
+        for a in self.area.area_manager.areas:
             if client in a.owners:
                 a.owners.remove(client)
-                client.server.area_manager.send_arup_cms()
+                client.area.area_manager.send_arup_cms()
                 if len(a.owners) == 0:
                     if a.is_locked != a.Locked.FREE:
                         a.unlock()
