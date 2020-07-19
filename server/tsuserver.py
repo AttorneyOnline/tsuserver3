@@ -398,17 +398,17 @@ class TsuServer3:
             '1',
             pred=lambda x: not x.muted_adverts)
 
-    def send_arup(self, args):
-        """Update the area properties for 2.6 clients.
+    def send_arup(self, client, args):
+        """Update the area properties for this 2.6 client.
 
         Playercount:
             ARUP#0#<area1_p: int>#<area2_p: int>#...
         Status:
-            ARUP#1##<area1_s: string>##<area2_s: string>#...
+            ARUP#1#<area1_s: string>#<area2_s: string>#...
         CM:
-            ARUP#2##<area1_cm: string>##<area2_cm: string>#...
+            ARUP#2#<area1_cm: string>#<area2_cm: string>#...
         Lockedness:
-            ARUP#3##<area1_l: string>##<area2_l: string>#...
+            ARUP#3#<area1_l: string>#<area2_l: string>#...
 
         :param args:
 
@@ -432,7 +432,7 @@ class TsuServer3:
                 except:
                     return
 
-        self.send_all_cmd_pred('ARUP', *args, pred=lambda x: True)
+        client.send_command('ARUP', *args)
 
     def refresh(self):
         """

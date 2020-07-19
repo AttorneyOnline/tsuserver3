@@ -104,6 +104,9 @@ class ClientManager:
             self.blinded = False
             self.hidden = False
 
+            # a list of all areas the client can currently see
+            self.local_area_list = []
+
         def send_raw_message(self, msg):
             """
             Send a raw packet over TCP.

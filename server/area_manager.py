@@ -645,7 +645,9 @@ class AreaManager:
 
             for c in clients:
                 allowed = c in self.owners or c.is_mod
-                c.reload_area_list([a.name for a in c.get_area_list(allowed, allowed)])
+                area_list = c.get_area_list(not allowed, not allowed)
+                c.local_area_list = area_list
+                c.reload_area_list([a.name for a in area_list])
 
         class JukeboxVote:
             """Represents a single vote cast for the jukebox."""
@@ -792,30 +794,34 @@ class AreaManager:
     def send_arup_players(self):
         """Broadcast ARUP packet containing player counts."""
         players_list = [0]
-        for area in self.areas:
-            players_list.append(len(area.clients))
-        self.server.send_arup(players_list)
+        for client in self.server.client_manager.clients:
+            for area in client.local_area_list:
+                players_list.append(len(area.clients))
+            self.server.send_arup(client, players_list)
 
     def send_arup_status(self):
         """Broadcast ARUP packet containing area statuses."""
         status_list = [1]
-        for area in self.areas:
-            status_list.append(area.status)
-        self.server.send_arup(status_list)
+        for client in self.server.client_manager.clients:
+            for area in client.local_area_list:
+                status_list.append(area.status)
+            self.server.send_arup(client, status_list)
 
     def send_arup_cms(self):
         """Broadcast ARUP packet containing area CMs."""
         cms_list = [2]
-        for area in self.areas:
-            cm = 'FREE'
-            if len(area.owners) > 0:
-                cm = area.get_cms()
-            cms_list.append(cm)
-        self.server.send_arup(cms_list)
+        for client in self.server.client_manager.clients:
+            for area in client.local_area_list:
+                cm = 'FREE'
+                if len(area.owners) > 0:
+                    cm = area.get_cms()
+                cms_list.append(cm)
+            self.server.send_arup(client, cms_list)
 
     def send_arup_lock(self):
         """Broadcast ARUP packet containing the lock status of each area."""
         lock_list = [3]
-        for area in self.areas:
-            lock_list.append(area.is_locked.name)
-        self.server.send_arup(lock_list)
+        for client in self.server.client_manager.clients:
+            for area in client.local_area_list:
+                lock_list.append(area.is_locked.name)
+            self.server.send_arup(client, lock_list)
