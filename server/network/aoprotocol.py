@@ -604,12 +604,6 @@ class AOProtocol(asyncio.Protocol):
             sfx_looping, screenshake, frames_shake, frames_realization,
             frames_sfx, additive, effect)
 
-        self.client.area.set_next_msg_delay(len(msg))
-        database.log_ic(self.client, self.client.area, showname, msg)
-
-        if (self.client.area.is_recording):
-            self.client.area.recorded_messages.append(args)
-
     def net_cmd_ct(self, args):
         """OOC Message
 
