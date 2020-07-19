@@ -138,6 +138,9 @@ class AreaManager:
                 _pos_lock = area['poslock'].split(' ')
             if 'bglock' in area:
                 self.bg_lock = area['bglock']
+            if 'accessible' in area:
+                for link in [s for s in str(area['accessible']).split(' ')]:
+                    self.link(link)
 
             if 'locked' in area:
                 self.is_locked = self.Locked.FREE
