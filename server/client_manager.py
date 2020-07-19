@@ -414,14 +414,14 @@ class ClientManager:
         def send_area_list(self):
             """Send a list of areas over OOC."""
             msg = '=== Areas ==='
-            for _, area in enumerate(self.server.area_manager.areas):
+            for _, area in enumerate(self.local_area_list):
                 owner = 'FREE'
                 if len(area.owners) > 0:
                     owner = f'CMs: {area.get_cms()}'
                 lock = {
                     area.Locked.FREE: '',
-                    area.Locked.SPECTATABLE: '[SPECTATABLE]',
-                    area.Locked.LOCKED: '[LOCKED]'
+                    area.Locked.SPECTATABLE: '[SPEC]',
+                    area.Locked.LOCKED: '[LOCK]'
                 }
                 msg += f'\r\n[{area.id}] {area.abbreviation}: {area.name} (users: {len(area.clients)}) [{area.status}][{owner}]{lock[area.is_locked]}'
                 if self.area == area:
