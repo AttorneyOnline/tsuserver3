@@ -638,6 +638,48 @@ class AreaManager:
                 msg = msg[:-2]
             return msg
 
+        def add_owner(self, client):
+            self.owners.append(client)
+
+            # Make sure the client's available areas are updated
+            self.broadcast_area_list(client)
+
+            # HAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHHAHAHAHAHA
+            # This should be remade by only sending updates to those players
+            # who would actually be affected, and all players who don't need
+            # an update are ignored.
+            self.area_manager.send_arup_players()
+            self.area_manager.send_arup_status()
+            self.area_manager.send_arup_cms()
+            self.area_manager.send_arup_lock()
+            # HAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHHAHAHAHAHA
+
+            self.broadcast_evidence_list()
+
+            self.broadcast_ooc(
+                f'{client.char_name} [{client.id}] is CM in this area now.')
+
+        def remove_owner(self, client):
+            self.owners.remove(client)
+
+            # Make sure the client's available areas are updated
+            self.broadcast_area_list(client)
+
+            # HAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHHAHAHAHAHA
+            # This should be remade by only sending updates to those players
+            # who would actually be affected, and all players who don't need
+            # an update are ignored.
+            self.area_manager.send_arup_players()
+            self.area_manager.send_arup_status()
+            self.area_manager.send_arup_cms()
+            self.area_manager.send_arup_lock()
+            # HAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHHAHAHAHAHA
+
+            self.broadcast_evidence_list()
+
+            self.broadcast_ooc(
+                f'{client.char_name} [{client.id}] is no longer CM in this area.')
+
         def broadcast_area_list(self, client=None):
             clients = []
             if client == None:

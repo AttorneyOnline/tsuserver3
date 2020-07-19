@@ -61,10 +61,8 @@ def ooc_cmd_evidence_mod(client, arg):
         client.send_ooc(
             f'current evidence mod: {client.area.evidence_mod}')
     elif arg in ['FFA', 'Mods', 'CM', 'HiddenCM']:
-        if client.area.evidence_mod == 'HiddenCM':
-            for i in range(len(client.area.evi_list.evidences)):
-                client.area.evi_list.evidences[i].pos = 'all'
         client.area.evidence_mod = arg
+        client.area.broadcast_evidence_list()
         client.send_ooc(
             f'current evidence mod: {client.area.evidence_mod}')
         database.log_room('evidence_mod', client, client.area, message=arg)
@@ -101,12 +99,7 @@ def ooc_cmd_cm(client, arg):
             raise ArgumentError(
                 'You cannot \'nominate\' people to be CMs when you are not one.'
             )
-        client.area.owners.append(client)
-        if client.area.evidence_mod == 'HiddenCM':
-            client.area.broadcast_evidence_list()
-        client.server.area_manager.send_arup_cms()
-        client.area.broadcast_ooc('{} [{}] is CM in this area now.'.format(
-            client.char_name, client.id))
+        client.area.add_owner(client)
         database.log_room('cm.add', client, client.area, target=client, message='self-added')
     elif client in client.area.owners:
         if len(arg) > 0:
@@ -122,16 +115,9 @@ def ooc_cmd_cm(client, arg):
                     )
                 elif c in client.area.owners:
                     client.send_ooc(
-                        '{} [{}] is already a CM here.'.format(
-                            c.char_name, c.id))
+                        f'{c.char_name} [{c.id}] is already a CM here.')
                 else:
-                    client.area.owners.append(c)
-                    if client.area.evidence_mod == 'HiddenCM':
-                        client.area.broadcast_evidence_list()
-                    client.server.area_manager.send_arup_cms()
-                    client.area.broadcast_ooc(
-                        '{} [{}] is CM in this area now.'.format(
-                            c.char_name, c.id))
+                    client.area.add_owner(c)
                     database.log_room('cm.add', client, client.area, target=c)
             except:
                 client.send_ooc(
@@ -156,8 +142,7 @@ def ooc_cmd_uncm(client, arg):
             c = client.server.client_manager.get_targets(
                 client, TargetType.ID, _id, False)[0]
             if c in client.area.owners:
-                client.area.owners.remove(c)
-                client.server.area_manager.send_arup_cms()
+                client.area.remove_owner(c)
                 client.area.broadcast_ooc(
                     '{} [{}] is no longer CM in this area.'.format(
                         c.char_name, c.id))

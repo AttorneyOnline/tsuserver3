@@ -287,8 +287,21 @@ def ooc_cmd_login(client, arg):
     except ClientError:
         database.log_misc('login.invalid', client)
         raise
-    if client.area.evidence_mod == 'HiddenCM':
-        client.area.broadcast_evidence_list()
+
+    # Make sure the client's available areas are updated
+    client.area.broadcast_area_list(client)
+
+    # HAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHHAHAHAHAHA
+    # This should be remade by only sending updates to those players
+    # who would actually be affected, and all players who don't need
+    # an update are ignored.
+    client.area.area_manager.send_arup_players()
+    client.area.area_manager.send_arup_status()
+    client.area.area_manager.send_arup_cms()
+    client.area.area_manager.send_arup_lock()
+    # HAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHHAHAHAHAHA
+
+    client.area.broadcast_evidence_list()
     client.send_ooc('Logged in as a moderator.')
     database.log_misc('login', client, data={'profile': login_name})
 
@@ -334,9 +347,22 @@ def ooc_cmd_unmod(client, arg):
     """
     client.is_mod = False
     client.mod_profile_name = None
-    if client.area.evidence_mod == 'HiddenCM':
-        client.area.broadcast_evidence_list()
-    client.send_ooc('you\'re not a mod now')
+
+    # Make sure the client's available areas are updated
+    client.area.broadcast_area_list(client)
+
+    # HAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHHAHAHAHAHA
+    # This should be remade by only sending updates to those players
+    # who would actually be affected, and all players who don't need
+    # an update are ignored.
+    client.area.area_manager.send_arup_players()
+    client.area.area_manager.send_arup_status()
+    client.area.area_manager.send_arup_cms()
+    client.area.area_manager.send_arup_lock()
+    # HAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHHAHAHAHAHA
+
+    client.area.broadcast_evidence_list()
+    client.send_ooc('You\'re no longer a mod.')
 
 
 @mod_only()
