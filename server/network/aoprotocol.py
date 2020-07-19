@@ -571,6 +571,11 @@ class AOProtocol(asyncio.Protocol):
 
         if not confirmed:
             charid_pair = -1
+        
+        if len(self.client.area.pos_lock) > 0 and pos not in self.client.area.pos_lock:
+            pos = self.client.area.pos_lock[0]
+        if pos != None and self.client.pos != pos:
+            self.client.change_position(pos)
 
         self.client.area.send_ic(self.client, msg_type, pre, folder, anim, msg,
                                  pos, sfx, anim_type, cid, sfx_delay,
