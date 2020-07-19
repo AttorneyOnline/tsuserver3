@@ -232,39 +232,45 @@ def ooc_cmd_uninvite(client, arg):
 def ooc_cmd_area_kick(client, arg):
     """
     Remove a user from the current area and move them to another area.
-    Usage: /area_kick <id> [destination]
+    If id is a * char, it will kick everyone but you and CMs from current area to destination.
+    target_pos is the optional position that everyone should end up in when kicked.
+    Usage: /area_kick <id> [destination] [target_pos]
     """
     if client.area.is_locked == client.area.Locked.FREE:
         raise ClientError('Area isn\'t locked.')
     if not arg:
         raise ClientError(
             'You must specify a target. Use /area_kick <id> [destination #]')
-    arg = arg.split(' ')
-    if arg[0] == 'afk':
-        trgtype = TargetType.AFK
-        argi = arg[0]
+
+    args = arg.split(' ')
+    if args[0] == 'afk':
+        targets = client.server.client_manager.get_targets(client, TargetType.AFK,
+                                                           args[0], False)
+    elif args[0] == '*':
+        targets = [c for c in client.area.clients if c != client and c != client.area.owners]
     else:
-        trgtype = TargetType.ID
-        argi = int(arg[0])
-    targets = client.server.client_manager.get_targets(client, trgtype,
-                                                       argi, False)
+        targets = client.server.client_manager.get_targets(client, TargetType.ID,
+                                                           int(args[0]), False)
+
     if targets:
         try:
             for c in targets:
-                if len(arg) == 1:
-                    area = client.server.area_manager.get_area_by_id(int(0))
-                    output = 0
+                if len(args) == 1:
+                    area = client.area.area_manager.default_area()
+                    output = area.id
                 else:
                     try:
-                        area = client.server.area_manager.get_area_by_id(
-                            int(arg[1]))
-                        output = arg[1]
+                        area = client.area.area_manager.get_area_by_id(
+                            int(args[1]))
+                        output = args[1]
                     except AreaError:
                         raise
+                target_pos = ''
+                if len(args) >= 3:
+                    target_pos = args[2]
                 client.send_ooc(
-                    "Attempting to kick {} to area {}.".format(
-                        c.char_name, output))
-                c.change_area(area)
+                    f'Attempting to kick {c.char_name} to area {output}.')
+                c.set_area(area, target_pos)
                 c.send_ooc(
                     f"You were kicked from the area to area {output}.")
                 database.log_room('area_kick', client, client.area, target=c, message=output)
