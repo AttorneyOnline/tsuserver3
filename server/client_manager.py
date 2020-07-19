@@ -453,6 +453,10 @@ class ClientManager:
                 player_list = area.afkers
             else:
                 player_list = area.clients
+            
+            if not self.is_mod and not self in area.owners:
+                # We exclude hidden players here because we don't want them to count for the user count
+                player_list = [c for c in player_list if not c.hidden]
             info += f'[{area.abbreviation}]: [{len(player_list)} users][{area.status}]{lock[area.is_locked]}'
 
             sorted_clients = []

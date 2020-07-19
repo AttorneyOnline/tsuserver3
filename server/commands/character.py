@@ -19,6 +19,8 @@ __all__ = [
     'ooc_cmd_blind',
     'ooc_cmd_unblind',
     'ooc_cmd_player_move_delay',
+    'ooc_cmd_hide',
+    'ooc_cmd_unhide',
 ]
 
 
@@ -326,3 +328,71 @@ def ooc_cmd_player_move_delay(client, arg):
         raise ArgumentError('Delay must be an integer between -1800 and 1800.')
     except (AreaError, ClientError):
         raise
+
+
+@mod_only()
+def ooc_cmd_hide(client, arg):
+    """
+    Hide player(s) from /getarea and playercounts.
+    If <id> is *, it will hide everyone in the area excluding yourself and CMs.
+    Usage: /hide <id> [id(s)]
+    """
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a target.')
+    args = arg.split()
+    if args[0] == '*':
+        targets = [c for c in client.area.clients if c != client and c != client.area.owners]
+    else:
+        try:
+            targets = []
+            ids = [int(s) for s in args]
+            for targ_id in ids:
+                c = client.server.client_manager.get_targets(client, TargetType.ID, targ_id, False)
+                if c:
+                    targets = targets + c
+        except:
+            raise ArgumentError('You must specify a target. Use /unhide <id> [id(s)].')
+    if targets:
+        for c in targets:
+            if c.hidden:
+                raise ClientError(
+                    f'Client [{c.id}] {c.char_name} already hidden!')
+            c.hide(True)
+            client.send_ooc(
+                f'You have hidden [{c.id}] {c.char_name} from /getarea and playercounts.')
+    else:
+        client.send_ooc('No targets found.')
+
+
+@mod_only()
+def ooc_cmd_unhide(client, arg):
+    """
+    Unhide player(s) from /getarea and playercounts.
+    If <id> is *, it will hide everyone in the area excluding yourself and CMs.
+    Usage: /unhide <id> [id(s)]
+    """
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a target.')
+    args = arg.split()
+    if args[0] == '*':
+        targets = [c for c in client.area.clients if c != client and c != client.area.owners]
+    else:
+        try:
+            targets = []
+            ids = [int(s) for s in args]
+            for targ_id in ids:
+                c = client.server.client_manager.get_targets(client, TargetType.ID, targ_id, False)
+                if c:
+                    targets = targets + c
+        except:
+            raise ArgumentError('You must specify a target. Use /unhide <id> [id(s)].')
+    if targets:
+        for c in targets:
+            if not c.hidden:
+                raise ClientError(
+                    f'Client [{c.id}] {c.char_name} already revealed!')
+            c.hide(False)
+            client.send_ooc(
+                f'You have revealed [{c.id}] {c.char_name} for /getarea and playercounts.')
+    else:
+        client.send_ooc('No targets found.')

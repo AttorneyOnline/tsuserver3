@@ -872,7 +872,8 @@ class AreaManager:
         players_list = [0]
         for client in self.server.client_manager.clients:
             for area in client.local_area_list:
-                players_list.append(len(area.clients))
+                players = [c for c in area.clients if not c.hidden]
+                players_list.append(len(players))
             self.server.send_arup(client, players_list)
 
     def send_arup_status(self):
