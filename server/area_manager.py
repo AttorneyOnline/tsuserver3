@@ -643,6 +643,9 @@ class AreaManager:
             return msg
 
         def add_owner(self, client):
+            """
+            Add a CM to the area.
+            """
             self.owners.append(client)
 
             # Make sure the client's available areas are updated
@@ -664,6 +667,9 @@ class AreaManager:
                 f'{client.char_name} [{client.id}] is CM in this area now.')
 
         def remove_owner(self, client):
+            """
+            Remove a CM from the area.
+            """
             self.owners.remove(client)
 
             # Make sure the client's available areas are updated
@@ -685,6 +691,9 @@ class AreaManager:
                 f'{client.char_name} [{client.id}] is no longer CM in this area.')
 
         def broadcast_area_list(self, client=None):
+            """
+            Send the accessible and visible areas to the client.
+            """
             clients = []
             if client == None:
                 clients = list(self.clients)
