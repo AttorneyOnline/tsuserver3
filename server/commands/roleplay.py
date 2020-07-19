@@ -19,81 +19,142 @@ __all__ = [
 ]
 
 
+def rtd(arg):
+    DICE_MAX = 11037
+    NUMDICE_MAX = 20
+    MODIFIER_LENGTH_MAX = 12 #Change to a higher at your own risk
+    ACCEPTABLE_IN_MODIFIER = '1234567890+-*/().r'
+    MAXDIVZERO_ATTEMPTS = 10
+    MAXACCEPTABLETERM = DICE_MAX*10 #Change to a higher number at your own risk
+
+    special_calculation = False
+    args = arg.split(' ')
+    arg_length = len(args)
+    
+    if arg != '':
+        if arg_length == 2:
+            dice_type, modifiers = args
+            if len(modifiers) > MODIFIER_LENGTH_MAX:
+                raise ArgumentError('The given modifier is too long to compute. Please try a shorter one')
+        elif arg_length == 1:
+            dice_type, modifiers = arg, ''
+        else:
+             raise ArgumentError('This command takes one or two arguments. Use /roll [<num of rolls>]d[<max>] [modifiers]')
+
+        dice_type = dice_type.split('d')
+        if len(dice_type) == 1:
+            dice_type.insert(0,1)
+        if dice_type[0] == '':
+            dice_type[0] = '1'
+            
+        try:
+            num_dice,chosen_max = int(dice_type[0]),int(dice_type[1])
+        except ValueError:
+            raise ArgumentError('Expected integer value for number of rolls and max value of dice')
+
+        if not 1 <= num_dice <= NUMDICE_MAX: 
+            raise ArgumentError('Number of rolls must be between 1 and {}'.format(NUMDICE_MAX))
+        if not 1 <= chosen_max <= DICE_MAX:
+            raise ArgumentError('Dice value must be between 1 and {}'.format(DICE_MAX))
+            
+        for char in modifiers:
+            if char not in ACCEPTABLE_IN_MODIFIER:
+                raise ArgumentError('Expected numbers and standard mathematical operations in modifier')
+            if char == 'r':
+                special_calculation = True
+        if '**' in modifiers: #Exponentiation manually disabled, it can be pretty dangerous
+            raise ArgumentError('Expected numbers and standard mathematical operations in modifier')
+    else:
+        num_dice,chosen_max,modifiers = 1,6,'' #Default
+
+    roll = ''
+    Sum = 0
+    
+    for i in range(num_dice):
+        divzero_attempts = 0
+        while True:
+            raw_roll = str(random.randint(1, chosen_max))
+            if modifiers == '':
+                aux_modifier = ''
+                mid_roll = int(raw_roll)
+            else:
+                if special_calculation:
+                    aux_modifier = modifiers.replace('r',raw_roll)+'='
+                elif modifiers[0].isdigit():
+                    aux_modifier = raw_roll+"+"+modifiers+'='
+                else:
+                    aux_modifier = raw_roll+modifiers+'='
+                
+                #Prevent any terms from reaching past MAXACCEPTABLETERM in order to prevent server lag due to potentially frivolous dice rolls
+                aux = aux_modifier[:-1]
+                for i in "+-*/()":
+                    aux = aux.replace(i,"!")
+                aux = aux.split('!')
+                for i in aux:
+                    try:
+                        if i != '' and round(float(i)) > MAXACCEPTABLETERM:
+                            raise ArgumentError("Given mathematical formula takes numbers past the server's computation limit")
+                    except ValueError:
+                        raise ArgumentError('Given mathematical formula has a syntax error and cannot be computed')
+                        
+                try: 
+                    mid_roll = round(eval(aux_modifier[:-1])) #By this point it should be 'safe' to run eval
+                except SyntaxError:
+                    raise ArgumentError('Given mathematical formula has a syntax error and cannot be computed')
+                except TypeError: #Deals with inputs like 3(r-1)
+                    raise ArgumentError('Given mathematical formula has a syntax error and cannot be computed')
+                except ZeroDivisionError:
+                    divzero_attempts += 1
+                    if divzero_attempts == MAXDIVZERO_ATTEMPTS:
+                        raise ArgumentError('Given mathematical formula produces divisions by zero too often and cannot be computed')
+                    continue
+            break
+
+        final_roll = mid_roll #min(chosen_max,max(1,mid_roll))
+        Sum += final_roll
+        if final_roll != mid_roll:
+            final_roll = "|"+str(final_roll) #This visually indicates the roll was capped off due to exceeding the acceptable roll range
+        else:
+            final_roll = str(final_roll)
+        if modifiers != '':
+            roll += str(raw_roll+':')
+        roll += str(aux_modifier+final_roll) + ', '
+    roll = roll[:-2]
+    if num_dice > 1:
+        roll = '(' + roll + ')'
+    
+    return roll, num_dice, chosen_max, modifiers, Sum
+
+
 def ooc_cmd_roll(client, arg):
     """
     Roll a die. The result is shown publicly.
-    Usage: /roll [max value] [rolls]
+    Usage: /roll [max value] OR [2d6] ["+5"/"-5"/"*5"/"/5"]
+    Example: /roll 2d6 +5 would roll two 6-sided die and add 5 to every result.
+    Rolls a 1D6 if blank
     """
-    roll_max = 11037
-    if len(arg) != 0:
-        try:
-            val = list(map(int, arg.split(' ')))
-            if not 1 <= val[0] <= roll_max:
-                raise ArgumentError(
-                    f'Roll value must be between 1 and {roll_max}.')
-        except ValueError:
-            raise ArgumentError(
-                'Wrong argument. Use /roll [<max>] [<num of rolls>]')
-    else:
-        val = [6]
-    if len(val) == 1:
-        val.append(1)
-    if len(val) > 2:
-        raise ArgumentError(
-            'Too many arguments. Use /roll [<max>] [<num of rolls>]')
-    if val[1] > 20 or val[1] < 1:
-        raise ArgumentError('Num of rolls must be between 1 and 20')
-    roll = ''
-    for _ in range(val[1]):
-        roll += str(random.randint(1, val[0])) + ', '
-    roll = roll[:-2]
-    if val[1] > 1:
-        roll = '(' + roll + ')'
-    client.area.broadcast_ooc('{} rolled {} out of {}.'.format(
-        client.char_name, roll, val[0]))
-    database.log_room('roll', client, client.area, message=f'{roll} out of {val[0]}')
+    roll, num_dice, chosen_max, modifiers, Sum = rtd(arg)
+
+    client.area.broadcast_ooc(f'{client.char_name} rolled {roll} out of {chosen_max}.\nThe total sum is {Sum}.')
+    database.log_room('roll', client, client.area, message=f'{roll} out of {chosen_max}')
 
 
 def ooc_cmd_rollp(client, arg):
     """
-    Roll a die privately.
-    Usage: /roll [max value] [rolls]
+    Roll a die privately. Same as /roll but the result is only shown to you and the CMs.
+    Usage: /rollp <max value> OR [2d6] ["+5"/"-5"/"*5"/"/5"]
+    Example: /roll 2d6 +5 would roll two 6-sided die and add 5 to every result.
+    Rolls a 1D6 if blank
     """
-    roll_max = 11037
-    if len(arg) != 0:
-        try:
-            val = list(map(int, arg.split(' ')))
-            if not 1 <= val[0] <= roll_max:
-                raise ArgumentError(
-                    f'Roll value must be between 1 and {roll_max}.')
-        except ValueError:
-            raise ArgumentError(
-                'Wrong argument. Use /rollp [<max>] [<num of rolls>]')
-    else:
-        val = [6]
-    if len(val) == 1:
-        val.append(1)
-    if len(val) > 2:
-        raise ArgumentError(
-            'Too many arguments. Use /rollp [<max>] [<num of rolls>]')
-    if val[1] > 20 or val[1] < 1:
-        raise ArgumentError('Num of rolls must be between 1 and 20')
-    roll = ''
-    for _ in range(val[1]):
-        roll += str(random.randint(1, val[0])) + ', '
-    roll = roll[:-2]
-    if val[1] > 1:
-        roll = '(' + roll + ')'
-    client.send_ooc('{} rolled {} out of {}.'.format(
-        client.char_name, roll, val[0]))
+    roll, num_dice, chosen_max, modifiers, Sum = rtd(arg)
 
-    client.area.broadcast_ooc('{} rolled in secret.'.format(
-        client.char_name))
+    client.send_ooc(f'[Hidden] You rolled {roll} out of {chosen_max}.\nThe total sum is {Sum}.')
+
+    client.area.broadcast_ooc(f'{client.char_name} rolled in secret.')
     for c in client.area.owners:
-        c.send_ooc('[{}]{} secretly rolled {} out of {}.'.format(
-            client.area.abbreviation, client.char_name, roll, val[0]))
+        c.send_ooc(f'[{client.area.abbreviation}]{client.char_name} secretly rolled {roll} out of {chosen_max}.')
 
-    database.log_room('rollp', client, client.area, message=f'{roll} out of {val[0]}')
+    database.log_room('rollp', client, client.area, message=f'{roll} out of {chosen_max}')
 
 
 def ooc_cmd_notecard(client, arg):
