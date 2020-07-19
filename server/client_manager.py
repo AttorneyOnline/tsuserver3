@@ -479,6 +479,8 @@ class ClientManager:
                         info += '[CM]'
                 if c in area.afkers:
                     info += '[AFK]'
+                if c.hidden:
+                    info += '[HID]'
                 info += f' [{c.id}] {c.char_name}'
                 if self.is_mod:
                     info += f' ({c.ipid}): {c.name}'
