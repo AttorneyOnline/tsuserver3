@@ -43,6 +43,8 @@ __all__ = [
     'ooc_cmd_pos_lock_clear',
     # hehehe
     'ooc_cmd_peek',
+    'ooc_cmd_area_move_delay',
+    'ooc_cmd_hub_move_delay',
 ]
 
 
@@ -226,7 +228,7 @@ def ooc_cmd_uninvite(client, arg):
         client.send_ooc("No targets found.")
 
 
-@mod_only()
+@mod_only(area_owners=True)
 def ooc_cmd_area_kick(client, arg):
     """
     Remove a user from the current area and move them to another area.
@@ -779,5 +781,47 @@ def ooc_cmd_peek(client, arg):
         client.send_ooc(f'There\'s {sorted_clients} in [{area.id}] {area.name}.')
     except ValueError:
         raise ArgumentError('Area ID must be a number or name.')
+    except (AreaError, ClientError):
+        raise
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_area_move_delay(client, arg):
+    """
+    Set the area's move delay to a value in seconds. Can be negative.
+    Delay must be from -1800 to 1800 in seconds or empty to check.
+    Usage: /area_move_delay [delay]
+    """
+    args = arg.split()
+    try:
+        if len(args) > 0:
+            move_delay = min(1800, max(-1800, int(args[0]))) # Move delay is limited between -1800 and 1800
+            client.area.move_delay = move_delay
+            client.send_ooc(f'Set {client.area.name} movement delay to {move_delay}.')
+        else:
+            client.send_ooc(f'Current move delay for {client.area.name} is {client.area.move_delay}.')
+    except ValueError:
+        raise ArgumentError('Delay must be an integer between -1800 and 1800.')
+    except (AreaError, ClientError):
+        raise
+
+
+@mod_only()
+def ooc_cmd_hub_move_delay(client, arg):
+    """
+    Set the hub's move delay to a value in seconds. Can be negative.
+    Delay must be from -1800 to 1800 in seconds or empty to check.
+    Usage: /hub_move_delay [delay]
+    """
+    args = arg.split()
+    try:
+        if len(args) > 0:
+            move_delay = min(1800, max(-1800, int(args[0]))) # Move delay is limited between -1800 and 1800
+            client.area.area_manager.move_delay = move_delay
+            client.send_ooc(f'Set {client.area.name} movement delay to {move_delay}.')
+        else:
+            client.send_ooc(f'Current move delay for {client.area.name} is {client.area.area_manager.move_delay}.')
+    except ValueError:
+        raise ArgumentError('Delay must be an integer between -1800 and 1800.')
     except (AreaError, ClientError):
         raise

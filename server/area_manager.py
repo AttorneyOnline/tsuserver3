@@ -60,6 +60,7 @@ class AreaManager:
             self.hp_pro = 10
             self.doc = 'No document.'
             self.status = 'IDLE'
+            self.move_delay = 0
             # /prefs end
 
             self.music_looper = None
@@ -191,6 +192,8 @@ class AreaManager:
                 self.doc = area['doc']
             if 'status' in area:
                 self.status = area['status']
+            if 'move_delay' in area:
+                self.move_delay = area['move_delay']
 
             if 'evidence' in area and len(area['evidence']) > 0:
                 self.evi_list.evidences.clear()
@@ -222,6 +225,7 @@ class AreaManager:
             area['hp_pro'] = self.hp_pro
             area['doc'] = self.doc
             area['status'] = self.status
+            area['move_delay'] = self.move_delay
             if len(self.evi_list.evidences) > 0:
                 area['evidence'] = [e.to_dict() for e in self.evi_list.evidences]
             if len(self.links) > 0:
@@ -693,6 +697,21 @@ class AreaManager:
                 c.local_area_list = area_list
                 c.reload_area_list([a.name for a in area_list])
 
+        def time_until_move(self, client):
+            """
+            Sum up the movement delays. For example,
+            if client has 1s move delay, area has 3s move delay, and hub has 2s move delay,
+            the resulting delay will be 1+3+2=6 seconds.
+            Negative numbers are allowed.
+            :return: time left until you can move again or 0.
+            """
+            secs = round(time.time() * 1000.0 - client.last_move_time)
+            total = sum([client.move_delay, self.move_delay, self.area_manager.move_delay]) 
+            test = total * 1000.0 - secs
+            if test > 0:
+                return test
+            return 0
+
         class JukeboxVote:
             """Represents a single vote cast for the jukebox."""
             def __init__(self, client, name, length, showname):
@@ -705,6 +724,10 @@ class AreaManager:
     def __init__(self, server):
         self.server = server
         self.areas = []
+
+        # prefs
+        self.move_delay = 0
+
         self.load_areas()
 
     def load_areas(self, path='config/areas.yaml'):

@@ -18,6 +18,7 @@
 import re
 import string
 import time
+import math
 from heapq import heappop, heappush
 
 from server import database
@@ -369,6 +370,12 @@ class ClientManager:
 
             if area.is_locked == area.Locked.LOCKED and not self.is_mod and not self.id in area.invite_list:
                 raise ClientError('That area is locked!')
+
+            delay = self.area.time_until_move(self)
+            if delay > 0:
+                sec = int(math.ceil(delay * 0.001))
+                raise ClientError(f'You need to wait {sec} seconds until you can move again.')
+
             if area.is_locked == area.Locked.SPECTATABLE and not self.is_mod and not self.id in area.invite_list:
                 self.send_ooc(
                     'This area is spectatable, but not free - you cannot talk in-character unless invited.'
@@ -377,6 +384,7 @@ class ClientManager:
             if not area.is_char_available(self.char_id) and not self.is_mod and self not in area.owners:
                 self.check_char_taken(area)
             self.set_area(area, target_pos)
+            self.last_move_time = round(time.time() * 1000.0)
 
         def get_area_list(self, hidden=False, linked=False):
             area_list = []

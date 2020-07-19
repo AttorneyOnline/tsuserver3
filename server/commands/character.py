@@ -18,6 +18,7 @@ __all__ = [
     'ooc_cmd_reload',
     'ooc_cmd_blind',
     'ooc_cmd_unblind',
+    'ooc_cmd_player_move_delay',
 ]
 
 
@@ -302,3 +303,26 @@ def ooc_cmd_unblind(client, arg):
             client.send_ooc(f'You have unblinded [{c.id}] {c.name}.')
     else:
         raise ArgumentError('No targets found.')
+
+
+@mod_only()
+def ooc_cmd_player_move_delay(client, arg):
+    """
+    Set the player's move delay to a value in seconds. Can be negative.
+    Delay must be from -1800 to 1800 in seconds or empty to check.
+    Usage: /player_move_delay <id> [delay]
+    """
+    args = arg.split()
+    try:
+        c = client.server.client_manager.get_targets(client, TargetType.ID,
+                                                     int(arg), False)[0]
+        if len(args) > 1:
+            move_delay = min(1800, max(-1800, int(args[1]))) # Move delay is limited between -1800 and 1800
+            c.move_delay = move_delay
+            client.send_ooc(f'Set move delay for [{c.id}]{c.char_name} to {move_delay}.')
+        else:
+            client.send_ooc(f'Current move delay for [{c.id}]{c.char_name} is {c.move_delay}.')
+    except ValueError:
+        raise ArgumentError('Delay must be an integer between -1800 and 1800.')
+    except (AreaError, ClientError):
+        raise
