@@ -310,6 +310,9 @@ class ClientManager:
             if target_pos != '':
                 self.pos = target_pos
 
+            # Make sure the client's available areas are updated
+            self.area.broadcast_area_list(self)
+
             self.send_ooc(
                 f'Changed area to {area.name} [{self.area.status}].')
             
@@ -336,17 +339,20 @@ class ClientManager:
             if self.area == area:
                 raise ClientError('User already in specified area.')
             target_pos = ''
+            allowed = self.is_mod or self in area.owners or self in self.area.owners
             if len(self.area.links) > 0:
-                if not str(area.id) in self.area.links and not self.is_mod and self not in area.owners and self not in self.area.owners:
+                if not str(area.id) in self.area.links and not allowed:
                     raise ClientError('That area is inaccessible from your area!')
-                # Get that link reference
-                link = self.area.links[str(area.id)]
 
-                # Our path is locked :(
-                if link["locked"]:
-                    raise ClientError('That path is locked - cannot access area!')
+                if str(area.id) in self.area.links:
+                    # Get that link reference
+                    link = self.area.links[str(area.id)]
 
-                target_pos = link["target_pos"]
+                    # Our path is locked :(
+                    if link["locked"] and not allowed:
+                        raise ClientError('That path is locked - cannot access area!')
+
+                    target_pos = link["target_pos"]
 
             if area.is_locked == area.Locked.LOCKED and not self.is_mod and not self.id in area.invite_list:
                 raise ClientError('That area is locked!')
@@ -358,6 +364,20 @@ class ClientManager:
             if not area.is_char_available(self.char_id) and not self.is_mod and self not in area.owners:
                 self.check_char_taken(area)
             self.set_area(area, target_pos)
+
+        def get_area_list(self, hidden=False, linked=False):
+            area_list = []
+            for area in self.server.area_manager.areas:
+                if self.area != area and len(self.area.links) > 0:
+                    if not (str(area.id) in self.area.links):
+                        if linked:
+                            continue
+                    elif hidden and self.area.links[str(area.id)]["hidden"] == True:
+                        continue
+
+                area_list.append(area)
+
+            return area_list
 
         def check_char_taken(self, area):
             try:

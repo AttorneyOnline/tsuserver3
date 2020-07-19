@@ -307,6 +307,10 @@ def ooc_cmd_load_hub(client, arg):
         path = 'storage/hubs'
         arg = f'{path}/{arg}.yaml'
         client.server.area_manager.load_areas(arg)
+        client.server.area_manager.send_arup_players()
+        client.server.area_manager.send_arup_status()
+        client.server.area_manager.send_arup_cms()
+        client.server.area_manager.send_arup_lock()
         client.send_ooc(f'Loading {arg}...')
     except AreaError:
         raise
@@ -336,6 +340,7 @@ def ooc_cmd_area_create(client, arg):
     area = client.server.area_manager.create_area()
     if arg != '':
         area.name = arg
+    client.server.area_manager.broadcast_area_list()
     client.send_ooc(f'New area created! ({area.name})')
 
 
@@ -352,6 +357,7 @@ def ooc_cmd_area_remove(client, arg):
             area = client.server.area_manager.get_area_by_id(int(args[0]))
             name = area.name
             client.server.area_manager.remove_area(area)
+            client.server.area_manager.broadcast_area_list()
             client.send_ooc(f'Area {name} removed!')
         except ValueError:
             raise ArgumentError('Area ID must be a number.')

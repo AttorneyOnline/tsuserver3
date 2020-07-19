@@ -405,7 +405,7 @@ class AreaManager:
             """
             if not self.jukebox:
                 return
-            if length <= 0:
+            if length == 0:
                 self.remove_jukebox_vote(client, False)
             else:
                 self.remove_jukebox_vote(client, True)
@@ -636,6 +636,17 @@ class AreaManager:
                 msg = msg[:-2]
             return msg
 
+        def broadcast_area_list(self, client=None):
+            clients = []
+            if client == None:
+                clients = list(self.clients)
+            else:
+                clients.append(client)
+
+            for c in clients:
+                allowed = c in self.owners or c.is_mod
+                c.reload_area_list([a.name for a in c.get_area_list(allowed, allowed)])
+
         class JukeboxVote:
             """Represents a single vote cast for the jukebox."""
             def __init__(self, client, name, length, showname):
@@ -669,6 +680,8 @@ class AreaManager:
 
             for i, area in enumerate(hub):
                 self.areas[i].load(area)
+
+            self.broadcast_area_list()
         except:
             raise AreaError(f'Something went wrong while loading the areas!')
 
@@ -770,6 +783,11 @@ class AreaManager:
         for a_id in area_ids:
             self.get_area_by_id(a_id).send_command(cmd, *args)
             self.get_area_by_id(a_id).send_owner_command(cmd, *args)
+
+    #Global update of all areas for the client music lists in the hub
+    def broadcast_area_list(self):
+        for area in self.areas:
+            area.broadcast_area_list()
 
     def send_arup_players(self):
         """Broadcast ARUP packet containing player counts."""
