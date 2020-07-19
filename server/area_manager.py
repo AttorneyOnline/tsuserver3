@@ -43,6 +43,7 @@ class AreaManager:
 
             # Initialize prefs
             self.background = 'default'
+            self.pos_lock = set()
             self.bg_lock = False
             self.evidence_mod = 'FFA'
             self.can_cm = False
@@ -130,12 +131,14 @@ class AreaManager:
             self._name = area['area']
             if 'background' in area:
                 self.background = area['background']
-
+            _pos_lock = ''
+            # Legacy KFO support.
             # We gotta fix the sins of our forefathers
+            if 'poslock' in area:
+                _pos_lock = area['poslock'].split(' ')
             if 'bglock' in area:
                 self.bg_lock = area['bglock']
 
-            # Legacy KFO support
             if 'locked' in area:
                 self.is_locked = self.Locked.FREE
                 if area['locked'] == True:
@@ -143,6 +146,16 @@ class AreaManager:
 
             if 'bg_lock' in area:
                 self.bg_lock = area['bg_lock']
+            if 'pos_lock' in area:
+                _pos_lock = area['pos_lock'].split(' ')
+
+            if len(_pos_lock) > 0:
+                self.pos_lock.clear()
+                for pos in _pos_lock:
+                    pos = pos.lower()
+                    if pos != "none":
+                        self.pos_lock.add(pos)
+
             if 'evidence_mod' in area:
                 self.evidence_mod = area['evidence_mod']
             if 'can_cm' in area:
@@ -188,6 +201,8 @@ class AreaManager:
             area = OrderedDict()
             area['area'] = self.name
             area['background'] = self.background
+            if len(self.pos_lock) > 0:
+                area['pos_lock'] = ' '.join(map(str, self.pos_lock))
             area['bg_lock'] = self.bg_lock
             area['evidence_mod'] = self.evidence_mod
             area['can_cm'] = self.can_cm
@@ -222,10 +237,17 @@ class AreaManager:
             self.clients.remove(client)
             if client in self.afkers:
                 self.afkers.remove(client)
+                self.server.client_manager.toggle_afk(client)
+            if self.jukebox:
+                self.remove_jukebox_vote(client, True)
             if len(self.clients) == 0:
                 self.change_status('IDLE')
             if client.char_id != -1:
                 database.log_room('area.leave', client, self)
+
+            # Update everyone's available characters list
+            self.send_command('CharsCheck',
+                              *self.server.client_manager.get_available_char_list())
 
         def unlock(self):
             """Mark the area as unlocked."""
@@ -530,7 +552,11 @@ class AreaManager:
                                   for name in self.server.backgrounds):
                 raise AreaError('Invalid background name.')
             self.background = bg
-            self.send_command('BN', self.background)
+            for client in self.clients:
+                #Update all clients to the pos lock
+                if len(self.pos_lock) > 0 and client.pos not in self.pos_lock:
+                    client.change_position(self.pos_lock[0])
+                client.send_command('BN', self.background, client.pos)
 
         def change_status(self, value):
             """

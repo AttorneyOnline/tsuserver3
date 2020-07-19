@@ -99,6 +99,10 @@ class ClientManager:
             # movement system stuff
             self.last_move_time = 0
             self.move_delay = 0
+        
+            # client status stuff
+            self.blinded = False
+            self.hidden = False
 
         def send_raw_message(self, msg):
             """
@@ -291,6 +295,38 @@ class ClientManager:
             # KEEP THE ASTERISK
             self.send_command('FA', *area_list)
 
+        def set_area(self, area, target_pos=''):
+            """
+            Unsafe method to set the client's area, sending all the relevant packet info.
+            Ignores preconditions like lock state, accessibility, char availability etc.
+            :param area: area to switch to
+            :param target_pos: which position to target in the new area
+            """
+            self.area.remove_client(self)
+            self.area = area
+            if len(area.pos_lock) > 0 and not (target_pos in area.pos_lock):
+                target_pos = area.pos_lock[0]
+            area.new_client(self)
+            if target_pos != '':
+                self.pos = target_pos
+
+            self.send_ooc(
+                f'Changed area to {area.name} [{self.area.status}].')
+            
+            # Update everyone's available characters list
+            self.area.send_command('CharsCheck',
+                                   *self.get_available_char_list())
+            # Get defense HP bar
+            self.send_command('HP', 1, self.area.hp_def)
+            # Get prosecution HP bar
+            self.send_command('HP', 2, self.area.hp_pro)
+            # Send the background information
+            self.send_command('BN', self.area.background, self.pos)
+            if len(self.area.pos_lock) > 0:
+                #set that juicy pos dropdown
+                self.send_command('SD', '*'.join(self.area.pos_lock))
+            # Send the evidence information
+            self.send_command('LE', *self.area.get_evidence_list(self))
 
         def change_area(self, area):
             """
@@ -318,38 +354,21 @@ class ClientManager:
                 self.send_ooc(
                     'This area is spectatable, but not free - you cannot talk in-character unless invited.'
                 )
+            # Mods and area owners can be any character regardless of availability
+            if not area.is_char_available(self.char_id) and not self.is_mod and self not in area.owners:
+                self.check_char_taken(area)
+            self.set_area(area, target_pos)
 
-            if self in self.area.afkers:
-                self.server.client_manager.toggle_afk(self)
-            if self.area.jukebox:
-                self.area.remove_jukebox_vote(self, True)
+        def check_char_taken(self, area):
+            try:
+                new_char_id = area.get_rand_avail_char_id()
+            except AreaError:
+                raise ClientError('No available characters in that area.')
 
-            old_area = self.area
-            if not area.is_char_available(self.char_id):
-                try:
-                    new_char_id = area.get_rand_avail_char_id()
-                except AreaError:
-                    raise ClientError('No available characters in that area.')
-
-                self.change_character(new_char_id)
-                self.send_ooc(
-                    f'Character taken, switched to {self.char_name}.')
-
-            self.area.remove_client(self)
-            self.area = area
-            area.new_client(self)
-            if target_pos != '':
-                self.pos = target_pos
-
+            self.change_character(new_char_id)
             self.send_ooc(
-                f'Changed area to {area.name} [{self.area.status}].')
-            self.area.send_command('CharsCheck',
-                                   *self.get_available_char_list())
-            self.area.send_command('CharsCheck', *self.get_available_char_list())
-            self.send_command('HP', 1, self.area.hp_def)
-            self.send_command('HP', 2, self.area.hp_pro)
-            self.send_command('BN', self.area.background, self.pos)
-            self.send_command('LE', *self.area.get_evidence_list(self))
+                f'Character taken, switched to {self.char_name}.')
+            return new_char_id
 
         def send_area_list(self):
             """Send a list of areas over OOC."""
@@ -363,7 +382,7 @@ class ClientManager:
                     area.Locked.SPECTATABLE: '[SPECTATABLE]',
                     area.Locked.LOCKED: '[LOCKED]'
                 }
-                msg += f'\r\nArea {area.abbreviation}: {area.name} (users: {len(area.clients)}) [{area.status}][{owner}]{lock[area.is_locked]}'
+                msg += f'\r\n[{area.id}] {area.abbreviation}: {area.name} (users: {len(area.clients)}) [{area.status}][{owner}]{lock[area.is_locked]}'
                 if self.area == area:
                     msg += ' [*]'
             self.send_ooc(msg)
@@ -386,8 +405,8 @@ class ClientManager:
 
             lock = {
                 area.Locked.FREE: '',
-                area.Locked.SPECTATABLE: '[SPECTATABLE]',
-                area.Locked.LOCKED: '[LOCKED]'
+                area.Locked.SPECTATABLE: '[SPEC]',
+                area.Locked.LOCKED: '[LOCK]'
             }
             if afk_check:
                 player_list = area.afkers
@@ -560,7 +579,9 @@ class ClientManager:
             """
             self.pos = pos
             self.send_ooc(f'Position set to {pos}.')
-            self.send_command('SP', self.pos) #Send a "Set Position" packet
+            # Send a "Set Position" packet
+            self.send_command('SP', self.pos)
+            # Send evidence list
             self.send_command('LE', *self.area.get_evidence_list(self))
 
         def set_mod_call_delay(self):
