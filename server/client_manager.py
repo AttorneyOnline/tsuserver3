@@ -707,7 +707,7 @@ class ClientManager:
         """
         if client.area.jukebox:
             client.area.remove_jukebox_vote(client, True)
-        for a in self.area.area_manager.areas:
+        for a in self.server.area_manager.areas:
             if client in a.owners:
                 a.owners.remove(client)
                 client.area.area_manager.send_arup_cms()

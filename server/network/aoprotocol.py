@@ -458,7 +458,7 @@ class AOProtocol(asyncio.Protocol):
             part = text.split(' ')
             try:
                 aid = int(part[1])
-                area = self.area.area_manager.get_area_by_id(aid)
+                area = self.client.area.area_manager.get_area_by_id(aid)
                 if self.client in area.owners:
                     target_area.append(aid)
                 if not target_area:
@@ -471,7 +471,7 @@ class AOProtocol(asyncio.Protocol):
                 return
         elif text.startswith('/s '):
             part = text.split(' ')
-            for a in self.area.area_manager.areas:
+            for a in self.client.area.area_manager.areas:
                 if self.client in a.owners:
                     target_area.append(a.id)
             if not target_area:
@@ -598,7 +598,7 @@ class AOProtocol(asyncio.Protocol):
             sfx_looping, screenshake, frames_shake, frames_realization,
             frames_sfx, additive, effect)
 
-        self.area.area_manager.send_remote_command(
+        self.client.area.area_manager.send_remote_command(
             target_area, 'MS', msg_type, pre, folder, anim, msg, pos, sfx,
             anim_type, cid, sfx_delay, button, self.client.evi_list[evidence],
             flip, ding, color, showname, charid_pair, other_folder,
