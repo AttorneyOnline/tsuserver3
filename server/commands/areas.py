@@ -41,6 +41,8 @@ __all__ = [
     # pos stuff
     'ooc_cmd_pos_lock',
     'ooc_cmd_pos_lock_clear',
+    # hehehe
+    'ooc_cmd_peek',
 ]
 
 
@@ -404,7 +406,7 @@ def ooc_cmd_area_swap(client, arg):
 @mod_only(area_owners=True)
 def ooc_cmd_area_pref(client, arg):
     """
-    Toggle a preference on/off for a hub.
+    Toggle a preference on/off for an area.
     Usage:  /area_pref - display list of prefs
             /area_pref <pref> - toggle pref on/off
             /area_pref <pref> <on/true|off/false> - set pref to on or off
@@ -718,3 +720,64 @@ def ooc_cmd_pos_lock_clear(client, arg):
     """
     client.area.pos_lock.clear()
     client.area.broadcast_ooc('Position lock cleared.')
+
+
+def ooc_cmd_peek(client, arg):
+    """
+    Peek into a room to see if there's people in it or if it's locked.
+    Usage:  /peek <id>
+    """
+    args = arg.split()
+    if len(args) == 0:
+        raise ArgumentError('You need to input an accessible area name or ID to peek into it!')
+
+    try:
+        area = None
+        for _area in client.server.area_manager.areas:
+            if (args[0].isdigit() and _area.id == int(args[0])) or _area.abbreviation.lower() == args[0].lower() or _area.name.lower() == arg.lower():
+                area = _area
+                break
+        if area == None:
+            raise ClientError('Target area not found.')
+
+        sorted_clients = []
+        for c in area.clients:
+            if not c.hidden and not c in area.owners and not c.is_mod: #pure IC
+                sorted_clients.append(c)
+
+        allowed = client.is_mod or client in area.owners or client in client.area.owners
+        if len(client.area.links) > 0:
+            if not str(area.id) in client.area.links and not allowed:
+                raise ClientError('That area is inaccessible from your area!')
+
+            if str(area.id) in client.area.links:
+                # Get that link reference
+                link = client.area.links[str(area.id)]
+
+                # Our path is locked :(
+                if link["locked"] and not allowed:
+                    raise ClientError('That path is locked - cannot access area!')
+
+        if area.is_locked == area.Locked.LOCKED and not client.is_mod and not client.id in area.invite_list:
+            raise ClientError('That area is locked!')
+
+        _sort = [c.char_name for c in sorted(sorted_clients, key=lambda x: x.char_name)]
+
+        # this would be nice to be a separate "make human readable list" func
+        if len(_sort) == 2:
+            sorted_clients = ' and '.join(_sort)
+        elif len(_sort) > 2:
+            sorted_clients = ', '.join(_sort[:-1])
+            sorted_clients = "{} and {}".format(sorted_clients, _sort[-1])
+        elif len(_sort) == 1:
+            sorted_clients = _sort[0]
+
+        if len(sorted_clients) <= 0:
+            sorted_clients = 'nobody'
+
+        client.area.broadcast_ooc(f'[{client.id}] {client.char_name} peeks into [{area.id}] {area.name}...')
+        client.send_ooc(f'There\'s {sorted_clients} in [{area.id}] {area.name}.')
+    except ValueError:
+        raise ArgumentError('Area ID must be a number or name.')
+    except (AreaError, ClientError):
+        raise
