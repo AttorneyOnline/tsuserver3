@@ -316,6 +316,16 @@ class ClientManager:
             # Make sure the client's available areas are updated
             self.area.broadcast_area_list(self)
 
+            # HAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHHAHAHAHAHA
+            # This should be remade by only sending updates to those players
+            # who would actually be affected, and all players who don't need
+            # an update are ignored.
+            self.area.area_manager.send_arup_players()
+            self.area.area_manager.send_arup_status()
+            self.area.area_manager.send_arup_cms()
+            self.area.area_manager.send_arup_lock()
+            # HAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHHAHAHAHAHA
+
             self.send_ooc(
                 f'Changed area to {area.name} [{self.area.status}].')
             
@@ -586,6 +596,13 @@ class ClientManager:
             if self.char_id == -1:
                 return None
             return self.server.char_list[self.char_id]
+                
+        def hide(self, tog=True):
+            self.hidden = tog
+            msg = 'no longer'
+            if tog:
+                msg = 'now'
+            self.send_ooc(f'You are {msg} hidden from the area.')
 
         def blind(self, tog=True):
             self.blinded = tog

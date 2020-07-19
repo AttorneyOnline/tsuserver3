@@ -231,7 +231,6 @@ class AreaManager:
         def new_client(self, client):
             """Add a client to the area."""
             self.clients.add(client)
-            self.server.area_manager.send_arup_players()
             if client.char_id != -1:
                 database.log_room('area.join', client, self)
 
@@ -257,7 +256,7 @@ class AreaManager:
             self.is_locked = self.Locked.FREE
             self.blankposting_allowed = True
             self.invite_list = {}
-            self.server.area_manager.send_arup_lock()
+            self.area_manager.send_arup_lock()
             self.broadcast_ooc('This area is open now.')
 
         def spectator(self):
@@ -267,7 +266,7 @@ class AreaManager:
                 self.invite_list[i.id] = None
             for i in self.owners:
                 self.invite_list[i.id] = None
-            self.server.area_manager.send_arup_lock()
+            self.area_manager.send_arup_lock()
             self.broadcast_ooc('This area is spectatable now.')
 
         def lock(self):
@@ -277,7 +276,7 @@ class AreaManager:
                 self.invite_list[i.id] = None
             for i in self.owners:
                 self.invite_list[i.id] = None
-            self.server.area_manager.send_arup_lock()
+            self.area_manager.send_arup_lock()
             self.broadcast_ooc('This area is locked now.')
         
         def link(self, target, locked=False, hidden=False, target_pos=''):
@@ -575,7 +574,7 @@ class AreaManager:
             if value.lower() == 'lfp':
                 value = 'looking-for-players'
             self.status = value.upper()
-            self.server.area_manager.send_arup_status()
+            self.area_manager.send_arup_status()
 
         def change_doc(self, doc='No document.'):
             """
