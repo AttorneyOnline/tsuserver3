@@ -397,7 +397,7 @@ def ooc_cmd_unhide(client, arg):
             client.send_ooc(
                 f'You have revealed [{c.id}] {c.char_name} for /getarea and playercounts.')
     else:
-        client.send_ooc('No targets found.')def ooc_cmd_listen_pos(client, arg):
+        client.send_ooc('No targets found.')
 
 
 def ooc_cmd_listen_pos(client, arg):
