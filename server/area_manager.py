@@ -721,9 +721,7 @@ class AreaManager:
 
             for c in clients:
                 allowed = c in self.owners or c.is_mod
-                area_list = c.get_area_list(not allowed, not allowed)
-                c.local_area_list = area_list
-                c.reload_area_list([a.name for a in area_list])
+                c.reload_area_list(c.get_area_list(not allowed, not allowed))
 
         def time_until_move(self, client):
             """
