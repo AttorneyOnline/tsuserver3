@@ -106,6 +106,7 @@ class ClientManager:
             self.hidden = False
             self.sneaking = False
             self.listen_pos = None
+            self.following = None
 
             # a list of all areas the client can currently see
             self.local_area_list = []
@@ -398,6 +399,12 @@ class ClientManager:
             self.set_area(area, target_pos)
             self.last_move_time = round(time.time() * 1000.0)
 
+            for c in self.server.client_manager.clients:
+                if c.following == self.id:
+                    c.change_area(area)
+                    c.send_ooc(
+                        f'Following [{self.id}] {self.char_name} to {area.name}.')
+
             if not self.sneaking and not self.hidden:
                 old_area.broadcast_ooc(
                     f'[{self.id}] {self.char_name} leaves to [{area.id}] {area.name}.')
@@ -654,6 +661,28 @@ class ClientManager:
             if tog:
                 msg = 'now'
             self.send_ooc(f'You are {msg} sneaking (area transfer announcements will {msg} be hidden).')
+
+        def follow(self, target):
+            try:
+                self.change_area(target.area)
+                self.following = target.id
+                self.send_ooc(
+                    'You are now following [{}] {}.'.format(target.id, target.char_name))
+            except ValueError:
+                raise
+            except (AreaError, ClientError):
+                raise
+        
+        def unfollow(self):
+            if self.following != None:
+                try:
+                    c = self.server.client_manager.get_targets(
+                        self, TargetType.ID, int(self.following), False)[0]
+                    self.send_ooc(
+                        'You are no longer following [{}] {}.'.format(c.id, c.char_name))
+                    self.following = None
+                except:
+                    self.following = None
 
         def change_position(self, pos=''):
             """

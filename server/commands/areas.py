@@ -51,6 +51,8 @@ __all__ = [
     'ooc_cmd_hub_arup_disable',
     'ooc_cmd_hub_hide_clients',
     'ooc_cmd_hub_unhide_clients',
+    'ooc_cmd_follow',
+    'ooc_cmd_unfollow',
 ]
 
 
@@ -955,3 +957,45 @@ def ooc_cmd_hub_unhide_clients(client, arg):
     client.area.area_manager.arup_enabled = False
     client.server.area_manager.broadcast_area_list()
     client.area.area_manager.broadcast_ooc('Client playercounts are no longer hidden for this hub.')
+
+
+@mod_only()
+def ooc_cmd_follow(client, arg):
+    if len(arg) == 0:
+        try:
+            c = client.server.client_manager.get_targets(client, TargetType.ID, int(client.following), False)[0]
+            client.send_ooc(
+                f'You are currently following [{c.id}] {c.get_char_name(True)}.')
+        except:
+            raise ArgumentError('You must specify a target. Use /follow <id>.')
+        return
+    try:
+        targets = client.server.client_manager.get_targets(
+            client, TargetType.ID, int(arg), False)
+    except:
+        raise ArgumentError('You must specify a target. Use /follow <id>.')
+    if targets:
+        c = targets[0]
+        if client == c:
+            raise ClientError('Can\'t follow yourself!')
+        if client.following == c.id:
+            raise ClientError(
+                f'Already following [{c.id}] {c.get_char_name(True)}!')
+        client.following = c.id
+        client.send_ooc(
+            f'You are now following [{c.id}] {c.get_char_name(True)}.')
+        client.change_area(c.area)
+    else:
+        client.send_ooc('No targets found.')
+
+
+def ooc_cmd_unfollow(client, arg):
+    try:
+        c = client.server.client_manager.get_targets(
+            client, TargetType.ID, int(client.following), False)[0]
+        client.send_ooc(
+            f'You are no longer following [{c.id}] {c.get_char_name(True)}.')
+        client.following = None
+    except:
+        client.following = None
+        raise ClientError('You\'re not following anyone!')
