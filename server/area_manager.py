@@ -364,6 +364,8 @@ class AreaManager:
             """
             if client in self.afkers:
                 client.server.client_manager.toggle_afk(client)
+            if client.hidden_in != None:
+                client.hide(False)
             for c in self.clients:
                 # Blinded clients don't receive IC messages
                 if c.blinded:

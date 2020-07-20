@@ -22,12 +22,14 @@ class EvidenceList:
 
     class Evidence:
         """Represents a single evidence item."""
-        def __init__(self, name, desc, image, pos):
+        def __init__(self, name, desc, image, pos, can_hide_in=False):
             self.name = name
             self.desc = desc
             self.image = image
             self.public = False
             self.pos = pos
+            self.can_hide_in = can_hide_in
+            self.hiding_client = None
 
         def set_name(self, name):
             self.name = name
@@ -44,7 +46,7 @@ class EvidenceList:
             return '&'.join(sequence)
 
         def to_dict(self):
-            return {'name': self.name, 'desc': self.desc, 'image': self.image, 'pos': self.pos}
+            return {'name': self.name, 'desc': self.desc, 'image': self.image, 'pos': self.pos, 'can_hide_in': self.can_hide_in}
 
     def __init__(self):
         self.evidences = []
@@ -55,6 +57,9 @@ class EvidenceList:
             if p == 'all' or (pos != '' and pos == p):
                 return True
         return False
+
+    def can_hide_in(self, evi):
+        return evi.can_hide_in
 
     def login(self, client):
         """
@@ -152,7 +157,8 @@ class EvidenceList:
                 evi = self.evidences[i]
                 desc = evi.desc
                 if client.area.evidence_mod == 'HiddenCM':
-                    desc = f'<owner={evi.pos}>\n{evi.desc}'
+                    can_hide_in = int(evi.can_hide_in)
+                    desc = f'<owner={evi.pos}>\n<can_hide_in={can_hide_in}>\n{evi.desc}'
                 evi_list.append(
                     self.Evidence(evi.name, desc,
                                   evi.image, evi.pos).to_string())
@@ -163,8 +169,8 @@ class EvidenceList:
 
     def import_evidence(self, data):
         for evi in data:
-            name, description, image, pos = evi['name'], evi['desc'], evi['image'], evi['pos']
-            self.evidences.append(self.Evidence(name, description, image, pos))
+            name, description, image, pos, can_hide_in = evi['name'], evi['desc'], evi['image'], evi['pos'], evi['can_hide_in']
+            self.evidences.append(self.Evidence(name, description, image, pos, can_hide_in))
 
     def del_evidence(self, client, id):
         """
@@ -177,6 +183,11 @@ class EvidenceList:
             return
         if not client in client.area.owners and not client.is_mod:
             id = client.evi_list[id+1]-1
+        c = self.evidences[id].hiding_client
+        if c != None:
+            c.hide(False)
+            c.send_ooc(f'You discover {c.char_name} in the {self.evidences[id].name}!')
+
         self.evidences.pop(id)
 
     def edit_evidence(self, client, id, arg):
@@ -195,7 +206,8 @@ class EvidenceList:
                     lines = arg[1].split('\n')
                     cmd = lines[0].strip(' ')  # remove all whitespace
                     poses = cmd[7:-1]
-                    self.evidences[id] = self.Evidence(arg[0], '\n'.join(lines[1:]), arg[2], poses)
+                    can_hide_in = lines[1].strip(' ')[13:-1]
+                    self.evidences[id] = self.Evidence(arg[0], '\n'.join(lines[2:]), arg[2], poses, can_hide_in)
                 else:
                     client.send_ooc('You entered a bad pos.')
                     return
@@ -207,5 +219,9 @@ class EvidenceList:
             # Client sends evidence updates to server using an index starting from 0.
             # This needs a complete overhaul.
             idx = client.evi_list[id+1]-1
+            c = self.evidences[idx].hiding_client
+            if c != None:
+                c.hide(False)
+                client.send_ooc(f'You discover {c.char_name} in the {self.evidences[idx].name}!')
             self.evidences[idx] = self.Evidence(
                 arg[0], arg[1], arg[2], self.evidences[idx].pos)

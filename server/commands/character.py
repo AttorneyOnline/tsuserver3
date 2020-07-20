@@ -19,6 +19,8 @@ __all__ = [
     'ooc_cmd_blind',
     'ooc_cmd_unblind',
     'ooc_cmd_player_move_delay',
+    'ooc_cmd_player_hide',
+    'ooc_cmd_player_unhide',
     'ooc_cmd_hide',
     'ooc_cmd_unhide',
     'ooc_cmd_sneak',
@@ -335,11 +337,11 @@ def ooc_cmd_player_move_delay(client, arg):
 
 
 @mod_only()
-def ooc_cmd_hide(client, arg):
+def ooc_cmd_player_hide(client, arg):
     """
     Hide player(s) from /getarea and playercounts.
     If <id> is *, it will hide everyone in the area excluding yourself and CMs.
-    Usage: /hide <id> [id(s)]
+    Usage: /player_hide <id> [id(s)]
     """
     if len(arg) == 0:
         raise ArgumentError('You must specify a target.')
@@ -355,7 +357,7 @@ def ooc_cmd_hide(client, arg):
                 if c:
                     targets = targets + c
         except:
-            raise ArgumentError('You must specify a target. Use /unhide <id> [id(s)].')
+            raise ArgumentError('You must specify a target. Use /player_unhide <id> [id(s)].')
     if targets:
         for c in targets:
             if c.hidden:
@@ -369,11 +371,11 @@ def ooc_cmd_hide(client, arg):
 
 
 @mod_only()
-def ooc_cmd_unhide(client, arg):
+def ooc_cmd_player_unhide(client, arg):
     """
     Unhide player(s) from /getarea and playercounts.
     If <id> is *, it will hide everyone in the area excluding yourself and CMs.
-    Usage: /unhide <id> [id(s)]
+    Usage: /player_unhide <id> [id(s)]
     """
     if len(arg) == 0:
         raise ArgumentError('You must specify a target.')
@@ -389,7 +391,7 @@ def ooc_cmd_unhide(client, arg):
                 if c:
                     targets = targets + c
         except:
-            raise ArgumentError('You must specify a target. Use /unhide <id> [id(s)].')
+            raise ArgumentError('You must specify a target. Use /player_unhide <id> [id(s)].')
     if targets:
         for c in targets:
             if not c.hidden:
@@ -401,6 +403,29 @@ def ooc_cmd_unhide(client, arg):
     else:
         client.send_ooc('No targets found.')
 
+def ooc_cmd_hide(client, arg):
+    """
+    Try to hide in the targeted evidence name or ID.
+    Usage: /hide <evi_name/evi_id>
+    """
+    if arg == '':
+        raise ArgumentError('Use /hide <evi_name/evi_id> to hide in evidence, or /unhide to stop hiding.')
+    try:
+        client.hide(True, arg)
+    except ValueError:
+        raise
+    except (AreaError, ClientError):
+        raise
+
+
+def ooc_cmd_unhide(client, arg):
+    """
+    Stop hiding.
+    Usage: /unhide
+    """
+    if client.hidden_in != None and client.hidden_in in client.area.evi_list.evidences:
+        client.area.broadcast_ooc(f'{client.char_name} emerges from the {client.area.evi_list.evidences[client.hidden_in]}!')
+    client.hide(False)
 
 def ooc_cmd_sneak(client, arg):
     """

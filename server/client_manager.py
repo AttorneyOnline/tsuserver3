@@ -104,6 +104,7 @@ class ClientManager:
             # client status stuff
             self.blinded = False
             self.hidden = False
+            self.hidden_in = None
             self.sneaking = False
             self.listen_pos = None
             self.following = None
@@ -319,6 +320,8 @@ class ClientManager:
             :param area: area to switch to
             :param target_pos: which position to target in the new area
             """
+            if self.hidden_in != None:
+                self.hide(False)
             self.area.remove_client(self)
             self.area = area
             if len(area.pos_lock) > 0 and not (target_pos in area.pos_lock):
@@ -362,6 +365,10 @@ class ClientManager:
             """
             if self.area == area:
                 raise ClientError('User already in specified area.')
+            if self.hidden_in != None:
+                # You gotta unhide first lol
+                self.hide(False)
+                raise ClientError('You had to leave your hiding spot - area transfer failed.')
             target_pos = ''
             allowed = self.is_mod or self in area.owners or self in self.area.owners
             if len(self.area.links) > 0:
@@ -643,12 +650,40 @@ class ClientManager:
                 return None
             return self.server.char_list[self.char_id]
                 
-        def hide(self, tog=True):
+        def hide(self, tog=True, target=None):
             self.hidden = tog
-            msg = 'no longer'
+            msg = 'no longer hidden'
             if tog:
-                msg = 'now'
-            self.send_ooc(f'You are {msg} hidden from the area.')
+                msg = 'now hidden'
+                if target != None:
+                    evidence = None
+                    for i, evi in enumerate(self.area.evi_list.evidences):
+                        if not self.area.evi_list.can_see(evi, self.pos):
+                            continue
+                        if (target.lower() == evi.name.lower() or target == str(i)):
+                            if not self.area.evi_list.can_hide_in(evi):
+                                raise ClientError('Targeted evidence cannot be hidden in.')
+                            evidence = i
+                            break
+                    if evidence != None:
+                        evi = self.area.evi_list.evidences[evidence]
+                        if evi.hiding_client != None:
+                            c = evi.hiding_client
+                            c.hide(False)
+                            raise ClientError(f'{c.char_name} was already hiding in that evidence!')
+                        self.hidden_in = evidence
+                        evi.hiding_client = self
+                        msg += f' inside the {evi.name}'
+                    else:
+                        raise ClientError('Targeted evidence does not exist.')
+            else:
+                if self.hidden_in != None:
+                    evi = self.area.evi_list.evidences[self.hidden_in]
+                    evi.hidden_client = None
+                    self.hidden_in = None
+                    self.area.broadcast_ooc(f'{self.char_name} emerges from the {evi.name}!')
+                    
+            self.send_ooc(f'You are {msg} from /getarea and playercounts.')
             self.area.area_manager.send_arup_players()
 
         def blind(self, tog=True):
@@ -693,6 +728,9 @@ class ClientManager:
             Change the character's current position in the area.
             :param pos: position in area (Default value = '')
             """
+            if self.hidden_in != None:
+                # YOU DARE MOVE?!
+                self.hide(False)
             self.pos = pos
             self.send_ooc(f'Position set to {pos}.')
             # Send a "Set Position" packet

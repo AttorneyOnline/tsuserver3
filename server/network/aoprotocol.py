@@ -536,10 +536,16 @@ class AOProtocol(asyncio.Protocol):
         if self.client.disemvowel:
             msg = self.client.disemvowel_message(msg)
         if evidence:
-            if self.client.area.evi_list.evidences[
-                    self.client.evi_list[evidence] - 1].pos != 'all':
-                self.client.area.evi_list.evidences[
-                    self.client.evi_list[evidence] - 1].pos = 'all'
+            evi = self.client.area.evi_list.evidences[
+                    self.client.evi_list[evidence] - 1]
+
+            if evi.hiding_client != None:
+                c = evi.hiding_client
+                c.hide(False)
+                self.client.send_ooc(f'You discover {c.char_name} in the {evi.name}!')
+
+            if evi.pos != 'all':
+                evi.pos = 'all'
                 self.client.area.broadcast_evidence_list()
 
         # Here, we check the pair stuff, and save info about it to the client.
