@@ -442,7 +442,7 @@ def ooc_cmd_listen_pos(client, arg):
     if value == 'self':
         value = f'listening to your own pos {client.pos}'
     else:
-        value = value.join(', ')
+        value = ', '.join(value)
         value = f'listening to pos {value}'
     client.send_ooc(f'You are {value}. Use /unlisten_pos to stop listening.')
 

@@ -363,15 +363,19 @@ class AreaManager:
                 if c.blinded:
                     continue
                 # pos doesn't match listen_pos, we're not listening so make this an OOC message instead
-                if client.listen_pos != None and (client.listen_pos == 'self' and args[5] != client.pos) or \
-                   len(client.listen_pos) > 0 and not (args[5] in client.listen_pos):
-                    name = client.name
-                    if args[8] != -1:
-                        name = self.server.char_list[args[8]]
-                    if args[15] != '':
-                        name = args[15]
-                    client.send_command('CT', f'[pos \'{args[5]}\'] {name}', args[4]) #send the mesage as OOC
-                    return
+                if c.listen_pos != None:
+                    if type(c.listen_pos) is list and not (args[5] in c.listen_pos) or \
+                       c.listen_pos == 'self' and args[5] != c.pos:
+                        name = client.name
+                        if args[8] != -1:
+                            name = self.server.char_list[args[8]]
+                        if args[15] != '':
+                            name = args[15]
+                        # Send the mesage as OOC.
+                        # Woulda been nice if there was a packet to send messages to IC log
+                        # without displaying it in the viewport.
+                        c.send_command('CT', f'[pos \'{args[5]}\'] {name}', args[4])
+                        continue
                 c.send_command('MS', *args)
 
             # args[4] = msg
