@@ -283,7 +283,7 @@ class AreaManager:
             self.area_manager.send_arup_lock()
             self.broadcast_ooc('This area is locked now.')
         
-        def link(self, target, locked=False, hidden=False, target_pos=''):
+        def link(self, target, locked=False, hidden=False, target_pos='', can_peek=True):
             """
             Sets up a one-way connection between this area and targeted area.
             Returns the link dictionary.
@@ -291,12 +291,14 @@ class AreaManager:
             :param locked: is the link unusable?
             :param hidden: is the link  invisible?
             :param target_pos: which position should we end up in when we come through
+            :param can_peek: can you peek through this path?
 
             """
             link = {
                 "locked": locked,
                 "hidden": hidden,
                 "target_pos": target_pos,
+                "can_peek": can_peek,
             }
             self.links[str(target)] = link
             return link

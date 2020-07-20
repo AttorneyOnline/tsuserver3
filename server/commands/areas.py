@@ -38,6 +38,7 @@ __all__ = [
     'ooc_cmd_link_hide',
     'ooc_cmd_link_unhide',
     'ooc_cmd_link_pos',
+    'ooc_cmd_link_peekable',
     # pos stuff
     'ooc_cmd_pos_lock',
     'ooc_cmd_pos_lock_clear',
@@ -695,6 +696,60 @@ def ooc_cmd_link_pos(client, arg):
         raise
 
 
+@mod_only(area_owners=True)
+def ooc_cmd_link_peekable(client, arg):
+    """
+    Make the path(s) leading to target area(s) /peek-able.
+    Usage:  /link_peekable <aid> [aid(s)]
+    """
+    args = arg.split()
+    if len(args) <= 0:
+        raise ArgumentError('Invalid number of arguments. Use /link_peekable <aid>')
+    try:
+        links = []
+        for aid in args:
+            try:
+                target_id = client.server.area_manager.get_area_by_abbreviation(aid).id
+            except:
+                target_id = int(aid)
+
+            client.area.links[str(target_id)]["can_peek"] = True
+            links.append(target_id)
+        links = ', '.join(str(l) for l in links)
+        client.send_ooc(f'Area {client.area.name} links {links} are now peekable.')
+    except (ValueError, KeyError):
+        raise ArgumentError('Area ID must be a number or abbreviation.')
+    except (AreaError, ClientError):
+        raise
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_link_unpeekable(client, arg):
+    """
+    Make the path(s) leading to target area(s) no longer /peek-able.
+    Usage:  /link_unpeekable <aid> [aid(s)]
+    """
+    args = arg.split()
+    if len(args) <= 0:
+        raise ArgumentError('Invalid number of arguments. Use /link_unpeekable <aid>')
+    try:
+        links = []
+        for aid in args:
+            try:
+                target_id = client.server.area_manager.get_area_by_abbreviation(aid).id
+            except:
+                target_id = int(aid)
+
+            client.area.links[str(target_id)]["can_peek"] = False
+            links.append(target_id)
+        links = ', '.join(str(l) for l in links)
+        client.send_ooc(f'Area {client.area.name} links {links} are no longer peekable.')
+    except (ValueError, KeyError):
+        raise ArgumentError('Area ID must be a number or abbreviation.')
+    except (AreaError, ClientError):
+        raise
+
+
 def ooc_cmd_pos_lock(client, arg):
     """
     Lock current area's available positions into a list of pos.
@@ -771,6 +826,10 @@ def ooc_cmd_peek(client, arg):
                 # Our path is locked :(
                 if link["locked"] and not allowed:
                     raise ClientError('That path is locked - cannot access area!')
+
+                # Our path cannot be peeked through :(
+                if not link["can_peek"] and not allowed:
+                    raise ClientError('Cannot peek through that path!')
 
         if area.is_locked == area.Locked.LOCKED and not client.is_mod and not client.id in area.invite_list:
             raise ClientError('That area is locked!')
