@@ -443,15 +443,19 @@ class ClientManager:
             """Send a list of areas over OOC."""
             msg = '=== Areas ==='
             for _, area in enumerate(self.local_area_list):
-                owner = 'FREE'
+                owner = ''
                 if len(area.owners) > 0:
-                    owner = f'CMs: {area.get_cms()}'
+                    owner = f'[CMs: {area.get_cms()}]'
                 lock = {
                     area.Locked.FREE: '',
                     area.Locked.SPECTATABLE: '[SPEC]',
                     area.Locked.LOCKED: '[LOCK]'
                 }
-                msg += f'\r\n[{area.id}] {area.abbreviation}: {area.name} (users: {len(area.clients)}) [{area.status}][{owner}]{lock[area.is_locked]}'
+                users = ''
+                if not area.area_manager.hide_clients and not area.hide_clients:
+                    users = len(area.clients)
+                    users = f'(users: {users}) '
+                msg += f'\r\n[{area.id}] {area.abbreviation}: {area.name} {users}[{area.status}]{owner}{lock[area.is_locked]}'
                 if self.area == area:
                     msg += ' [*]'
             self.send_ooc(msg)
