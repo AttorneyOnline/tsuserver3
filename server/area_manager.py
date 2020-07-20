@@ -61,6 +61,7 @@ class AreaManager:
             self.doc = 'No document.'
             self.status = 'IDLE'
             self.move_delay = 0
+            self.hide_clients = False
             # /prefs end
 
             self.music_looper = None
@@ -194,6 +195,8 @@ class AreaManager:
                 self.status = area['status']
             if 'move_delay' in area:
                 self.move_delay = area['move_delay']
+            if 'hide_clients' in area:
+                self.hide_clients = area['hide_clients']
 
             if 'evidence' in area and len(area['evidence']) > 0:
                 self.evi_list.evidences.clear()
@@ -226,6 +229,7 @@ class AreaManager:
             area['doc'] = self.doc
             area['status'] = self.status
             area['move_delay'] = self.move_delay
+            area['hide_clients'] = self.hide_clients
             if len(self.evi_list.evidences) > 0:
                 area['evidence'] = [e.to_dict() for e in self.evi_list.evidences]
             if len(self.links) > 0:
@@ -756,6 +760,7 @@ class AreaManager:
         # prefs
         self.move_delay = 0
         self.arup_enabled = True
+        self.hide_clients = False
 
         self.load_areas()
 
@@ -906,8 +911,10 @@ class AreaManager:
         players_list = [0]
         for client in self.server.client_manager.clients:
             for area in client.local_area_list:
-                players = [c for c in area.clients if not c.hidden]
-                players_list.append(len(players))
+                playercount = -1
+                if not self.hide_clients and not area.hide_clients:
+                    playercount = len([c for c in area.clients if not c.hidden])
+                players_list.append(playercount)
             self.server.send_arup(client, players_list)
 
     def send_arup_status(self):

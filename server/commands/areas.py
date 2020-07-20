@@ -49,6 +49,8 @@ __all__ = [
     # Madness incarnate
     'ooc_cmd_hub_arup_enable',
     'ooc_cmd_hub_arup_disable',
+    'ooc_cmd_hub_hide_clients',
+    'ooc_cmd_hub_unhide_clients',
 ]
 
 
@@ -435,6 +437,7 @@ def ooc_cmd_area_pref(client, arg):
         'jukebox',
         'non_int_pres_only',
         'blankposting_allowed',
+        'hide_clients',
     ]
 
     if len(arg) == 0:
@@ -926,3 +929,29 @@ def ooc_cmd_hub_arup_disable(client, arg):
     client.area.area_manager.send_command('FL', preflist)
     client.server.area_manager.broadcast_area_list()
     client.area.area_manager.broadcast_ooc('ARUP system has been disabled for this hub.')
+
+
+@mod_only()
+def ooc_cmd_hub_hide_clients(client, arg):
+    """
+    Enable the ARUP system for this hub.
+    Usage: /hub_hide_clients
+    """
+    if client.area.area_manager.hide_clients:
+        raise ClientError('Client playercounts already hidden! Use /hub_unhide_clients to unhide.')
+    client.area.area_manager.hide_clients = True
+    client.server.area_manager.broadcast_area_list()
+    client.area.area_manager.broadcast_ooc('Client playercounts are now hidden for this hub.')
+
+
+@mod_only()
+def ooc_cmd_hub_unhide_clients(client, arg):
+    """
+    Disable the ARUP system for this hub.
+    Usage: /hub_unhide_clients
+    """
+    if not client.area.area_manager.arup_enabled:
+        raise ClientError('Client playercounts already revealed! Use /hub_hide_clients to hide.')
+    client.area.area_manager.arup_enabled = False
+    client.server.area_manager.broadcast_area_list()
+    client.area.area_manager.broadcast_ooc('Client playercounts are no longer hidden for this hub.')
