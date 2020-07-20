@@ -225,11 +225,10 @@ class AOProtocol(asyncio.Protocol):
 
         ID#<pv:int>#<software:string>#<version:string>#%
         """
-        self.client.send_command('FL', 'yellowtext', 'customobjections',
-                                 'flipping', 'fastloading', 'noencryption',
-                                 'deskmod', 'evidence', 'modcall_reason',
-                                 'cccc_ic_support', 'arup', 'casing_alerts',
-                                 'prezoom', 'looping_sfx', 'additive', 'effects')
+        preflist = self.client.server.supported_features.copy()
+        if not self.client.area.area_manager.arup_enabled and 'arup' in preflist:
+            preflist.remove('arup')
+        self.client.send_command('FL', preflist)
 
     def net_cmd_ch(self, _):
         """Reset the client drop timeout (keepalive).

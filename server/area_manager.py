@@ -755,6 +755,7 @@ class AreaManager:
 
         # prefs
         self.move_delay = 0
+        self.arup_enabled = True
 
         self.load_areas()
 
@@ -869,6 +870,13 @@ class AreaManager:
                 return area
         raise AreaError('Area not found.')
 
+    def send_command(self, cmd, *args):
+        """
+        Broadcast an AO-compatible command to all areas and all clients in those areas.
+        """
+        for area in self.areas:
+            area.send_command(cmd, *args)
+
     def send_remote_command(self, area_ids, cmd, *args):
         """
         Broadcast an AO-compatible command to a specified
@@ -881,13 +889,20 @@ class AreaManager:
             self.get_area_by_id(a_id).send_command(cmd, *args)
             self.get_area_by_id(a_id).send_owner_command(cmd, *args)
 
-    #Global update of all areas for the client music lists in the hub
     def broadcast_area_list(self):
+        """Global update of all areas for the client music lists in the hub."""
         for area in self.areas:
             area.broadcast_area_list()
 
+    def broadcast_ooc(self, msg):
+        """Broadcast an OOC message to all areas in this hub."""
+        for area in self.areas:
+            area.broadcast_ooc(msg)
+
     def send_arup_players(self):
         """Broadcast ARUP packet containing player counts."""
+        if not self.arup_enabled:
+            return
         players_list = [0]
         for client in self.server.client_manager.clients:
             for area in client.local_area_list:
@@ -896,7 +911,9 @@ class AreaManager:
             self.server.send_arup(client, players_list)
 
     def send_arup_status(self):
-        """Broadcast ARUP packet containing area statuses."""
+        """Broadcast ARUP packet containing area statuses."""        
+        if not self.arup_enabled:
+            return
         status_list = [1]
         for client in self.server.client_manager.clients:
             for area in client.local_area_list:
@@ -905,6 +922,8 @@ class AreaManager:
 
     def send_arup_cms(self):
         """Broadcast ARUP packet containing area CMs."""
+        if not self.arup_enabled:
+            return        
         cms_list = [2]
         for client in self.server.client_manager.clients:
             for area in client.local_area_list:
@@ -916,6 +935,8 @@ class AreaManager:
 
     def send_arup_lock(self):
         """Broadcast ARUP packet containing the lock status of each area."""
+        if not self.arup_enabled:
+            return        
         lock_list = [3]
         for client in self.server.client_manager.clients:
             for area in client.local_area_list:

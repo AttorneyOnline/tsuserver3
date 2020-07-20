@@ -62,6 +62,11 @@ class TsuServer3:
         self.ipRange_bans = []
         self.geoIpReader = None
         self.useGeoIp = False
+        self.supported_features = ['yellowtext', 'customobjections',
+                                   'flipping', 'fastloading', 'noencryption',
+                                   'deskmod', 'evidence', 'modcall_reason',
+                                   'cccc_ic_support', 'casing_alerts', 'prezoom',
+                                   'arup', 'looping_sfx', 'additive', 'effects']
 
         try:
             self.geoIpReader = geoip2.database.Reader('./storage/GeoLite2-ASN.mmdb')

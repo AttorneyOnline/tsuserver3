@@ -45,6 +45,9 @@ __all__ = [
     'ooc_cmd_peek',
     'ooc_cmd_area_move_delay',
     'ooc_cmd_hub_move_delay',
+    # Madness incarnate
+    'ooc_cmd_hub_arup_enable',
+    'ooc_cmd_hub_arup_disable',
 ]
 
 
@@ -376,6 +379,7 @@ def ooc_cmd_area_remove(client, arg):
     else:
         raise ArgumentError('Invalid number of arguments. Use /area_remove <aid>.')
 
+
 @mod_only()
 def ooc_cmd_area_rename(client, arg):
     """
@@ -391,6 +395,7 @@ def ooc_cmd_area_rename(client, arg):
             raise
     else:
         raise ArgumentError('Invalid number of arguments. Use /area_rename <name>.')
+
 
 @mod_only()
 def ooc_cmd_area_swap(client, arg):
@@ -410,6 +415,7 @@ def ooc_cmd_area_swap(client, arg):
         raise ArgumentError('Area IDs must be a number.')
     except (AreaError, ClientError):
         raise
+
 
 @mod_only(area_owners=True)
 def ooc_cmd_area_pref(client, arg):
@@ -831,3 +837,33 @@ def ooc_cmd_hub_move_delay(client, arg):
         raise ArgumentError('Delay must be an integer between -1800 and 1800.')
     except (AreaError, ClientError):
         raise
+
+
+@mod_only()
+def ooc_cmd_hub_arup_enable(client, arg):
+    """
+    Enable the ARUP system for this hub.
+    Usage: /hub_arup_enable
+    """
+    if client.area.area_manager.arup_enabled:
+        raise ClientError('ARUP system is already enabled! Use /arup_disable to disable it.')
+    client.area.area_manager.arup_enabled = True
+    client.area.area_manager.send_command('FL', client.server.supported_features)
+    client.server.area_manager.broadcast_area_list()
+    client.area.area_manager.broadcast_ooc('ARUP system has been enabled for this hub.')
+
+
+@mod_only()
+def ooc_cmd_hub_arup_disable(client, arg):
+    """
+    Disable the ARUP system for this hub.
+    Usage: /hub_arup_disable
+    """
+    if not client.area.area_manager.arup_enabled:
+        raise ClientError('ARUP system is already disabled! Use /arup_enable to enable it.')
+    client.area.area_manager.arup_enabled = False
+    preflist = client.server.supported_features.copy()
+    preflist.remove('arup')
+    client.area.area_manager.send_command('FL', preflist)
+    client.server.area_manager.broadcast_area_list()
+    client.area.area_manager.broadcast_ooc('ARUP system has been disabled for this hub.')
