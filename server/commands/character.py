@@ -21,6 +21,8 @@ __all__ = [
     'ooc_cmd_player_move_delay',
     'ooc_cmd_hide',
     'ooc_cmd_unhide',
+    'ooc_cmd_sneak',
+    'ooc_cmd_unsneak',
     'ooc_cmd_listen_pos',
     'ooc_cmd_unlisten_pos',
 ]
@@ -398,6 +400,30 @@ def ooc_cmd_unhide(client, arg):
                 f'You have revealed [{c.id}] {c.char_name} for /getarea and playercounts.')
     else:
         client.send_ooc('No targets found.')
+
+
+def ooc_cmd_sneak(client, arg):
+    """
+    Begin sneaking a.k.a. hide your area moving messages from the OOC.
+    Usage: /sneak
+    """
+    if arg != '':
+        raise ArgumentError('This command takes no arguments!')
+    if client.sneaking:
+        raise ClientError('You are already sneaking! Use /unsneak to stop sneaking.')
+    client.sneak(True)
+
+
+def ooc_cmd_unsneak(client, arg):
+    """
+    Stop sneaking a.k.a. show your area moving messages in the OOC.
+    Usage: /sneak
+    """
+    if arg != '':
+        raise ArgumentError('This command takes no arguments!')
+    if not client.sneaking:
+        raise ClientError('You are not sneaking! Use /sneak to start sneaking.')
+    client.sneak(False)
 
 
 def ooc_cmd_listen_pos(client, arg):

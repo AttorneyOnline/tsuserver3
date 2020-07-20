@@ -104,6 +104,7 @@ class ClientManager:
             # client status stuff
             self.blinded = False
             self.hidden = False
+            self.sneaking = False
             self.listen_pos = None
 
             # a list of all areas the client can currently see
@@ -327,9 +328,6 @@ class ClientManager:
             self.area.area_manager.send_arup_cms()
             self.area.area_manager.send_arup_lock()
             # HAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHHAHAHAHAHA
-
-            self.send_ooc(
-                f'Changed area to {area.name} [{self.area.status}].')
             
             # Update everyone's available characters list
             self.area.send_command('CharsCheck',
@@ -381,11 +379,23 @@ class ClientManager:
                 self.send_ooc(
                     'This area is spectatable, but not free - you cannot talk in-character unless invited.'
                 )
+
             # Mods and area owners can be any character regardless of availability
             if not area.is_char_available(self.char_id) and not self.is_mod and self not in area.owners:
                 self.check_char_taken(area)
+
+            old_area = self.area
             self.set_area(area, target_pos)
             self.last_move_time = round(time.time() * 1000.0)
+
+            if not self.sneaking and not self.hidden:
+                old_area.broadcast_ooc(
+                    f'[{self.id}] {self.char_name} leaves to [{area.id}] {area.name}.')
+                area.broadcast_ooc(
+                    f'[{self.id}] {self.char_name} enters from [{old_area.id}] {old_area.name}.')
+            else:
+                self.send_ooc(
+                    f'Changed area to {area.name} unannounced.')
 
         def get_area_list(self, hidden=False, linked=False):
             area_list = []
@@ -627,6 +637,13 @@ class ClientManager:
                 msg = 'now'
             self.send_ooc(f'You are {msg} blinded from the area and seeing non-broadcasted IC messages.')
             self.send_command('LE', *self.area.get_evidence_list(self))
+
+        def sneak(self, tog=True):
+            self.sneaking = tog
+            msg = 'no longer'
+            if tog:
+                msg = 'now'
+            self.send_ooc(f'You are {msg} sneaking (area transfer announcements will {msg} be hidden).')
 
         def change_position(self, pos=''):
             """
