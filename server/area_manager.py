@@ -362,12 +362,27 @@ class AreaManager:
                 # Blinded clients don't receive IC messages
                 if c.blinded:
                     continue
+                # pos doesn't match listen_pos, we're not listening so make this an OOC message instead
+                if client.listen_pos != None and (client.listen_pos == 'self' and args[5] != client.pos) or \
+                   len(client.listen_pos) > 0 and not (args[5] in client.listen_pos):
+                    name = client.name
+                    if args[8] != -1:
+                        name = self.server.char_list[args[8]]
+                    if args[15] != '':
+                        name = args[15]
+                    client.send_command('CT', f'[pos \'{args[5]}\'] {name}', args[4]) #send the mesage as OOC
+                    return
                 c.send_command('MS', *args)
 
             # args[4] = msg
             # args[15] = showname
+            name = client.name
+            if args[8] != -1:
+                name = self.server.char_list[args[8]]
+            if args[15] != '':
+                name = args[15]
             client.area.set_next_msg_delay(len(args[4]))
-            database.log_ic(client, client.area, args[15], args[4])
+            database.log_ic(client, client.area, name, args[4])
 
             if (self.is_recording):
                 self.recorded_messages.append(args)

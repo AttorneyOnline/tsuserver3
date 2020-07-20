@@ -104,6 +104,7 @@ class ClientManager:
             # client status stuff
             self.blinded = False
             self.hidden = False
+            self.listen_pos = None
 
             # a list of all areas the client can currently see
             self.local_area_list = []

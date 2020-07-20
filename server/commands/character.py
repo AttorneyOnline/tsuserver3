@@ -21,6 +21,8 @@ __all__ = [
     'ooc_cmd_player_move_delay',
     'ooc_cmd_hide',
     'ooc_cmd_unhide',
+    'ooc_cmd_listen_pos',
+    'ooc_cmd_unlisten_pos',
 ]
 
 
@@ -395,4 +397,36 @@ def ooc_cmd_unhide(client, arg):
             client.send_ooc(
                 f'You have revealed [{c.id}] {c.char_name} for /getarea and playercounts.')
     else:
-        client.send_ooc('No targets found.')
+        client.send_ooc('No targets found.')def ooc_cmd_listen_pos(client, arg):
+
+
+def ooc_cmd_listen_pos(client, arg):
+    """
+    Start only listening to your currently occupied pos.
+    All messages outside of that pos will be reflected in the OOC.
+    Optional argument is a list of positions you want to listen to.
+    Usage: /listen_pos [pos1] [pos2] [posX]
+    """
+    args = arg.split()
+    value = 'self'
+    if len(args) > 0:
+        value = args
+
+    client.listen_pos = value
+    if value == 'self':
+        value = f'listening to your own pos {client.pos}'
+    else:
+        value = value.join(', ')
+        value = f'listening to pos {value}'
+    client.send_ooc(f'You are {value}. Use /unlisten_pos to stop listening.')
+
+
+def ooc_cmd_unlisten_pos(client, arg):
+    """
+    Undo the effects of /listen_pos command so you stop listening to the position(s).
+    Usage: /unlisten_pos
+    """
+    if client.listen_pos == None:
+        raise ClientError('You are not listening to any pos at the moment!')
+    client.listen_pos = None
+    client.send_ooc(f'You re no longer listening to any pos (All IC messages will appear as normal).')
