@@ -15,6 +15,8 @@ __all__ = [
     'ooc_cmd_area_lock',
     'ooc_cmd_area_spectate',
     'ooc_cmd_area_unlock',
+    'ooc_cmd_lock',
+    'ooc_cmd_unlock',
     'ooc_cmd_invite',
     'ooc_cmd_uninvite',
     'ooc_cmd_area_kick',
@@ -254,6 +256,43 @@ def ooc_cmd_area_unlock(client, arg):
         raise ArgumentError('Target must be an abbreviation or number.')
     except (ClientError, AreaError):
         raise
+
+
+def ooc_cmd_lock(client, arg):
+    """
+    Context-sensitive function to lock area(s) and/or area link(s).
+    Usage: /lock - lock current area. /lock [id] - lock target area. /lock 1-5 - lock the link from area 1 to area 5.
+    Multiple targets may be passed.
+    """
+    args = arg.split()
+    areas = args
+    for a in args:
+        link = a.split('-')
+        if len(link) <= 1:
+            continue
+        ooc_cmd_link_lock(client, ' '.join([link[0], link[1]]))
+        areas.remove(a)
+    areas = ' '.join(areas)
+    ooc_cmd_area_lock(client, areas)
+
+
+@mod_only()
+def ooc_cmd_unlock(client, arg):
+    """
+    Context-sensitive function to unlock area(s) and/or area link(s).
+    Usage: /unlock - unlock current area. /unlock [id] - lock target area. /unlock 1-5 - lock the link from area 1 to area 5.
+    Multiple targets may be passed.
+    """
+    args = arg.split()
+    areas = args
+    for a in args:
+        link = a.split('-')
+        if len(link) <= 1:
+            continue
+        ooc_cmd_link_unlock(client, ' '.join([link[0], link[1]]))
+        areas.remove(a)
+    areas = ' '.join(areas)
+    ooc_cmd_area_unlock(client, areas)
 
 
 @mod_only(area_owners=True)
