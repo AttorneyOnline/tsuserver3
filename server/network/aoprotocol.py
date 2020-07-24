@@ -453,6 +453,9 @@ class AOProtocol(asyncio.Protocol):
                     "While that is not a blankpost, it is still pretty spammy. Try forming sentences."
                 )
                 return
+        if text.lstrip().startswith('(('):
+            self.client.send_ooc("Please, *please* use the OOC chat instead of polluting IC. Normal OOC is local to area. You can use /g to talk across the entire server.")
+            return
         if text.startswith('/a '):
             part = text.split(' ')
             try:
