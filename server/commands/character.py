@@ -27,6 +27,8 @@ __all__ = [
     'ooc_cmd_unsneak',
     'ooc_cmd_listen_pos',
     'ooc_cmd_unlisten_pos',
+    'ooc_cmd_save_character_data',
+    'ooc_cmd_load_character_data',
 ]
 
 
@@ -481,3 +483,37 @@ def ooc_cmd_unlisten_pos(client, arg):
         raise ClientError('You are not listening to any pos at the moment!')
     client.listen_pos = None
     client.send_ooc(f'You re no longer listening to any pos (All IC messages will appear as normal).')
+
+
+@mod_only()
+def ooc_cmd_save_character_data(client, arg):
+    """
+    Save the move_delay, keys, etc. for characters into a file in the storage/character_data/ folder.
+    Usage: /save_character_data <path>
+    """
+    if len(arg) < 3:
+        client.send_ooc("Filename must be at least 3 symbols long!")
+        return
+
+    try:
+        path = 'storage/character_data'
+        arg = f'{path}/{arg}.yaml'
+        client.area.area_manager.save_character_data(arg)
+        client.send_ooc(f'Saving as {arg} character data...')
+    except AreaError:
+        raise
+
+
+@mod_only()
+def ooc_cmd_load_character_data(client, arg):
+    """
+    Load the move_delay, keys, etc. for characters from a file in the storage/character_data/ folder.
+    Usage: /load_character_data <path>
+    """
+    try:
+        path = 'storage/character_data'
+        arg = f'{path}/{arg}.yaml'
+        client.server.area_manager.load_character_data(arg)
+        client.send_ooc(f'Loading {arg} character data...')
+    except AreaError:
+        raise

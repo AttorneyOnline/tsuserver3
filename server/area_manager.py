@@ -764,6 +764,10 @@ class AreaManager:
         self.arup_enabled = True
         self.hide_clients = False
 
+        # Save character information for character select screen ID's in the hub data
+        # ex. {"1": {"keys": [1, 2, 3, 5], "fatigue": 100.0, "hunger": 34.0}, "2": {"keys": [4, 6, 8]}}
+        self.character_data = {}
+
         self.load_areas()
 
     def load_areas(self, path='config/areas.yaml'):
@@ -784,7 +788,13 @@ class AreaManager:
                 self.create_area()
 
             for i, area in enumerate(hub):
-                self.areas[i].load(area)
+                # if 'character_data' in area:
+                #     try:
+                #         self.load_character_data(area['character_data'])
+                #     except:
+                #         print('Character data reference path invalid!')
+                if 'area' in area:
+                    self.areas[i].load(area)
 
             self.broadcast_area_list()
         except:
@@ -804,6 +814,61 @@ class AreaManager:
                 yaml.dump(areas, stream, default_flow_style=False)
         except:
             raise AreaError(f'File path {path} is invalid!')
+
+    def load_character_data(self, path='config/character_data.yaml'):
+        """
+        Load all the character-specific information such as movement delay, keys, etc.
+        :param path: filepath to the YAML file.
+
+        """
+        try:
+            with open(path, 'r') as chars:
+                data = yaml.safe_load(chars)
+        except:
+            raise AreaError(f'File path {path} is invalid!')
+
+        try:
+            self.character_data = data
+        except:
+            raise AreaError(f'Something went wrong while loading the character data!')
+
+    def save_character_data(self, path='config/character_data.yaml'):
+        """
+        Save all the character-specific information such as movement delay, keys, etc.
+        :param path: filepath to the YAML file.
+
+        """
+        try:
+            with open(path, 'w', encoding='utf-8') as stream:
+                yaml.dump(self.character_data, stream, default_flow_style=False)
+        except:
+            raise AreaError(f'File path {path} is invalid!')
+
+    def get_character_data(self, c_id, key, default_value = None):
+        """
+        Obtain the character data from the Hub data.
+        :param c_id: The Character Folder ID
+        :param key: The key to search the value for
+        :param default_value: What value should be returned if the look-up failed
+
+        """
+        if c_id not in self.character_data:
+            return default_value
+        if key not in self.character_data[c_id]:
+            return default_value
+        return self.character_data[c_id][key]
+
+    def set_character_data(self, c_id, key, value):
+        """
+        Obtain the character data from the Hub data.
+        :param c_id: The Character Folder ID
+        :param key: The key to save over
+        :param value: The value to save
+
+        """
+        if c_id not in self.character_data:
+            self.character_data[c_id] = {}
+        self.character_data[c_id][key] = value
 
     def create_area(self):
         """Create a new area instance and return it."""
