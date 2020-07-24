@@ -37,7 +37,7 @@ class AreaManager:
                      area_manager,
                      name):
             self.clients = set()
-            self.invite_list = {}
+            self.invite_list = set()
             self.area_manager = area_manager
             self._name = name
 
@@ -263,7 +263,7 @@ class AreaManager:
             """Mark the area as unlocked."""
             self.is_locked = self.Locked.FREE
             self.blankposting_allowed = True
-            self.invite_list = {}
+            self.invite_list.clear()
             self.area_manager.send_arup_lock()
             self.broadcast_ooc('This area is open now.')
 

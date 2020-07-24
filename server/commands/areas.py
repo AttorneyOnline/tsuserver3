@@ -329,7 +329,7 @@ def ooc_cmd_invite(client, arg):
     try:
         c = client.server.client_manager.get_targets(client, TargetType.ID,
                                                      int(arg), False)[0]
-        client.area.invite_list[c.id] = None
+        client.area.invite_list.add(c.id)
         client.send_ooc('{} is invited to your area.'.format(
             c.char_name))
         c.send_ooc(
@@ -362,7 +362,7 @@ def ooc_cmd_uninvite(client, arg):
                     "You were removed from the area whitelist.")
                 database.log_room('uninvite', client, client.area, target=c)
                 if client.area.is_locked != client.area.Locked.FREE:
-                    client.area.invite_list.pop(c.id)
+                    client.area.invite_list.discard(c.id)
         except AreaError:
             raise
         except ClientError:
@@ -418,7 +418,7 @@ def ooc_cmd_area_kick(client, arg):
                     f"You were kicked from the area to area {output}.")
                 database.log_room('area_kick', client, client.area, target=c, message=output)
                 if client.area.is_locked != client.area.Locked.FREE:
-                    client.area.invite_list.pop(c.id)
+                    client.area.invite_list.discard(c.id)
         except AreaError:
             raise
         except ClientError:
