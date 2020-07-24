@@ -523,3 +523,116 @@ def ooc_cmd_load_character_data(client, arg):
         client.send_ooc(f'Loading {arg} character data...')
     except AreaError:
         raise
+
+
+def mod_keys(client, arg, mod=0):
+    """
+    A helper function to reduce copy-pasted code for /keys_(set|add|remove) commands.
+    Modifies the keys of the target client/character folder/character id.
+    :param arg: The arguments passed from the /keys_(set|add|remove) commands.
+    :param mod: A number from 0-2 that dictates the operation. 0 = set, 1 = add, 2 = remove.
+    """
+    args = arg.split()
+    if len(args) <= 1:
+        raise ArgumentError("Please provide the key(s) to set. Keys must be a number 5 or a link eg. 1-5.")
+    try:
+        target = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), False)
+        if target:
+            target = target[0].c_id
+        else:
+            if args[0] != '-1' and (int(args[0]) in client.server.char_list):
+                target = int(args[0])
+            else:
+                try:
+                    target = client.server.get_char_id_by_name(arg)
+                except (ServerError):
+                    raise
+        args = args[1:]
+        keys = []
+        if mod == 1:
+            keys = client.area.area_manager.get_character_data(target, 'keys', [])
+        for a in args:
+            for key in a.split('-'):
+                # make sure all the keys are integers
+                key = int(key)
+            if not (a in keys):
+                if mod == 2:
+                    keys.remove(a)
+                else:
+                    keys.append(a)
+        client.area.area_manager.set_character_data(target, 'keys', keys)
+        client.send_ooc(f'Character folder {client.server.char_list[target]}\'s keys are updated: {keys}')
+    except ValueError:
+        raise ArgumentError('Keys must be a number like 5 or a link eg. 1-5.')
+    except (AreaError, ClientError):
+        raise
+
+
+@mod_only()
+def ooc_cmd_keys_set(client, arg):
+    """
+    Sets the keys of the target client/character folder/character id to the key(s). Keys must be a number like 5 or a link eg. 1-5.
+    Usage: /keys_set <char> [key(s)]
+    """
+    if not arg:
+        raise ArgumentError("Usage: /keys_set <char> [key(s)].")
+
+    mod_keys(client, arg)
+
+
+@mod_only()
+def ooc_cmd_keys_add(client, arg):
+    """
+    Adds the keys of the target client/character folder/character id to the key(s). Keys must be a number like 5 or a link eg. 1-5.
+    Usage: /keys_add <char> [key(s)]
+    """
+    if not arg:
+        raise ArgumentError("Usage: /keys_add <char> [key(s)].")
+
+    mod_keys(client, arg, 1)
+
+
+@mod_only()
+def ooc_cmd_keys_remove(client, arg):
+    """
+    Remvove the keys of the target client/character folder/character id from the key(s). Keys must be a number like 5 or a link eg. 1-5.
+    Usage: /keys_remove <char>  [key(s)]
+    """
+    if not arg:
+        raise ArgumentError("Usage: /keys_remove <char> [area id(s)]. Removes the selected 'keys' from the user.")
+
+    mod_keys(client, arg, 2)
+
+
+def ooc_cmd_keys(client, arg):
+    """
+    Check your own keys, or someone else's (if admin).
+    Keys allow you to /lock or /unlock specific areas, OR
+    area links if it's formatted like 1-5
+    Usage: /keys [target_id]
+    """
+    args = arg.split()
+    if len(args) < 1:
+        client.send_ooc(f'Your current keys are {client.keys}')
+        return
+    if not client.is_mod:
+        raise ClientError('Only mods can check other people\'s keys.')
+    if len(args) == 1:
+        try:
+            target = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), False)
+            if target:
+                target = target[0].c_id
+            else:
+                if args[0] != '-1' and (int(args[0]) in client.server.char_list):
+                    target = int(args[0])
+                else:
+                    try:
+                        target = client.server.get_char_id_by_name(arg)
+                    except (ServerError):
+                        raise
+            keys = client.area.area_manager.get_character_data(target, 'keys', [])
+            client.send_ooc(f'Target\'s current keys are {keys}')
+        except:
+            raise ArgumentError('Target not found.')
+    else:
+        raise ArgumentError("Usage: /keys [target_id].")
