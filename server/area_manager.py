@@ -265,27 +265,16 @@ class AreaManager:
             self.blankposting_allowed = True
             self.invite_list.clear()
             self.area_manager.send_arup_lock()
-            self.broadcast_ooc('This area is open now.')
 
         def spectator(self):
             """Mark the area as spectator-only."""
             self.is_locked = self.Locked.SPECTATABLE
-            for i in self.clients:
-                self.invite_list[i.id] = None
-            for i in self.owners:
-                self.invite_list[i.id] = None
             self.area_manager.send_arup_lock()
-            self.broadcast_ooc('This area is spectatable now.')
 
         def lock(self):
             """Mark the area as locked."""
             self.is_locked = self.Locked.LOCKED
-            for i in self.clients:
-                self.invite_list[i.id] = None
-            for i in self.owners:
-                self.invite_list[i.id] = None
             self.area_manager.send_arup_lock()
-            self.broadcast_ooc('This area is locked now.')
         
         def link(self, target, locked=False, hidden=False, target_pos='', can_peek=True):
             """
@@ -557,7 +546,7 @@ class AreaManager:
             Check if this room is locked to a client.
             :param client: sender
             """
-            return self.is_locked != self.Locked.FREE and not client.is_mod and not client.id in self.invite_list
+            return self.is_locked == self.Locked.SPECTATABLE and not client.is_mod and not client.id in self.invite_list and not client.id in self.owners
 
         def change_hp(self, side, val):
             """

@@ -387,7 +387,7 @@ class ClientManager:
 
                     target_pos = link["target_pos"]
 
-            if area.is_locked == area.Locked.LOCKED and not self.is_mod and not self.id in area.invite_list:
+            if area.is_locked == area.Locked.LOCKED and not self.is_mod and not self.id in area.invite_list and not self.id in area.owners:
                 raise ClientError('That area is locked!')
 
             delay = self.area.time_until_move(self)
@@ -395,7 +395,7 @@ class ClientManager:
                 sec = int(math.ceil(delay * 0.001))
                 raise ClientError(f'You need to wait {sec} seconds until you can move again.')
 
-            if area.is_locked == area.Locked.SPECTATABLE and not self.is_mod and not self.id in area.invite_list:
+            if area.cannot_ic_interact(self):
                 self.send_ooc(
                     'This area is spectatable, but not free - you cannot talk in-character unless invited.'
                 )

@@ -975,7 +975,7 @@ def ooc_cmd_peek(client, arg):
                 if not link["can_peek"] and not allowed:
                     raise ClientError('Cannot peek through that path!')
 
-        if area.is_locked == area.Locked.LOCKED and not client.is_mod and not client.id in area.invite_list:
+        if area.is_locked == area.Locked.LOCKED and not client.is_mod and not client.id in area.invite_list and not client.id in area.owners:
             raise ClientError('That area is locked!')
 
         _sort = [c.char_name for c in sorted(sorted_clients, key=lambda x: x.char_name)]
