@@ -99,7 +99,6 @@ class ClientManager:
 
             # movement system stuff
             self.last_move_time = 0
-            self.move_delay = 0
         
             # client status stuff
             self.blinded = False
@@ -649,7 +648,17 @@ class ClientManager:
             if self.char_id == -1:
                 return None
             return self.server.char_list[self.char_id]
-                
+
+        @property
+        def move_delay(self):
+            """Get the character's movement delay."""
+            return self.area.area_manager.get_character_data(self.char_name, 'move_delay', 0)
+
+        @move_delay.setter
+        def move_delay(self, value):
+            """Set the character's move delay in the character data."""
+            self.area.area_manager.set_character_data(self.char_name, 'move_delay', value)
+
         def hide(self, tog=True, target=None):
             self.hidden = tog
             msg = 'no longer hidden'
