@@ -225,8 +225,6 @@ def ooc_cmd_area_spectate(client, arg):
         raise ArgumentError('Target must be an abbreviation or number.')
     except (ClientError, AreaError):
         raise
-    if client.area.is_locked == client.area.Locked.FREE:
-        raise ClientError('Area is already unlocked.')
 
 
 def ooc_cmd_area_unlock(client, arg):
