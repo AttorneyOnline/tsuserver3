@@ -143,42 +143,117 @@ def ooc_cmd_getafk(client, arg):
     client.send_area_info(arg, False, afk_check=True)
 
 
-@mod_only(area_owners=True)
 def ooc_cmd_area_lock(client, arg):
     """
     Prevent users from joining the current area.
     Usage: /area_lock
     """
-    if not client.area.locking_allowed and not client.is_mod:
-        client.send_ooc('Area locking is disabled in this area.')
-    elif client.area.is_locked == client.area.Locked.LOCKED:
-        client.send_ooc('Area is already locked.')
-    client.area.lock()
+    args = arg.split()
+    if len(args) == 0:
+        args = [client.area.id]
+
+    try:
+        area_list = []
+        for aid in args:
+            try:
+                target_id = client.server.area_manager.get_area_by_abbreviation(aid).id
+            except:
+                target_id = int(aid)
+            area = client.server.area_manager.get_area_by_id(target_id)
+
+            if not client.is_mod:
+                if not area.locking_allowed:
+                    client.send_ooc(f'Area locking is disabled in area {area.name}.')
+                    continue
+                if not client in area.owners:
+                    client.send_ooc(f'You don\'t own area {area.name}.')
+                    continue
+            if area.is_locked == client.area.Locked.LOCKED:
+                client.send_ooc(f'Area {area.name} is already locked.')
+                continue
+            area.lock()
+            area_list.append(area.id)
+        client.send_ooc(f'Locked areas {area_list}.')
+    except ValueError:
+        raise ArgumentError('Target must be an abbreviation or number.')
+    except (ClientError, AreaError):
+        raise
 
 
-@mod_only(area_owners=True)
 def ooc_cmd_area_spectate(client, arg):
     """
     Allow users to join the current area, but only as spectators.
     Usage: /area_spectate
     """
-    if not client.area.locking_allowed and not client.is_mod:
-        client.send_ooc('Area locking is disabled in this area.')
-    elif client.area.is_locked == client.area.Locked.SPECTATABLE:
-        client.send_ooc('Area is already spectatable.')
-    client.area.spectator()
+    args = arg.split()
+    if len(args) == 0:
+        args = [client.area.id]
+
+    try:
+        area_list = []
+        for aid in args:
+            try:
+                target_id = client.server.area_manager.get_area_by_abbreviation(aid).id
+            except:
+                target_id = int(aid)
+            area = client.server.area_manager.get_area_by_id(target_id)
+
+            if not client.is_mod:
+                if not area.locking_allowed:
+                    client.send_ooc(f'Area locking is disabled in area {area.name}.')
+                    continue
+                if not client in area.owners:
+                    client.send_ooc(f'You don\'t own area {area.name}.')
+                    continue
+            if area.is_locked == client.area.Locked.SPECTATABLE:
+                client.send_ooc(f'Area {area.name} is already spectatable.')
+                continue
+            area.spectator()
+            area_list.append(area.id)
+        client.send_ooc(f'Made areas {area_list} spectatable.')
+    except ValueError:
+        raise ArgumentError('Target must be an abbreviation or number.')
+    except (ClientError, AreaError):
+        raise
+    if client.area.is_locked == client.area.Locked.FREE:
+        raise ClientError('Area is already unlocked.')
 
 
-@mod_only(area_owners=True)
 def ooc_cmd_area_unlock(client, arg):
     """
     Allow anyone to freely join the current area.
     Usage: /area_unlock
     """
-    if client.area.is_locked == client.area.Locked.FREE:
-        raise ClientError('Area is already unlocked.')
-    client.area.unlock()
-    client.send_ooc('Area is unlocked.')
+    args = arg.split()
+    if len(args) == 0:
+        args = [client.area.id]
+
+    try:
+        area_list = []
+        for aid in args:
+            try:
+                target_id = client.server.area_manager.get_area_by_abbreviation(aid).id
+            except:
+                target_id = int(aid)
+            area = client.server.area_manager.get_area_by_id(target_id)
+
+            if not client.is_mod:
+                if not area.locking_allowed:
+                    client.send_ooc(f'Area locking is disabled in area {area.name}.')
+                    continue
+                if not client in area.owners:
+                    client.send_ooc(f'You don\'t own area {area.name}.')
+                    continue
+            if area.is_locked == client.area.Locked.FREE:
+                client.send_ooc(f'Area {area.name} is already unlocked.')
+                continue
+            area.unlock()
+            area_list.append(area.id)
+        client.send_ooc(f'Unlocked areas {area_list}.')
+    except ValueError:
+        raise ArgumentError('Target must be an abbreviation or number.')
+    except (ClientError, AreaError):
+        raise
 
 
 @mod_only(area_owners=True)
