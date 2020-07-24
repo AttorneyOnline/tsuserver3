@@ -652,22 +652,22 @@ class ClientManager:
         @property
         def move_delay(self):
             """Get the character's movement delay."""
-            return self.area.area_manager.get_character_data(self.char_name, 'move_delay', 0)
+            return self.area.area_manager.get_character_data(self.char_id, 'move_delay', 0)
 
         @move_delay.setter
         def move_delay(self, value):
             """Set the character's move delay in the character data."""
-            self.area.area_manager.set_character_data(self.char_name, 'move_delay', value)
+            self.area.area_manager.set_character_data(self.char_id, 'move_delay', value)
 
         @property
         def keys(self):
             """Get the character's keys."""
-            return self.area.area_manager.get_character_data(self.char_name, 'keys', [])
+            return self.area.area_manager.get_character_data(self.char_id, 'keys', [])
 
         @keys.setter
         def keys(self, value):
             """Set the character's keys in the character data."""
-            self.area.area_manager.set_character_data(self.char_name, 'keys', value)
+            self.area.area_manager.set_character_data(self.char_id, 'keys', value)
 
         def hide(self, tog=True, target=None):
             self.hidden = tog

@@ -537,12 +537,12 @@ def mod_keys(client, arg, mod=0):
     :param mod: A number from 0-2 that dictates the operation. 0 = set, 1 = add, 2 = remove.
     """
     args = arg.split()
-    if len(args) <= 1:
+    if len(args) <= 1 and mod != 0:
         raise ArgumentError("Please provide the key(s) to set. Keys must be a number 5 or a link eg. 1-5.")
     try:
         target = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), False)
         if target:
-            target = target[0].c_id
+            target = target[0].char_id
         else:
             if args[0] != '-1' and (int(args[0]) in client.server.char_list):
                 target = int(args[0])
@@ -551,8 +551,13 @@ def mod_keys(client, arg, mod=0):
                     target = client.server.get_char_id_by_name(arg)
                 except (ServerError):
                     raise
-        args = args[1:]
+
+        if len(args) > 1:
+            args = args[1:]
+        else:
+            args = []
         keys = []
+
         if mod == 1:
             keys = client.area.area_manager.get_character_data(target, 'keys', [])
         for a in args:
@@ -625,7 +630,7 @@ def ooc_cmd_keys(client, arg):
         try:
             target = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), False)
             if target:
-                target = target[0].c_id
+                target = target[0].char_id
             else:
                 if args[0] != '-1' and (int(args[0]) in client.server.char_list):
                     target = int(args[0])
