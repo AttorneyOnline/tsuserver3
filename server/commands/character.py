@@ -29,6 +29,10 @@ __all__ = [
     'ooc_cmd_unlisten_pos',
     'ooc_cmd_save_character_data',
     'ooc_cmd_load_character_data',
+    'ooc_cmd_keys_set',
+    'ooc_cmd_keys_add',
+    'ooc_cmd_keys_remove',
+    'ooc_cmd_keys',
 ]
 
 
