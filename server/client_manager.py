@@ -371,6 +371,8 @@ class ClientManager:
                 # You gotta unhide first lol
                 self.hide(False)
                 raise ClientError('You had to leave your hiding spot - area transfer failed.')
+            if not (area == area.area_manager.default_area()) and self.area.is_locked == area.Locked.LOCKED and not self.is_mod and not self.id in self.area.invite_list and not self.id in self.area.owners:
+                raise ClientError('Your current area is locked! You may not leave.')
             target_pos = ''
             allowed = self.is_mod or self in area.owners or self in self.area.owners
             if len(self.area.links) > 0:
