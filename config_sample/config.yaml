@@ -40,6 +40,7 @@ motd: Welcome to my server!
 # and must also be forwarded.
 use_websockets: true
 websocket_port: 50001
+content_url: "https://example.com/base/"
 
 # Whether or not the server should be advertised on the server list.
 use_masterserver: true
