@@ -168,8 +168,12 @@ def ooc_cmd_area_lock(client, arg):
                     client.send_ooc(f'Area locking is disabled in area {area.name}.')
                     continue
                 if not client in area.owners:
-                    client.send_ooc(f'You don\'t own area {area.name}.')
-                    continue
+                    if not str(target_id) in client.keys:
+                        client.send_ooc(f'You don\'t have the keys to this {area.name}.')
+                        continue
+                    if not client.can_access_area(area):
+                        client.send_ooc(f'You have the keys to {area.name} but it is not accessible from your area.')
+                        continue
             if area.is_locked == client.area.Locked.LOCKED:
                 client.send_ooc(f'Area {area.name} is already locked.')
                 continue
@@ -205,8 +209,12 @@ def ooc_cmd_area_spectate(client, arg):
                     client.send_ooc(f'Area locking is disabled in area {area.name}.')
                     continue
                 if not client in area.owners:
-                    client.send_ooc(f'You don\'t own area {area.name}.')
-                    continue
+                    if not str(target_id) in client.keys:
+                        client.send_ooc(f'You don\'t have the keys to this {area.name}.')
+                        continue
+                    if not client.can_access_area(area):
+                        client.send_ooc(f'You have the keys to {area.name} but it is not accessible from your area.')
+                        continue
             if area.is_locked == client.area.Locked.SPECTATABLE:
                 client.send_ooc(f'Area {area.name} is already spectatable.')
                 continue
@@ -244,8 +252,12 @@ def ooc_cmd_area_unlock(client, arg):
                     client.send_ooc(f'Area locking is disabled in area {area.name}.')
                     continue
                 if not client in area.owners:
-                    client.send_ooc(f'You don\'t own area {area.name}.')
-                    continue
+                    if not str(target_id) in client.keys:
+                        client.send_ooc(f'You don\'t have the keys to this {area.name}.')
+                        continue
+                    if not client.can_access_area(area):
+                        client.send_ooc(f'You have the keys to {area.name} but it is not accessible from your area.')
+                        continue
             if area.is_locked == client.area.Locked.FREE:
                 client.send_ooc(f'Area {area.name} is already unlocked.')
                 continue
@@ -692,7 +704,6 @@ def ooc_cmd_area_unlink(client, arg):
         raise
 
 
-@mod_only(area_owners=True)
 def ooc_cmd_link_lock(client, arg):
     """
     Lock the path leading to target area(s).
@@ -708,6 +719,10 @@ def ooc_cmd_link_lock(client, arg):
                 target_id = client.server.area_manager.get_area_by_abbreviation(aid).id
             except:
                 target_id = int(aid)
+            if not client.is_mod and not client in client.area.owners:
+                if not f'{client.area.id}-{target_id}' in client.keys:
+                    client.send_ooc(f'You don\'t have the keys to the link {client.area.id}-{target_id}.')
+                    continue
             client.area.links[str(target_id)]["locked"] = True
             links.append(target_id)
         links = ', '.join(str(l) for l in links)
@@ -718,7 +733,6 @@ def ooc_cmd_link_lock(client, arg):
         raise
 
 
-@mod_only(area_owners=True)
 def ooc_cmd_link_unlock(client, arg):
     """
     Unlock the path leading to target area(s).
@@ -734,7 +748,10 @@ def ooc_cmd_link_unlock(client, arg):
                 target_id = client.server.area_manager.get_area_by_abbreviation(aid).id
             except:
                 target_id = int(aid)
-
+            if not client.is_mod and not client in client.area.owners:
+                if not f'{client.area.id}-{target_id}' in client.keys:
+                    client.send_ooc(f'You don\'t have the keys to the link {client.area.id}-{target_id}.')
+                    continue
             client.area.links[str(target_id)]["locked"] = False
             links.append(target_id)
         links = ', '.join(str(l) for l in links)

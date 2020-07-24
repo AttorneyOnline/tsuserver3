@@ -357,6 +357,9 @@ class ClientManager:
             # Send the evidence information
             self.send_command('LE', *self.area.get_evidence_list(self))
 
+        def can_access_area(self, area):
+            return len(self.area.links) <= 0 or (str(area.id) in self.area.links and not self.area.links[str(area.id)]["locked"])
+
         def change_area(self, area):
             """
             Switch the client to another area, unless the area is locked.
