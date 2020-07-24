@@ -374,7 +374,7 @@ class ClientManager:
             if not (area == area.area_manager.default_area()) and self.area.is_locked == area.Locked.LOCKED and not self.is_mod and not self.id in self.area.invite_list and not self.id in self.area.owners:
                 raise ClientError('Your current area is locked! You may not leave.')
             target_pos = ''
-            allowed = self.is_mod or self in area.owners or self in self.area.owners
+            allowed = self.is_mod or self in area.owners or self in self.area.owners or area == area.area_manager.default_area()
             if len(self.area.links) > 0:
                 if not str(area.id) in self.area.links and not allowed:
                     raise ClientError('That area is inaccessible from your area!')

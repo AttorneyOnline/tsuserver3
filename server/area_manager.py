@@ -84,7 +84,7 @@ class AreaManager:
             self.jukebox_votes = []
             self.jukebox_prev_char_id = -1
 
-            self.owners = []
+            self._owners = set()
             self.afkers = []
 
             # Dictionary of dictionaries with further info, examine def link for more info
@@ -115,6 +115,11 @@ class AreaManager:
         def server(self):
             """Area's server. Accesses AreaManager's 'server' property"""
             return self.area_manager.server
+
+        @property
+        def owners(self):
+            """Area's owners. Also appends Game Masters (Hub Managers)."""
+            return self.area_manager.owners | self._owners
 
         def abbreviate(self):
             """Abbreviate our name."""
@@ -662,7 +667,7 @@ class AreaManager:
             """
             Add a CM to the area.
             """
-            self.owners.append(client)
+            self.owners.add(client)
 
             # Make sure the client's available areas are updated
             self.broadcast_area_list(client)
@@ -747,6 +752,7 @@ class AreaManager:
     def __init__(self, server):
         self.server = server
         self.areas = []
+        self.owners = set()
 
         # prefs
         self.move_delay = 0
