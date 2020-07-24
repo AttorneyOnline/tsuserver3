@@ -179,7 +179,8 @@ def ooc_cmd_area_lock(client, arg):
                 continue
             area.lock()
             area_list.append(area.id)
-        client.send_ooc(f'Locked areas {area_list}.')
+        if len(area_list) > 0:
+            client.send_ooc(f'Locked areas {area_list}.')
     except ValueError:
         raise ArgumentError('Target must be an abbreviation or number.')
     except (ClientError, AreaError):
@@ -220,7 +221,8 @@ def ooc_cmd_area_spectate(client, arg):
                 continue
             area.spectator()
             area_list.append(area.id)
-        client.send_ooc(f'Made areas {area_list} spectatable.')
+        if len(area_list) > 0:
+            client.send_ooc(f'Made areas {area_list} spectatable.')
     except ValueError:
         raise ArgumentError('Target must be an abbreviation or number.')
     except (ClientError, AreaError):
@@ -261,7 +263,8 @@ def ooc_cmd_area_unlock(client, arg):
                 continue
             area.unlock()
             area_list.append(area.id)
-        client.send_ooc(f'Unlocked areas {area_list}.')
+        if len(area_list) > 0:
+            client.send_ooc(f'Unlocked areas {area_list}.')
     except ValueError:
         raise ArgumentError('Target must be an abbreviation or number.')
     except (ClientError, AreaError):
@@ -274,6 +277,8 @@ def ooc_cmd_lock(client, arg):
     Usage: /lock - lock current area. /lock [id] - lock target area. /lock !5 - lock the link from current area to area 5.
     Multiple targets may be passed.
     """
+    if arg == '':
+        arg = str(client.area.id)
     args = arg.split()
     areas = args.copy()
     links = []
@@ -291,13 +296,14 @@ def ooc_cmd_lock(client, arg):
         ooc_cmd_link_lock(client, links)
 
 
-@mod_only()
 def ooc_cmd_unlock(client, arg):
     """
     Context-sensitive function to unlock area(s) and/or area link(s).
     Usage: /unlock - unlock current area. /unlock [id] - unlock target area. /unlock !5 - unlock the link from current area to area 5.
     Multiple targets may be passed.
     """
+    if arg == '':
+        arg = str(client.area.id)
     args = arg.split()
     areas = args.copy()
     links = []
@@ -723,8 +729,9 @@ def ooc_cmd_link_lock(client, arg):
                     continue
             client.area.links[str(target_id)]["locked"] = True
             links.append(target_id)
-        links = ', '.join(str(l) for l in links)
-        client.send_ooc(f'Area {client.area.name} links {links} locked.')
+        if len(links) > 0:
+            links = ', '.join(str(l) for l in links)
+            client.send_ooc(f'Area {client.area.name} links {links} locked.')
     except (ValueError, KeyError):
         raise ArgumentError('Area ID must be a number or abbreviation and the link must exist.')
     except (AreaError, ClientError):
@@ -752,8 +759,9 @@ def ooc_cmd_link_unlock(client, arg):
                     continue
             client.area.links[str(target_id)]["locked"] = False
             links.append(target_id)
-        links = ', '.join(str(l) for l in links)
-        client.send_ooc(f'Area {client.area.name} links {links} unlocked.')
+        if len(links) > 0:
+            links = ', '.join(str(l) for l in links)
+            client.send_ooc(f'Area {client.area.name} links {links} unlocked.')
     except (ValueError, KeyError):
         raise ArgumentError('Area ID must be a number or abbreviation and the link must exist.')
     except (AreaError, ClientError):
@@ -779,8 +787,9 @@ def ooc_cmd_link_hide(client, arg):
 
             client.area.links[str(target_id)]["hidden"] = True
             links.append(target_id)
-        links = ', '.join(str(l) for l in links)
-        client.send_ooc(f'Area {client.area.name} links {links} hidden.')
+        if len(links) > 0:
+            links = ', '.join(str(l) for l in links)
+            client.send_ooc(f'Area {client.area.name} links {links} hidden.')
     except (ValueError, KeyError):
         raise ArgumentError('Area ID must be a number or abbreviation.')
     except (AreaError, ClientError):
@@ -806,8 +815,9 @@ def ooc_cmd_link_unhide(client, arg):
 
             client.area.links[str(target_id)]["hidden"] = False
             links.append(target_id)
-        links = ', '.join(str(l) for l in links)
-        client.send_ooc(f'Area {client.area.name} links {links} hidden.')
+        if len(links) > 0:
+            links = ', '.join(str(l) for l in links)
+            client.send_ooc(f'Area {client.area.name} links {links} hidden.')
     except (ValueError, KeyError):
         raise ArgumentError('Area ID must be a number or abbreviation.')
     except (AreaError, ClientError):
@@ -857,8 +867,9 @@ def ooc_cmd_link_peekable(client, arg):
 
             client.area.links[str(target_id)]["can_peek"] = True
             links.append(target_id)
-        links = ', '.join(str(l) for l in links)
-        client.send_ooc(f'Area {client.area.name} links {links} are now peekable.')
+        if len(links) > 0:
+            links = ', '.join(str(l) for l in links)
+            client.send_ooc(f'Area {client.area.name} links {links} are now peekable.')
     except (ValueError, KeyError):
         raise ArgumentError('Area ID must be a number or abbreviation.')
     except (AreaError, ClientError):
@@ -884,8 +895,9 @@ def ooc_cmd_link_unpeekable(client, arg):
 
             client.area.links[str(target_id)]["can_peek"] = False
             links.append(target_id)
-        links = ', '.join(str(l) for l in links)
-        client.send_ooc(f'Area {client.area.name} links {links} are no longer peekable.')
+        if len(links) > 0:
+            links = ', '.join(str(l) for l in links)
+            client.send_ooc(f'Area {client.area.name} links {links} are no longer peekable.')
     except (ValueError, KeyError):
         raise ArgumentError('Area ID must be a number or abbreviation.')
     except (AreaError, ClientError):
