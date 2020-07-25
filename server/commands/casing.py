@@ -31,8 +31,6 @@ def ooc_cmd_doc(client, arg):
         client.send_ooc(f'Document: {client.area.doc}')
         database.log_room('doc.request', client, client.area)
     else:
-        if not client in client.area.owners:
-            raise ClientError('You must be a CM of the area to do that.')
         client.area.change_doc(arg)
         client.area.broadcast_ooc('{} changed the doc link.'.format(
             client.char_name))
@@ -152,9 +150,6 @@ def ooc_cmd_uncm(client, arg):
                 client, TargetType.ID, _id, False)[0]
             if c in client.area.owners:
                 client.area.remove_owner(c)
-                client.area.broadcast_ooc(
-                    '{} [{}] is no longer CM in this area.'.format(
-                        c.char_name, c.id))
                 database.log_room('cm.remove', client, client.area, target=c)
             else:
                 client.send_ooc(

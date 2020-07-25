@@ -1171,6 +1171,8 @@ def ooc_cmd_info(client, arg):
         client.send_ooc(f'Info: {client.area.area_manager.info}')
         database.log_room('info.request', client, client.area)
     else:
+        if not client.is_mod and not client in client.area.area_manager.owners:
+            raise ClientError('You must be a GM of the Hub to do that.')
         client.area.area_manager.info = arg
         client.area.area_manager.broadcast_ooc('{} changed the Hub info.'.format(
             client.char_name))
@@ -1259,9 +1261,6 @@ def ooc_cmd_ungm(client, arg):
                 client, TargetType.ID, _id, False)[0]
             if c in client.area.area_manager.owners:
                 client.area.area_manager.remove_owner(c)
-                client.area.area_manager.broadcast_ooc(
-                    '{} [{}] is no longer GM in this area.'.format(
-                        c.char_name, c.id))
                 database.log_room('cm.remove', client, client.area, target=c)
             else:
                 client.send_ooc(
@@ -1283,8 +1282,6 @@ def ooc_cmd_desc(client, arg):
         client.send_ooc(f'Description: {client.area.desc}')
         database.log_room('desc.request', client, client.area)
     else:
-        if not client in client.area.owners:
-            raise ClientError('You must be a CM of the area to do that.')
         client.area.desc = arg
         desc = arg[:128]
         if len(arg) > len(desc):
