@@ -57,6 +57,8 @@ __all__ = [
     'ooc_cmd_unfollow',
     'ooc_cmd_info',
     'ooc_cmd_max_players',
+    'ooc_cmd_gm',
+    'ooc_cmd_ungm',
 ]
 
 
@@ -130,7 +132,7 @@ def ooc_cmd_getarea(client, arg):
     client.send_area_info(client.area.id, False)
 
 
-@mod_only()
+@mod_only(hub_owners=True)
 def ooc_cmd_getareas(client, arg):
     """
     Show information about all areas.
@@ -439,7 +441,7 @@ def ooc_cmd_area_kick(client, arg):
         client.send_ooc("No targets found.")
 
 
-@mod_only()
+@mod_only(hub_owners=True)
 def ooc_cmd_save_hub(client, arg):
     """
     Save the current Hub in the server's storage/hubs/<name>.yaml file.
@@ -462,7 +464,7 @@ def ooc_cmd_save_hub(client, arg):
         raise
 
 
-@mod_only()
+@mod_only(hub_owners=True)
 def ooc_cmd_load_hub(client, arg):
     """
     Load Hub data from the server's storage/hubs/<name>.yaml file.
@@ -496,7 +498,7 @@ def ooc_cmd_list_hubs(client, arg):
     client.send_ooc(text)
 
 
-@mod_only()
+@mod_only(hub_owners=True)
 def ooc_cmd_area_create(client, arg):
     """
     Create a new area.
@@ -509,7 +511,7 @@ def ooc_cmd_area_create(client, arg):
     client.send_ooc(f'New area created! ({area.name})')
 
 
-@mod_only()
+@mod_only(hub_owners=True)
 def ooc_cmd_area_remove(client, arg):
     """
     Remove specified area by Area ID.
@@ -532,7 +534,7 @@ def ooc_cmd_area_remove(client, arg):
         raise ArgumentError('Invalid number of arguments. Use /area_remove <aid>.')
 
 
-@mod_only()
+@mod_only(hub_owners=True)
 def ooc_cmd_area_rename(client, arg):
     """
     Rename area you are currently in to <name>.
@@ -549,7 +551,7 @@ def ooc_cmd_area_rename(client, arg):
         raise ArgumentError('Invalid number of arguments. Use /area_rename <name>.')
 
 
-@mod_only()
+@mod_only(hub_owners=True)
 def ooc_cmd_area_swap(client, arg):
     """
     Swap areas by Area IDs <aid1> and <aid2>.
@@ -1040,7 +1042,7 @@ def ooc_cmd_area_move_delay(client, arg):
         raise
 
 
-@mod_only()
+@mod_only(hub_owners=True)
 def ooc_cmd_hub_move_delay(client, arg):
     """
     Set the hub's move delay to a value in seconds. Can be negative.
@@ -1061,7 +1063,7 @@ def ooc_cmd_hub_move_delay(client, arg):
         raise
 
 
-@mod_only()
+@mod_only(hub_owners=True)
 def ooc_cmd_hub_arup_enable(client, arg):
     """
     Enable the ARUP system for this hub.
@@ -1075,7 +1077,7 @@ def ooc_cmd_hub_arup_enable(client, arg):
     client.area.area_manager.broadcast_ooc('ARUP system has been enabled for this hub.')
 
 
-@mod_only()
+@mod_only(hub_owners=True)
 def ooc_cmd_hub_arup_disable(client, arg):
     """
     Disable the ARUP system for this hub.
@@ -1091,10 +1093,10 @@ def ooc_cmd_hub_arup_disable(client, arg):
     client.area.area_manager.broadcast_ooc('ARUP system has been disabled for this hub.')
 
 
-@mod_only()
+@mod_only(hub_owners=True)
 def ooc_cmd_hub_hide_clients(client, arg):
     """
-    Enable the ARUP system for this hub.
+    Hide the playercounts for this Hub's areas.
     Usage: /hub_hide_clients
     """
     if client.area.area_manager.hide_clients:
@@ -1104,10 +1106,10 @@ def ooc_cmd_hub_hide_clients(client, arg):
     client.area.area_manager.broadcast_ooc('Client playercounts are now hidden for this hub.')
 
 
-@mod_only()
+@mod_only(hub_owners=True)
 def ooc_cmd_hub_unhide_clients(client, arg):
     """
-    Disable the ARUP system for this hub.
+    Unhide the playercounts for this Hub's areas.
     Usage: /hub_unhide_clients
     """
     if not client.area.area_manager.arup_enabled:
@@ -1117,7 +1119,7 @@ def ooc_cmd_hub_unhide_clients(client, arg):
     client.area.area_manager.broadcast_ooc('Client playercounts are no longer hidden for this hub.')
 
 
-@mod_only()
+@mod_only(hub_owners=True)
 def ooc_cmd_follow(client, arg):
     if len(arg) == 0:
         try:
@@ -1196,3 +1198,76 @@ def ooc_cmd_max_players(client, arg):
         raise ArgumentError('Area ID must be a name, abbreviation or a number.')
     except (AreaError, ClientError):
         raise
+
+
+def ooc_cmd_gm(client, arg):
+    """
+    Add a game master for the current Hub.
+    Usage: /gm <id>
+    """
+    if not client.area.area_manager.can_gm:
+        raise ClientError('You can\'t become a GM in this Hub!')
+    if len(client.area.area_manager.owners) == 0:
+        if len(arg) > 0:
+            raise ArgumentError(
+                'You cannot \'nominate\' people to be GMs when you are not one.'
+            )
+        client.area.area_manager.add_owner(client)
+        database.log_room('gm.add', client, client.area, target=client, message='self-added')
+    elif client in client.area.area_manager.owners:
+        if len(arg) > 0:
+            arg = arg.split(' ')
+        for id in arg:
+            try:
+                id = int(id)
+                c = client.server.client_manager.get_targets(
+                    client, TargetType.ID, id, False)[0]
+                if not c in client.area.clients:
+                    raise ArgumentError(
+                        'You can only \'nominate\' people to be GMs when they are in the area.'
+                    )
+                elif c in client.area.area_manager.owners:
+                    client.send_ooc(
+                        f'{c.char_name} [{c.id}] is already a GM here.')
+                else:
+                    client.area.area_manager.add_owner(c)
+                    database.log_room('gm.add', client, client.area, target=c)
+            except ValueError:
+                client.send_ooc(
+                    f'{id} does not look like a valid ID.')
+            except (ClientError, ArgumentError):
+                raise
+    else:
+        raise ClientError('You must be authorized to do that.')
+
+
+@mod_only(hub_owners=True)
+def ooc_cmd_ungm(client, arg):
+    """
+    Remove a game master from the current Hub.
+    Usage: /ungm <id>
+    """
+    if len(arg) > 0:
+        arg = arg.split()
+    else:
+        arg = [client.id]
+    for _id in arg:
+        try:
+            _id = int(_id)
+            c = client.server.client_manager.get_targets(
+                client, TargetType.ID, _id, False)[0]
+            if c in client.area.area_manager.owners:
+                client.area.area_manager.remove_owner(c)
+                client.area.area_manager.broadcast_ooc(
+                    '{} [{}] is no longer GM in this area.'.format(
+                        c.char_name, c.id))
+                database.log_room('cm.remove', client, client.area, target=c)
+            else:
+                client.send_ooc(
+                    'You cannot remove someone from GMing when they aren\'t a GM.'
+                )
+        except ValueError:
+            client.send_ooc(
+                f'{id} does not look like a valid ID.')
+        except (ClientError, ArgumentError):
+            raise

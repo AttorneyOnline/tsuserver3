@@ -78,13 +78,13 @@ def list_commands(submodule=''):
     return cmds
 
 
-def mod_only(area_owners=False):
+def mod_only(area_owners=False, hub_owners=False):
     import functools
     from ..exceptions import ClientError
     def decorator(func):
         @functools.wraps(func)
         def wrapper_mod_only(client, arg, *args, **kwargs):
-            if not client.is_mod and (not area_owners or client not in client.area.owners):
+            if not client.is_mod and (not area_owners or client not in client.area.owners) and (not hub_owners or client not in client.area.area_manager.owners):
                 raise ClientError('You must be authorized to do that.')
             func(client, arg, *args, **kwargs)
         return wrapper_mod_only

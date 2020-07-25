@@ -50,7 +50,7 @@ def ooc_cmd_cleardoc(client, arg):
     database.log_room('doc.clear', client, client.area)
 
 
-@mod_only()
+@mod_only(hub_owners=True)
 def ooc_cmd_evidence_mod(client, arg):
     """
     Change the evidence privilege mode. Refer to the documentation
@@ -61,6 +61,11 @@ def ooc_cmd_evidence_mod(client, arg):
         client.send_ooc(
             f'current evidence mod: {client.area.evidence_mod}')
     elif arg in ['FFA', 'Mods', 'CM', 'HiddenCM']:
+        if not client.is_mod:
+            if client.area.evidence_mod == 'Mods':
+                raise ClientError('You must be authorized to change this area\'s evidence mod from Mod-only.')
+            if arg == 'Mods':
+                raise ClientError('You must be authorized to set the area\'s evidence to Mod-only.')
         client.area.evidence_mod = arg
         client.area.broadcast_evidence_list()
         client.send_ooc(
@@ -119,9 +124,11 @@ def ooc_cmd_cm(client, arg):
                 else:
                     client.area.add_owner(c)
                     database.log_room('cm.add', client, client.area, target=c)
-            except:
+            except ValueError:
                 client.send_ooc(
                     f'{id} does not look like a valid ID.')
+            except (ClientError, ArgumentError):
+                raise
     else:
         raise ClientError('You must be authorized to do that.')
 
@@ -133,7 +140,7 @@ def ooc_cmd_uncm(client, arg):
     Usage: /uncm <id>
     """
     if len(arg) > 0:
-        arg = arg.split(' ')
+        arg = arg.split()
     else:
         arg = [client.id]
     for _id in arg:
@@ -151,9 +158,11 @@ def ooc_cmd_uncm(client, arg):
                 client.send_ooc(
                     'You cannot remove someone from CMing when they aren\'t a CM.'
                 )
-        except:
+        except ValueError:
             client.send_ooc(
                 f'{_id} does not look like a valid ID.')
+        except (ClientError, ArgumentError):
+            raise
 
 
 # LEGACY

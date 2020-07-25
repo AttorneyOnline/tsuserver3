@@ -143,7 +143,7 @@ def ooc_cmd_jukebox(client, arg):
             f'The jukebox has the following songs in it:{message}')
 
 
-@mod_only()
+@mod_only(area_owners=True)
 def ooc_cmd_play(client, arg):
     """
     Play a track.

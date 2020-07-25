@@ -264,7 +264,7 @@ def ooc_cmd_reload(client, arg):
     client.send_ooc('Character reloaded.')
 
 
-@mod_only()
+@mod_only(hub_owners=True)
 def ooc_cmd_blind(client, arg):
     """
     Blind the targeted player(s) from being able to see or talk IC.
@@ -293,7 +293,7 @@ def ooc_cmd_blind(client, arg):
         raise ArgumentError('No targets found.')
 
 
-@mod_only()
+@mod_only(hub_owners=True)
 def ooc_cmd_unblind(client, arg):
     """
     Undo effects of the /blind command.
@@ -322,7 +322,7 @@ def ooc_cmd_unblind(client, arg):
         raise ArgumentError('No targets found.')
 
 
-@mod_only()
+@mod_only(hub_owners=True)
 def ooc_cmd_player_move_delay(client, arg):
     """
     Set the player's move delay to a value in seconds. Can be negative.
@@ -351,7 +351,7 @@ def ooc_cmd_player_move_delay(client, arg):
         raise
 
 
-@mod_only()
+@mod_only(hub_owners=True)
 def ooc_cmd_player_hide(client, arg):
     """
     Hide player(s) from /getarea and playercounts.
@@ -385,7 +385,7 @@ def ooc_cmd_player_hide(client, arg):
         client.send_ooc('No targets found.')
 
 
-@mod_only()
+@mod_only(hub_owners=True)
 def ooc_cmd_player_unhide(client, arg):
     """
     Unhide player(s) from /getarea and playercounts.
@@ -498,7 +498,7 @@ def ooc_cmd_unlisten_pos(client, arg):
     client.send_ooc(f'You re no longer listening to any pos (All IC messages will appear as normal).')
 
 
-@mod_only()
+@mod_only(hub_owners=True)
 def ooc_cmd_save_character_data(client, arg):
     """
     Save the move_delay, keys, etc. for characters into a file in the storage/character_data/ folder.
@@ -517,7 +517,7 @@ def ooc_cmd_save_character_data(client, arg):
         raise
 
 
-@mod_only()
+@mod_only(hub_owners=True)
 def ooc_cmd_load_character_data(client, arg):
     """
     Load the move_delay, keys, etc. for characters from a file in the storage/character_data/ folder.
@@ -580,7 +580,7 @@ def mod_keys(client, arg, mod=0):
         raise
 
 
-@mod_only()
+@mod_only(hub_owners=True)
 def ooc_cmd_keys_set(client, arg):
     """
     Sets the keys of the target client/character folder/character id to the key(s). Keys must be a number like 5 or a link eg. 1-5.
@@ -592,7 +592,7 @@ def ooc_cmd_keys_set(client, arg):
     mod_keys(client, arg)
 
 
-@mod_only()
+@mod_only(hub_owners=True)
 def ooc_cmd_keys_add(client, arg):
     """
     Adds the keys of the target client/character folder/character id to the key(s). Keys must be a number like 5 or a link eg. 1-5.
@@ -604,7 +604,7 @@ def ooc_cmd_keys_add(client, arg):
     mod_keys(client, arg, 1)
 
 
-@mod_only()
+@mod_only(hub_owners=True)
 def ooc_cmd_keys_remove(client, arg):
     """
     Remvove the keys of the target client/character folder/character id from the key(s). Keys must be a number like 5 or a link eg. 1-5.

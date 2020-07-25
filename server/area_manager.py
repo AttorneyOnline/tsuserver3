@@ -782,6 +782,7 @@ class AreaManager:
         self.arup_enabled = True
         self.hide_clients = False
         self.info = 'No info.'
+        self.can_gm = True
 
         # Save character information for character select screen ID's in the hub data
         # ex. {"1": {"keys": [1, 2, 3, 5], "fatigue": 100.0, "hunger": 34.0}, "2": {"keys": [4, 6, 8]}}
@@ -940,8 +941,53 @@ class AreaManager:
         # Swap 'em good
         self.areas[b], self.areas[a] = self.areas[a], self.areas[b]
 
-    def change_rpmode(self, value):
-        pass
+    def add_owner(self, client):
+        """
+        Add a GM to the Hub.
+        """
+        self.owners.add(client)
+
+        # Make sure the client's available areas are updated
+        client.area.broadcast_area_list(client)
+
+        # HAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHHAHAHAHAHA
+        # This should be remade by only sending updates to those players
+        # who would actually be affected, and all players who don't need
+        # an update are ignored.
+        self.send_arup_players()
+        self.send_arup_status()
+        self.send_arup_cms()
+        self.send_arup_lock()
+        # HAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHHAHAHAHAHA
+
+        client.area.broadcast_evidence_list()
+
+        self.broadcast_ooc(
+            f'{client.char_name} [{client.id}] is GM in this hub now.')
+
+    def remove_owner(self, client):
+        """
+        Remove a GM from the Hub.
+        """
+        self.owners.remove(client)
+
+        # Make sure the client's available areas are updated
+        client.area.broadcast_area_list(client)
+
+        # HAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHHAHAHAHAHA
+        # This should be remade by only sending updates to those players
+        # who would actually be affected, and all players who don't need
+        # an update are ignored.
+        self.send_arup_players()
+        self.send_arup_status()
+        self.send_arup_cms()
+        self.send_arup_lock()
+        # HAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHHAHAHAHAHA
+
+        client.area.broadcast_evidence_list()
+
+        self.broadcast_ooc(
+            f'{client.char_name} [{client.id}] is no longer GM in this hub.')
 
     def default_area(self):
         """Get the default area."""
@@ -995,7 +1041,11 @@ class AreaManager:
     def broadcast_ooc(self, msg):
         """Broadcast an OOC message to all areas in this hub."""
         for area in self.areas:
-            area.broadcast_ooc(msg)
+            area.send_command('CT', area.server.config['hostname'], msg, '1')
+        area.send_owner_command(
+            'CT',
+            '[ALL]' + area.server.config['hostname'],
+            msg, '1')
 
     def send_arup_players(self):
         """Broadcast ARUP packet containing player counts."""

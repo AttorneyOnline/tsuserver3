@@ -8,7 +8,6 @@ __all__ = [
     'ooc_cmd_a',
     'ooc_cmd_s',
     'ooc_cmd_g',
-    'ooc_cmd_gm',
     'ooc_cmd_m',
     'ooc_cmd_lm',
     'ooc_cmd_announce',
@@ -73,22 +72,8 @@ def ooc_cmd_g(client, arg):
         raise ClientError('Global chat toggled off.')
     if len(arg) == 0:
         raise ArgumentError("You can't send an empty message.")
-    client.server.broadcast_global(client, arg)
+    client.server.broadcast_global(client, arg, client.is_mod)
     database.log_room('chat.global', client, client.area, message=arg)
-
-
-@mod_only()
-def ooc_cmd_gm(client, arg):
-    """
-    Broadcast a message to all areas, speaking officially.
-    Usage: /gm <message>
-    """
-    if client.muted_global:
-        raise ClientError('You have the global chat muted.')
-    if len(arg) == 0:
-        raise ArgumentError("Can't send an empty message.")
-    client.server.broadcast_global(client, arg, True)
-    database.log_room('chat.global-mod', client, client.area, message=arg)
 
 
 @mod_only()
