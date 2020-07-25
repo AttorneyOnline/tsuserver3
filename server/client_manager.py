@@ -110,6 +110,10 @@ class ClientManager:
 
             # a list of all areas the client can currently see
             self.local_area_list = []
+            # a list of all songs the client can currently see
+            self.local_music_list = []
+            # reference to the storage/musiclists/ref.yaml for displaying purposes
+            self.local_music_ref = ''
 
         def send_raw_message(self, msg):
             """
@@ -288,6 +292,7 @@ class ClientManager:
             else:
                 song_list = self.server.music_list
 
+            self.local_music_list = music
             song_list = self.server.build_music_list_ao2(song_list)
             # KEEP THE ASTERISK
             self.send_command('FM', *song_list)
