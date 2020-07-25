@@ -12,7 +12,11 @@ __all__ = [
     'ooc_cmd_jukebox',
     'ooc_cmd_play',
     'ooc_cmd_blockdj',
-    'ooc_cmd_unblockdj'
+    'ooc_cmd_unblockdj',
+    'ooc_cmd_musiclists',
+    'ooc_cmd_musiclist',
+    'ooc_cmd_area_musiclist',
+    'ooc_cmd_hub_musiclist',
 ]
 
 
@@ -203,3 +207,57 @@ def ooc_cmd_unblockdj(client, arg):
         database.log_room('unblockdj', client, client.area, target=target)
     client.send_ooc('Unblockdj\'d {}.'.format(
         targets[0].char_name))
+
+
+def ooc_cmd_musiclists(client, arg):
+    """
+    Displays all the available music lists.
+    Usage: /musiclists
+    """
+    text = 'Available musiclists:'
+    from os import listdir
+    for F in listdir('storage/musiclists/'):
+        if F.lower().endswith('.yaml'):
+            text += '\n- {}'.format(F[:-5])
+
+    client.send_ooc(text)
+
+
+def ooc_cmd_musiclist(client, arg):
+    """
+    Load a client-side music list. Pass no arguments to reset. /musiclists to see available lists.
+    Note: if there is a set area/hub music list, their music lists will take priority.
+    Usage: /musiclist [path]
+    """
+    if arg == '':
+        client.clear_music()
+    else:
+        client.load_music(f'storage/musiclists/{arg}.yaml')
+    client.refresh_music_list()
+
+@mod_only(area_owners=True)
+def ooc_cmd_area_musiclist(client, arg):
+    """
+    Load an area-wide music list. Pass no arguments to reset. /musiclists to see available lists.
+    Area list takes priority over client lists.
+    Usage: /area_musiclist [path]
+    """
+    if arg == '':
+        client.area.clear_music()
+    else:
+        client.area.load_music(f'storage/musiclists/{arg}.yaml')
+    client.server.client_manager.refresh_music_list(client.area.clients)
+
+
+@mod_only(hub_owners=True)
+def ooc_cmd_hub_musiclist(client, arg):
+    """
+    Load a hub-wide music list. Pass no arguments to reset. /musiclists to see available lists.
+    Hub list takes priority over client lists.
+    Usage: /hub_musiclist [path]
+    """
+    if arg == '':
+        client.area.area_manager.clear_music()
+    else:
+        client.area.area_manager.load_music(f'storage/musiclists/{arg}.yaml')
+    client.server.client_manager.refresh_music_list(client.area.area_manager.clients)

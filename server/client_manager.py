@@ -25,6 +25,7 @@ from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, AreaError
 
+import oyaml as yaml #ordered yaml
 
 class ClientManager:
     """Holds the list of all clients currently connected to the server."""
@@ -114,6 +115,8 @@ class ClientManager:
             self.local_music_list = []
             # reference to the storage/musiclists/ref.yaml for displaying purposes
             self.local_music_ref = ''
+            # a music list override that was loaded manually by the client
+            self.override_music_list = []
 
         def send_raw_message(self, msg):
             """
@@ -280,6 +283,72 @@ class ClientManager:
                 self.change_character(self.char_id, True)
             except ClientError:
                 raise
+
+        def clear_music(self):
+            self.music_ref = ''
+            self.override_music_list.clear()
+
+        def load_music(self, music_ref):
+            """Load a music list from a music_ref. Use it for the local music list and reload it."""
+            #TODO: Move the musiclist parsing function to tsuserver3.py or something
+            try:
+                with open(f'storage/musiclists/{music_ref}.yaml', 'r', encoding='utf-8') as stream:
+                    music_list = yaml.safe_load(stream)
+
+                prepath = ''
+                for item in music_list:
+                    if 'replace' in item:
+                        if 'use_unique_folder' in item and item['use_unique_folder'] == True:
+                            prepath = music_ref + '/'
+                        continue
+
+                    if 'category' not in item:
+                        continue
+
+                    for song in item['songs']:
+                        song['name'] = prepath + song['name']
+                self.music_ref = music_ref
+                self.override_music_list = music_list
+            except ValueError:
+                raise
+            except AreaError:
+                raise
+        
+        def construct_music_list(self, music_override = False):
+            """
+            Obtain the most relevant music list for the client.
+            :param music_override: when True, include the client's music override in the equation.
+            """
+            # Server music list
+            song_list = self.server.music_list
+
+            # Hub music list
+            if self.area.area_manager.replace_music:
+                song_list = self.area.area_manager.music_list
+            else:
+                song_list += self.area.area_manager.music_list
+
+            # Area music list
+            if self.area.replace_music:
+                song_list = self.area.music_list
+            else:
+                song_list += self.area.music_list
+
+            # Client override
+            if music_override and self.music_ref != '' and len(self.override_music_list) > 0:
+                song_list = self.override_music_list
+
+            return song_list
+
+        def refresh_music_list(self):
+            """
+            Rebuild the client's music list according to a priority Client override -> Area override -> Hub override.
+            """
+            song_list = self.construct_music_list(music_override=True)
+
+            # Update that boi's music list if there's a change
+            if self.local_music_list != song_list:
+                self.reload_music_list(song_list)
 
         def reload_music_list(self, music=[]):
             """
@@ -956,3 +1025,14 @@ class ClientManager:
                 client.area.broadcast_ooc('{} is now AFK.'.format(client.char_name))
                 client.send_ooc('You are now AFK. Have a good day!')
                 client.area.afkers.append(client)
+
+    def refresh_music(self, clients=None):
+        """
+        Refresh the listed clients' music lists.
+        :param clients: list of clients whose music lists should be regenerated.
+
+        """
+        if clients == None:
+            clients = self.clients
+        for client in clients:
+            client.refresh_music_list()

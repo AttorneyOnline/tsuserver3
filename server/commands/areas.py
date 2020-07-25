@@ -479,6 +479,7 @@ def ooc_cmd_load_hub(client, arg):
         client.server.area_manager.send_arup_status()
         client.server.area_manager.send_arup_cms()
         client.server.area_manager.send_arup_lock()
+        client.server.client_manager.refresh_music_list(client.server.area_manager.clients)
         client.send_ooc(f'Loading {arg}...')
     except AreaError:
         raise

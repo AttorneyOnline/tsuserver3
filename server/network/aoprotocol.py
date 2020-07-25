@@ -698,7 +698,7 @@ class AOProtocol(asyncio.Protocol):
     def net_cmd_mc(self, args):
         """Play music.
 
-        MC#<song_name:int>#<???:int>#%
+        MC#<song_name:int>#<char_id:int>#<show_name:str_or_empty>#<effects:int>#%
 
         """
         if not self.client.is_checked:
@@ -724,8 +724,7 @@ class AOProtocol(asyncio.Protocol):
             if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT):
                 if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT, self.ArgType.STR_OR_EMPTY):
                     if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.INT):
-                        if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.INT, self.ArgType.INT):
-                            return
+                        return
 
             if args[1] != self.client.char_id:
                 return
@@ -735,7 +734,7 @@ class AOProtocol(asyncio.Protocol):
                 )
                 return
             try:
-                name, length = self.server.get_song_data(self.server.music_list, args[0])
+                name, length = self.server.get_song_data(self.client.construct_music_list(self.client.area.music_override), args[0])
 
                 # Showname info
                 showname = ''
@@ -763,7 +762,10 @@ class AOProtocol(asyncio.Protocol):
                     self.client.area.add_music_playing(self.client, name, showname)
                     database.log_room('music', self.client, self.client.area, message=name)
             except ServerError:
-                self.client.send_ooc('Error: song {} isn\'t recognized by server!'.format(args[0]))
+                if self.client.music_ref != '':
+                    self.client.send_ooc(f'Error: song {args[0]} was not accepted! View acceptable music by resetting your client\'s using /musiclist.')
+                else:
+                    self.client.send_ooc(f'Error: song {args[0]} isn\'t recognized by server!')
         except ClientError as ex:
             self.client.send_ooc(ex)
 

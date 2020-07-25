@@ -66,6 +66,7 @@ class AreaManager:
             self.max_players = -1
             self.desc = ''
             self.music_ref = ''
+            self.music_override = False
             # /prefs end
 
             self.music_looper = None
@@ -224,6 +225,8 @@ class AreaManager:
                 self.music_ref = area['music_ref']
             if self.music_ref != '':
                 self.load_music(f'storage/musiclists/{self.music_ref}.yaml')
+            if 'music_override' in area:
+                self.music_override = area['music_override']
             if 'replace_music' in area:
                 self.replace_music = area['replace_music']
 
@@ -265,6 +268,7 @@ class AreaManager:
             if self.music_ref != '':
                 area['music_ref'] = self.music_ref
                 area['replace_music'] = self.replace_music
+            area['music_override'] = self.music_override
             if self.music_autoplay:
                 area['music'] = self.current_music
             if len(self.evi_list.evidences) > 0:
@@ -457,18 +461,21 @@ class AreaManager:
                         return False
             return not self.server.char_emotes[char].validate(preanim, anim, sfx)
 
+        def clear_music(self):
+            self.music_list.clear()
+            self.music_ref = ''
+
         def load_music(self, path):
             try:
                 with open(path, 'r', encoding='utf-8') as stream:
                     self.music_list = yaml.safe_load(stream)
 
                 prepath = ''
-                # Make sure the paths are prefixed if "use_unique_folder" is True
                 for item in self.music_list:
                     if 'replace' in item:
                         self.replace_music = item['replace'] == True
                         if 'use_unique_folder' in item and item['use_unique_folder'] == True:
-                            prepath = path + '/'
+                            prepath = os.path.splitext(os.path.basename(path))[0] + '/'
                         continue
 
                     if 'category' not in item:
@@ -825,6 +832,7 @@ class AreaManager:
         self.info = ''
         self.can_gm = True
         self.music_ref = ''
+        self.music_override = False
         # /prefs
 
         self.music_list = []
@@ -888,18 +896,21 @@ class AreaManager:
         except:
             raise AreaError(f'File path {path} is invalid!')
 
+    def clear_music(self):
+        self.music_list.clear()
+        self.music_ref = ''
+
     def load_music(self, path):
         try:
             with open(path, 'r', encoding='utf-8') as stream:
                 self.music_list = yaml.safe_load(stream)
 
             prepath = ''
-            # Make sure the paths are prefixed if "use_unique_folder" is True
             for item in self.music_list:
                 if 'replace' in item:
                     self.replace_music = item['replace'] == True
                     if 'use_unique_folder' in item and item['use_unique_folder'] == True:
-                        prepath = path + '/'
+                        prepath = os.path.splitext(os.path.basename(path))[0] + '/'
                     continue
 
                 if 'category' not in item:
@@ -912,18 +923,6 @@ class AreaManager:
         except AreaError:
             raise
 
-    def refresh_music(self, clients=None):
-        if clients == None:
-            clients = self.clients
-        if self.replace_music:
-            song_list = self.music_list
-        else:
-            song_list = self.server.music_list + self.music_list
-        for client in clients:
-            if client.area.replace_music:
-                client.reload_music_list(client.area.music_list)
-            else:
-                client.reload_music_list(song_list + client.area.music_list)
 
     def load_character_data(self, path='config/character_data.yaml'):
         """
