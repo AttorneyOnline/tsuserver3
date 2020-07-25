@@ -102,7 +102,7 @@ class ClientManager:
         
             # client status stuff
             self.blinded = False
-            self.hidden = False
+            self._hidden = False
             self.hidden_in = None
             self.sneaking = False
             self.listen_pos = None
@@ -188,19 +188,21 @@ class ClientManager:
             to another character if the target character is not available
             (Default value = False)
             """
-            if not self.server.is_valid_char_id(char_id):
-                raise ClientError('Invalid character ID.')
-            if len(self.charcurse) > 0:
-                if not char_id in self.charcurse:
-                    raise ClientError('Character not available.')
-                force = True
-            if not self.area.is_char_available(char_id):
-                if force:
-                    for client in self.area.clients:
-                        if client.char_id == char_id:
-                            client.char_select()
-                else:
-                    raise ClientError('Character not available.')
+            # If it's -1, we want to be the spectator character.
+            if char_id != -1:
+                if not self.server.is_valid_char_id(char_id):
+                    raise ClientError('Invalid character ID.')
+                if len(self.charcurse) > 0:
+                    if not char_id in self.charcurse:
+                        raise ClientError('Character not available.')
+                    force = True
+                if not self.area.is_char_available(char_id):
+                    if force:
+                        for client in self.area.clients:
+                            if client.char_id == char_id:
+                                client.char_select()
+                    else:
+                        raise ClientError('Character not available.')
             old_char = self.char_name
             self.char_id = char_id
             self.pos = ''
@@ -403,7 +405,7 @@ class ClientManager:
                 )
 
             # Mods and area owners can be any character regardless of availability
-            if not area.is_char_available(self.char_id) and not self.is_mod and self not in area.owners:
+            if not self.char_id == -1 and not area.is_char_available(self.char_id) and not self.is_mod and self not in area.owners:
                 self.check_char_taken(area)
 
             old_area = self.area
@@ -416,7 +418,7 @@ class ClientManager:
                     c.send_ooc(
                         f'Following [{self.id}] {self.char_name} to {area.name}.')
 
-            if not self.sneaking and not self.hidden and not self.char_id == -1:
+            if not self.sneaking and not self.hidden:
                 old_area.broadcast_ooc(
                     f'[{self.id}] {self.char_name} leaves to [{area.id}] {area.name}.')
                 area.broadcast_ooc(
@@ -463,8 +465,11 @@ class ClientManager:
                     area.Locked.LOCKED: '[LOCK]'
                 }
                 users = ''
-                if not area.area_manager.hide_clients and not area.hide_clients:
-                    users = len(area.clients)
+                if not area.hide_clients:
+                    clients = area.clients
+                    if not self.is_mod and not self in area.owners:
+                        clients = [c for c in area.clients if not c.hidden]
+                    users = len(clients)
                     users = f'(users: {users}) '
                 msg += f'\r\n[{area.id}] {area.abbreviation}: {area.name} {users}[{area.status}]{owner}{lock[area.is_locked]}'
                 if self.area == area:
@@ -545,11 +550,14 @@ class ClientManager:
                 cnt = 0
                 info = '\n== Area List =='
                 for i in range(len(self.area.area_manager.areas)):
-                    client_list = self.area.area_manager.areas[i]
+                    area = self.area.area_manager.areas[i]
                     if afk_check:
-                        client_list = client_list.afkers
+                        client_list = area.afkers
                     else:
-                        client_list = client_list.clients
+                        client_list = area.clients
+                    if not self.is_mod and not self in area.owners:
+                        # We exclude hidden players here because we don't want them to count for the user count
+                        client_list = [c for c in client_list if not c.hidden]
                     area_info = self.get_area_info(i, mods, afk_check)
                     if len(client_list) > 0 or len(
                                self.area.area_manager.areas[i].owners) > 0:
@@ -566,6 +574,9 @@ class ClientManager:
                         client_list = client_list.afkers
                     else:
                         client_list = client_list.clients
+                    if not self.is_mod and not self in area.owners:
+                        # We exclude hidden players here because we don't want them to count for the user count
+                        client_list = [c for c in client_list if not c.hidden]
                     area_info = self.get_area_info(area_id, mods, afk_check)
                     area_client_cnt = len(client_list)
                     if afk_check:
@@ -653,7 +664,7 @@ class ClientManager:
         def char_name(self):
             """Get the name of the character that the client is using."""
             if self.char_id == -1:
-                return None
+                return 'Spectator'
             return self.server.char_list[self.char_id]
 
         @property
@@ -676,8 +687,13 @@ class ClientManager:
             """Set the character's keys in the character data."""
             self.area.area_manager.set_character_data(self.char_id, 'keys', value)
 
+        @property
+        def hidden(self):
+            """Return if the character is hidden or not. Always True if char_id is -1 (spectator)"""
+            return self.char_id == -1 or self._hidden
+
         def hide(self, tog=True, target=None):
-            self.hidden = tog
+            self._hidden = tog
             msg = 'no longer hidden'
             if tog:
                 msg = 'now hidden'
