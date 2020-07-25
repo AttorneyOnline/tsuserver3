@@ -777,12 +777,20 @@ class AreaManager:
         self.move_delay = 0
         self.arup_enabled = True
         self.hide_clients = False
+        self.info = 'No info.'
 
         # Save character information for character select screen ID's in the hub data
         # ex. {"1": {"keys": [1, 2, 3, 5], "fatigue": 100.0, "hunger": 34.0}, "2": {"keys": [4, 6, 8]}}
         self.character_data = {}
 
         self.load_areas()
+    
+    def change_info(self, info='No info.'):
+        """
+        Set the Hub info.
+        :param info: info text (Default value = 'No info.')
+        """
+        self.info = info
 
     def load_areas(self, path='config/areas.yaml'):
         """

@@ -55,6 +55,7 @@ __all__ = [
     'ooc_cmd_hub_unhide_clients',
     'ooc_cmd_follow',
     'ooc_cmd_unfollow',
+    'ooc_cmd_info',
 ]
 
 
@@ -1155,3 +1156,18 @@ def ooc_cmd_unfollow(client, arg):
     except:
         client.following = None
         raise ClientError('You\'re not following anyone!')
+
+
+def ooc_cmd_info(client, arg):
+    """
+    Check the information for the current Hub
+    Usage: /info [str]
+    """
+    if len(arg) == 0:
+        client.send_ooc(f'Info: {client.area.area_manager.info}')
+        database.log_room('info.request', client, client.area)
+    else:
+        client.area.area_manager.change_info(arg)
+        client.area.area_manager.broadcast_ooc('{} changed the Hub info.'.format(
+            client.char_name))
+        database.log_room('info.change', client, client.area, message=arg)
