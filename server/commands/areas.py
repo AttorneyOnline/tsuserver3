@@ -591,6 +591,7 @@ def ooc_cmd_area_pref(client, arg):
         'blankposting_allowed',
         'hide_clients',
         'music_autoplay',
+        'replace_music',
     ]
 
     if len(arg) == 0:
