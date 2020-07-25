@@ -311,6 +311,7 @@ class ClientManager:
                     area = f'{brush}{area.name}'
                     area_list.append(area)
 
+            self.local_area_list = areas
             # KEEP THE ASTERISK
             self.send_command('FA', *area_list)
 
