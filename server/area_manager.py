@@ -65,6 +65,7 @@ class AreaManager:
             self.hide_clients = False
             self.max_players = -1
             self.desc = ''
+            self.music_ref = ''
             # /prefs end
 
             self.music_looper = None
@@ -89,6 +90,9 @@ class AreaManager:
 
             self.jukebox_votes = []
             self.jukebox_prev_char_id = -1
+
+            self.music_list = []
+            self.replace_music = False
 
             self._owners = set()
             self.afkers = []
@@ -216,6 +220,12 @@ class AreaManager:
                 self.max_players = area['max_players']
             if 'desc' in area:
                 self.desc = area['desc']
+            if 'music_ref' in area:
+                self.music_ref = area['music_ref']
+            if self.music_ref != '':
+                self.load_music(f'storage/musiclists/{self.music_ref}.yaml')
+            if 'replace_music' in area:
+                self.replace_music = area['replace_music']
 
             if 'evidence' in area and len(area['evidence']) > 0:
                 self.evi_list.evidences.clear()
@@ -252,6 +262,9 @@ class AreaManager:
             area['music_autoplay'] = self.music_autoplay
             area['max_players'] = self.max_players
             area['desc'] = self.desc
+            if self.music_ref != '':
+                area['music_ref'] = self.music_ref
+                area['replace_music'] = self.replace_music
             if self.music_autoplay:
                 area['music'] = self.current_music
             if len(self.evi_list.evidences) > 0:
@@ -443,6 +456,30 @@ class AreaManager:
                     if client.char_name in char_link and char in char_link:
                         return False
             return not self.server.char_emotes[char].validate(preanim, anim, sfx)
+
+        def load_music(self, path):
+            try:
+                with open(path, 'r', encoding='utf-8') as stream:
+                    self.music_list = yaml.safe_load(stream)
+
+                prepath = ''
+                # Make sure the paths are prefixed if "use_unique_folder" is True
+                for item in self.music_list:
+                    if 'replace' in item:
+                        self.replace_music = item['replace'] == True
+                        if 'use_unique_folder' in item and item['use_unique_folder'] == True:
+                            prepath = path + '/'
+                        continue
+
+                    if 'category' not in item:
+                        continue
+
+                    for song in item['songs']:
+                        song['name'] = prepath + song['name']
+            except ValueError:
+                raise
+            except AreaError:
+                raise
 
         def add_jukebox_vote(self, client, music_name, length=-1, showname=''):
             """
@@ -787,12 +824,24 @@ class AreaManager:
         self.hide_clients = False
         self.info = ''
         self.can_gm = True
+        self.music_ref = ''
+        # /prefs
+
+        self.music_list = []
+        self.replace_music = False
 
         # Save character information for character select screen ID's in the hub data
         # ex. {"1": {"keys": [1, 2, 3, 5], "fatigue": 100.0, "hunger": 34.0}, "2": {"keys": [4, 6, 8]}}
         self.character_data = {}
 
         self.load_areas()
+    
+    @property
+    def clients(self):
+        clients = []
+        for area in self.areas:
+            clients = clients + area.clients
+        return clients
 
     def load_areas(self, path='config/areas.yaml'):
         """
@@ -838,6 +887,43 @@ class AreaManager:
                 yaml.dump(areas, stream, default_flow_style=False)
         except:
             raise AreaError(f'File path {path} is invalid!')
+
+    def load_music(self, path):
+        try:
+            with open(path, 'r', encoding='utf-8') as stream:
+                self.music_list = yaml.safe_load(stream)
+
+            prepath = ''
+            # Make sure the paths are prefixed if "use_unique_folder" is True
+            for item in self.music_list:
+                if 'replace' in item:
+                    self.replace_music = item['replace'] == True
+                    if 'use_unique_folder' in item and item['use_unique_folder'] == True:
+                        prepath = path + '/'
+                    continue
+
+                if 'category' not in item:
+                    continue
+
+                for song in item['songs']:
+                    song['name'] = prepath + song['name']
+        except ValueError:
+            raise
+        except AreaError:
+            raise
+
+    def refresh_music(self, clients=None):
+        if clients == None:
+            clients = self.clients
+        if self.replace_music:
+            song_list = self.music_list
+        else:
+            song_list = self.server.music_list + self.music_list
+        for client in clients:
+            if client.area.replace_music:
+                client.reload_music_list(client.area.music_list)
+            else:
+                client.reload_music_list(song_list + client.area.music_list)
 
     def load_character_data(self, path='config/character_data.yaml'):
         """

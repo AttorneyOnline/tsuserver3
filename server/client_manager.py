@@ -435,6 +435,7 @@ class ClientManager:
                 self.send_ooc(
                     f'Changed area to {area.name} unannounced.')
 
+            self.area.area_manager.refresh_music([self])
             if self.area.desc != '':
                 desc = self.area.desc[:128]
                 if len(self.area.desc) > len(desc):
