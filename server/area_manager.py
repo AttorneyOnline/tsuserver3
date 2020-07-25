@@ -64,6 +64,7 @@ class AreaManager:
             self.move_delay = 0
             self.hide_clients = False
             self.max_players = -1
+            self.desc = ''
             # /prefs end
 
             self.music_looper = None
@@ -213,6 +214,8 @@ class AreaManager:
                     self.current_music = area['music']
             if 'max_players' in area:
                 self.max_players = area['max_players']
+            if 'desc' in area:
+                self.desc = area['desc']
 
             if 'evidence' in area and len(area['evidence']) > 0:
                 self.evi_list.evidences.clear()
@@ -248,6 +251,7 @@ class AreaManager:
             area['hide_clients'] = self.hide_clients
             area['music_autoplay'] = self.music_autoplay
             area['max_players'] = self.max_players
+            area['desc'] = self.desc
             if self.music_autoplay:
                 area['music'] = self.current_music
             if len(self.evi_list.evidences) > 0:
@@ -789,13 +793,6 @@ class AreaManager:
         self.character_data = {}
 
         self.load_areas()
-    
-    def change_info(self, info='No info.'):
-        """
-        Set the Hub info.
-        :param info: info text (Default value = 'No info.')
-        """
-        self.info = info
 
     def load_areas(self, path='config/areas.yaml'):
         """

@@ -59,6 +59,7 @@ __all__ = [
     'ooc_cmd_max_players',
     'ooc_cmd_gm',
     'ooc_cmd_ungm',
+    'ooc_cmd_desc',
 ]
 
 
@@ -1170,7 +1171,7 @@ def ooc_cmd_info(client, arg):
         client.send_ooc(f'Info: {client.area.area_manager.info}')
         database.log_room('info.request', client, client.area)
     else:
-        client.area.area_manager.change_info(arg)
+        client.area.area_manager.info = arg
         client.area.area_manager.broadcast_ooc('{} changed the Hub info.'.format(
             client.char_name))
         database.log_room('info.change', client, client.area, message=arg)
@@ -1271,3 +1272,22 @@ def ooc_cmd_ungm(client, arg):
                 f'{id} does not look like a valid ID.')
         except (ClientError, ArgumentError):
             raise
+
+
+def ooc_cmd_desc(client, arg):
+    """
+    Set an area description that appears to the user any time they enter the area.
+    Usage: /desc [str]
+    """
+    if len(arg) == 0:
+        client.send_ooc(f'Description: {client.area.desc}')
+        database.log_room('desc.request', client, client.area)
+    else:
+        if not client in client.area.owners:
+            raise ClientError('You must be a CM of the area to do that.')
+        client.area.desc = arg
+        desc = arg[:128]
+        if len(arg) > len(desc):
+            desc += "... Use /desc to read the rest."
+        client.area.broadcast_ooc(f'{client.char_name} changed the area description to: {desc}.')
+        database.log_room('desc.change', client, client.area, message=arg)
