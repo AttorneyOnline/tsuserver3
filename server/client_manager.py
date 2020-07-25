@@ -435,6 +435,12 @@ class ClientManager:
                 self.send_ooc(
                     f'Changed area to {area.name} unannounced.')
 
+            if self.area.desc != '':
+                desc = self.area.desc[:128]
+                if len(self.area.desc) > len(desc):
+                    desc += "... Use /desc to read the rest."
+                self.send_ooc(f'Description: {desc}')
+
         def get_area_list(self, hidden=False, linked=False):
             area_list = []
             for area in self.area.area_manager.areas:

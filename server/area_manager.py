@@ -785,7 +785,7 @@ class AreaManager:
         self.move_delay = 0
         self.arup_enabled = True
         self.hide_clients = False
-        self.info = 'No info.'
+        self.info = ''
         self.can_gm = True
 
         # Save character information for character select screen ID's in the hub data
