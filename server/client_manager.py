@@ -376,9 +376,9 @@ class ClientManager:
             if not (area == area.area_manager.default_area()) and self.area.is_locked == area.Locked.LOCKED and not self.is_mod and not self.id in self.area.invite_list and not self.id in self.area.owners:
                 raise ClientError('Your current area is locked! You may not leave.')
             target_pos = ''
-            allowed = self.is_mod or self in area.owners or self in self.area.owners or area == area.area_manager.default_area()
+            allowed = self.is_mod or self in area.owners or self in self.area.owners
             if len(self.area.links) > 0:
-                if not str(area.id) in self.area.links and not allowed:
+                if not str(area.id) in self.area.links and not allowed and not self.char_id == -1 and not area == area.area_manager.default_area():
                     raise ClientError('That area is inaccessible from your area!')
 
                 if str(area.id) in self.area.links:
@@ -386,13 +386,21 @@ class ClientManager:
                     link = self.area.links[str(area.id)]
 
                     # Our path is locked :(
-                    if link["locked"] and not allowed:
+                    if link["locked"] and not allowed and not self.char_id == -1 and not area == area.area_manager.default_area():
                         raise ClientError('That path is locked - cannot access area!')
 
                     target_pos = link["target_pos"]
 
             if area.is_locked == area.Locked.LOCKED and not self.is_mod and not self.id in area.invite_list and not self.id in area.owners:
                 raise ClientError('That area is locked!')
+
+            if not allowed and not self.char_id == -1 and not area == area.area_manager.default_area():
+                if area.max_players > 0:
+                    players = len([x for x in area.clients if (not x in area.owners and not x.is_mod and not x.hidden)])
+                    if players >= area.max_players:
+                        raise ClientError('That area is full!')
+                elif area.max_players == 0:
+                    raise ClientError('That area cannot be accessed by normal means!')
 
             delay = self.area.time_until_move(self)
             if delay > 0:

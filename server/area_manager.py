@@ -63,6 +63,7 @@ class AreaManager:
             self.status = 'IDLE'
             self.move_delay = 0
             self.hide_clients = False
+            self.max_players = -1
             # /prefs end
 
             self.music_looper = None
@@ -210,6 +211,8 @@ class AreaManager:
                 self.music_autoplay = area['music_autoplay']
                 if self.music_autoplay and 'music' in area:
                     self.current_music = area['music']
+            if 'max_players' in area:
+                self.max_players = area['max_players']
 
             if 'evidence' in area and len(area['evidence']) > 0:
                 self.evi_list.evidences.clear()
@@ -244,6 +247,7 @@ class AreaManager:
             area['move_delay'] = self.move_delay
             area['hide_clients'] = self.hide_clients
             area['music_autoplay'] = self.music_autoplay
+            area['max_players'] = self.max_players
             if self.music_autoplay:
                 area['music'] = self.current_music
             if len(self.evi_list.evidences) > 0:

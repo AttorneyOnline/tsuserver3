@@ -56,6 +56,7 @@ __all__ = [
     'ooc_cmd_follow',
     'ooc_cmd_unfollow',
     'ooc_cmd_info',
+    'ooc_cmd_max_players',
 ]
 
 
@@ -1171,3 +1172,27 @@ def ooc_cmd_info(client, arg):
         client.area.area_manager.broadcast_ooc('{} changed the Hub info.'.format(
             client.char_name))
         database.log_room('info.change', client, client.area, message=arg)
+
+
+def ooc_cmd_max_players(client, arg):
+    """
+    Set a max amount of players for current area between -1 and 99.
+    Usage: /max_players [num]
+    """
+    if arg == '':
+        client.send_ooc(f'Max amount of players for the area is {client.area.max_players}.')
+        return
+
+    if not client.area.locking_allowed:
+        raise ClientError('You cannot modify this area.')
+
+    try:
+        arg = int(arg)
+        if arg < -1 or arg > 99:
+            raise ClientError('The min-max values are -1 and 99!')
+        client.area.max_players = arg
+        client.send_ooc(f'New max amount of players for the area is now {client.area.max_players}.')
+    except ValueError:
+        raise ArgumentError('Area ID must be a name, abbreviation or a number.')
+    except (AreaError, ClientError):
+        raise
