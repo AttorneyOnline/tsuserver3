@@ -416,7 +416,7 @@ class ClientManager:
                     c.send_ooc(
                         f'Following [{self.id}] {self.char_name} to {area.name}.')
 
-            if not self.sneaking and not self.hidden:
+            if not self.sneaking and not self.hidden and not self.char_id == -1:
                 old_area.broadcast_ooc(
                     f'[{self.id}] {self.char_name} leaves to [{area.id}] {area.name}.')
                 area.broadcast_ooc(

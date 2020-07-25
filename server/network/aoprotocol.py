@@ -629,7 +629,7 @@ class AOProtocol(asyncio.Protocol):
         if self.client.is_ooc_muted:  # Checks to see if the client has been muted by a mod
             self.client.send_ooc('You are muted by a moderator.')
             return
-        if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR):
+        if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR, needs_auth=False):
             return
         if self.client.name != args[0] and self.client.fake_name != args[0]:
             if self.client.is_valid_name(args[0]):
@@ -911,7 +911,9 @@ class AOProtocol(asyncio.Protocol):
         """
         if not self.client.is_checked:
             return
-        elif len(args) < 3:
+        if not self.validate_net_cmd(args, self.ArgType.STR_OR_EMPTY, self.ArgType.STR_OR_EMPTY, self.ArgType.STR_OR_EMPTY):
+            return
+        if len(args) < 3:
             return
         # evi = Evidence(args[0], args[1], args[2], self.client.pos)
         self.client.area.evi_list.add_evidence(self.client, args[0], args[1],
@@ -927,6 +929,8 @@ class AOProtocol(asyncio.Protocol):
         """
         if not self.client.is_checked:
             return
+        if not self.validate_net_cmd(args, self.ArgType.INT):
+            return
         self.client.area.evi_list.del_evidence(
             self.client, self.client.evi_list[int(args[0])])
         database.log_room('evidence.del', self.client, self.client.area)
@@ -939,6 +943,8 @@ class AOProtocol(asyncio.Protocol):
 
         """
         if not self.client.is_checked:
+            return
+        if not self.validate_net_cmd(args, self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.STR_OR_EMPTY, self.ArgType.STR_OR_EMPTY):
             return
         elif len(args) < 4:
             return

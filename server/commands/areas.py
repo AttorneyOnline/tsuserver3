@@ -128,6 +128,7 @@ def ooc_cmd_getarea(client, arg):
     client.send_area_info(client.area.id, False)
 
 
+@mod_only()
 def ooc_cmd_getareas(client, arg):
     """
     Show information about all areas.
