@@ -46,7 +46,11 @@ def ooc_cmd_switch(client, arg):
     if len(arg) == 0:
         raise ArgumentError('You must specify a character name.')
     try:
-        cid = client.server.get_char_id_by_name(arg)
+        # loser wants to spectate
+        if arg == '-1' or arg.lower() == 'spectator':
+            cid = int(arg)
+        else:
+            cid = client.server.get_char_id_by_name(arg)
     except ServerError:
         raise
     try:
