@@ -177,19 +177,21 @@ class ClientManager:
             to another character if the target character is not available
             (Default value = False)
             """
-            if not self.server.is_valid_char_id(char_id):
-                raise ClientError('Invalid character ID.')
-            if len(self.charcurse) > 0:
-                if not char_id in self.charcurse:
-                    raise ClientError('Character not available.')
-                force = True
-            if not self.area.is_char_available(char_id):
-                if force:
-                    for client in self.area.clients:
-                        if client.char_id == char_id:
-                            client.char_select()
-                else:
-                    raise ClientError('Character not available.')
+            # If it's -1, we want to be the spectator character.
+            if char_id != -1:
+                if not self.server.is_valid_char_id(char_id):
+                    raise ClientError('Invalid character ID.')
+                if len(self.charcurse) > 0:
+                    if not char_id in self.charcurse:
+                        raise ClientError('Character not available.')
+                    force = True
+                if not self.area.is_char_available(char_id):
+                    if force:
+                        for client in self.area.clients:
+                            if client.char_id == char_id:
+                                client.char_select()
+                    else:
+                        raise ClientError('Character not available.')
             old_char = self.char_name
             self.char_id = char_id
             self.pos = ''
@@ -312,7 +314,7 @@ class ClientManager:
                 self.area.remove_jukebox_vote(self, True)
 
             old_area = self.area
-            if not area.is_char_available(self.char_id):
+            if not self.char_id == -1 and not area.is_char_available(self.char_id):
                 try:
                     new_char_id = area.get_rand_avail_char_id()
                 except AreaError:
@@ -527,7 +529,7 @@ class ClientManager:
         def char_name(self):
             """Get the name of the character that the client is using."""
             if self.char_id == -1:
-                return None
+                return 'Spectator'
             return self.server.char_list[self.char_id]
 
         def change_position(self, pos=''):
