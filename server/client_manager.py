@@ -525,6 +525,8 @@ class ClientManager:
                 if c.hidden:
                     info += '[HID]'
                 info += f' [{c.id}] {c.char_name}'
+                if c.pos != '':
+                    info += f' <{c.pos}>'
                 if self.is_mod:
                     info += f' ({c.ipid}): {c.name}'
             return info
