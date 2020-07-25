@@ -31,6 +31,8 @@ def ooc_cmd_doc(client, arg):
         client.send_ooc(f'Document: {client.area.doc}')
         database.log_room('doc.request', client, client.area)
     else:
+        if not client in client.area.owners:
+            raise ClientError('You must be a CM of the area to do that.')
         client.area.change_doc(arg)
         client.area.broadcast_ooc('{} changed the doc link.'.format(
             client.char_name))
