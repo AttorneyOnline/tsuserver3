@@ -62,8 +62,7 @@ def ooc_cmd_pos(client, arg):
     Usage: /pos <name>
     """
     if len(arg) == 0:
-        client.change_position()
-        client.send_ooc('Position reset.')
+        client.send_ooc(f'Your current position is {client.pos}.')
     else:
         try:
             client.change_position(arg)

@@ -64,7 +64,12 @@ def ooc_cmd_bg(client, arg):
     Usage: /bg <background>
     """
     if len(arg) == 0:
-        raise ArgumentError('You must specify a name. Use /bg <background>.')
+        pos_lock = ''
+        if len(client.area.pos_lock) > 0:
+            pos = ' '.join(str(l) for l in client.area.pos_lock)
+            pos_lock = f'\nAvailable positions: {pos}.'
+        client.send_ooc(f'Current background is {client.area.background}.{pos_lock}')
+        return
     if not client.is_mod and client.area.bg_lock == "true":
         raise AreaError("This area's background is locked")
     try:
@@ -914,7 +919,7 @@ def ooc_cmd_pos_lock(client, arg):
     if not arg:
         if len(client.area.pos_lock) > 0:
             pos = ' '.join(str(l) for l in client.area.pos_lock)
-            client.send_ooc(f'Pos_lock is currently "{pos}".')
+            client.send_ooc(f'Pos_lock is currently {pos}.')
         else:
             client.send_ooc('No pos lock set.')
         return
