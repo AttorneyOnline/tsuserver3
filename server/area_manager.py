@@ -26,6 +26,7 @@ import os
 from server import database
 from server.evidence import EvidenceList
 from server.exceptions import AreaError
+from server.constants import MusicEffect
 
 from collections import OrderedDict
 
@@ -70,6 +71,9 @@ class AreaManager:
             self.current_music = ''
             self.current_music_player = ''
             self.current_music_player_ipid = -1
+            self.current_music_looping = 0
+            self.current_music_effects = 0
+            self.music_autoplay = False
             self.evi_list = EvidenceList()
             self.is_recording = False
             self.recorded_messages = []
@@ -202,6 +206,10 @@ class AreaManager:
                 self.move_delay = area['move_delay']
             if 'hide_clients' in area:
                 self.hide_clients = area['hide_clients']
+            if 'music_autoplay' in area:
+                self.music_autoplay = area['music_autoplay']
+                if self.music_autoplay and 'music' in area:
+                    self.current_music = area['music']
 
             if 'evidence' in area and len(area['evidence']) > 0:
                 self.evi_list.evidences.clear()
@@ -235,6 +243,9 @@ class AreaManager:
             area['status'] = self.status
             area['move_delay'] = self.move_delay
             area['hide_clients'] = self.hide_clients
+            area['music_autoplay'] = self.music_autoplay
+            if self.music_autoplay:
+                area['music'] = self.current_music
             if len(self.evi_list.evidences) > 0:
                 area['evidence'] = [e.to_dict() for e in self.evi_list.evidences]
             if len(self.links) > 0:
@@ -246,6 +257,8 @@ class AreaManager:
             self.clients.add(client)
             if client.char_id != -1:
                 database.log_room('area.join', client, self)
+                if self.music_autoplay:
+                    client.send_command('MC', self.current_music, -1, '', self.current_music_looping, 0, self.current_music_effects)
 
         def remove_client(self, client):
             """Remove a disconnected client from the area."""
@@ -533,6 +546,8 @@ class AreaManager:
             # If it's anything other than 0, it's looping. (Legacy music.yaml support)
             if loop != 0:
                 loop = 1
+            self.current_music_looping = loop
+            self.current_music_effects = effects
             self.send_command('MC', name, cid, showname, loop, 0, effects)
 
         def can_send_message(self, client):
@@ -619,12 +634,13 @@ class AreaManager:
             self.judgelog.append(
                 f'{client.char_name} ({client.ip}) {msg}.')
 
-        def add_music_playing(self, client, name, showname=''):
+        def add_music_playing(self, client, name, showname='', autoplay=None):
             """
             Set info about the current track playing.
             :param client: player
             :param showname: showname of player (can be blank)
             :param name: track name
+            :param autoplay: if track will play itself as soon as user joins area
             """
             if showname != '':
                 self.current_music_player = f'{showname} ({client.char_name})'
@@ -632,6 +648,9 @@ class AreaManager:
                 self.current_music_player = client.char_name
             self.current_music_player_ipid = client.ipid
             self.current_music = name
+            if autoplay == None:
+                autoplay = self.music_autoplay
+            self.music_autoplay = autoplay
 
         def get_evidence_list(self, client):
             """

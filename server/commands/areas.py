@@ -579,6 +579,7 @@ def ooc_cmd_area_pref(client, arg):
         'non_int_pres_only',
         'blankposting_allowed',
         'hide_clients',
+        'music_autoplay',
     ]
 
     if len(arg) == 0:
