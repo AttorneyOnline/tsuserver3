@@ -569,11 +569,11 @@ class ClientManager:
                     info = f'Current online: {cnt}{info}'
             else:
                 try:
-                    client_list = self.area.area_manager.areas[area_id]
+                    area = self.area.area_manager.areas[area_id]
                     if afk_check:
-                        client_list = client_list.afkers
+                        client_list = area.afkers
                     else:
-                        client_list = client_list.clients
+                        client_list = area.clients
                     if not self.is_mod and not self in area.owners:
                         # We exclude hidden players here because we don't want them to count for the user count
                         client_list = [c for c in client_list if not c.hidden]
