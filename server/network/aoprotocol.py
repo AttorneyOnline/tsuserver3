@@ -366,10 +366,8 @@ class AOProtocol(asyncio.Protocol):
         """
         if not self.client.is_checked:
             return
-        elif self.client.is_muted:  # Checks to see if the client has been muted by a mod
+        if self.client.is_muted:  # Checks to see if the client has been muted by a mod
             self.client.send_ooc('You are muted by a moderator.')
-            return
-        elif not self.client.area.can_send_message(self.client):
             return
 
         target_area = []
@@ -498,13 +496,13 @@ class AOProtocol(asyncio.Protocol):
             return
         if ding not in (0, 1):
             return
-        if color not in (0, 1, 2, 3, 4, 5, 6, 7, 8):
+        if color >= 12:
             return
         if len(showname) > 15:
             self.client.send_ooc("Your IC showname is way too long!")
             return
         if nonint_pre == 1:
-            if button in (1, 2, 3, 4, 23):
+            if button in range(1, 4):
                 if anim_type == 1 or anim_type == 2:
                     anim_type = 0
                 elif anim_type == 6:
@@ -526,7 +524,8 @@ class AOProtocol(asyncio.Protocol):
             button = 0
             # Turn off the ding.
             ding = 0
-
+        if int(button) <= 0 and not self.client.area.can_send_message(self.client):
+            return
         max_char = 0
         try:
             max_char = int(self.server.config['max_chars'])
