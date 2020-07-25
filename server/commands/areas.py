@@ -75,7 +75,7 @@ def ooc_cmd_bg(client, arg):
             pos_lock = f'\nAvailable positions: {pos}.'
         client.send_ooc(f'Current background is {client.area.background}.{pos_lock}')
         return
-    if not client.is_mod and client.area.bg_lock == "true":
+    if not client in client.area.area_manager.owners and not client.is_mod and client.area.bg_lock:
         raise AreaError("This area's background is locked")
     try:
         client.area.change_background(arg)
