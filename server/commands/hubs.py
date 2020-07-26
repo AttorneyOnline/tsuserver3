@@ -1,5 +1,7 @@
 import os
 
+import oyaml as yaml #ordered yaml
+
 from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, ArgumentError, AreaError

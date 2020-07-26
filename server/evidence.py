@@ -169,7 +169,17 @@ class EvidenceList:
 
     def import_evidence(self, data):
         for evi in data:
-            name, description, image, pos, can_hide_in = evi['name'], evi['desc'], evi['image'], evi['pos'], evi['can_hide_in']
+            name, description, image, pos, can_hide_in = '<name>', '<desc>', '', 'all', False
+            if 'name' in evi:
+                name = evi['name']
+            if 'description' in evi:
+                description = evi['description']
+            if 'image' in evi:
+                image = evi['image']
+            if 'pos' in evi:
+                pos = evi['pos']
+            if 'can_hide_in' in evi:
+                can_hide_in = evi['can_hide_in']
             self.evidences.append(self.Evidence(name, description, image, pos, can_hide_in))
 
     def del_evidence(self, client, id):

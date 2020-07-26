@@ -100,6 +100,10 @@ class AreaManager:
         :param hub: what to parse.
 
         """
+        # Legacy
+        if 'doc' in hub:
+            self.info = hub['doc']
+
         if 'hub' in hub:
             self.name = hub['hub']
         if 'abbreviation' in hub:

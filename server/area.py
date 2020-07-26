@@ -156,6 +156,7 @@ class Area:
         if 'bglock' in area:
             self.bg_lock = area['bglock']
         if 'accessible' in area:
+            self.links.clear()
             for link in [s for s in str(area['accessible']).split(' ')]:
                 self.link(link)
 
