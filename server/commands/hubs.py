@@ -245,7 +245,6 @@ def ooc_cmd_area_pref(client, arg):
             /area_pref <pref> <on/true|off/false> - set pref to on or off
     """
     cm_allowed = [
-        # 'bg_lock',
         'locking_allowed',
         'iniswap_allowed',
         'showname_changes_allowed',
@@ -256,6 +255,7 @@ def ooc_cmd_area_pref(client, arg):
         'hide_clients',
         'music_autoplay',
         'replace_music',
+        'music_override',
     ]
 
     if len(arg) == 0:
@@ -264,7 +264,7 @@ def ooc_cmd_area_pref(client, arg):
             value = getattr(client.area, attri)
             if not(type(value) is bool):
                 continue
-            mod = '[mod] ' if not (attri in cm_allowed) else ''
+            mod = '[gm] ' if not (attri in cm_allowed) else ''
             msg += f'\n* {mod}{attri}={value}'
         client.send_ooc(msg)
         return
@@ -277,8 +277,8 @@ def ooc_cmd_area_pref(client, arg):
         attri = getattr(client.area, args[0].lower())
         if not (type(attri) is bool):
             raise ArgumentError("Preference is not a boolean.")
-        if not client.is_mod and not (args[0] in cm_allowed):
-            raise ClientError("You need to be a mod to modify this preference.")
+        if not client.is_mod and not client in client.area.area_manager.owners and not (args[0] in cm_allowed):
+            raise ClientError("You need to be a GM to modify this preference.")
         tog = not attri
         if len(args) > 1:
             if args[1].lower() in ('on', 'true'):

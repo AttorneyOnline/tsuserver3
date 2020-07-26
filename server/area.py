@@ -79,7 +79,6 @@ class Area:
         self.current_music_effects = 0
         self.music_autoplay = False
         self.evi_list = EvidenceList()
-        self.is_recording = False
         self.recorded_messages = []
         self.cards = dict()
         """
@@ -434,9 +433,6 @@ class Area:
             name = args[15]
         client.area.set_next_msg_delay(len(args[4]))
         database.log_ic(client, client.area, name, args[4])
-
-        if (self.is_recording):
-            self.recorded_messages.append(args)
 
     def set_next_msg_delay(self, msg_length):
         """
