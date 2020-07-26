@@ -36,8 +36,8 @@ class HubManager:
                 break
             while len(self.hubs) < len(hubs):
                 # Make sure that the hub manager contains enough hubs to update with new information
-                self.hubs.append(AreaManager(self, f'Hub {i}'))
-            while len(self.hubs) >= len(hubs):
+                self.hubs.append(AreaManager(self, f'Hub {len(self.hubs)}'))
+            while len(self.hubs) > len(hubs):
                 # Clean up excess hubs
                 h = self.hubs.pop()
                 clients = h.clients.copy()
