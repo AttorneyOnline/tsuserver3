@@ -67,6 +67,7 @@ class Area:
         self.music_override = False
         self.replace_music = False
         self.ambience = ''
+        self.can_dj = True
         # /prefs end
 
         self.music_looper = None
@@ -231,6 +232,8 @@ class Area:
             self.replace_music = area['replace_music']
         if 'ambience' in area:
             self.ambience = area['ambience']
+        if 'can_dj' in area:
+            self.can_dj = area['can_dj']
 
         if 'evidence' in area and len(area['evidence']) > 0:
             self.evi_list.evidences.clear()
@@ -274,6 +277,7 @@ class Area:
         if self.music_autoplay:
             area['music'] = self.current_music
         area['ambience'] = self.ambience
+        area['can_dj'] = self.can_dj
         if len(self.evi_list.evidences) > 0:
             area['evidence'] = [e.to_dict() for e in self.evi_list.evidences]
         if len(self.links) > 0:
