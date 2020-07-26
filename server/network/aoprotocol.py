@@ -720,6 +720,12 @@ class AOProtocol(asyncio.Protocol):
                     "You are not on the area's invite list, and thus, you cannot change music!"
                 )
                 return
+            if not self.client.is_mod and not self.client in self.client.area.owners and not self.client.area.can_dj:
+                self.client.send_ooc(
+                    "You cannot change music in this area!"
+                )
+                return
+
 
             if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT):
                 if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT, self.ArgType.STR_OR_EMPTY):
