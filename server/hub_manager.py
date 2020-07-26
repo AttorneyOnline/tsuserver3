@@ -10,7 +10,7 @@ class HubManager:
     def __init__(self, server):
         self.server = server
         self.hubs = []
-        self.load_hubs()
+        self.load()
 
     @property
     def clients(self):
@@ -27,7 +27,7 @@ class HubManager:
             raise AreaError(f'File path {path} is invalid!')
         
         for hub in hubs:
-            _hub = AreaManager(self.server)
+            _hub = AreaManager(self)
             _hub.load(hub)
             self.hubs.append(_hub)
 

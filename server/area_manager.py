@@ -33,8 +33,8 @@ from collections import OrderedDict
 class AreaManager:
     """Holds the list of all areas."""
 
-    def __init__(self, server):
-        self.server = server
+    def __init__(self, hub_manager):
+        self.hub_manager = hub_manager
         self.areas = []
         self.owners = set()
 
@@ -54,7 +54,17 @@ class AreaManager:
         # Save character information for character select screen ID's in the hub data
         # ex. {"1": {"keys": [1, 2, 3, 5], "fatigue": 100.0, "hunger": 34.0}, "2": {"keys": [4, 6, 8]}}
         self.character_data = {}
-    
+
+    @property
+    def id(self):
+        """Get area's index in the HubManager's 'hubs' list."""
+        return self.hub_manager.hubs.index(self)
+
+    @property
+    def server(self):
+        """Area's server. Accesses HubManager's 'server' property"""
+        return self.hub_manager.server
+
     @property
     def clients(self):
         clients = set()
