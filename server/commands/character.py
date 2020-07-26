@@ -526,7 +526,7 @@ def ooc_cmd_load_character_data(client, arg):
     try:
         path = 'storage/character_data'
         arg = f'{path}/{arg}.yaml'
-        client.server.area_manager.load_character_data(arg)
+        client.area.area_manager.load_character_data(arg)
         client.send_ooc(f'Loading {arg} character data...')
     except AreaError:
         raise

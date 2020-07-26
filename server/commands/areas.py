@@ -114,7 +114,7 @@ def ooc_cmd_area(client, arg):
         return
 
     try:
-        for area in client.server.area_manager.areas:
+        for area in client.area.area_manager.areas:
             if (args[0].isdigit() and area.id == int(args[0])) or area.abbreviation.lower() == args[0].lower() or area.name.lower() == arg.lower():
                 client.change_area(area)
                 return
@@ -169,10 +169,10 @@ def ooc_cmd_area_lock(client, arg):
         area_list = []
         for aid in args:
             try:
-                target_id = client.server.area_manager.get_area_by_abbreviation(aid).id
+                target_id = client.area.area_manager.get_area_by_abbreviation(aid).id
             except:
                 target_id = int(aid)
-            area = client.server.area_manager.get_area_by_id(target_id)
+            area = client.area.area_manager.get_area_by_id(target_id)
 
             if not client.is_mod:
                 if not area.locking_allowed:
@@ -211,10 +211,10 @@ def ooc_cmd_area_spectate(client, arg):
         area_list = []
         for aid in args:
             try:
-                target_id = client.server.area_manager.get_area_by_abbreviation(aid).id
+                target_id = client.area.area_manager.get_area_by_abbreviation(aid).id
             except:
                 target_id = int(aid)
-            area = client.server.area_manager.get_area_by_id(target_id)
+            area = client.area.area_manager.get_area_by_id(target_id)
 
             if not client.is_mod:
                 if not area.locking_allowed:
@@ -253,10 +253,10 @@ def ooc_cmd_area_unlock(client, arg):
         area_list = []
         for aid in args:
             try:
-                target_id = client.server.area_manager.get_area_by_abbreviation(aid).id
+                target_id = client.area.area_manager.get_area_by_abbreviation(aid).id
             except:
                 target_id = int(aid)
-            area = client.server.area_manager.get_area_by_id(target_id)
+            area = client.area.area_manager.get_area_by_id(target_id)
 
             if not client.is_mod:
                 if not area.locking_allowed:
@@ -459,7 +459,7 @@ def ooc_cmd_save_hub(client, arg):
         if (num_files >= 1000): #yikes
             raise AreaError('Server storage full! Please contact the server host to resolve this issue.')
         arg = f'{path}/{arg}.yaml'
-        client.server.area_manager.save_areas(arg)
+        client.area.area_manager.save_areas(arg)
         client.send_ooc(f'Saving as {arg}...')
     except AreaError:
         raise
@@ -474,12 +474,12 @@ def ooc_cmd_load_hub(client, arg):
     try:
         path = 'storage/hubs'
         arg = f'{path}/{arg}.yaml'
-        client.server.area_manager.load_areas(arg)
-        client.server.area_manager.send_arup_players()
-        client.server.area_manager.send_arup_status()
-        client.server.area_manager.send_arup_cms()
-        client.server.area_manager.send_arup_lock()
-        client.server.client_manager.refresh_music(client.server.area_manager.clients)
+        client.area.area_manager.load(arg)
+        client.area.area_manager.send_arup_players()
+        client.area.area_manager.send_arup_status()
+        client.area.area_manager.send_arup_cms()
+        client.area.area_manager.send_arup_lock()
+        client.server.client_manager.refresh_music(client.area.area_manager.clients)
         client.send_ooc(f'Loading {arg}...')
     except AreaError:
         raise
@@ -506,10 +506,10 @@ def ooc_cmd_area_create(client, arg):
     Create a new area.
     Usage: /area_create [name]
     """
-    area = client.server.area_manager.create_area()
+    area = client.area.area_manager.create_area()
     if arg != '':
         area.name = arg
-    client.server.area_manager.broadcast_area_list()
+    client.area.area_manager.broadcast_area_list()
     client.send_ooc(f'New area created! ({area.name})')
 
 
@@ -523,10 +523,10 @@ def ooc_cmd_area_remove(client, arg):
 
     if len(args) == 1:
         try:
-            area = client.server.area_manager.get_area_by_id(int(args[0]))
+            area = client.area.area_manager.get_area_by_id(int(args[0]))
             name = area.name
-            client.server.area_manager.remove_area(area)
-            client.server.area_manager.broadcast_area_list()
+            client.area.area_manager.remove_area(area)
+            client.area.area_manager.broadcast_area_list()
             client.send_ooc(f'Area {name} removed!')
         except ValueError:
             raise ArgumentError('Area ID must be a number.')
@@ -563,9 +563,9 @@ def ooc_cmd_area_swap(client, arg):
     if len(args) != 2:
         raise ClientError("You must specify 2 numbers.")
     try:
-        area1 = client.server.area_manager.get_area_by_id(int(args[0]))
-        area2 = client.server.area_manager.get_area_by_id(int(args[1]))
-        client.server.area_manager.swap_area(area1, area2)
+        area1 = client.area.area_manager.get_area_by_id(int(args[0]))
+        area2 = client.area.area_manager.get_area_by_id(int(args[1]))
+        client.area.area_manager.swap_area(area1, area2)
         client.send_ooc(f'Area {area1.name} has been swapped with Area {area2.name}!')
     except ValueError:
         raise ArgumentError('Area IDs must be a number.')
@@ -647,7 +647,7 @@ def ooc_cmd_area_link(client, arg):
         links = []
         for aid in args:
             try:
-                target_id = client.server.area_manager.get_area_by_abbreviation(aid).id
+                target_id = client.area.area_manager.get_area_by_abbreviation(aid).id
             except:
                 target_id = int(aid)
 
@@ -676,7 +676,7 @@ def ooc_cmd_area_links(client, arg):
             hidden = ' [H]'
 
         try:
-            area_name = f' - "{client.server.area_manager.get_area_by_id(int(key)).name}"'
+            area_name = f' - "{client.area.area_manager.get_area_by_id(int(key)).name}"'
         except:
             area_name = ''
 
@@ -705,7 +705,7 @@ def ooc_cmd_area_unlink(client, arg):
         links = []
         for aid in args:
             try:
-                target_id = client.server.area_manager.get_area_by_abbreviation(aid).id
+                target_id = client.area.area_manager.get_area_by_abbreviation(aid).id
             except:
                 target_id = int(aid)
 
@@ -734,7 +734,7 @@ def ooc_cmd_link_lock(client, arg):
         links = []
         for aid in args:
             try:
-                target_id = client.server.area_manager.get_area_by_abbreviation(aid).id
+                target_id = client.area.area_manager.get_area_by_abbreviation(aid).id
             except:
                 target_id = int(aid)
             if not client.is_mod and not client in client.area.owners:
@@ -764,7 +764,7 @@ def ooc_cmd_link_unlock(client, arg):
         links = []
         for aid in args:
             try:
-                target_id = client.server.area_manager.get_area_by_abbreviation(aid).id
+                target_id = client.area.area_manager.get_area_by_abbreviation(aid).id
             except:
                 target_id = int(aid)
             if not client.is_mod and not client in client.area.owners:
@@ -795,7 +795,7 @@ def ooc_cmd_link_hide(client, arg):
         links = []
         for aid in args:
             try:
-                target_id = client.server.area_manager.get_area_by_abbreviation(aid).id
+                target_id = client.area.area_manager.get_area_by_abbreviation(aid).id
             except:
                 target_id = int(aid)
 
@@ -823,7 +823,7 @@ def ooc_cmd_link_unhide(client, arg):
         links = []
         for aid in args:
             try:
-                target_id = client.server.area_manager.get_area_by_abbreviation(aid).id
+                target_id = client.area.area_manager.get_area_by_abbreviation(aid).id
             except:
                 target_id = int(aid)
 
@@ -849,7 +849,7 @@ def ooc_cmd_link_pos(client, arg):
         raise ArgumentError('Invalid number of arguments. Use /link_unhide <aid>')
     try:
         try:
-            target_id = client.server.area_manager.get_area_by_abbreviation(args[0]).id
+            target_id = client.area.area_manager.get_area_by_abbreviation(args[0]).id
         except:
             target_id = int(args[0])
 
@@ -875,7 +875,7 @@ def ooc_cmd_link_peekable(client, arg):
         links = []
         for aid in args:
             try:
-                target_id = client.server.area_manager.get_area_by_abbreviation(aid).id
+                target_id = client.area.area_manager.get_area_by_abbreviation(aid).id
             except:
                 target_id = int(aid)
 
@@ -903,7 +903,7 @@ def ooc_cmd_link_unpeekable(client, arg):
         links = []
         for aid in args:
             try:
-                target_id = client.server.area_manager.get_area_by_abbreviation(aid).id
+                target_id = client.area.area_manager.get_area_by_abbreviation(aid).id
             except:
                 target_id = int(aid)
 
@@ -970,7 +970,7 @@ def ooc_cmd_peek(client, arg):
 
     try:
         area = None
-        for _area in client.server.area_manager.areas:
+        for _area in client.area.area_manager.areas:
             if (args[0].isdigit() and _area.id == int(args[0])) or _area.abbreviation.lower() == args[0].lower() or _area.name.lower() == arg.lower():
                 area = _area
                 break
@@ -1076,7 +1076,7 @@ def ooc_cmd_hub_arup_enable(client, arg):
         raise ClientError('ARUP system is already enabled! Use /arup_disable to disable it.')
     client.area.area_manager.arup_enabled = True
     client.area.area_manager.send_command('FL', client.server.supported_features)
-    client.server.area_manager.broadcast_area_list()
+    client.area.area_manager.broadcast_area_list()
     client.area.area_manager.broadcast_ooc('ARUP system has been enabled for this hub.')
 
 
@@ -1092,7 +1092,7 @@ def ooc_cmd_hub_arup_disable(client, arg):
     preflist = client.server.supported_features.copy()
     preflist.remove('arup')
     client.area.area_manager.send_command('FL', preflist)
-    client.server.area_manager.broadcast_area_list()
+    client.area.area_manager.broadcast_area_list()
     client.area.area_manager.broadcast_ooc('ARUP system has been disabled for this hub.')
 
 
@@ -1105,7 +1105,7 @@ def ooc_cmd_hub_hide_clients(client, arg):
     if client.area.area_manager.hide_clients:
         raise ClientError('Client playercounts already hidden! Use /hub_unhide_clients to unhide.')
     client.area.area_manager.hide_clients = True
-    client.server.area_manager.broadcast_area_list()
+    client.area.area_manager.broadcast_area_list()
     client.area.area_manager.broadcast_ooc('Client playercounts are now hidden for this hub.')
 
 
@@ -1118,7 +1118,7 @@ def ooc_cmd_hub_unhide_clients(client, arg):
     if not client.area.area_manager.arup_enabled:
         raise ClientError('Client playercounts already revealed! Use /hub_hide_clients to hide.')
     client.area.area_manager.arup_enabled = False
-    client.server.area_manager.broadcast_area_list()
+    client.area.area_manager.broadcast_area_list()
     client.area.area_manager.broadcast_ooc('Client playercounts are no longer hidden for this hub.')
 
 

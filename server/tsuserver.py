@@ -80,7 +80,7 @@ class TsuServer3:
 
         try:
             self.load_config()
-            self.area_manager = AreaManager(self)
+            self.hub_manager = HubManager(self)
             self.load_iniswaps()
             self.load_characters()
             self.load_music()
@@ -185,7 +185,7 @@ class TsuServer3:
 
         c = self.client_manager.new_client(transport)
         c.server = self
-        c.area = self.area_manager.default_area()
+        c.area = self.hub_manager.default_hub().default_area()
         c.area.new_client(c)
         return c
 

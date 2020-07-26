@@ -29,7 +29,7 @@ def ooc_cmd_a(client, arg):
     arg = arg.split(' ')
 
     try:
-        area = client.server.area_manager.get_area_by_id(int(arg[0]))
+        area = client.area.area_manager.get_area_by_id(int(arg[0]))
     except ValueError:
         raise ArgumentError('The first argument must be an area ID.')
     except AreaError:
@@ -44,7 +44,7 @@ def ooc_cmd_s(client, arg):
     Usage: /s <message>
     """
     areas = []
-    for a in client.server.area_manager.areas:
+    for a in client.area.area_manager.areas:
         if client in a.owners:
             areas.append(a)
     if not areas:

@@ -1,7 +1,7 @@
 
 import oyaml as yaml #ordered yaml
 
-from area.area_manager import AreaManager
+from server.area_manager import AreaManager
 from server.exceptions import AreaError
 
 class HubManager:
