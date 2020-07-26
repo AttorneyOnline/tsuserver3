@@ -25,22 +25,33 @@ class HubManager:
                 hubs = yaml.safe_load(stream)
         except:
             raise AreaError(f'File path {path} is invalid!')
+
+        i = 0
         for hub in hubs:
             if 'area' in hub:
                 # Legacy support triggered! Abort operation
-                _hub = AreaManager(self)
-                _hub.load_areas(hubs)
-                self.hubs.append(_hub)
+                if len(self.hubs) <= 0:
+                    self.hubs.append(AreaManager(self))
+                self.hubs[0].load_areas(hubs)
                 break
-            _hub = AreaManager(self)
-            _hub.load(hub)
-            self.hubs.append(_hub)
+            while len(self.hubs) < len(hubs):
+                # Make sure that the hub manager contains enough hubs to update with new information
+                self.hubs.append(AreaManager(self))
+            while len(self.hubs) >= len(hubs):
+                # Clean up excess hubs
+                h = self.hubs.pop()
+                clients = h.clients.copy()
+                for client in clients:
+                    client.set_area(self.default_hub().default_area())
+
+            self.hubs[i].load(hub)
+            i += 1
 
     def save(self, path='config/areas.yaml'):
         try:
             with open(path, 'w', encoding='utf-8') as stream:
                 hubs = []
-                for hubs in self.hubs:
+                for hub in self.hubs:
                     hubs.append(hub.save())
                 yaml.dump(hubs, stream, default_flow_style=False)
         except:

@@ -448,19 +448,28 @@ def ooc_cmd_save_hub(client, arg):
     Save the current Hub in the server's storage/hubs/<name>.yaml file.
     Usage: /save_hub <name>
     """
-    if len(arg) < 3:
-        client.send_ooc("Filename must be at least 3 symbols long!")
-        return
-
+    if not client.is_mod:
+        if arg == '':
+            raise ArgumentError('You must be authorized to save the default hub!')
+        if len(arg) < 3:
+            raise ArgumentError("Filename must be at least 3 symbols long!")
     try:
-        path = 'storage/hubs'
-        num_files = len([f for f in os.listdir(
-            path) if os.path.isfile(os.path.join(path, f))])
-        if (num_files >= 1000): #yikes
-            raise AreaError('Server storage full! Please contact the server host to resolve this issue.')
-        arg = f'{path}/{arg}.yaml'
-        client.area.area_manager.save_areas(arg)
-        client.send_ooc(f'Saving as {arg}...')
+        if arg != '':
+            path = 'storage/hubs'
+            num_files = len([f for f in os.listdir(
+                path) if os.path.isfile(os.path.join(path, f))])
+            if (num_files >= 1000): #yikes
+                raise AreaError('Server storage full! Please contact the server host to resolve this issue.')
+            try:
+                arg = f'{path}/{arg}.yaml'
+                with open(arg, 'w', encoding='utf-8') as stream:
+                    yaml.dump(client.area.area_manager.save(), stream, default_flow_style=False)
+            except:
+                raise AreaError(f'File path {arg} is invalid!')
+            client.send_ooc(f'Saving as {arg}...')
+        else:
+            client.server.hub_manager.save('config/areas_new.yaml')
+            client.send_ooc('Saving all Hubs to areas_new.yaml. Contact the server owner to apply the changes.')
     except AreaError:
         raise
 
@@ -471,16 +480,38 @@ def ooc_cmd_load_hub(client, arg):
     Load Hub data from the server's storage/hubs/<name>.yaml file.
     Usage: /load_hub <name>
     """
+    if arg == '' and not client.is_mod:
+        raise ArgumentError('You must be authorized to load the default hub!')
     try:
-        path = 'storage/hubs'
-        arg = f'{path}/{arg}.yaml'
-        client.area.area_manager.load(arg)
-        client.area.area_manager.send_arup_players()
-        client.area.area_manager.send_arup_status()
-        client.area.area_manager.send_arup_cms()
-        client.area.area_manager.send_arup_lock()
-        client.server.client_manager.refresh_music(client.area.area_manager.clients)
-        client.send_ooc(f'Loading {arg}...')
+        if arg != '':
+            path = 'storage/hubs'
+            arg = f'{path}/{arg}.yaml'
+            try:
+                with open(arg, 'r', encoding='utf-8') as stream:
+                    hub = yaml.safe_load(stream)
+            except:
+                raise AreaError(f'File path {arg} is invalid!')
+            client.area.area_manager.load(hub)
+            client.send_ooc(f'Loading as {arg}...')
+            client.area.area_manager.send_arup_players()
+            client.area.area_manager.send_arup_status()
+            client.area.area_manager.send_arup_cms()
+            client.area.area_manager.send_arup_lock()
+            client.server.client_manager.refresh_music(client.area.area_manager.clients)
+            client.send_ooc('Success, sending ARUP and refreshing music...')
+        else:
+            client.server.hub_manager.load()
+            client.send_ooc('Loading all Hubs from areas.yaml...')
+            clients = set()
+            for hub in client.server.hub_manager.hubs:
+                hub.send_arup_players()
+                hub.send_arup_status()
+                hub.send_arup_cms()
+                hub.send_arup_lock()
+                clients = clients | hub.clients
+            client.server.client_manager.refresh_music(clients)
+            client.send_ooc('Success, sending ARUP and refreshing music...')
+
     except AreaError:
         raise
     

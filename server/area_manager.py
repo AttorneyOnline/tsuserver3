@@ -228,7 +228,6 @@ class AreaManager:
             raise AreaError('Area not found.')
         # Make a copy because it can change size during iteration
         # (causes runtime error otherwise)
-        clients = area.clients.copy()
         if self.default_area() != area:
             target_area = self.default_area()
         else:
@@ -236,8 +235,9 @@ class AreaManager:
                 target_area = self.get_area_by_id(1)
             except:
                 raise AreaError('May not remove last existing area!')
+        clients = area.clients.copy()
         for client in clients:
-            client.change_area(target_area)
+            client.set_area(target_area)
         self.areas.remove(area)
 
     def swap_area(self, area1, area2):
