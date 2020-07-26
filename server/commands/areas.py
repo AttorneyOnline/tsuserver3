@@ -21,6 +21,7 @@ __all__ = [
     'ooc_cmd_peek',
     'ooc_cmd_max_players',
     'ooc_cmd_desc',
+    'ooc_cmd_edit_ambience',
 ]
 
 
@@ -373,3 +374,26 @@ def ooc_cmd_desc(client, arg):
             desc += "... Use /desc to read the rest."
         client.area.broadcast_ooc(f'{client.char_name} changed the area description to: {desc}.')
         database.log_room('desc.change', client, client.area, message=arg)
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_edit_ambience(client, arg):
+    """
+    Toggle edit mode for setting ambience. Playing music will set it as the area's ambience.
+    Usage: /edit_ambience [tog]
+    """
+    if len(arg.split()) > 1:
+        raise ArgumentError("This command can only take one argument ('on' or 'off') or no arguments at all!")
+    if arg:
+        if arg == 'on':
+            client.edit_ambience = True
+        elif arg == 'off':
+            client.edit_ambience = False
+        else:
+            raise ArgumentError("Invalid argument: {}".format(arg))
+    else:
+        client.edit_ambience = not client.edit_ambience
+    stat = 'no longer'
+    if client.edit_ambience:
+        stat = 'now'
+    client.send_ooc(f'Playing a song will {stat} edit the area\'s ambience.')

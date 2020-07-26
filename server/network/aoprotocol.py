@@ -736,6 +736,12 @@ class AOProtocol(asyncio.Protocol):
             try:
                 name, length = self.server.get_song_data(self.client.construct_music_list(self.client.area.music_override), args[0])
 
+                if (self.client.is_mod or self.client in self.client.area.owners) and self.client.edit_ambience:
+                    self.client.area.set_ambience(name)
+                    self.client.send_ooc(
+                        f'Setting current area\'s ambience to {name}.')
+                    return
+
                 # Showname info
                 showname = ''
                 if len(args) > 2:

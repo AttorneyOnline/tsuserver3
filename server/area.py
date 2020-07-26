@@ -290,7 +290,7 @@ class Area:
                 client.send_command('MC', self.current_music, -1, '', self.current_music_looping, 0, self.current_music_effects)
 
             # Play the ambience
-            self.send_command('MC', self.current_ambience, -1, "", 1, 1, int(MusicEffect.FADE_OUT | MusicEffect.FADE_IN | MusicEffect.SYNC_POS))
+            self.send_command('MC', self.ambience, -1, "", 1, 1, int(MusicEffect.FADE_OUT | MusicEffect.FADE_IN | MusicEffect.SYNC_POS))
 
     def remove_client(self, client):
         """Remove a disconnected client from the area."""
@@ -594,8 +594,8 @@ class Area:
             vote_picked.length, lambda: self.start_jukebox())
 
     def set_ambience(self, name):
-        self.current_ambience = name
-        self.send_command('MC', self.current_ambience, -1, "", 1, 1, int(MusicEffect.FADE_OUT | MusicEffect.FADE_IN | MusicEffect.SYNC_POS))
+        self.ambience = name
+        self.send_command('MC', self.ambience, -1, "", 1, 1, int(MusicEffect.FADE_OUT | MusicEffect.FADE_IN | MusicEffect.SYNC_POS))
 
     def play_music(self, name, cid, loop=0, showname="", effects=0):
         """
