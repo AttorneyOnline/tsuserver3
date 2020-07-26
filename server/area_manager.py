@@ -45,7 +45,7 @@ class AreaManager:
         self.arup_enabled = True
         self.hide_clients = False
         self.info = ''
-        self.can_gm = True
+        self.can_gm = False
         self.music_ref = ''
         self.music_override = False
         # /prefs
