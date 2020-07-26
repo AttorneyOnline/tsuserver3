@@ -109,7 +109,6 @@ class AreaManager:
             self.create_area()
         i = 0
         for area in areas:
-            print(area)
             if 'area' in area:
                 self.areas[i].load(area)
                 i += 1
