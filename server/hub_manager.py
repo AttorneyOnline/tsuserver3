@@ -1,7 +1,7 @@
 
 import oyaml as yaml #ordered yaml
 
-from server.area_manager import AreaManager
+from area.area_manager import AreaManager
 from server.exceptions import AreaError
 
 class HubManager:
@@ -12,14 +12,34 @@ class HubManager:
         self.hubs = []
         self.load_hubs()
 
-    def load_hubs(self):
-        with open('config/areas.yaml', 'r', encoding='utf-8') as chars:
-            hubs = yaml.safe_load(chars)
+    @property
+    def clients(self):
+        clients = set()
+        for hub in self.hubs:
+            clients = clients | hub.clients
+        return clients
 
+    def load(self, path='config/areas.yaml'):
+        try:
+            with open(path, 'r', encoding='utf-8') as stream:
+                hubs = yaml.safe_load(stream)
+        except:
+            raise AreaError(f'File path {path} is invalid!')
+        
         for hub in hubs:
             _hub = AreaManager(self.server)
             _hub.load(hub)
             self.hubs.append(_hub)
+
+    def save(self, path='config/areas.yaml'):
+        try:
+            with open(path, 'w', encoding='utf-8') as stream:
+                hubs = []
+                for hubs in self.hubs:
+                    hubs.append(hub.save())
+                yaml.dump(hubs, stream, default_flow_style=False)
+        except:
+            raise AreaError(f'File path {path} is invalid!')
 
     def default_hub(self):
         return self.hubs[0]

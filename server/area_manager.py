@@ -54,8 +54,6 @@ class AreaManager:
         # Save character information for character select screen ID's in the hub data
         # ex. {"1": {"keys": [1, 2, 3, 5], "fatigue": 100.0, "hunger": 34.0}, "2": {"keys": [4, 6, 8]}}
         self.character_data = {}
-
-        self.load()
     
     @property
     def clients(self):
@@ -64,50 +62,57 @@ class AreaManager:
             clients = clients | area.clients
         return clients
 
-    def load(self, path='config/areas.yaml'):
+    def load(self, hub):
         """
-        Create all areas from a YAML file.
-        :param path: filepath to the YAML file.
+        Create all hub data from a YAML dictionary.
+        :param hub: what to parse.
 
         """
-        try:
-            with open(path, 'r') as chars:
-                hub = yaml.safe_load(chars)
-        except:
-            raise AreaError(f'File path {path} is invalid!')
+        while len(self.areas) < len(hub):
+            # Make sure that the area manager contains enough areas to update with new information
+            self.create_area()
 
-        try:
-            while len(self.areas) < len(hub):
-                # Make sure that the area manager contains enough areas to update with new information
-                self.create_area()
+        if 'move_delay' in hub:
+            self.move_delay = hub['move_delay']
+        if 'arup_enabled' in hub:
+            self.arup_enabled = hub['arup_enabled']
+        if 'hide_clients' in hub:
+            self.hide_clients = hub['hide_clients']
+        if 'info' in hub:
+            self.info = hub['info']
+        if 'can_gm' in hub:
+            self.can_gm = hub['can_gm']
+        if 'music_ref' in hub:
+            self.music_ref = hub['music_ref']
+        if 'music_override' in hub:
+            self.music_override = hub['music_override']
 
-            for i, area in enumerate(hub):
-                # if 'character_data' in area:
-                #     try:
-                #         self.load_character_data(area['character_data'])
-                #     except:
-                #         print('Character data reference path invalid!')
+        if 'character_data' in hub:
+            try:
+                self.load_character_data(hub['character_data'])
+            except:
+                print('Character data reference path invalid!')
+        if 'areas' in hub:
+            for i, area in enumerate(hub['areas']):
                 if 'area' in area:
                     self.areas[i].load(area)
 
-            self.broadcast_area_list()
-        except:
-            raise AreaError(f'Something went wrong while loading the areas!')
+        self.broadcast_area_list()
 
-    def save_areas(self, path='config/areas.yaml'):
-        """
-        Save all areas to a YAML file.
-        :param path: filepath to the YAML file.
-
-        """
-        try:
-            with open(path, 'w', encoding='utf-8') as stream:
-                areas = []
-                for area in self.areas:
-                    areas.append(area.save())
-                yaml.dump(areas, stream, default_flow_style=False)
-        except:
-            raise AreaError(f'File path {path} is invalid!')
+    def save(self):
+        hub = OrderedDict()
+        hub['move_delay'] = self.move_delay
+        hub['arup_enabled'] = self.arup_enabled
+        hub['hide_clients'] = self.hide_clients
+        hub['info'] = self.info
+        hub['can_gm'] = self.can_gm
+        hub['music_ref'] = self.music_ref
+        hub['music_override'] = self.music_override
+        areas = []
+        for area in self.areas:
+            areas.append(area.save())
+        hub['areas'] = areas
+        return hub
 
     def clear_music(self):
         self.music_list.clear()
