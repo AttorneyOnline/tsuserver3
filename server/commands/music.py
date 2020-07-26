@@ -232,8 +232,8 @@ def ooc_cmd_musiclist(client, arg):
     if arg == '':
         client.clear_music()
     else:
-        client.load_music(f'storage/musiclists/{arg}.yaml')
-    client.refresh_music_list()
+        client.load_music(arg)#f'storage/musiclists/{arg}.yaml')
+    client.refresh_music()
 
 @mod_only(area_owners=True)
 def ooc_cmd_area_musiclist(client, arg):
@@ -246,7 +246,7 @@ def ooc_cmd_area_musiclist(client, arg):
         client.area.clear_music()
     else:
         client.area.load_music(f'storage/musiclists/{arg}.yaml')
-    client.server.client_manager.refresh_music_list(client.area.clients)
+    client.server.client_manager.refresh_music(client.area.clients)
 
 
 @mod_only(hub_owners=True)
@@ -260,4 +260,4 @@ def ooc_cmd_hub_musiclist(client, arg):
         client.area.area_manager.clear_music()
     else:
         client.area.area_manager.load_music(f'storage/musiclists/{arg}.yaml')
-    client.server.client_manager.refresh_music_list(client.area.area_manager.clients)
+    client.server.client_manager.refresh_music(client.area.area_manager.clients)

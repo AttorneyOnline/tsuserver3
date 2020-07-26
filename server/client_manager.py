@@ -114,7 +114,7 @@ class ClientManager:
             # a list of all songs the client can currently see
             self.local_music_list = []
             # reference to the storage/musiclists/ref.yaml for displaying purposes
-            self.local_music_ref = ''
+            self.music_ref = ''
             # a music list override that was loaded manually by the client
             self.override_music_list = []
 
@@ -326,13 +326,13 @@ class ClientManager:
             if self.area.area_manager.replace_music:
                 song_list = self.area.area_manager.music_list
             else:
-                song_list += self.area.area_manager.music_list
+                song_list = song_list + self.area.area_manager.music_list
 
             # Area music list
             if self.area.replace_music:
                 song_list = self.area.music_list
             else:
-                song_list += self.area.music_list
+                song_list = song_list + self.area.music_list
 
             # Client override
             if music_override and self.music_ref != '' and len(self.override_music_list) > 0:
@@ -340,7 +340,7 @@ class ClientManager:
 
             return song_list
 
-        def refresh_music_list(self):
+        def refresh_music(self):
             """
             Rebuild the client's music list according to a priority Client override -> Area override -> Hub override.
             """
@@ -510,7 +510,7 @@ class ClientManager:
                 self.send_ooc(
                     f'Changed area to {area.name} unannounced.')
 
-            self.area.area_manager.refresh_music([self])
+            self.refresh_music()
             if self.area.desc != '':
                 desc = self.area.desc[:128]
                 if len(self.area.desc) > len(desc):
@@ -1035,4 +1035,4 @@ class ClientManager:
         if clients == None:
             clients = self.clients
         for client in clients:
-            client.refresh_music_list()
+            client.refresh_music()

@@ -222,9 +222,11 @@ class AreaManager:
             if 'desc' in area:
                 self.desc = area['desc']
             if 'music_ref' in area:
+                self.clear_music()
                 self.music_ref = area['music_ref']
             if self.music_ref != '':
                 self.load_music(f'storage/musiclists/{self.music_ref}.yaml')
+                
             if 'music_override' in area:
                 self.music_override = area['music_override']
             if 'replace_music' in area:
