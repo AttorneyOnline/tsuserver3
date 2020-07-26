@@ -65,6 +65,8 @@ class Area:
         self.desc = ''
         self.music_ref = ''
         self.music_override = False
+        self.replace_music = False
+        self.ambience = ''
         # /prefs end
 
         self.music_looper = None
@@ -91,7 +93,6 @@ class Area:
         self.jukebox_prev_char_id = -1
 
         self.music_list = []
-        self.replace_music = False
 
         self._owners = set()
         self.afkers = []
@@ -229,6 +230,8 @@ class Area:
             self.music_override = area['music_override']
         if 'replace_music' in area:
             self.replace_music = area['replace_music']
+        if 'ambience' in area:
+            self.ambience = area['ambience']
 
         if 'evidence' in area and len(area['evidence']) > 0:
             self.evi_list.evidences.clear()
@@ -271,6 +274,7 @@ class Area:
         area['music_override'] = self.music_override
         if self.music_autoplay:
             area['music'] = self.current_music
+        area['ambience'] = self.ambience
         if len(self.evi_list.evidences) > 0:
             area['evidence'] = [e.to_dict() for e in self.evi_list.evidences]
         if len(self.links) > 0:
@@ -284,6 +288,9 @@ class Area:
             database.log_room('area.join', client, self)
             if self.music_autoplay:
                 client.send_command('MC', self.current_music, -1, '', self.current_music_looping, 0, self.current_music_effects)
+
+            # Play the ambience
+            self.send_command('MC', self.current_ambience, -1, "", 1, 1, int(MusicEffect.FADE_OUT | MusicEffect.FADE_IN | MusicEffect.SYNC_POS))
 
     def remove_client(self, client):
         """Remove a disconnected client from the area."""
@@ -585,6 +592,10 @@ class Area:
             self.music_looper.cancel()
         self.music_looper = asyncio.get_event_loop().call_later(
             vote_picked.length, lambda: self.start_jukebox())
+
+    def set_ambience(self, name):
+        self.current_ambience = name
+        self.send_command('MC', self.current_ambience, -1, "", 1, 1, int(MusicEffect.FADE_OUT | MusicEffect.FADE_IN | MusicEffect.SYNC_POS))
 
     def play_music(self, name, cid, loop=0, showname="", effects=0):
         """

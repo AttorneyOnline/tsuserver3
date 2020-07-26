@@ -60,6 +60,7 @@ class ClientManager:
             self.pm_mute = False
             self.mod_call_time = 0
             self.ipid = ipid
+            self.version = ''
 
             # Pairing stuff
             self.charid_pair = -1
@@ -433,6 +434,12 @@ class ClientManager:
                 self.send_command('SD', '*'.join(self.area.pos_lock))
             # Send the evidence information
             self.send_command('LE', *self.area.get_evidence_list(self))
+            self.refresh_music()
+            if self.area.desc != '':
+                desc = self.area.desc[:128]
+                if len(self.area.desc) > len(desc):
+                    desc += "... Use /desc to read the rest."
+                self.send_ooc(f'Description: {desc}')
 
         def can_access_area(self, area):
             return len(self.area.links) <= 0 or (str(area.id) in self.area.links and not self.area.links[str(area.id)]["locked"])
@@ -509,13 +516,6 @@ class ClientManager:
             else:
                 self.send_ooc(
                     f'Changed area to {area.name} unannounced.')
-
-            self.refresh_music()
-            if self.area.desc != '':
-                desc = self.area.desc[:128]
-                if len(self.area.desc) > len(desc):
-                    desc += "... Use /desc to read the rest."
-                self.send_ooc(f'Description: {desc}')
 
         def get_area_list(self, hidden=False, linked=False):
             area_list = []
