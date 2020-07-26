@@ -2,6 +2,7 @@
 # Sensitive data
 config/
 storage/**/*.json
+storage/**/*.yaml
 storage/db.sqlite*
 storage/GeoLite*
 logs/**/*.log
