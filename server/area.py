@@ -479,17 +479,18 @@ class Area:
 
             prepath = ''
             for item in self.music_list:
-                if 'replace' in item:
-                    self.replace_music = item['replace'] == True
-                    if 'use_unique_folder' in item and item['use_unique_folder'] == True:
-                        prepath = os.path.splitext(os.path.basename(path))[0] + '/'
-                    continue
+                # deprecated, use 'replace_music' area pref instead
+                # if 'replace' in item:
+                #     self.replace_music = item['replace'] == True
+                if 'use_unique_folder' in item and item['use_unique_folder'] == True:
+                    prepath = os.path.splitext(os.path.basename(path))[0] + '/'
 
                 if 'category' not in item:
                     continue
-
-                for song in item['songs']:
-                    song['name'] = prepath + song['name']
+                
+                if 'songs' in item:
+                    for song in item['songs']:
+                        song['name'] = prepath + song['name']
         except ValueError:
             raise
         except AreaError:
