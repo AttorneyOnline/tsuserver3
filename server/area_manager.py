@@ -848,9 +848,9 @@ class AreaManager:
     
     @property
     def clients(self):
-        clients = []
+        clients = set()
         for area in self.areas:
-            clients = clients + area.clients
+            clients = clients | area.clients
         return clients
 
     def load_areas(self, path='config/areas.yaml'):
