@@ -99,6 +99,7 @@ from .areas import *
 from .casing import *
 from .character import *
 from .fun import *
+from .hubs import *
 from .messaging import *
 from .music import *
 from .roleplay import *
