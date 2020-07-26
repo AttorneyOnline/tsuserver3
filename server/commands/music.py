@@ -1,6 +1,6 @@
 from server import database
 from server.constants import TargetType
-from server.exceptions import ClientError, ServerError, ArgumentError
+from server.exceptions import ClientError, ServerError, ArgumentError, AreaError
 
 from . import mod_only
 
@@ -229,11 +229,15 @@ def ooc_cmd_musiclist(client, arg):
     Note: if there is a set area/hub music list, their music lists will take priority.
     Usage: /musiclist [path]
     """
-    if arg == '':
-        client.clear_music()
-    else:
-        client.load_music(arg)#f'storage/musiclists/{arg}.yaml')
-    client.refresh_music()
+    try:
+        if arg == '':
+            client.clear_music()
+        else:
+            client.load_music(arg)#f'storage/musiclists/{arg}.yaml')
+        client.refresh_music()
+        client.send_ooc(f'Loading local musiclist {arg}...')
+    except AreaError:
+        raise
 
 @mod_only(area_owners=True)
 def ooc_cmd_area_musiclist(client, arg):
@@ -242,11 +246,15 @@ def ooc_cmd_area_musiclist(client, arg):
     Area list takes priority over client lists.
     Usage: /area_musiclist [path]
     """
-    if arg == '':
-        client.area.clear_music()
-    else:
-        client.area.load_music(f'storage/musiclists/{arg}.yaml')
-    client.server.client_manager.refresh_music(client.area.clients)
+    try:
+        if arg == '':
+            client.area.clear_music()
+        else:
+            client.area.load_music(f'storage/musiclists/{arg}.yaml')
+        client.server.client_manager.refresh_music(client.area.clients)
+        client.send_ooc(f'Loading area musiclist {arg}...')
+    except AreaError:
+        raise
 
 
 @mod_only(hub_owners=True)
@@ -256,8 +264,12 @@ def ooc_cmd_hub_musiclist(client, arg):
     Hub list takes priority over client lists.
     Usage: /hub_musiclist [path]
     """
-    if arg == '':
-        client.area.area_manager.clear_music()
-    else:
-        client.area.area_manager.load_music(f'storage/musiclists/{arg}.yaml')
-    client.server.client_manager.refresh_music(client.area.area_manager.clients)
+    try:
+        if arg == '':
+            client.area.area_manager.clear_music()
+        else:
+            client.area.area_manager.load_music(f'storage/musiclists/{arg}.yaml')
+        client.server.client_manager.refresh_music(client.area.area_manager.clients)
+        client.send_ooc(f'Loading hub musiclist {arg}...')
+    except AreaError:
+        raise
