@@ -33,12 +33,14 @@ from collections import OrderedDict
 class AreaManager:
     """Holds the list of all areas."""
 
-    def __init__(self, hub_manager):
+    def __init__(self, hub_manager, name):
         self.hub_manager = hub_manager
         self.areas = []
         self.owners = set()
 
         # prefs
+        self._name = name
+        self.abbreviation = self.abbreviate()
         self.move_delay = 0
         self.arup_enabled = True
         self.hide_clients = False
@@ -54,6 +56,16 @@ class AreaManager:
         # Save character information for character select screen ID's in the hub data
         # ex. {"1": {"keys": [1, 2, 3, 5], "fatigue": 100.0, "hunger": 34.0}, "2": {"keys": [4, 6, 8]}}
         self.character_data = {}
+
+    @property
+    def name(self):
+        """Area's name string. Abbreviation is also updated according to this."""
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        self._name = value
+        self.abbreviation = self.abbreviate()
 
     @property
     def id(self):
@@ -72,12 +84,26 @@ class AreaManager:
             clients = clients | area.clients
         return clients
 
+    def abbreviate(self):
+        """Abbreviate our name."""
+        if self.name.lower().startswith("hub"):
+            return "H" + self.name.split()[-1]
+        if len(self.name.split()) > 1:
+            return "".join(item[0].upper() for item in self.name.split())
+        if len(self.name) > 3:
+            return self.name[:3].upper()
+        return self.name.upper()
+
     def load(self, hub):
         """
         Create all hub data from a YAML dictionary.
         :param hub: what to parse.
 
         """
+        if 'hub' in hub:
+            self.name = hub['hub']
+        if 'abbreviation' in hub:
+            self.abbreviation = hub['abbreviation']
         if 'move_delay' in hub:
             self.move_delay = hub['move_delay']
         if 'arup_enabled' in hub:
@@ -115,6 +141,8 @@ class AreaManager:
 
     def save(self):
         hub = OrderedDict()
+        hub['hub'] = self.name
+        hub['abbreviation'] = self.abbreviation
         hub['move_delay'] = self.move_delay
         hub['arup_enabled'] = self.arup_enabled
         hub['hide_clients'] = self.hide_clients

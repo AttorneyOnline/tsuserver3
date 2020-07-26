@@ -66,7 +66,7 @@ def ooc_cmd_status(client, arg):
 
 def ooc_cmd_area(client, arg):
     """
-    List areas, or go to another area/room.
+    List areas, or go to another area.
     Usage: /area [id] or /area [name]
     """
     args = arg.split()

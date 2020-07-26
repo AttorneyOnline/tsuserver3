@@ -7,6 +7,9 @@ from server.exceptions import ClientError, ArgumentError, AreaError
 from . import mod_only
 
 __all__ = [
+    # Navigation
+    'ooc_cmd_hub',
+    # Saving/loading
     'ooc_cmd_save_hub',
     'ooc_cmd_load_hub',
     'ooc_cmd_list_hubs',
@@ -46,6 +49,29 @@ __all__ = [
     'ooc_cmd_ungm',
 ]
 
+
+def ooc_cmd_hub(client, arg):
+    """
+    List hubs, or go to another hub.
+    Usage: /hub [id] or /hub [name]
+    """
+    args = arg.split()
+    if len(args) == 0:
+        client.send_hub_list()
+        return
+
+    try:
+        for hub in client.server.hub_manager.hubs:
+            if (args[0].isdigit() and hub.id == int(args[0])) or hub.abbreviation.lower() == args[0].lower() or hub.name.lower() == arg.lower():
+                if hub == client.area.area_manager:
+                    raise AreaError('User already in specified hub.')
+                client.change_area(hub.default_area())
+                return
+        raise AreaError('Targeted hub not found!')
+    except ValueError:
+        raise ArgumentError('Hub ID must be a name, abbreviation or a number.')
+    except (AreaError, ClientError):
+        raise
 
 
 @mod_only(hub_owners=True)

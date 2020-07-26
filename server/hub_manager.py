@@ -31,12 +31,12 @@ class HubManager:
             if 'area' in hub:
                 # Legacy support triggered! Abort operation
                 if len(self.hubs) <= 0:
-                    self.hubs.append(AreaManager(self))
+                    self.hubs.append(AreaManager(self, f'Hub 0'))
                 self.hubs[0].load_areas(hubs)
                 break
             while len(self.hubs) < len(hubs):
                 # Make sure that the hub manager contains enough hubs to update with new information
-                self.hubs.append(AreaManager(self))
+                self.hubs.append(AreaManager(self, f'Hub {i}'))
             while len(self.hubs) >= len(hubs):
                 # Clean up excess hubs
                 h = self.hubs.pop()
@@ -58,16 +58,26 @@ class HubManager:
             raise AreaError(f'File path {path} is invalid!')
 
     def default_hub(self):
+        """Get the default hub."""
         return self.hubs[0]
 
     def get_hub_by_name(self, name):
+        """Get a hub by name."""
         for hub in self.hubs:
             if hub.name.lower() == name.lower():
                 return hub
         raise AreaError('Hub not found.')
 
     def get_hub_by_id(self, num):
+        """Get a hub by ID."""
         for hub in self.hubs:
             if hub.id == num:
+                return hub
+        raise AreaError('Hub not found.')
+
+    def get_hub_by_abbreviation(self, abbr):
+        """Get a hub by abbreviation."""
+        for hub in self.hubs:
+            if hub.abbreviation.lower() == abbr.lower():
                 return hub
         raise AreaError('Hub not found.')

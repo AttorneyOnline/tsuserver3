@@ -679,6 +679,18 @@ class ClientManager:
                     raise
             self.send_ooc(info)
 
+        def send_hub_list(self):
+            msg = '=== Hubs ==='
+            for hub in self.server.hub_manager.hubs:
+                owner = 'FREE'
+                if len(hub.owners) > 0:
+                    owner = hub.owners[0]
+                    owner = f'[{owner.id}] {owner.char_name}'
+                msg += f'\r\n[{hub.id}] {hub.abbreviation}: {hub.name} (users: {len(hub.clients)}) {owner}'
+                if self.area.area_manager == hub:
+                    msg += ' [*]'
+            self.send_ooc(msg)
+
         def send_done(self):
             """
             Send area information and finish the join handshake.
