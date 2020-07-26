@@ -40,7 +40,7 @@ class ClientManager:
             self.hdid = ''
             self.id = user_id
             self.char_id = -1
-            self.area = area.area_manager.default_hub().default_area()
+            self.area = server.hub_manager.default_hub().default_area()
             self.server = server
             self.name = ''
             self.fake_name = ''
@@ -941,7 +941,7 @@ class ClientManager:
         """
         if client.area.jukebox:
             client.area.remove_jukebox_vote(client, True)
-        for a in self.area.area_manager.areas:
+        for a in client.area.area_manager.areas:
             if client in a.owners:
                 a.owners.remove(client)
                 client.area.area_manager.send_arup_cms()

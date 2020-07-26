@@ -78,10 +78,6 @@ class AreaManager:
         :param hub: what to parse.
 
         """
-        while len(self.areas) < len(hub):
-            # Make sure that the area manager contains enough areas to update with new information
-            self.create_area()
-
         if 'move_delay' in hub:
             self.move_delay = hub['move_delay']
         if 'arup_enabled' in hub:
@@ -103,11 +99,20 @@ class AreaManager:
             except:
                 print('Character data reference path invalid!')
         if 'areas' in hub:
-            for i, area in enumerate(hub['areas']):
-                if 'area' in area:
-                    self.areas[i].load(area)
+            self.load_areas(hub['areas'])
 
         self.broadcast_area_list()
+
+    def load_areas(self, areas):
+        while len(self.areas) < len(areas):
+            # Make sure that the area manager contains enough areas to update with new information
+            self.create_area()
+        i = 0
+        for area in areas:
+            print(area)
+            if 'area' in area:
+                self.areas[i].load(area)
+                i += 1
 
     def save(self):
         hub = OrderedDict()

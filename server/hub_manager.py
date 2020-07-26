@@ -25,8 +25,13 @@ class HubManager:
                 hubs = yaml.safe_load(stream)
         except:
             raise AreaError(f'File path {path} is invalid!')
-        
+
         for hub in hubs:
+            if 'area' in hubs:
+                # Legacy support triggered! Abort operation
+                _hub = AreaManager(self)
+                _hub.load_areas(hubs)
+                break
             _hub = AreaManager(self)
             _hub.load(hub)
             self.hubs.append(_hub)
