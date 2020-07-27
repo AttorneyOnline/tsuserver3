@@ -318,7 +318,7 @@ class AOProtocol(asyncio.Protocol):
         area_list = self.client.get_area_list(not allowed, not allowed)
         self.client.local_area_list = area_list
         song_list += [a.name for a in area_list]
-        self.client.local_music_list = self.server.music_list_ao2
+        self.client.local_music_list = self.server.music_list
         song_list += self.server.music_list_ao2
 
         self.client.send_command('SM', *song_list)

@@ -1,3 +1,5 @@
+import random
+
 from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, ServerError, ArgumentError, AreaError
@@ -17,6 +19,7 @@ __all__ = [
     'ooc_cmd_musiclist',
     'ooc_cmd_area_musiclist',
     'ooc_cmd_hub_musiclist',
+    'ooc_cmd_random_music',
 ]
 
 
@@ -239,6 +242,8 @@ def ooc_cmd_musiclist(client, arg):
         client.refresh_music()
     except AreaError:
         raise
+    except:
+        client.send_ooc('File not found!')
 
 @mod_only(area_owners=True)
 def ooc_cmd_area_musiclist(client, arg):
@@ -257,6 +262,8 @@ def ooc_cmd_area_musiclist(client, arg):
         client.server.client_manager.refresh_music(client.area.clients)
     except AreaError:
         raise
+    except:
+        client.send_ooc('File not found!')
 
 
 @mod_only(hub_owners=True)
@@ -276,3 +283,21 @@ def ooc_cmd_hub_musiclist(client, arg):
         client.server.client_manager.refresh_music(client.area.area_manager.clients)
     except AreaError:
         raise
+    except:
+        client.send_ooc('File not found!')
+
+
+def ooc_cmd_random_music(client, arg):
+    """
+    Play a random track from your current muisc list. If supplied, [category] will pick the song from that category.
+    Usage: /random_music [category]
+    """
+    songs = []
+    for c in client.local_music_list:
+        if 'category' in c and (arg == '' or c['category'].strip('==').lower() == arg.lower()):
+            if 'songs' in c:
+                songs = songs + c['songs']
+    if len(songs) <= 0:
+        raise ArgumentError('Could not find a single song that fit the criteria!')
+    song_name = songs[random.randint(0, len(songs)-1)]['name']
+    client.change_music([song_name, client.char_id, '', 2])
