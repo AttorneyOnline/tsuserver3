@@ -385,7 +385,10 @@ class Area:
         that are not currently in the area.
         """
         for c in self.owners:
-            if c not in self.clients:
+            if c not in self.clients and \
+              (c.remote_listen == 3 or \
+              (cmd == 'CT' and c.remote_listen == 2) or \
+              (cmd == 'MS' and c.remote_listen == 1)):
                 c.send_command(cmd, *args)
 
     def broadcast_ooc(self, msg):
