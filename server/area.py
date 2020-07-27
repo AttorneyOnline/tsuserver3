@@ -751,7 +751,7 @@ class Area:
         """
         Add a CM to the area.
         """
-        self.owners.add(client)
+        self._owners.add(client)
 
         # Make sure the client's available areas are updated
         self.broadcast_area_list(client)
@@ -775,7 +775,7 @@ class Area:
         """
         Remove a CM from the area.
         """
-        self.owners.remove(client)
+        self._owners.remove(client)
 
         # Make sure the client's available areas are updated
         self.broadcast_area_list(client)
