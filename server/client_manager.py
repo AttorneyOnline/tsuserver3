@@ -21,6 +21,8 @@ import time
 import math
 from heapq import heappop, heappush
 
+from enum import Enum
+
 from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, AreaError, ServerError
@@ -110,6 +112,12 @@ class ClientManager:
             self.listen_pos = None
             self.following = None
             self.edit_ambience = False
+
+            # 0 = listen to NONE
+            # 1 = listen to IC
+            # 2 = listen to OOC
+            # 3 = Listen to ALL
+            self.remote_listen = 3
 
             # a list of all areas the client can currently see
             self.local_area_list = []
@@ -590,7 +598,9 @@ class ClientManager:
             area_list = []
             for area in self.area.area_manager.areas:
                 if self.area != area and len(self.area.links) > 0:
-                    if not (str(area.id) in self.area.links):
+                    if hidden and area.hidden:
+                        continue
+                    elif not (str(area.id) in self.area.links):
                         if linked:
                             continue
                     elif hidden and self.area.links[str(area.id)]["hidden"] == True:

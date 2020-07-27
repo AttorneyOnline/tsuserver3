@@ -396,7 +396,7 @@ class Area:
         self.send_command('CT', self.server.config['hostname'], msg, '1')
         self.send_owner_command(
             'CT',
-            '[' + self.abbreviation + ']' + self.server.config['hostname'],
+            '[' + self.abbreviation + '] ' + self.server.config['hostname'],
             msg, '1')
     
     def send_ic(self, client, *args):

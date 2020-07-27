@@ -457,30 +457,36 @@ class AOProtocol(asyncio.Protocol):
         if text.lstrip().startswith('(('):
             self.client.send_ooc("Please, *please* use the OOC chat instead of polluting IC. Normal OOC is local to area. You can use /g to talk across the entire server.")
             return
-        if text.startswith('/a '):
+        if text.startswith('/a ') or text.startswith('/s '):
             part = text.split(' ')
             try:
-                aid = int(part[1])
-                area = self.client.area.area_manager.get_area_by_id(aid)
-                if self.client in area.owners:
-                    target_area.append(aid)
-                if not target_area:
-                    self.client.send_ooc(f'You don\'t own {area.name}!')
+                areas = part[1].split(',')
+                for a in areas:
+                    try:
+                        aid = int(a)
+                    except ValueError:
+                        break
+                    area = self.client.area.area_manager.get_area_by_id(aid)
+                    if self.client in area.owners:
+                        target_area.append(aid)
+                    else:
+                        self.client.send_ooc(f'You don\'t own {area.name}!')
+                        return
+                if len(target_area) <= 0:
+                    for a in self.client.area.area_manager.areas:
+                        if self.client in a.owners:
+                            target_area.append(a.id)
+                    part = part[1:]
+                else:
+                    part = part[2:]
+                if len(target_area) <= 0:
+                    self.client.send_ooc('No target areas found!')
                     return
-                text = ' '.join(part[2:])
-            except ValueError:
+                text = ' '.join(part)
+            except (ValueError, AreaError):
                 self.client.send_ooc(
                     "That does not look like a valid area ID!")
                 return
-        elif text.startswith('/s '):
-            part = text.split(' ')
-            for a in self.client.area.area_manager.areas:
-                if self.client in a.owners:
-                    target_area.append(a.id)
-            if not target_area:
-                self.client.send_ooc('You don\'t any areas!')
-                return
-            text = ' '.join(part[1:])
         if msg_type not in ('chat', '0', '1'):
             return
         if anim_type not in (0, 1, 2, 4, 5, 6):
@@ -601,7 +607,7 @@ class AOProtocol(asyncio.Protocol):
 
         self.client.area.send_owner_command(
             'MS', msg_type, pre, folder, anim,
-            '[' + self.client.area.abbreviation + ']' + msg, pos, sfx,
+            '}}}[' + self.client.area.abbreviation + '] {{{' + msg, pos, sfx,
             anim_type, cid, sfx_delay, button, self.client.evi_list[evidence],
             flip, ding, color, showname, charid_pair, other_folder,
             other_emote, offset_pair, other_offset, other_flip, nonint_pre,

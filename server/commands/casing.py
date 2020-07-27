@@ -18,7 +18,8 @@ __all__ = [
     'ooc_cmd_blockwtce',
     'ooc_cmd_unblockwtce',
     'ooc_cmd_judgelog',
-    'ooc_cmd_afk'
+    'ooc_cmd_afk',
+    'ooc_cmd_remote_listen',
 ]
 
 
@@ -299,3 +300,24 @@ def ooc_cmd_judgelog(client, arg):
         
 def ooc_cmd_afk(client, arg):
     client.server.client_manager.toggle_afk(client)
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_remote_listen(client, arg):
+    """
+    Change the remote listen logs to either NONE, IC, OOC or ALL. It will send you those messages from the areas you are an owner of.
+    Usage: /remote_listen [option]
+    """
+    options = {
+        'NONE': 0,
+        'IC': 1,
+        'OOC': 2,
+        'ALL': 3,
+    }
+    if arg == '':
+        client.send_ooc(f'Your current option is: {options[client.remote_listen]}')
+        return
+    try:
+        client.remote_listen = options[arg]
+    except:
+        raise ArgumentError('Invalid option! Your options are NONE, IC, OOC or ALL.')
