@@ -23,7 +23,7 @@ from heapq import heappop, heappush
 
 from server import database
 from server.constants import TargetType
-from server.exceptions import ClientError, AreaError
+from server.exceptions import ClientError, AreaError, ServerError
 
 import oyaml as yaml #ordered yaml
 
@@ -250,6 +250,74 @@ class ClientManager:
             self.mus_counter = (self.mus_counter + 1) % times_per_interval
             self.mus_change_time[self.mus_counter] = time.time()
             return 0
+
+        def change_music(self, args):
+            if self.is_muted:  # Checks to see if the client has been muted by a mod
+                self.send_ooc(
+                    'You are muted by a moderator.')
+                return
+            if not self.is_dj:
+                self.send_ooc(
+                    'You were blockdj\'d by a moderator.')
+                return
+            if self.area.cannot_ic_interact(self):
+                self.send_ooc(
+                    "You are not on the area's invite list, and thus, you cannot change music!"
+                )
+                return
+            if not self.is_mod and not self in self.area.owners and not self.area.can_dj:
+                self.send_ooc(
+                    "You cannot change music in this area!"
+                )
+                return
+
+            if args[1] != self.char_id:
+                return
+
+            if self.change_music_cd():
+                self.send_ooc(
+                    f'You changed song too many times. Please try again after {int(self.change_music_cd())} seconds.'
+                )
+                return
+            try:
+                name, length = self.server.get_song_data(self.construct_music_list(self.area.music_override), args[0])
+
+                if (self.is_mod or self in self.area.owners) and self.edit_ambience:
+                    self.area.set_ambience(name)
+                    self.send_ooc(
+                        f'Setting current area\'s ambience to {name}.')
+                    return
+
+                # Showname info
+                showname = ''
+                if len(args) > 2:
+                    showname = args[2]
+                    if len(showname) > 0 and not self.area.showname_changes_allowed:
+                        self.send_ooc(
+                            "Showname changes are forbidden in this area!"
+                        )
+                        return
+
+                # Effects info
+                effects = 0
+                if len(args) > 3:
+                    effects = int(args[3])
+                
+                # Jukebox check
+                if self.area.jukebox:
+                    self.area.add_jukebox_vote(self, name,
+                                                      length, showname)
+                    database.log_room('jukebox.vote', self, self.area, message=name)
+                else:
+                    self.area.play_music(name, self.char_id,
+                                                length, showname, effects)
+                    self.area.add_music_playing(self, name, showname)
+                    database.log_room('music', self, self.area, message=name)
+            except ServerError:
+                if self.music_ref != '':
+                    self.send_ooc(f'Error: song {args[0]} was not accepted! View acceptable music by resetting your client\'s using /musiclist.')
+                else:
+                    self.send_ooc(f'Error: song {args[0]} isn\'t recognized by server!')
 
         def wtce_mute(self):
             """
