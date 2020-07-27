@@ -258,6 +258,8 @@ def ooc_cmd_area_pref(client, arg):
         'music_autoplay',
         'replace_music',
         'music_override',
+        'can_dj',
+        'hidden',
     ]
 
     if len(arg) == 0:

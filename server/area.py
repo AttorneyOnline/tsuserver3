@@ -68,6 +68,7 @@ class Area:
         self.replace_music = False
         self.ambience = ''
         self.can_dj = True
+        self.hidden = False
         # /prefs end
 
         self.music_looper = None
@@ -235,6 +236,8 @@ class Area:
             self.ambience = area['ambience']
         if 'can_dj' in area:
             self.can_dj = area['can_dj']
+        if 'hidden' in area:
+            self.hidden = area['hidden']
 
         if 'evidence' in area and len(area['evidence']) > 0:
             self.evi_list.evidences.clear()
@@ -279,6 +282,7 @@ class Area:
             area['music'] = self.current_music
         area['ambience'] = self.ambience
         area['can_dj'] = self.can_dj
+        area['hidden'] = self.hidden
         if len(self.evi_list.evidences) > 0:
             area['evidence'] = [e.to_dict() for e in self.evi_list.evidences]
         if len(self.links) > 0:
