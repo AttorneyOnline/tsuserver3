@@ -427,6 +427,7 @@ def ooc_cmd_hide(client, arg):
         raise ArgumentError('Use /hide <evi_name/evi_id> to hide in evidence, or /unhide to stop hiding.')
     try:
         client.hide(True, arg)
+        client.area.broadcast_area_list(client)
     except ValueError:
         raise
     except (AreaError, ClientError):
@@ -438,9 +439,9 @@ def ooc_cmd_unhide(client, arg):
     Stop hiding.
     Usage: /unhide
     """
-    if client.hidden_in != None and client.hidden_in in client.area.evi_list.evidences:
-        client.area.broadcast_ooc(f'{client.char_name} emerges from the {client.area.evi_list.evidences[client.hidden_in]}!')
     client.hide(False)
+    client.area.broadcast_area_list(client)
+
 
 def ooc_cmd_sneak(client, arg):
     """

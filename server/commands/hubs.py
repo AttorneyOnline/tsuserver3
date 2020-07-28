@@ -521,7 +521,7 @@ def ooc_cmd_link_unhide(client, arg):
             links.append(target_id)
         if len(links) > 0:
             links = ', '.join(str(l) for l in links)
-            client.send_ooc(f'Area {client.area.name} links {links} hidden.')
+            client.send_ooc(f'Area {client.area.name} links {links} revealed.')
     except (ValueError, KeyError):
         raise ArgumentError('Area ID must be a number or abbreviation.')
     except (AreaError, ClientError):
@@ -622,15 +622,17 @@ def ooc_cmd_link_evidence(client, arg):
         link = client.area.links[args[0]]
         if len(args) > 1:
             evidences = []
-            for evi_id in args:
+            for evi_id in args[1:]:
                 evi_id = int(evi_id)
-                evidences.append(client.area.evidences[evi_id].name)
+                evidences.append(client.area.evi_list.evidences[evi_id].name)
                 link["evidence"].append(evi_id)
             evidences = ', '.join(f'\'{l}\'' for l in evidences)
-            client.send_ooc(f'Area {client.area.name} link {link} can now only be accessed from {evidences}.')
+            client.send_ooc(f'Area {client.area.name} link {args[0]} can now only be accessed from {evidences}.')
         else:
-            evidences = ', '.join([f'\'{evi.name}\'' for evi in link["evidence"]])
-            client.send_ooc(f'Area {client.area.name} link {link} associated evidences: {evidences}.')
+            evidences = ', '.join([f'\'{client.area.evi_list.evidences[evi].name}\'' for evi in link["evidence"]])
+            client.send_ooc(f'Area {client.area.name} link {args[0]} associated evidences: {evidences}.')
+    except IndexError:
+        raise ArgumentError('Evidence not found.')
     except (ValueError, KeyError):
         raise ArgumentError('Area ID must be a number.')
     except (AreaError, ClientError):
@@ -655,10 +657,10 @@ def ooc_cmd_unlink_evidence(client, arg):
                 evi_id = int(evi_id)
                 link["evidence"].remove(evi_id)
             evidences = ', '.join(str(l) for l in link["evidence"])
-            client.send_ooc(f'Area {client.area.name} link {link} is now unlinked from evidence IDs {evidences}.')
+            client.send_ooc(f'Area {client.area.name} link {args[0]} is now unlinked from evidence IDs {evidences}.')
         else:
             link["evidence"].clear()
-            client.send_ooc(f'Area {client.area.name} link {link} associated evidences cleared.')
+            client.send_ooc(f'Area {client.area.name} link {args[0]} associated evidences cleared.')
     except (ValueError, KeyError):
         raise ArgumentError('Area ID must be a number.')
     except (AreaError, ClientError):

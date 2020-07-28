@@ -245,7 +245,20 @@ class Area:
             self.broadcast_evidence_list()
 
         if 'links' in area and len(area['links']) > 0:
-            self.links = area['links']
+            self.links.clear()
+            for key, value in area['links'].items():
+                locked, hidden, target_pos, can_peek, evidence = False, False, '', True, []
+                if 'locked' in value:
+                    locked = value['locked']
+                if 'hidden' in value:
+                    hidden = value['hidden']
+                if 'target_pos' in value:
+                    target_pos = value['target_pos']
+                if 'can_peek' in value:
+                    can_peek = value['can_peek']
+                if 'evidence' in value:
+                    evidence = value['evidence']
+                self.link(key, locked, hidden, target_pos, can_peek, evidence)
 
     def save(self):
         area = OrderedDict()
@@ -302,6 +315,8 @@ class Area:
 
     def remove_client(self, client):
         """Remove a disconnected client from the area."""
+        if client.hidden_in != None:
+            client.hide(False, hidden=True)
         self.clients.remove(client)
         if client in self.afkers:
             self.afkers.remove(client)
@@ -418,6 +433,7 @@ class Area:
             client.server.client_manager.toggle_afk(client)
         if client.hidden_in != None:
             client.hide(False)
+            client.area.broadcast_area_list(client)
         for c in self.clients:
             # Blinded clients don't receive IC messages
             if c.blinded:

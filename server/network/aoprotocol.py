@@ -553,6 +553,7 @@ class AOProtocol(asyncio.Protocol):
             if evi.hiding_client != None:
                 c = evi.hiding_client
                 c.hide(False)
+                c.area.broadcast_area_list(c)
                 self.client.send_ooc(f'You discover {c.char_name} in the {evi.name}!')
 
             if evi.pos != 'all':

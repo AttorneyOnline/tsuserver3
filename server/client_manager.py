@@ -474,8 +474,6 @@ class ClientManager:
             :param area: area to switch to
             :param target_pos: which position to target in the new area
             """
-            if self.hidden_in != None:
-                self.hide(False)
             self.area.remove_client(self)
             self.area = area
             if len(area.pos_lock) > 0 and not (target_pos in area.pos_lock):
@@ -531,10 +529,6 @@ class ClientManager:
             """
             if self.area == area:
                 raise ClientError('User already in specified area.')
-            if self.hidden_in != None:
-                # You gotta unhide first lol
-                self.hide(False)
-                raise ClientError('You had to leave your hiding spot - area transfer failed.')
             if not (area == area.area_manager.default_area()) and self.area.is_locked == area.Locked.LOCKED and not self.is_mod and not self.id in self.area.invite_list and not self.id in self.area.owners:
                 raise ClientError('Your current area is locked! You may not leave.')
             target_pos = ''
@@ -548,8 +542,15 @@ class ClientManager:
                     link = self.area.links[str(area.id)]
 
                     # Link requires us to be inside a piece of evidence
-                    if len(link["evidence"]) > 0 and not (self.hidden_in in link["evidence"]) and not allowed:
-                        raise ClientError('That area is inaccessible!')
+                    if len(link["evidence"]) > 0:
+                        if not (self.hidden_in in link["evidence"]) and not allowed:
+                            raise ClientError('That area is inaccessible!')
+                    else:
+                        if self.hidden_in != None:
+                            # You gotta unhide first lol
+                            self.hide(False)
+                            self.area.broadcast_area_list(self)
+                            raise ClientError('You had to leave your hiding spot - area transfer failed.')
 
                     # Our path is locked :(
                     if link["locked"] and not allowed and not self.char_id == -1 and not area == area.area_manager.default_area():
@@ -706,7 +707,9 @@ class ClientManager:
                 if c in area.afkers:
                     info += '[AFK]'
                 if c.hidden:
-                    info += '[HID]'
+                    if c.hidden_in != None:
+                        name = f':{c.area.evi_list.evidences[c.hidden_in].name}'
+                    info += f'[HID{name}]'
                 info += f' [{c.id}] {c.char_name}'
                 if c.pos != '':
                     info += f' <{c.pos}>'
@@ -882,7 +885,7 @@ class ClientManager:
             """Return if the character is hidden or not. Always True if char_id is -1 (spectator)"""
             return self.char_id == -1 or self._hidden
 
-        def hide(self, tog=True, target=None):
+        def hide(self, tog=True, target=None, hidden=False):
             self._hidden = tog
             msg = 'no longer hidden'
             if tog:
@@ -902,6 +905,7 @@ class ClientManager:
                         if evi.hiding_client != None:
                             c = evi.hiding_client
                             c.hide(False)
+                            c.area.broadcast_area_list(c)
                             raise ClientError(f'{c.char_name} was already hiding in that evidence!')
                         self.hidden_in = evidence
                         evi.hiding_client = self
@@ -911,9 +915,10 @@ class ClientManager:
             else:
                 if self.hidden_in != None:
                     evi = self.area.evi_list.evidences[self.hidden_in]
-                    evi.hidden_client = None
+                    evi.hiding_client = None
                     self.hidden_in = None
-                    self.area.broadcast_ooc(f'{self.char_name} emerges from the {evi.name}!')
+                    if not hidden:
+                        self.area.broadcast_ooc(f'{self.char_name} emerges from the {evi.name}!')
                     
             self.send_ooc(f'You are {msg} from /getarea and playercounts.')
             self.area.area_manager.send_arup_players()
@@ -963,6 +968,7 @@ class ClientManager:
             if self.hidden_in != None:
                 # YOU DARE MOVE?!
                 self.hide(False)
+                self.area.broadcast_area_list(self)
             self.pos = pos
             self.send_ooc(f'Position set to {pos}.')
             # Send a "Set Position" packet
