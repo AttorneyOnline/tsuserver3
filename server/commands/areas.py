@@ -302,6 +302,10 @@ def ooc_cmd_peek(client, arg):
                 # Get that link reference
                 link = client.area.links[str(area.id)]
 
+                # Link requires us to be inside a piece of evidence
+                if len(link["evidence"]) > 0 and not (client.hidden_in in link["evidence"]) and not allowed:
+                    raise ClientError('That area is inaccessible!')
+
                 # Our path is locked :(
                 if link["locked"] and not allowed:
                     raise ClientError('That path is locked - cannot access area!')

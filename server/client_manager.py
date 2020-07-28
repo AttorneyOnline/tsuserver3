@@ -519,7 +519,10 @@ class ClientManager:
                 self.send_ooc(f'Description: {desc}')
 
         def can_access_area(self, area):
-            return len(self.area.links) <= 0 or (str(area.id) in self.area.links and not self.area.links[str(area.id)]["locked"])
+            return len(self.area.links) <= 0 or (str(area.id) in self.area.links and \
+                not self.area.links[str(area.id)]["locked"] and \
+                    (len(self.area.links[str(area.id)]["evidence"]) <= 0 or \
+                        self.hidden_in in self.area.links[str(area.id)]["evidence"]))
 
         def change_area(self, area):
             """
@@ -543,6 +546,10 @@ class ClientManager:
                 if str(area.id) in self.area.links:
                     # Get that link reference
                     link = self.area.links[str(area.id)]
+
+                    # Link requires us to be inside a piece of evidence
+                    if len(link["evidence"]) > 0 and not (self.hidden_in in link["evidence"]) and not allowed:
+                        raise ClientError('That area is inaccessible!')
 
                     # Our path is locked :(
                     if link["locked"] and not allowed and not self.char_id == -1 and not area == area.area_manager.default_area():
@@ -604,6 +611,8 @@ class ClientManager:
                         if linked:
                             continue
                     elif hidden and self.area.links[str(area.id)]["hidden"] == True:
+                        continue
+                    elif hidden and len(self.area.links[str(area.id)]["evidence"]) > 0 and not self.hidden_in in self.area.links[str(area.id)]["evidence"]:
                         continue
 
                 area_list.append(area)

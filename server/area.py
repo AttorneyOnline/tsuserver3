@@ -334,15 +334,16 @@ class Area:
         self.is_locked = self.Locked.LOCKED
         self.area_manager.send_arup_lock()
     
-    def link(self, target, locked=False, hidden=False, target_pos='', can_peek=True):
+    def link(self, target, locked=False, hidden=False, target_pos='', can_peek=True, evidence=[]):
         """
         Sets up a one-way connection between this area and targeted area.
         Returns the link dictionary.
         :param target: the targeted Area ID to connect
         :param locked: is the link unusable?
-        :param hidden: is the link  invisible?
+        :param hidden: is the link invisible?
         :param target_pos: which position should we end up in when we come through
         :param can_peek: can you peek through this path?
+        :param evidence: a list of evidence from which this link will be accessible when you hide in it
 
         """
         link = {
@@ -350,6 +351,7 @@ class Area:
             "hidden": hidden,
             "target_pos": target_pos,
             "can_peek": can_peek,
+            "evidence": evidence,
         }
         self.links[str(target)] = link
         return link

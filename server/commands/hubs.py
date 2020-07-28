@@ -32,6 +32,8 @@ __all__ = [
     'ooc_cmd_link_unhide',
     'ooc_cmd_link_pos',
     'ooc_cmd_link_peekable',
+    'ooc_cmd_link_evidence',
+    'ooc_cmd_unlink_evidence',
     'ooc_cmd_hub_move_delay',
     'ooc_cmd_hub_arup_enable',
     'ooc_cmd_hub_arup_disable',
@@ -602,6 +604,63 @@ def ooc_cmd_link_unpeekable(client, arg):
             client.send_ooc(f'Area {client.area.name} links {links} are no longer peekable.')
     except (ValueError, KeyError):
         raise ArgumentError('Area ID must be a number or abbreviation.')
+    except (AreaError, ClientError):
+        raise
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_link_evidence(client, arg):
+    """
+    Make specific link only accessible from evidence ID(s).
+    Pass evidence ID's which you can see by mousing over evidence, or blank to see current evidences.
+    Usage:  /link_evidence <aid> [evi_id(s)]
+    """
+    args = arg.split()
+    if len(args) <= 0:
+        raise ArgumentError('Invalid number of arguments. Use /link_evidence <aid>')
+    try:
+        link = client.area.links[args[0]]
+        if len(args) > 1:
+            evidences = []
+            for evi_id in args:
+                evi_id = int(evi_id)
+                evidences.append(client.area.evidences[evi_id].name)
+                link["evidence"].append(evi_id)
+            evidences = ', '.join(f'\'{l}\'' for l in evidences)
+            client.send_ooc(f'Area {client.area.name} link {link} can now only be accessed from {evidences}.')
+        else:
+            evidences = ', '.join([f'\'{evi.name}\'' for evi in link["evidence"]])
+            client.send_ooc(f'Area {client.area.name} link {link} associated evidences: {evidences}.')
+    except (ValueError, KeyError):
+        raise ArgumentError('Area ID must be a number.')
+    except (AreaError, ClientError):
+        raise
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_unlink_evidence(client, arg):
+    """
+    Unlink evidence from links.
+    Pass evidence ID's which you can see by mousing over evidence.
+    Usage:  /unlink_evidence <aid> [evi_id(s)]
+    """
+    args = arg.split()
+    if len(args) <= 0:
+        raise ArgumentError('Invalid number of arguments. Use /unlink_evidence <aid>')
+    try:
+        link = client.area.links[args[0]]
+        if len(args) > 1:
+            evidences = []
+            for evi_id in args:
+                evi_id = int(evi_id)
+                link["evidence"].remove(evi_id)
+            evidences = ', '.join(str(l) for l in link["evidence"])
+            client.send_ooc(f'Area {client.area.name} link {link} is now unlinked from evidence IDs {evidences}.')
+        else:
+            link["evidence"].clear()
+            client.send_ooc(f'Area {client.area.name} link {link} associated evidences cleared.')
+    except (ValueError, KeyError):
+        raise ArgumentError('Area ID must be a number.')
     except (AreaError, ClientError):
         raise
 
