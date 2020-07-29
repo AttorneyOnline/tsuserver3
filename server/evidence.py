@@ -117,10 +117,7 @@ class EvidenceList:
             self.evidences.append(self.Evidence(
                 name, description, image, pos))
         else:
-            if len(client.area.pos_lock) > 0:
-                pos = client.pos
-            else:
-                pos = 'all'
+            pos = 'all'
             self.evidences.append(self.Evidence(
                 name, description, image, pos))
 
