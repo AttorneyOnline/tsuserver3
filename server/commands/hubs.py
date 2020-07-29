@@ -51,6 +51,8 @@ __all__ = [
     'ooc_cmd_info',
     'ooc_cmd_gm',
     'ooc_cmd_ungm',
+    'ooc_cmd_broadcast',
+    'ooc_cmd_clear_broadcast',
 ]
 
 
@@ -1047,3 +1049,37 @@ def ooc_cmd_ungm(client, arg):
                 f'{id} does not look like a valid ID.')
         except (ClientError, ArgumentError):
             raise
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_broadcast(client, arg):
+    """
+    Start broadcasting your IC, Music and Judge buttons to specified area ID's.
+    Usage: /broadcast <id(s)>
+    """
+    args = arg.split()
+    if len(args) <= 0:
+        a_list = ', '.join([f'[{a.id}] {a.abbreviation}' for a in client.broadcast_list])
+        client.send_ooc(f'Your broadcast list is {a_list}')
+        return
+    try:
+        client.broadcast_list.clear()
+        for aid in args:
+            area = client.area.area_manager.get_area_by_id(int(aid))
+            client.broadcast_list.append(area.id)
+        client.send_ooc(f'Your broadcast list now contains [{area.id}] {area.name}.')
+    except ValueError:
+        client.send_ooc('Bad arguments!')
+    except (ClientError, AreaError):
+        raise
+
+def ooc_cmd_clear_broadcast(client, arg):
+    """
+    Stop broadcasting your IC, Music and Judge buttons.
+    Usage: /broadcast <id(s)>
+    """
+    if len(client.broadcast_list) <= 0:
+        client.send_ooc('Your broadcast list is already empty!')
+        return
+    client.broadcast_list.clear()
+    client.send_ooc('Your broadcast list has been cleared.')

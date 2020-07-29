@@ -371,10 +371,6 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_ooc('You are muted by a moderator.')
             return
 
-        # Targets for whispering
-        whisper_clients = None
-
-        target_area = []
         showname = ""
         charid_pair = -1
         offset_pair = 0
@@ -429,7 +425,14 @@ class AOProtocol(asyncio.Protocol):
         else:
             return
 
-        if len(showname) > 0 and not self.client.area.showname_changes_allowed:
+        # Targets for whispering
+        whisper_clients = None
+
+        target_area = []
+        if self.client.is_mod or self.client in self.client.area.owners:
+            target_area = self.client.broadcast_list
+
+        if len(showname) > 0 and not self.client.area.showname_changes_allowed and not self.client.is_mod and not (self.client in self.client.area.owners):
             self.client.send_ooc(
                 "Showname changes are forbidden in this area!")
             return
@@ -638,6 +641,21 @@ class AOProtocol(asyncio.Protocol):
                 if client.is_mod:
                     whisper_clients.append(client)
 
+        if len(target_area) > 0:
+            try:
+                a_list = ', '.join([f'[{a.id}] {a.abbreviation}' for a in target_area])
+                self.client.send_ooc(f'Broadcasting to areas {a_list}')
+                self.client.area.area_manager.send_remote_command(
+                    target_area, 'MS', msg_type, pre, folder, anim, msg, pos, sfx,
+                    anim_type, cid, sfx_delay, button, self.client.evi_list[evidence],
+                    flip, ding, color, showname, charid_pair, other_folder,
+                    other_emote, offset_pair, other_offset, other_flip, nonint_pre,
+                    sfx_looping, screenshake, frames_shake, frames_realization,
+                    frames_sfx, additive, effect)
+            except (AreaError, ValueError):
+                self.client.send_ooc('Your broadcast list is invalid! Do /clear_broadcast to reset it and /broadcast <id(s)> to set a new one.')
+                return
+
         self.client.area.send_ic(self.client, msg_type, pre, folder, anim, msg,
                                 pos, sfx, anim_type, cid, sfx_delay,
                                 button, self.client.evi_list[evidence],
@@ -656,15 +674,6 @@ class AOProtocol(asyncio.Protocol):
             other_emote, offset_pair, other_offset, other_flip, nonint_pre,
             sfx_looping, screenshake, frames_shake, frames_realization,
             frames_sfx, additive, effect)
-
-        if len(target_area) > 0:
-            self.client.area.area_manager.send_remote_command(
-                target_area, 'MS', msg_type, pre, folder, anim, msg, pos, sfx,
-                anim_type, cid, sfx_delay, button, self.client.evi_list[evidence],
-                flip, ding, color, showname, charid_pair, other_folder,
-                other_emote, offset_pair, other_offset, other_flip, nonint_pre,
-                sfx_looping, screenshake, frames_shake, frames_realization,
-                frames_sfx, additive, effect)
 
     def net_cmd_ct(self, args):
         """OOC Message
@@ -807,6 +816,19 @@ class AOProtocol(asyncio.Protocol):
                 'You used witness testimony/cross examination signs too many times. Please try again after {} seconds.'
                 .format(int(self.client.wtce_mute())))
             return
+
+        if len(self.client.broadcast_list) > 0:
+            try:
+                a_list = ', '.join([f'[{a.id}] {a.abbreviation}' for a in self.client.broadcast_list])
+                self.client.send_ooc(f'Broadcasting to areas {a_list}')
+                if len(args) == 1:
+                    self.client.area.area_manager.send_remote_command(target_area, 'RT', args[0])
+                elif len(args) == 2:
+                    self.client.area.area_manager.send_remote_command(self.client.broadcast_list, 'RT', args[0], args[1])
+            except (AreaError, ValueError):
+                self.client.send_ooc('Your broadcast list is invalid! Do /clear_broadcast to reset it and /broadcast <id(s)> to set a new one.')
+                return
+
         if len(args) == 1:
             self.client.area.send_command('RT', args[0])
         elif len(args) == 2:

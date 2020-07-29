@@ -127,6 +127,8 @@ class ClientManager:
             self.music_ref = ''
             # a music list override that was loaded manually by the client
             self.override_music_list = []
+            # list of areas to broadcast the message, music and judge buttons to
+            self.broadcast_list = []
 
         def send_raw_message(self, msg):
             """
@@ -268,16 +270,6 @@ class ClientManager:
                 self.send_ooc(
                     'You were blockdj\'d by a moderator.')
                 return
-            if self.area.cannot_ic_interact(self):
-                self.send_ooc(
-                    "You are not on the area's invite list, and thus, you cannot change music!"
-                )
-                return
-            if not self.is_mod and not self in self.area.owners and not self.area.can_dj:
-                self.send_ooc(
-                    "You cannot change music in this area!"
-                )
-                return
 
             if args[1] != self.char_id:
                 return
@@ -289,38 +281,62 @@ class ClientManager:
                 return
             try:
                 name, length = self.server.get_song_data(self.construct_music_list(self.area.music_override), args[0])
-
-                if (self.is_mod or self in self.area.owners) and self.edit_ambience:
-                    self.area.set_ambience(name)
-                    self.send_ooc(
-                        f'Setting current area\'s ambience to {name}.')
-                    return
-
-                # Showname info
-                showname = ''
-                if len(args) > 2:
-                    showname = args[2]
-                    if len(showname) > 0 and not self.area.showname_changes_allowed:
-                        self.send_ooc(
-                            "Showname changes are forbidden in this area!"
-                        )
+                target_areas = [self.area]
+                if len(self.broadcast_list) > 0 and (self.is_mod or self in self.area.owners):
+                    try:
+                        a_list = ', '.join([f'[{a.id}] {a.abbreviation}' for a in self.broadcast_list])
+                        self.send_ooc(f'Broadcasting to areas {a_list}')
+                        target_areas = self.broadcast_list
+                    except (AreaError, ValueError):
+                        self.send_ooc('Your broadcast list is invalid! Do /clear_broadcast to reset it and /broadcast <id(s)> to set a new one.')
                         return
 
-                # Effects info
-                effects = 0
-                if len(args) > 3:
-                    effects = int(args[3])
-                
-                # Jukebox check
-                if self.area.jukebox:
-                    self.area.add_jukebox_vote(self, name,
-                                                      length, showname)
-                    database.log_room('jukebox.vote', self, self.area, message=name)
-                else:
-                    self.area.play_music(name, self.char_id,
-                                                length, showname, effects)
-                    self.area.add_music_playing(self, name, showname)
-                    database.log_room('music', self, self.area, message=name)
+                for area in target_areas:
+                    if area.cannot_ic_interact(self):
+                        self.send_ooc(
+                            f'You are not on area [{area.id}] {area.name} invite list, and thus, you cannot change music!'
+                        )
+                        continue
+                    if not self.is_mod and not self in area.owners and not area.can_dj:
+                        self.send_ooc(
+                            f'You cannot change music in area [{area.id}] {area.name}!'
+                        )
+                        continue
+                    if self.edit_ambience:
+                        if self.is_mod or self in area.owners:
+                            area.set_ambience(name)
+                            self.send_ooc(
+                                f'Setting area [{area.id}] {area.name} ambience to {name}.')
+                            continue
+                        else:
+                            self.edit_ambinece = False
+
+                    # Showname info
+                    showname = ''
+                    if len(args) > 2:
+                        showname = args[2]
+                        if len(showname) > 0 and not area.showname_changes_allowed and not self.is_mod and not self in area.owners:
+                            self.send_ooc(
+                                f'Showname changes are forbidden in area [{area.id}] {area.name}!'
+                            )
+                            continue
+
+                    # Effects info
+                    effects = 0
+                    if len(args) > 3:
+                        effects = int(args[3])
+                    
+                    # Jukebox check
+                    if area.jukebox and not self.is_mod and not self in area.owners:
+                        area.add_jukebox_vote(self, name,
+                                                        length, showname)
+                        database.log_room('jukebox.vote', self, area, message=name)
+                    else:
+                        area.play_music(name, self.char_id,
+                                                    length, showname, effects)
+                        area.add_music_playing(self, name, showname)
+                # We only make one log entry to not CBT the log list. TODO: Broadcast logs
+                database.log_room('music', self, self.area, message=name)
             except ServerError:
                 if self.music_ref != '':
                     self.send_ooc(f'Error: song {args[0]} was not accepted! View acceptable music by resetting your client\'s using /musiclist.')
