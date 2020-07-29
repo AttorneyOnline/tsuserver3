@@ -225,6 +225,7 @@ class AOProtocol(asyncio.Protocol):
 
         ID#<pv:int>#<software:string>#<version:string>#%
         """
+        self.client.version = args[1]
         preflist = self.client.server.supported_features.copy()
         if not self.client.area.area_manager.arup_enabled and 'arup' in preflist:
             preflist.remove('arup')
