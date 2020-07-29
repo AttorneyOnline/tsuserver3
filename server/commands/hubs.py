@@ -262,6 +262,7 @@ def ooc_cmd_area_pref(client, arg):
         'music_override',
         'can_dj',
         'hidden',
+        'can_whisper',
     ]
 
     if len(arg) == 0:

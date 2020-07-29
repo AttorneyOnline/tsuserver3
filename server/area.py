@@ -69,6 +69,7 @@ class Area:
         self.ambience = ''
         self.can_dj = True
         self.hidden = False
+        self.can_whisper = True
         # /prefs end
 
         self.music_looper = None
@@ -238,6 +239,8 @@ class Area:
             self.can_dj = area['can_dj']
         if 'hidden' in area:
             self.hidden = area['hidden']
+        if 'can_whisper' in area:
+            self.can_whisper = area['can_whisper']
 
         if 'evidence' in area and len(area['evidence']) > 0:
             self.evi_list.evidences.clear()
@@ -296,6 +299,7 @@ class Area:
         area['ambience'] = self.ambience
         area['can_dj'] = self.can_dj
         area['hidden'] = self.hidden
+        area['can_whisper'] = self.can_whisper
         if len(self.evi_list.evidences) > 0:
             area['evidence'] = [e.to_dict() for e in self.evi_list.evidences]
         if len(self.links) > 0:
@@ -423,7 +427,7 @@ class Area:
             '[' + self.abbreviation + '] ' + self.server.config['hostname'],
             msg, '1')
     
-    def send_ic(self, client, *args):
+    def send_ic(self, client, *args, targets=None):
         """
         Send an IC message from a client to all applicable clients in the area.
         :param client: speaker
@@ -434,7 +438,9 @@ class Area:
         if client.hidden_in != None:
             client.hide(False)
             client.area.broadcast_area_list(client)
-        for c in self.clients:
+        if targets == None:
+            targets = self.clients
+        for c in targets:
             # Blinded clients don't receive IC messages
             if c.blinded:
                 continue

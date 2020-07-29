@@ -371,6 +371,9 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_ooc('You are muted by a moderator.')
             return
 
+        # Targets for whispering
+        whisper_clients = None
+
         target_area = []
         showname = ""
         charid_pair = -1
@@ -458,7 +461,7 @@ class AOProtocol(asyncio.Protocol):
         if text.lstrip().startswith('(('):
             self.client.send_ooc("Please, *please* use the OOC chat instead of polluting IC. Normal OOC is local to area. You can use /g to talk across the entire server.")
             return
-        if text.startswith('/a ') or text.startswith('/s '):
+        if text.lower().startswith('/a ') or text.lower().startswith('/s '):
             part = text.split(' ')
             try:
                 areas = part[1].split(',')
@@ -541,7 +544,40 @@ class AOProtocol(asyncio.Protocol):
 
         if len(text) > max_char:
             return
-            
+
+        if len(self.client.area.pos_lock) > 0 and pos not in self.client.area.pos_lock:
+            pos = self.client.area.pos_lock[0]
+        if pos != None and self.client.pos != pos:
+            self.client.change_position(pos)
+
+        if text.lower().startswith('/w ') or text.lower().startswith('[w] '):
+            if not self.client.area.can_whisper and not self.client.is_mod and not self.client in self.client.area.owners:
+                self.client.send_ooc(
+                    "You can't whisper in this area!")
+                return
+            part = text.split(' ')
+            try:
+                clients = part[1].split(',')
+                try:
+                    [int(c) for c in clients]
+                except ValueError:
+                    clients = []
+                
+                if len(clients) > 0:
+                    part = part[2:]
+                    whisper_clients = [c for c in self.client.area.clients if str(c.id) in clients]
+                    clients = ','.join(clients)
+                else:
+                    part = part[1:]
+                    whisper_clients = [c for c in self.client.area.clients if c.pos == self.client.pos]
+                    clients = ''
+                text = ' '.join(part)
+                text = "}}}[W" + clients + "] {{{" + text
+            except (ValueError, AreaError):
+                self.client.send_ooc(
+                    "Invalid targets!")
+                return
+
         msg = self.dezalgo(text)[:256]
         if self.client.shaken:
             msg = self.client.shake_message(msg)
@@ -591,21 +627,26 @@ class AOProtocol(asyncio.Protocol):
 
         if not confirmed:
             charid_pair = -1
-        
-        if len(self.client.area.pos_lock) > 0 and pos not in self.client.area.pos_lock:
-            pos = self.client.area.pos_lock[0]
-        if pos != None and self.client.pos != pos:
-            self.client.change_position(pos)
+
+        if whisper_clients != None:
+            whisper_clients.insert(0, self.client)
+            for client in self.client.area.clients:
+                if client in whisper_clients:
+                    continue
+                if client in self.client.area.owners:
+                    whisper_clients.append(client)
+                if client.is_mod:
+                    whisper_clients.append(client)
 
         self.client.area.send_ic(self.client, msg_type, pre, folder, anim, msg,
-                                 pos, sfx, anim_type, cid, sfx_delay,
-                                 button, self.client.evi_list[evidence],
-                                 flip, ding, color, showname, charid_pair,
-                                 other_folder, other_emote, offset_pair,
-                                 other_offset, other_flip, nonint_pre,
-                                 sfx_looping, screenshake, frames_shake,
-                                 frames_realization, frames_sfx,
-                                 additive, effect)
+                                pos, sfx, anim_type, cid, sfx_delay,
+                                button, self.client.evi_list[evidence],
+                                flip, ding, color, showname, charid_pair,
+                                other_folder, other_emote, offset_pair,
+                                other_offset, other_flip, nonint_pre,
+                                sfx_looping, screenshake, frames_shake,
+                                frames_realization, frames_sfx,
+                                additive, effect, targets=whisper_clients)
 
         self.client.area.send_owner_command(
             'MS', msg_type, pre, folder, anim,
@@ -616,13 +657,14 @@ class AOProtocol(asyncio.Protocol):
             sfx_looping, screenshake, frames_shake, frames_realization,
             frames_sfx, additive, effect)
 
-        self.client.area.area_manager.send_remote_command(
-            target_area, 'MS', msg_type, pre, folder, anim, msg, pos, sfx,
-            anim_type, cid, sfx_delay, button, self.client.evi_list[evidence],
-            flip, ding, color, showname, charid_pair, other_folder,
-            other_emote, offset_pair, other_offset, other_flip, nonint_pre,
-            sfx_looping, screenshake, frames_shake, frames_realization,
-            frames_sfx, additive, effect)
+        if len(target_area) > 0:
+            self.client.area.area_manager.send_remote_command(
+                target_area, 'MS', msg_type, pre, folder, anim, msg, pos, sfx,
+                anim_type, cid, sfx_delay, button, self.client.evi_list[evidence],
+                flip, ding, color, showname, charid_pair, other_folder,
+                other_emote, offset_pair, other_offset, other_flip, nonint_pre,
+                sfx_looping, screenshake, frames_shake, frames_realization,
+                frames_sfx, additive, effect)
 
     def net_cmd_ct(self, args):
         """OOC Message
