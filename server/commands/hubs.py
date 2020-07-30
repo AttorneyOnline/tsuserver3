@@ -23,9 +23,11 @@ __all__ = [
     'ooc_cmd_area_pref',
     'ooc_cmd_area_move_delay',
     # Area links system
-    'ooc_cmd_area_link',
-    'ooc_cmd_area_unlink',
-    'ooc_cmd_area_links',
+    'ooc_cmd_link',
+    'ooc_cmd_unlink',
+    'ooc_cmd_links',
+    'ooc_cmd_onelink',
+    'ooc_cmd_oneunlink',
     'ooc_cmd_link_lock',
     'ooc_cmd_link_unlock',
     'ooc_cmd_link_hide',
@@ -327,37 +329,41 @@ def ooc_cmd_area_move_delay(client, arg):
 
 
 @mod_only(area_owners=True)
-def ooc_cmd_area_link(client, arg):
+def ooc_cmd_link(client, arg):
     """
-    Set up a one-way link from your current area with a targeted area(s).
-    Usage:  /area_link <aid> [aid(s)]
+    Set up a two-way link from your current area with a targeted area(s).
+    Usage:  /link <aid> [aid(s)]
     """
     args = arg.split()
     if len(args) <= 0:
-        ooc_cmd_area_links(client, arg)
+        ooc_cmd_links(client, arg)
         return
     try:
         links = []
         for aid in args:
             try:
-                target_id = client.area.area_manager.get_area_by_abbreviation(aid).id
+                area = client.area.area_manager.get_area_by_abbreviation(aid)
+                target_id = area.id
             except:
-                target_id = int(aid)
+                area = client.area.area_manager.get_area_by_id(int(aid))
+                target_id = area.id
 
             client.area.link(target_id)
+            # Connect the target area to us
+            area.link(client.area.id)
             links.append(target_id)
         links = ', '.join(str(l) for l in links)
-        client.send_ooc(f'Area {client.area.name} has been linked with {links}.')
+        client.send_ooc(f'Area {client.area.name} has been linked with {links} (two-way).')
     except ValueError:
         raise ArgumentError('Area ID must be a number or abbreviation.')
     except (AreaError, ClientError):
         raise
 
 
-def ooc_cmd_area_links(client, arg):
+def ooc_cmd_links(client, arg):
     """
     Display this area's information about area links.
-    Usage:  /area_links
+    Usage:  /links
     """
     links = ''
     for key, value in client.area.links.items():
@@ -386,14 +392,78 @@ def ooc_cmd_area_links(client, arg):
 
 
 @mod_only(area_owners=True)
-def ooc_cmd_area_unlink(client, arg):
+def ooc_cmd_unlink(client, arg):
     """
-    Remove a one-way link from your current area with a targeted area(s).
-    Usage:  /area_unlink <aid> [aid(s)]
+    Remove a two-way link from your current area with a targeted area(s).
+    Usage:  /unlink <aid> [aid(s)]
     """
     args = arg.split()
     if len(args) <= 0:
-        raise ArgumentError('Invalid number of arguments. Use /area_unlink <aid>')
+        raise ArgumentError('Invalid number of arguments. Use /unlink <aid>')
+    try:
+        links = []
+        for aid in args:
+            try:
+                area = client.area.area_manager.get_area_by_abbreviation(aid)
+                target_id = area.id
+            except:
+                area = client.area.area_manager.get_area_by_id(int(aid))
+                target_id = area.id
+
+            try:
+                client.area.unlink(target_id)
+                # Disconnect the target area from us
+                area.unlink(client.area.id)
+                links.append(target_id)
+            except:
+                continue
+        links = ', '.join(str(l) for l in links)
+        client.send_ooc(f'Area {client.area.name} has been unlinked with {links} (two-way).')
+    except ValueError:
+        raise ArgumentError('Area ID must be a number or abbreviation.')
+    except (AreaError, ClientError):
+        raise
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_onelink(client, arg):
+    """
+    Set up a one-way link from your current area with a targeted area(s).
+    Usage:  /onelink <aid> [aid(s)]
+    """
+    args = arg.split()
+    if len(args) <= 0:
+        ooc_cmd_links(client, arg)
+        return
+    try:
+        links = []
+        for aid in args:
+            try:
+                area = client.area.area_manager.get_area_by_abbreviation(aid)
+                target_id = area.id
+            except:
+                area = client.area.area_manager.get_area_by_id(int(aid))
+                target_id = area.id
+
+            client.area.link(target_id)
+            links.append(target_id)
+        links = ', '.join(str(l) for l in links)
+        client.send_ooc(f'Area {client.area.name} has been linked with {links} (one-way).')
+    except ValueError:
+        raise ArgumentError('Area ID must be a number or abbreviation.')
+    except (AreaError, ClientError):
+        raise
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_oneunlink(client, arg):
+    """
+    Remove a one-way link from your current area with a targeted area(s).
+    Usage:  /oneunlink <aid> [aid(s)]
+    """
+    args = arg.split()
+    if len(args) <= 0:
+        raise ArgumentError('Invalid number of arguments. Use /oneunlink <aid>')
     try:
         links = []
         for aid in args:
@@ -408,12 +478,11 @@ def ooc_cmd_area_unlink(client, arg):
             except:
                 continue
         links = ', '.join(str(l) for l in links)
-        client.send_ooc(f'Area {client.area.name} has been unlinked with {links}.')
+        client.send_ooc(f'Area {client.area.name} has been unlinked with {links} (one-way).')
     except ValueError:
         raise ArgumentError('Area ID must be a number or abbreviation.')
     except (AreaError, ClientError):
         raise
-
 
 def ooc_cmd_link_lock(client, arg):
     """
