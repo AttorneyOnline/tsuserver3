@@ -822,7 +822,7 @@ class AOProtocol(asyncio.Protocol):
                 a_list = ', '.join([f'[{a.id}] {a.abbreviation}' for a in self.client.broadcast_list])
                 self.client.send_ooc(f'Broadcasting to areas {a_list}')
                 if len(args) == 1:
-                    self.client.area.area_manager.send_remote_command(target_area, 'RT', args[0])
+                    self.client.area.area_manager.send_remote_command(self.client.broadcast_list, 'RT', args[0])
                 elif len(args) == 2:
                     self.client.area.area_manager.send_remote_command(self.client.broadcast_list, 'RT', args[0], args[1])
             except (AreaError, ValueError):
