@@ -95,6 +95,7 @@ def mod_only(area_owners=False, hub_owners=False):
 # There must be an __all__ in each module in order for reloading
 # to work properly.
 from .admin import *
+from .area_links import *
 from .areas import *
 from .casing import *
 from .character import *
