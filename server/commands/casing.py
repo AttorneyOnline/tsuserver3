@@ -23,6 +23,7 @@ __all__ = [
     'ooc_cmd_testimony',
     'ooc_cmd_testimony_clear',
     'ooc_cmd_testimony_remove',
+    'ooc_cmd_testimony_amend',
 ]
 
 
@@ -397,6 +398,32 @@ def ooc_cmd_testimony_remove(client, arg):
         if client.area.testimony_index == idx:
             client.area.testimony_index = -1
         client.area.broadcast_ooc(f'{client.char_name} has removed Statement {idx+1}.')
+    except ValueError:
+        raise ArgumentError('Index must be a number!')
+    except IndexError:
+        raise ArgumentError('Index out of bounds!')
+    except ClientError:
+        raise
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_testimony_amend(client, arg):
+    """
+    Edit the spoken message of the specified testimony
+    Usage: /testimony_amend <idx> <msg>
+    """
+    if len(client.area.testimony) <= 0:
+        client.send_ooc('There is no testimony recorded!')
+        return
+    args = arg.split()
+    if len(args) < 2:
+        raise ArgumentError('Usage: /testimony_remove <idx> <msg>.')
+    try:
+        idx = int(args[0]) - 1
+        lst = list(client.area.testimony[idx])
+        lst[4] = "}}}" + args[1]
+        client.area.testimony[idx] = tuple(lst)
+        client.area.broadcast_ooc(f'{client.char_name} has amended Statement {idx+1}.')
     except ValueError:
         raise ArgumentError('Index must be a number!')
     except IndexError:

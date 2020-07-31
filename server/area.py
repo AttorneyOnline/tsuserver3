@@ -442,47 +442,65 @@ class Area:
         if client.hidden_in != None:
             client.hide(False)
             client.area.broadcast_area_list(client)
-        if targets == None:
-            targets = self.clients
-        for c in targets:
-            # Blinded clients don't receive IC messages
-            if c.blinded:
-                continue
-            # pos doesn't match listen_pos, we're not listening so make this an OOC message instead
-            if c.listen_pos != None:
-                if type(c.listen_pos) is list and not (args[5] in c.listen_pos) or \
-                    c.listen_pos == 'self' and args[5] != c.pos:
-                    name = client.name
-                    if args[8] != -1:
-                        name = self.server.char_list[args[8]]
-                    if args[15] != '':
-                        name = args[15]
-                    # Send the mesage as OOC.
-                    # Woulda been nice if there was a packet to send messages to IC log
-                    # without displaying it in the viewport.
-                    c.send_command('CT', f'[pos \'{args[5]}\'] {name}', args[4])
+        if args[4].startswith('**') and len(client.testimony) > 0:
+            idx = client.area.testimony_index
+            if idx == -1:
+                idx = 0
+            try:
+                lst = list(client.area.testimony[idx])
+                lst[4] = "}}}" + args[4][2:]
+                client.area.testimony[idx] = tuple(lst)
+                client.area.broadcast_ooc(f'{client.char_name} has amended Statement {idx+1}.')
+            except IndexError:
+                client.send_ooc(f'Something went wrong, couldn\'t amend Statement {idx+1}!')
+            return
+        adding = client.area.recording
+        if args[4].lstrip().startswith('++') and len(client.testimony) > 0:
+            adding = True
+        else:
+            if targets == None:
+                targets = self.clients
+            for c in targets:
+                # Blinded clients don't receive IC messages
+                if c.blinded:
                     continue
-            c.send_command('MS', *args)
+                # pos doesn't match listen_pos, we're not listening so make this an OOC message instead
+                if c.listen_pos != None:
+                    if type(c.listen_pos) is list and not (args[5] in c.listen_pos) or \
+                        c.listen_pos == 'self' and args[5] != c.pos:
+                        name = client.name
+                        if args[8] != -1:
+                            name = self.server.char_list[args[8]]
+                        if args[15] != '':
+                            name = args[15]
+                        # Send the mesage as OOC.
+                        # Woulda been nice if there was a packet to send messages to IC log
+                        # without displaying it in the viewport.
+                        c.send_command('CT', f'[pos \'{args[5]}\'] {name}', args[4])
+                        continue
+                c.send_command('MS', *args)
 
-        # args[4] = msg
-        # args[15] = showname
-        name = client.name
-        if args[8] != -1:
-            name = self.server.char_list[args[8]]
-        if args[15] != '':
-            name = args[15]
-        client.area.set_next_msg_delay(len(args[4]))
-        client.area.last_ic_message = args[4]
-        database.log_ic(client, client.area, name, args[4])
+            # args[4] = msg
+            # args[15] = showname
+            name = client.name
+            if args[8] != -1:
+                name = self.server.char_list[args[8]]
+            if args[15] != '':
+                name = args[15]
+            client.area.set_next_msg_delay(len(args[4]))
+            client.area.last_ic_message = args[4]
+            database.log_ic(client, client.area, name, args[4])
 
-        if client.area.recording:
+            if client.area.recording:
+                # See if the testimony is supposed to end here.
+                scrunched = ''.join(e for e in args[4] if e.isalnum())
+                if len(scrunched) > 0 and scrunched.lower() == 'end':
+                    client.area.recording = False
+                    client.area.broadcast_ooc(f'[{client.id}] {client.char_name} has ended the testimony.')
+                    return
+
+        if adding:
             lst = list(args)
-            # See if the testimony is supposed to end here.
-            scrunched = ''.join(e for e in lst[4] if e.isalnum())
-            if len(scrunched) > 0 and scrunched.lower() == 'end':
-                client.area.recording = False
-                client.area.broadcast_ooc(f'[{client.id}] {client.char_name} has ended the testimony.')
-                return
 
             # Remove speed modifying chars and start the statement instantly
             lst[4] = "}}}" + lst[4].replace('{', '').replace('}', '')
