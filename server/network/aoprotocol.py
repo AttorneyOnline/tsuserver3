@@ -52,7 +52,7 @@ class AOProtocol(asyncio.Protocol):
 
         :param data: bytes of data
         """
-        buf = data.replace(b'\0', b'')
+        buf = data
 
         if not self.client.is_checked and self.server.ban_manager.is_banned(self.client.ipid):
             self.client.transport.close()
@@ -67,6 +67,8 @@ class AOProtocol(asyncio.Protocol):
             self.buffer += buf.decode('utf-8', 'ignore')
         else:
             self.buffer = buf
+
+        self.buffer = self.buffer.translate({ord(c): None for c in '\0'})
 
         if len(self.buffer) > 8192:
             self.client.disconnect()
