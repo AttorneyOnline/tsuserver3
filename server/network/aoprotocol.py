@@ -494,6 +494,33 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_ooc(
                     "That does not look like a valid area ID!")
                 return
+        if len(self.client.area.testimony) > 0 and (text.lstrip().startswith('>') or text.lstrip().startswith('<')):
+            if self.client.area.recording == True:
+                self.client.send_ooc('It is not cross-examination yet!')
+                return
+            cmd = text.strip()
+            idx = self.client.area.testimony_index
+            if len(cmd) > 1:
+                try:
+                    idx = int(cmd[1:])-1
+                    if idx <= -1:
+                        raise ValueError
+                except ValueError:
+                    self.client.send_ooc('Invalid index!')
+                    return
+            else:
+                if cmd == '>':
+                    idx += 1
+                if cmd == '<':
+                    idx -= 1
+                idx = idx % len(self.client.area.testimony)
+                self.client.area.testimony_index = idx
+            try:
+                self.client.area.testimony_send(idx)
+                self.client.area.broadcast_ooc(f'{self.client.char_name} has moved to Statement {idx+1}.')
+            except:
+                self.client.send_ooc('Invalid index!')
+            return
         if msg_type not in ('chat', '0', '1'):
             return
         if anim_type not in (0, 1, 2, 4, 5, 6):
@@ -523,10 +550,9 @@ class AOProtocol(asyncio.Protocol):
         if self.client.area.non_int_pres_only:
             if anim_type == 1 or anim_type == 2:
                 anim_type = 0
-                nonint_pre = 1
             elif anim_type == 6:
                 anim_type = 5
-                nonint_pre = 1
+            nonint_pre = 1
         if not self.client.area.shouts_allowed:
             # Old clients communicate the objecting in anim_type.
             if anim_type == 2:
@@ -631,6 +657,7 @@ class AOProtocol(asyncio.Protocol):
         if not confirmed:
             charid_pair = -1
 
+        # Whispering not recorded for testimony
         if whisper_clients != None:
             whisper_clients.insert(0, self.client)
             for client in self.client.area.clients:
@@ -835,6 +862,45 @@ class AOProtocol(asyncio.Protocol):
             self.client.area.send_command('RT', args[0], args[1])
         self.client.area.add_to_judgelog(self.client, f'used {sign}')
         database.log_room('wtce', self.client, self.client.area, message=sign)
+
+        if self.client in self.client.area.owners:
+            if self.client.area.last_ic_message != None and sign == 'WT':
+                # remove centering chars and strip space chars
+                msg = self.client.area.last_ic_message.replace('~', '').strip()
+                if msg.startswith('--') and msg.endswith('--'):
+                    msg = msg.replace('-', '')
+                    msg = msg.strip()
+                    # actual title possible lol!
+                    if len(msg) > 0:
+                        self.client.area.testimony.clear()
+                        self.client.area.testimony_index = -1
+                        self.client.area.testimony_title = msg
+                        self.client.area.recording = True
+                        self.client.area.broadcast_ooc(f'-- {self.client.area.testimony_title} --\nTestimony recording started! All new messages will be recorded as testimony lines. Say "End" to stop recording.')
+                        return
+            if sign == 'CE':
+                if self.client.area.recording:
+                    self.client.area.recording = False
+                    self.client.area.broadcast_ooc('Testimony recording stopped!')
+                # Display the testimony title
+                if len(self.client.area.testimony) > 0:
+                    statement = self.client.area.testimony[0]
+                    lst = list(statement)
+                    # See if the testimony is supposed to end here.
+
+                    # Center it and make it speedy
+                    lst[4] = "~~}}-- " + self.client.area.testimony_title + " --"
+
+                    # Make it orange
+                    lst[14] = 3
+                    statement = tuple(lst)
+                    targets = self.client.area.clients
+                    for c in targets:
+                        # Blinded clients don't receive IC messages
+                        if c.blinded:
+                            continue
+                        # Ignore those losers with listenpos for testimony
+                        c.send_command('MS', *statement)
 
     def net_cmd_setcase(self, args):
         """Sets the casing preferences of the given client.

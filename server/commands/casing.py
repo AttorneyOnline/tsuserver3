@@ -20,6 +20,9 @@ __all__ = [
     'ooc_cmd_judgelog',
     'ooc_cmd_afk',
     'ooc_cmd_remote_listen',
+    'ooc_cmd_testimony',
+    'ooc_cmd_testimony_clear',
+    'ooc_cmd_testimony_remove',
 ]
 
 
@@ -297,7 +300,8 @@ def ooc_cmd_judgelog(client, arg):
         raise ServerError(
             'There have been no judge actions in this area since start of session.'
         )
-        
+
+
 def ooc_cmd_afk(client, arg):
     client.server.client_manager.toggle_afk(client)
 
@@ -321,3 +325,81 @@ def ooc_cmd_remote_listen(client, arg):
         client.remote_listen = options[arg]
     except:
         raise ArgumentError('Invalid option! Your options are NONE, IC, OOC or ALL.')
+
+
+def ooc_cmd_testimony(client, arg):
+    """
+    Display the currently recorded testimony.
+    Usage: /testimony
+    """
+    if len(client.area.testimony) <= 0:
+        client.send_ooc('There is no testimony recorded!')
+        return
+    args = arg.split()
+    if len(args) > 0:
+        try:
+            if client.area.recording == True:
+                client.send_ooc('It is not cross-examination yet!')
+                return
+            idx = int(args[0])
+            client.area.testimony_send(idx)
+            client.area.broadcast_ooc(f'{client.char_name} has moved to Statement {idx+1}.')
+        except ValueError:
+            raise ArgumentError('Index must be a number!')
+        except ClientError:
+            raise
+        return
+
+    msg = f'-- {client.area.testimony_title} --'
+    for i, statement in enumerate(client.area.testimony):
+        # [15] SHOWNAME
+        name = statement[15]
+        if name == '' and statement[8] != -1:
+            # [8] CID
+            name = client.server.char_list[statement[8]]
+        txt = statement[4].replace('{', '').replace('}', '')
+        msg += f'\n[{i+1}] {name}: {txt}'
+    msg += f'\nUse > IC to progress, < to backtrack, >3 or <3 to go to specific statements.'
+    client.send_ooc(msg)
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_testimony_clear(client, arg):
+    """
+    Clear the current testimony.
+    Usage: /testimony_clear
+    """
+    if len(client.area.testimony) <= 0:
+        client.send_ooc('There is no testimony recorded!')
+        return
+    if len(arg) != 0:
+        raise ArgumentError('This command does not take any arguments.')
+    client.area.testimony.clear()
+    client.area.testimony_title = ''
+    client.area.broadcast_ooc(f'{client.char_name} cleared the current testimony.')
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_testimony_remove(client, arg):
+    """
+    Remove the statement at index.
+    Usage: /testimony_remove <idx>
+    """
+    if len(client.area.testimony) <= 0:
+        client.send_ooc('There is no testimony recorded!')
+        return
+    args = arg.split()
+    if len(args) <= 0:
+        raise ArgumentError('Usage: /testimony_remove <idx>.')
+    try:
+        idx = int(args[0]) - 1
+        client.area.testimony.pop(idx)
+        if client.area.testimony_index == idx:
+            client.area.testimony_index = -1
+        client.area.broadcast_ooc(f'{client.char_name} has removed Statement {idx+1}.')
+    except ValueError:
+        raise ArgumentError('Index must be a number!')
+    except IndexError:
+        raise ArgumentError('Index out of bounds!')
+    except ClientError:
+        raise

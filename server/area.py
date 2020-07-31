@@ -82,7 +82,11 @@ class Area:
         self.current_music_effects = 0
         self.music_autoplay = False
         self.evi_list = EvidenceList()
-        self.recorded_messages = []
+        self.testimony = []
+        self.testimony_title = ''
+        self.testimony_index = -1
+        self.recording = False
+        self.last_ic_message = None
         self.cards = dict()
         """
         #debug
@@ -468,7 +472,46 @@ class Area:
         if args[15] != '':
             name = args[15]
         client.area.set_next_msg_delay(len(args[4]))
+        client.area.last_ic_message = args[4]
         database.log_ic(client, client.area, name, args[4])
+
+        if client.area.recording:
+            lst = list(args)
+            # See if the testimony is supposed to end here.
+            scrunched = ''.join(e for e in lst[4] if e.isalnum())
+            if len(scrunched) > 0 and scrunched.lower() == 'end':
+                client.area.recording = False
+                client.area.broadcast_ooc(f'[{client.id}] {client.char_name} has ended the testimony.')
+                return
+
+            # Remove speed modifying chars and start the statement instantly
+            lst[4] = "}}}" + lst[4].replace('{', '').replace('}', '')
+            # Non-int pre automatically enabled
+            lst[18] = 1
+            # Set anim_type to conform to anim_type
+            if lst[7] == 1 or lst[7] == 2:
+                lst[7] = 0
+            elif lst[7] == 6:
+                lst[7] = 5
+            # Make it green
+            lst[14] = 1
+            rec = tuple(lst)
+            client.area.testimony.append(rec)
+            client.area.broadcast_ooc(f'Statement {len(client.area.testimony)} added.')
+    
+    def testimony_send(self, idx):
+        """Send the testimony statement at index"""
+        try:
+            statement = self.testimony[idx]
+            targets = self.clients
+            for c in targets:
+                # Blinded clients don't receive IC messages
+                if c.blinded:
+                    continue
+                # Ignore those losers with listenpos for testimony
+                c.send_command('MS', *statement)
+        except (ValueError, IndexError):
+            raise AreaError('Invalid testimony reference!')
 
     def set_next_msg_delay(self, msg_length):
         """
