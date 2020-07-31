@@ -247,6 +247,7 @@ def ooc_cmd_area_pref(client, arg):
         'can_dj',
         'hidden',
         'can_whisper',
+        'can_wtce',
     ]
 
     if len(arg) == 0:

@@ -70,6 +70,7 @@ class Area:
         self.can_dj = True
         self.hidden = False
         self.can_whisper = True
+        self.can_wtce = True
         # /prefs end
 
         self.music_looper = None
@@ -245,6 +246,8 @@ class Area:
             self.hidden = area['hidden']
         if 'can_whisper' in area:
             self.can_whisper = area['can_whisper']
+        if 'can_wtce' in area:
+            self.can_wtce = area['can_wtce']
 
         if 'evidence' in area and len(area['evidence']) > 0:
             self.evi_list.evidences.clear()
@@ -304,6 +307,7 @@ class Area:
         area['can_dj'] = self.can_dj
         area['hidden'] = self.hidden
         area['can_whisper'] = self.can_whisper
+        area['can_wtce'] = self.can_wtce
         if len(self.evi_list.evidences) > 0:
             area['evidence'] = [e.to_dict() for e in self.evi_list.evidences]
         if len(self.links) > 0:
@@ -443,19 +447,19 @@ class Area:
             client.hide(False)
             client.area.broadcast_area_list(client)
         if args[4].startswith('**') and len(client.testimony) > 0:
-            idx = client.area.testimony_index
+            idx = self.testimony_index
             if idx == -1:
                 idx = 0
             try:
-                lst = list(client.area.testimony[idx])
+                lst = list(self.testimony[idx])
                 lst[4] = "}}}" + args[4][2:]
-                client.area.testimony[idx] = tuple(lst)
-                client.area.broadcast_ooc(f'{client.char_name} has amended Statement {idx+1}.')
+                self.testimony[idx] = tuple(lst)
+                self.broadcast_ooc(f'{client.char_name} has amended Statement {idx+1}.')
             except IndexError:
                 client.send_ooc(f'Something went wrong, couldn\'t amend Statement {idx+1}!')
             return
-        adding = client.area.recording
-        if args[4].lstrip().startswith('++') and len(client.testimony) > 0:
+        adding = self.recording
+        if args[4].lstrip().startswith('++') and len(self.testimony) > 0:
             adding = True
         else:
             if targets == None:
@@ -487,21 +491,22 @@ class Area:
                 name = self.server.char_list[args[8]]
             if args[15] != '':
                 name = args[15]
-            client.area.set_next_msg_delay(len(args[4]))
-            client.area.last_ic_message = args[4]
-            database.log_ic(client, client.area, name, args[4])
+            self.set_next_msg_delay(len(args[4]))
+            self.last_ic_message = args[4]
+            database.log_ic(client, self, name, args[4])
 
-            if client.area.recording:
+            if self.recording:
                 # See if the testimony is supposed to end here.
                 scrunched = ''.join(e for e in args[4] if e.isalnum())
                 if len(scrunched) > 0 and scrunched.lower() == 'end':
-                    client.area.recording = False
-                    client.area.broadcast_ooc(f'[{client.id}] {client.char_name} has ended the testimony.')
+                    self.recording = False
+                    self.broadcast_ooc(f'[{client.id}] {client.char_name} has ended the testimony.')
                     return
 
         if adding:
             lst = list(args)
-
+            if lst[4].startswith('++'):
+                lst[4] = lst[4][2:]
             # Remove speed modifying chars and start the statement instantly
             lst[4] = "}}}" + lst[4].replace('{', '').replace('}', '')
             # Non-int pre automatically enabled
@@ -514,8 +519,10 @@ class Area:
             # Make it green
             lst[14] = 1
             rec = tuple(lst)
-            client.area.testimony.append(rec)
-            client.area.broadcast_ooc(f'Statement {len(client.area.testimony)} added.')
+            self.testimony.append(rec)
+            self.broadcast_ooc(f'Statement {len(self.testimony)} added.')
+            if not self.recording:
+                self.testimony_send(len(self.testimony)-1)
     
     def testimony_send(self, idx):
         """Send the testimony statement at index"""

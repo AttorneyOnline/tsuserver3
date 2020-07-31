@@ -821,6 +821,10 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_ooc(
                 'You were blocked from using judge signs by a moderator.')
             return
+        if not self.client.area.can_wtce and not self.client.is_mod and not self in self.client.area.owners:
+            self.client.send_ooc(
+                'Only CMs and mods may use judge buttons in this area!')
+            return
         if self.client.area.cannot_ic_interact(self.client):
             self.client.send_ooc(
                 "You are not on the area's invite list, and thus, you cannot use the WTCE buttons!"
@@ -840,8 +844,7 @@ class AOProtocol(asyncio.Protocol):
             return
         if self.client.wtce_mute():
             self.client.send_ooc(
-                'You used witness testimony/cross examination signs too many times. Please try again after {} seconds.'
-                .format(int(self.client.wtce_mute())))
+                f'You used witness testimony/cross examination signs too many times. Please try again after {int(self.client.wtce_mute())} seconds.')
             return
 
         if len(self.client.broadcast_list) > 0:
