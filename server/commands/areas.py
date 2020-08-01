@@ -126,21 +126,24 @@ def ooc_cmd_status(client, arg):
 def ooc_cmd_area(client, arg):
     """
     List areas, or go to another area/room.
-    Usage: /area [id]
+    Usage: /area [id] or /area [name]
     """
     args = arg.split()
     if len(args) == 0:
         client.send_area_list()
-    elif len(args) == 1:
+        return
+
+    try:
+        area = client.server.area_manager.get_area_by_id(int(args[0]))
+        client.change_area(area)
+    except:
         try:
-            area = client.server.area_manager.get_area_by_id(int(args[0]))
+            area = client.server.area_manager.get_area_by_name(arg)
             client.change_area(area)
         except ValueError:
-            raise ArgumentError('Area ID must be a number.')
+            raise ArgumentError('Area ID must be a name or a number.')
         except (AreaError, ClientError):
             raise
-    else:
-        raise ArgumentError('Too many arguments. Use /area <id>.')
 
 
 def ooc_cmd_getarea(client, arg):
@@ -148,7 +151,7 @@ def ooc_cmd_getarea(client, arg):
     Show information about the current area.
     Usage: /getarea
     """
-    client.send_area_info(client.area.id, False, False)
+    client.send_area_info(client.area.id, False)
 
 
 def ooc_cmd_getareas(client, arg):
@@ -156,7 +159,7 @@ def ooc_cmd_getareas(client, arg):
     Show information about all areas.
     Usage: /getareas
     """
-    client.send_area_info(-1, False, False)
+    client.send_area_info(-1, False)
 
 
 def ooc_cmd_getafk(client, arg):
@@ -170,8 +173,8 @@ def ooc_cmd_getafk(client, arg):
         arg = client.area.id
     else:
         raise ArgumentError('There is only one optional argument [all].')
-    client.send_area_info(arg, False, True)
-    
+    client.send_area_info(arg, False, afk_check=True)
+
 
 def ooc_cmd_area_lock(client, arg):
     """

@@ -7,7 +7,7 @@ from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, ServerError, ArgumentError
 
-from . import mod_only
+from . import mod_only, list_commands, list_submodules, help
 
 __all__ = [
     'ooc_cmd_motd',
@@ -45,11 +45,34 @@ def ooc_cmd_help(client, arg):
     Show help for a command, or show general help.
     Usage: /help
     """
-    if len(arg) != 0:
-        raise ArgumentError('This command has no arguments.')
-    help_url = 'https://github.com/AttorneyOnline/tsuserver3'
-    help_msg = f'The commands available on this server can be found here: {help_url}'
-    client.send_ooc(help_msg)
+    import inspect
+    if arg == '':
+        msg = inspect.cleandoc('''
+        Welcome to tsuserver3! You can use /help <command> on any known
+        command to get up-to-date help on it.
+        You may also use /help <category> to see available commands for that category.
+
+        If you don't understand a specific core feature, check the official
+        repository for more information:
+
+        https://github.com/AttorneyOnline/tsuserver3 
+
+        Available Categories:
+        ''')
+        msg += '\n'
+        msg += list_submodules()
+        client.send_ooc(msg)
+    else:
+        arg = arg.lower()
+        try:
+            client.send_ooc(help(f'ooc_cmd_{arg}'))
+        except AttributeError:
+            try:
+                msg = f'Submodule "{arg}" commands:\n\n'
+                msg += list_commands(arg)
+                client.send_ooc(msg)
+            except AttributeError:
+                client.send_ooc('No such command or submodule has been found in the help docs.')
 
 
 @mod_only()

@@ -1,0 +1,52 @@
+# line 0. This is a list of example tor networks that can contact you on port 27017 #
+# You can update this list by visiting https://check.torproject.org/cgi-bin/TorBulkExitList.py?ip=___.___.___.___&port=27017 #
+104.244.7
+107.189.10.
+134.19.179.
+144.217.85.
+171.25.193.
+176.119.
+177.133.
+177.157.15
+177.205.1
+177.99.1
+178.17.17
+178.175.148.
+179.186.123.15
+185.100.8
+185.220.10
+23.129.64.
+46.246.
+46.98.19
+46.98.20
+46.98.21
+94.140.114.
+94.248.
+# ProtonVPN
+185.159.156.
+3223
+# Hosting
+20473
+32780
+43350
+395954
+16276
+63199
+205544
+# Additionally it contains the ASNs for the most popular VPN providers
+# https://www.skadligkod.se/vpn/mapping-of-egress-points-used-by-vpn-providers/
+9009
+20860
+197595
+42708
+60068
+36351
+13213
+42831
+20952
+42473
+51815
+51852
+12989
+33438
+59898

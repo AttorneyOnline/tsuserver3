@@ -43,6 +43,7 @@ websocket_port: 50001
 
 # Whether or not the server should be advertised on the server list.
 use_masterserver: true
+# Don't change these unless the master server is no more
 masterserver_ip: master.aceattorneyonline.com
 masterserver_port: 27016
 
@@ -72,3 +73,6 @@ zalgo_tolerance: 3
 
 # How many simultaneous connections an IP address can make to the server. (Default: 16)
 multiclient_limit: 16
+
+# Maximum number of characters can a message contain
+max_chars: 256

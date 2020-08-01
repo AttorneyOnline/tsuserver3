@@ -218,7 +218,7 @@ def ooc_cmd_anncase(client, arg):
             msg = '=== Case Announcement ===\r\n{} [{}] is hosting {}, looking for '.format(
                 client.char_name, client.id, args[0])
 
-            lookingfor = [p for p, q in \
+            lookingfor = [p for p, q in
                 zip(['defense', 'prosecutor', 'judge', 'juror', 'stenographer'], args[1:])
                 if q == '1']
 
@@ -229,7 +229,7 @@ def ooc_cmd_anncase(client, arg):
 
             client.set_case_call_delay()
 
-            log_data = {k: v for k, v in \
+            log_data = {k: v for k, v in
                 zip(('message', 'def', 'pro', 'jud', 'jur', 'steno'), args)}
             database.log_room('case', client, client.area, message=log_data)
     else:
@@ -305,5 +305,6 @@ def ooc_cmd_judgelog(client, arg):
         raise ServerError(
             'There have been no judge actions in this area since start of session.'
         )
+        
 def ooc_cmd_afk(client, arg):
     client.server.client_manager.toggle_afk(client)
