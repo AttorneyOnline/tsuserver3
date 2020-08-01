@@ -56,6 +56,9 @@ def ooc_cmd_status(client, arg):
     if len(arg) == 0:
         client.send_ooc(f'Current status: {client.area.status}')
     else:
+        if not client.area.can_change_status and not client.is_mod and not client in client.area.owners:
+            client.send_ooc("This area's status cannot be changed by anyone who's not a CM or mod!")
+            return
         try:
             client.area.change_status(arg)
             client.area.broadcast_ooc('{} changed status to {}.'.format(

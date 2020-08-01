@@ -497,6 +497,9 @@ class ClientManager:
             :param area: area to switch to
             :param target_pos: which position to target in the new area
             """
+            # Make sure a single person can't hoard all the hubs
+            if self.area.area_manager != area.area_manager and self in self.area.area_manager.owners:
+                self.area.area_manager.remove_owner(self)
             self.area.remove_client(self)
             self.area = area
             if len(area.pos_lock) > 0 and not (target_pos in area.pos_lock):
@@ -730,6 +733,7 @@ class ClientManager:
                 if c in area.afkers:
                     info += '[AFK]'
                 if c.hidden:
+                    name = ''
                     if c.hidden_in != None:
                         name = f':{c.area.evi_list.evidences[c.hidden_in].name}'
                     info += f'[HID{name}]'

@@ -72,6 +72,7 @@ class Area:
         self.can_whisper = True
         self.can_wtce = True
         self.music_autoplay = False
+        self.can_change_status = True
         # /prefs end
 
         self.music_looper = None
@@ -248,6 +249,8 @@ class Area:
             self.can_whisper = area['can_whisper']
         if 'can_wtce' in area:
             self.can_wtce = area['can_wtce']
+        if 'can_change_status' in area:
+            self.can_change_status = area['can_change_status']
 
         if 'evidence' in area and len(area['evidence']) > 0:
             self.evi_list.evidences.clear()
@@ -308,6 +311,7 @@ class Area:
         area['hidden'] = self.hidden
         area['can_whisper'] = self.can_whisper
         area['can_wtce'] = self.can_wtce
+        area['can_change_status'] = self.can_change_status
         if len(self.evi_list.evidences) > 0:
             area['evidence'] = [e.to_dict() for e in self.evi_list.evidences]
         if len(self.links) > 0:
