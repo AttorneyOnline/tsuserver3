@@ -32,7 +32,7 @@ def check_deps():
         sys.exit(1)
 
     try:
-        import geoip2
+        import oyaml
     except ModuleNotFoundError:
         print('Installing dependencies for you...')
         try:
