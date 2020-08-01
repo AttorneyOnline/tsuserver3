@@ -49,6 +49,10 @@ class Emotes:
             logger.warn(f'Unknown key {e.args[0]} in character file {char_path}. '
                         'This indicates a malformed character INI file.')
             return
+        except ValueError as e:
+            logger.warn(f'Value error in character file {char_path}:\n{e}\n'
+                         'This indicates a malformed character INI file.')
+            return
 
     def validate(self, preanim, anim, sfx):
         """
