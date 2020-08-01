@@ -664,9 +664,7 @@ class AOProtocol(asyncio.Protocol):
                 arg = spl[1][:256]
             try:
                 called_function = f'ooc_cmd_{cmd}'
-                if cmd == 'help' and arg != '':
-                    self.client.send_ooc(commands.help(f'ooc_cmd_{arg}'))
-                elif not hasattr(commands, called_function):
+                if not hasattr(commands, called_function):
                     self.client.send_ooc('Invalid command.')
                 else:
                     getattr(commands, called_function)(self.client, arg)
