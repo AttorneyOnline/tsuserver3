@@ -1,13 +1,100 @@
-- category: Prelude
+- category: ==Music==
   songs:
-    - name: Prelude(AJ).mp3
-      length: 56
-- category: Trial
-  songs:
-    - name: Trial(AJ).mp3
-      length: 40
-- category: Objection
-  songs:
-    - name: OBJECTIOM(AJ).mp3
-      length: 50
-    - name: Trial(AA).mp3
+    - name: "Announce The Truth (AA).opus"
+      length: -1
+    - name: "Announce The Truth (AJ).opus"
+      length: -1
+    - name: "Announce The Truth (JFA).opus"
+      length: -1
+    - name: "Announce The Truth (Miles).opus"
+      length: -1
+    - name: "Announce The Truth (T&T).opus"
+      length: -1
+    - name: "Confrontation ~ Presto 2009.opus"
+      length: -1
+    - name: "Crises of Fate.opus"
+      length: -1
+    - name: "Forgotten Legend.opus"
+      length: -1
+    - name: "Godot - The Fragrance of Dark Coffee.opus"
+      length: -1
+    - name: "Great Revival ~ Franziska von Karma.opus"
+      length: -1
+    - name: "Great Revival ~ Miles Edgeworth.opus"
+      length: -1
+    - name: "Hotline of Fate.opus"
+      length: -1
+    - name: "Interesting People.opus"
+      length: -1
+    - name: "Logic and Trick.opus"
+      length: -1
+    - name: "Luke Atmey ~ I Just Want Love.opus"
+      length: -1
+    - name: "Noisy People.opus"
+      length: -1
+    - name: "OBJECTION (AA).opus"
+      length: -1
+    - name: "Objection (AJ).opus"
+      length: -1
+    - name: "OBJECTION (JFA).opus"
+      length: -1
+    - name: "Objection (Miles).opus"
+      length: -1
+    - name: "OBJECTION (T&T).opus"
+      length: -1
+    - name: "Others ~ Guilty love.opus"
+      length: -1
+    - name: "Prelude (AA).opus"
+      length: -1
+    - name: "Prelude (AJ).opus"
+      length: -1
+    - name: "Prologue (AA).opus"
+      length: -1
+    - name: "Pursuit (AA) - variation.opus"
+      length: -1
+    - name: "Pursuit (AA).opus"
+      length: -1
+    - name: "Pursuit (AJ).opus"
+      length: -1
+    - name: "Pursuit (DS).opus"
+      length: -1
+    - name: "Pursuit (JFA) - variation.opus"
+      length: -1
+    - name: "Pursuit (JFA).opus"
+      length: -1
+    - name: "Pursuit (Miles).opus"
+      length: -1
+    - name: "Pursuit (T&T) - variation.opus"
+      length: -1
+    - name: "Pursuit (T&T).opus"
+      length: -1
+    - name: "Pursuit ~ I Want to Find the Truth(Orchestra).opus"
+      length: -1
+    - name: "Questioning AA (Allegro).opus"
+      length: -1
+    - name: "Questioning AA (Moderato).opus"
+      length: -1
+    - name: "Questioning AJ (Allegro).opus"
+      length: -1
+    - name: "Questioning AJ (Moderato).opus"
+      length: -1
+    - name: "Questioning JFA (Allegro).opus"
+      length: -1
+    - name: "Questioning JFA (Moderato).opus"
+      length: -1
+    - name: "Questioning T&T (Allegro).opus"
+      length: -1
+    - name: "Questioning T&T (Moderato).opus"
+      length: -1
+    - name: "Speak up Pup.opus"
+      length: -1
+    - name: "Suspense (AA).opus"
+      length: -1
+    - name: "The Great Truth Burglar.opus"
+      length: -1
+    - name: "Trial (AA).opus"
+      length: -1
+    - name: "Trial (AJ).opus"
+      length: -1
+    - name: "Trial (Miles).opus"
+      length: -1

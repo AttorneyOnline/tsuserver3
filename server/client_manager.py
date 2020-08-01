@@ -18,28 +18,36 @@
 import re
 import string
 import time
+import math
 from heapq import heappop, heappush
 
-from server import logger
-from server.constants import TargetType
-from server.exceptions import ClientError, AreaError
+from enum import Enum
 
+from server import database
+from server.constants import TargetType
+from server.exceptions import ClientError, AreaError, ServerError
+
+import oyaml as yaml #ordered yaml
 
 class ClientManager:
+    """Holds the list of all clients currently connected to the server."""
     class Client:
+        """Represents a single instance of a user.
+
+        Clients may only belong to a single room.
+        """
         def __init__(self, server, transport, user_id, ipid):
             self.is_checked = False
             self.transport = transport
             self.hdid = ''
-            self.pm_mute = False
             self.id = user_id
             self.char_id = -1
-            self.hub = server.hub_manager.default_hub()
-            self.area = self.hub.default_area()
+            self.area = server.hub_manager.default_hub().default_area()
             self.server = server
             self.name = ''
             self.fake_name = ''
             self.is_mod = False
+            self.mod_profile_name = None
             self.is_dj = True
             self.can_wtce = True
             self.pos = ''
@@ -53,24 +61,8 @@ class ClientManager:
             self.is_ooc_muted = False
             self.pm_mute = False
             self.mod_call_time = 0
-            self.command_time = 0
-            self.in_rp = False
             self.ipid = ipid
-            self.last_showname = ''
-
-            #CMing stuff
-            self.is_cm = False
-            self.cm_log_type = ['MoveLog', 'ActionLog', 'PMLog', 'CharLog'] # If we're CM, we'll receive CM-related shenanigans
-            self.broadcast_ic = []
-            self.area_listen = []
-            self.hidden = False
-            self.blinded = False
-            self.blinded_by = None
-            self.following = None
-            self.sneak = False
-            self.listenpos = False
-            self.waiting_for_schedule = None
-            self.ambience_editing = False
+            self.version = ''
 
             # Pairing stuff
             self.charid_pair = -1
@@ -81,7 +73,7 @@ class ClientManager:
 
             # Casing stuff
             self.casing_cm = False
-            self.casing_cases = ""
+            self.casing_cases = ''
             self.casing_def = False
             self.casing_pro = False
             self.casing_jud = False
@@ -92,58 +84,105 @@ class ClientManager:
             # flood-guard stuff
             self.mus_counter = 0
             self.mus_mute_time = 0
-            self.mus_change_time = [x * self.server.config['music_change_floodguard']['interval_length'] for x in
-                                    range(self.server.config['music_change_floodguard']['times_per_interval'])]
+            self.mus_change_time = [
+                x * self.server.config['music_change_floodguard']
+                ['interval_length']
+                for x in range(self.server.config['music_change_floodguard']
+                               ['times_per_interval'])
+            ]
             self.wtce_counter = 0
             self.wtce_mute_time = 0
-            self.wtce_time = [x * self.server.config['wtce_floodguard']['interval_length'] for x in
-                              range(self.server.config['wtce_floodguard']['times_per_interval'])]
-            
-            self.cm_save_time = 0
+            self.wtce_time = [
+                x * self.server.config['wtce_floodguard']['interval_length']
+                for x in range(self.server.config['wtce_floodguard']
+                               ['times_per_interval'])
+            ]
+            # security stuff
+            self.clientscon = 0
+            self.gm_save_time = 0
 
+            # movement system stuff
             self.last_move_time = 0
-            self.move_delay = 0
+        
+            # client status stuff
+            self.blinded = False
+            self._hidden = False
+            self.hidden_in = None
+            self.sneaking = False
+            self.listen_pos = None
+            self.following = None
+            self.edit_ambience = False
+
+            # 0 = listen to NONE
+            # 1 = listen to IC
+            # 2 = listen to OOC
+            # 3 = Listen to ALL
+            self.remote_listen = 3
+
+            # a list of all areas the client can currently see
+            self.local_area_list = []
+            # a list of all songs the client can currently see
+            self.local_music_list = []
+            # reference to the storage/musiclists/ref.yaml for displaying purposes
+            self.music_ref = ''
+            # a music list override that was loaded manually by the client
+            self.override_music_list = []
+            # list of areas to broadcast the message, music and judge buttons to
+            self.broadcast_list = []
 
         def send_raw_message(self, msg):
+            """
+            Send a raw packet over TCP.
+            :param msg: string to send
+            """
             self.transport.write(msg.encode('utf-8'))
 
         def send_command(self, command, *args):
+            """
+            Compose and send an AO-compatible message, with arguments
+            delimited by `#` and ending with `#%`.
+            :param command: command name
+            :param *args: list of arguments
+            """
             if args:
                 if command == 'MS':
-                    if self.blinded and args[0] != 'broadcast':
-                        return #Don't receive any chat messages when blinded that are not broadcast_ic'ed
-                    if self.listenpos and args[5] != self.pos: #pos doesn't match our current pos, we're not listening so make this an OOC message instead
-                        name = self.server.char_list[args[8]]
-                        if len(args[15]) > 0: #showname
-                            name = args[15]
-                        self.send_command('CT', f'<{args[5]}> {name}', args[4]) #send the mesage as OOC
-                        return
-                    if args[0] == 'broadcast':
-                        lst = list(args)
-                        lst[0] = '0'
-                        args = tuple(lst)
-                    for evi_num in range(len(self.evi_list)): #i sure would like to know what this does exactly
+                    for evi_num in range(len(self.evi_list)):
                         if self.evi_list[evi_num] == args[11]:
                             lst = list(args)
                             lst[11] = evi_num
                             args = tuple(lst)
                             break
-                self.send_raw_message('{}#{}#%'.format(command, '#'.join([str(x) for x in args])))
+                self.send_raw_message(
+                    f'{command}#{"#".join([str(x) for x in args])}#%')
             else:
-                self.send_raw_message('{}#%'.format(command))
+                self.send_raw_message(f'{command}#%')
 
-        def send_host_message(self, msg):
+        def send_ooc(self, msg):
+            """
+            Send an out-of-character message to the client.
+            :param msg: message to send
+            """
             self.send_command('CT', self.server.config['hostname'], msg, '1')
 
         def send_motd(self):
-            self.send_host_message('=== MOTD ===\r\n{}\r\n============='.format(self.server.config['motd']))
+            """Send the message of the day to the client."""
+            motd = self.server.config['motd']
+            self.send_ooc(f'=== MOTD ===\r\n{motd}\r\n=============')
 
         def send_player_count(self):
-            self.send_host_message('{}/{} players online.'.format(
-                self.server.get_player_count(),
-                self.server.config['playerlimit']))
+            """
+            Send a message stating the number of players currently online
+            to the client.
+            """
+            players = self.server.player_count
+            limit = self.server.config['playerlimit']
+            self.send_ooc(f'{players}/{limit} players online.')
 
         def is_valid_name(self, name):
+            """
+            Check if the given string is valid as an OOC name.
+            :param name: name to check
+            """
             printset = set(string.ascii_letters + string.digits + "~ -_.',")
             name_ws = name.replace(' ', '')
             if not name_ws or name_ws.isdigit():
@@ -156,101 +195,254 @@ class ClientManager:
             return True
 
         def disconnect(self):
+            """Disconnect the client gracefully."""
             self.transport.close()
 
-        def change_character(self, char_id):
-            if not self.server.is_valid_char_id(char_id):
-                raise ClientError('Invalid Character ID.')
-            allowed = self.is_cm or self.is_mod or self.get_char_name() == "Spectator" or self.server.char_list[char_id] == "Spectator"
-            if len(self.charcurse) > 0:
-                if not char_id in self.charcurse:
-                    raise ClientError('Character not available.')
-                # force = True
-                allowed = True
-            if not allowed and not self.area.is_char_available(char_id):
-                # if force:
-                #     for client in self.area.clients:
-                #         if client.char_id == char_id:
-                #             client.char_select()
-                # else:
-                raise ClientError('Character not available.')
-            old_char = self.get_char_name()
+        def change_character(self, char_id, force=False):
+            """
+            Change the client's character or force the character selection
+            screen to appear for the client.
+            :param char_id: character ID to switch to
+            :param force: whether or not the client is forced to switch
+            to another character if the target character is not available
+            (Default value = False)
+            """
+            # If it's -1, we want to be the spectator character.
+            if char_id != -1:
+                if not self.server.is_valid_char_id(char_id):
+                    raise ClientError('Invalid character ID.')
+                if len(self.charcurse) > 0:
+                    if not char_id in self.charcurse:
+                        raise ClientError('Character not available.')
+                    force = True
+                if not self.area.is_char_available(char_id):
+                    if force:
+                        for client in self.area.clients:
+                            if client.char_id == char_id:
+                                client.char_select()
+                    else:
+                        raise ClientError('Character not available.')
+            old_char = self.char_name
             self.char_id = char_id
             self.pos = ''
             self.send_command('PV', self.id, 'CID', self.char_id)
-            self.area.send_command('CharsCheck', *self.get_available_char_list())
-            logger.log_server('Changed character from {} to {}.'.format(old_char, self.get_char_name()), self)
-            self.hub.send_to_cm('CharLog', '[{}][{}]Changed character from {} to {}.'
-                                .format(self.id, self.name, old_char, self.get_char_name()), self)
+            self.area.send_command('CharsCheck',
+                                   *self.get_available_char_list())
 
-            if self.following != None:
-                try:
-                    c = self.server.client_manager.get_targets(
-                        self, TargetType.ID, int(self.following), False)[0]
-                    self.send_host_message(
-                        'You are no longer following [{}] {}.'.format(c.id, c.get_char_name(True)))
-                    self.following = None
-                except:
-                    self.following = None
+            new_char = self.char_name
+            database.log_room('char.change', self, self.area,
+                message={'from': old_char, 'to': new_char})
 
         def change_music_cd(self):
-            if self.is_mod or self.is_cm:
+            """
+            Check if the client can change music or not.
+            :returns: how many seconds the client must wait to change music
+            """
+            if self.is_mod or self in self.area.owners:
                 return 0
             if self.mus_mute_time:
-                if time.time() - self.mus_mute_time < self.server.config['music_change_floodguard']['mute_length']:
-                    return self.server.config['music_change_floodguard']['mute_length'] - (
-                            time.time() - self.mus_mute_time)
+                if time.time() - self.mus_mute_time < self.server.config[
+                        'music_change_floodguard']['mute_length']:
+                    return self.server.config['music_change_floodguard'][
+                        'mute_length'] - (time.time() - self.mus_mute_time)
                 else:
-                    self.mute_time = 0
-            times_per_interval = self.server.config['music_change_floodguard']['times_per_interval']
-            interval_length = self.server.config['music_change_floodguard']['interval_length']
+                    self.mus_mute_time = 0
+            times_per_interval = self.server.config['music_change_floodguard'][
+                'times_per_interval']
+            interval_length = self.server.config['music_change_floodguard'][
+                'interval_length']
             if time.time() - self.mus_change_time[
-                (self.mus_counter - times_per_interval + 1) % times_per_interval] < interval_length:
+                (self.mus_counter - times_per_interval + 1) %
+                    times_per_interval] < interval_length:
                 self.mus_mute_time = time.time()
-                return self.server.config['music_change_floodguard']['mute_length']
+                return self.server.config['music_change_floodguard'][
+                    'mute_length']
             self.mus_counter = (self.mus_counter + 1) % times_per_interval
             self.mus_change_time[self.mus_counter] = time.time()
             return 0
-                
-        def hide(self, tog=True):
-            self.hidden = tog
-            msg = 'no longer'
-            if tog:
-                msg = 'now'
-            self.send_host_message('You are {} hidden from the area.'.format(msg))
 
-        def blind(self, tog=True):
-            self.blinded = tog
-            msg = 'no longer'
-            if tog:
-                msg = 'now'
-            self.send_host_message(
-                'You are {} blinded from the area and seeing non-broadcasted IC messages.'.format(msg))
-            self.area.update_evidence_list(self)
+        def change_music(self, args):
+            if self.is_muted:  # Checks to see if the client has been muted by a mod
+                self.send_ooc(
+                    'You are muted by a moderator.')
+                return
+            if not self.is_dj:
+                self.send_ooc(
+                    'You were blockdj\'d by a moderator.')
+                return
+
+            if args[1] != self.char_id:
+                return
+
+            if self.change_music_cd():
+                self.send_ooc(
+                    f'You changed song too many times. Please try again after {int(self.change_music_cd())} seconds.'
+                )
+                return
+            try:
+                name, length = self.server.get_song_data(self.construct_music_list(self.area.music_override), args[0])
+                target_areas = [self.area]
+                if len(self.broadcast_list) > 0 and (self.is_mod or self in self.area.owners):
+                    try:
+                        a_list = ', '.join([f'[{a.id}] {a.abbreviation}' for a in self.broadcast_list])
+                        self.send_ooc(f'Broadcasting to areas {a_list}')
+                        target_areas = self.broadcast_list
+                    except (AreaError, ValueError):
+                        self.send_ooc('Your broadcast list is invalid! Do /clear_broadcast to reset it and /broadcast <id(s)> to set a new one.')
+                        return
+
+                for area in target_areas:
+                    if area.cannot_ic_interact(self):
+                        self.send_ooc(
+                            f'You are not on area [{area.id}] {area.name} invite list, and thus, you cannot change music!'
+                        )
+                        continue
+                    if not self.is_mod and not self in area.owners and not area.can_dj:
+                        self.send_ooc(
+                            f'You cannot change music in area [{area.id}] {area.name}!'
+                        )
+                        continue
+                    if self.edit_ambience:
+                        if self.is_mod or self in area.owners:
+                            area.set_ambience(name)
+                            self.send_ooc(
+                                f'Setting area [{area.id}] {area.name} ambience to {name}.')
+                            continue
+                        else:
+                            self.edit_ambinece = False
+
+                    # Showname info
+                    showname = ''
+                    if len(args) > 2:
+                        showname = args[2]
+                        if len(showname) > 0 and not area.showname_changes_allowed and not self.is_mod and not self in area.owners:
+                            self.send_ooc(
+                                f'Showname changes are forbidden in area [{area.id}] {area.name}!'
+                            )
+                            continue
+
+                    # Effects info
+                    effects = 0
+                    if len(args) > 3:
+                        effects = int(args[3])
+                    
+                    # Jukebox check
+                    if area.jukebox and not self.is_mod and not self in area.owners:
+                        area.add_jukebox_vote(self, name,
+                                                        length, showname)
+                        database.log_room('jukebox.vote', self, area, message=name)
+                    else:
+                        area.play_music(name, self.char_id,
+                                                    length, showname, effects)
+                        area.add_music_playing(self, name, showname)
+                # We only make one log entry to not CBT the log list. TODO: Broadcast logs
+                database.log_room('music', self, self.area, message=name)
+            except ServerError:
+                if self.music_ref != '':
+                    self.send_ooc(f'Error: song {args[0]} was not accepted! View acceptable music by resetting your client\'s using /musiclist.')
+                else:
+                    self.send_ooc(f'Error: song {args[0]} isn\'t recognized by server!')
 
         def wtce_mute(self):
-            if self.is_mod or self.is_cm:
+            """
+            Check if the client can use WT/CE or not.
+            :returns: how many seconds the client must wait to use WT/CE
+            """
+            if self.is_mod or self in self.area.owners:
                 return 0
             if self.wtce_mute_time:
-                if time.time() - self.wtce_mute_time < self.server.config['wtce_floodguard']['mute_length']:
-                    return self.server.config['wtce_floodguard']['mute_length'] - (time.time() - self.wtce_mute_time)
+                if time.time() - self.wtce_mute_time < self.server.config[
+                        'wtce_floodguard']['mute_length']:
+                    return self.server.config['wtce_floodguard'][
+                        'mute_length'] - (time.time() - self.wtce_mute_time)
                 else:
                     self.wtce_mute_time = 0
-            times_per_interval = self.server.config['wtce_floodguard']['times_per_interval']
-            interval_length = self.server.config['wtce_floodguard']['interval_length']
+            times_per_interval = self.server.config['wtce_floodguard'][
+                'times_per_interval']
+            interval_length = self.server.config['wtce_floodguard'][
+                'interval_length']
             if time.time() - self.wtce_time[
-                (self.wtce_counter - times_per_interval + 1) % times_per_interval] < interval_length:
+                (self.wtce_counter - times_per_interval + 1) %
+                    times_per_interval] < interval_length:
                 self.wtce_mute_time = time.time()
-                return self.server.config['music_change_floodguard']['mute_length']
+                return self.server.config['music_change_floodguard'][
+                    'mute_length']
             self.wtce_counter = (self.wtce_counter + 1) % times_per_interval
             self.wtce_time[self.wtce_counter] = time.time()
             return 0
 
         def reload_character(self):
+            """Reload the state of the current character."""
             try:
-                self.change_character(self.char_id)
+                self.change_character(self.char_id, True)
             except ClientError:
                 raise
+
+        def clear_music(self):
+            self.music_ref = ''
+            self.override_music_list.clear()
+
+        def load_music(self, music_ref):
+            """Load a music list from a music_ref. Use it for the local music list and reload it."""
+            #TODO: Move the musiclist parsing function to tsuserver3.py or something
+            try:
+                with open(f'storage/musiclists/{music_ref}.yaml', 'r', encoding='utf-8') as stream:
+                    music_list = yaml.safe_load(stream)
+
+                prepath = ''
+                for item in music_list:
+                    if 'replace' in item:
+                        if 'use_unique_folder' in item and item['use_unique_folder'] == True:
+                            prepath = music_ref + '/'
+                        continue
+
+                    if 'category' not in item:
+                        continue
+
+                    for song in item['songs']:
+                        song['name'] = prepath + song['name']
+                self.music_ref = music_ref
+                self.override_music_list = music_list
+            except ValueError:
+                raise
+            except AreaError:
+                raise
+        
+        def construct_music_list(self, music_override = False):
+            """
+            Obtain the most relevant music list for the client.
+            :param music_override: when True, include the client's music override in the equation.
+            """
+            # Server music list
+            song_list = self.server.music_list
+
+            # Hub music list
+            if self.area.area_manager.replace_music:
+                song_list = self.area.area_manager.music_list
+            else:
+                song_list = song_list + self.area.area_manager.music_list
+
+            # Area music list
+            if self.area.replace_music:
+                song_list = self.area.music_list
+            else:
+                song_list = song_list + self.area.music_list
+
+            # Client override
+            if music_override and self.music_ref != '' and len(self.override_music_list) > 0:
+                song_list = self.override_music_list
+
+            return song_list
+
+        def refresh_music(self):
+            """
+            Rebuild the client's music list according to a priority Client override -> Area override -> Hub override.
+            """
+            song_list = self.construct_music_list(music_override=True)
+
+            # Update that boi's music list if there's a change
+            if self.local_music_list != song_list:
+                self.reload_music_list(song_list)
 
         def reload_music_list(self, music=[]):
             """
@@ -263,6 +455,7 @@ class ClientManager:
             else:
                 song_list = self.server.music_list
 
+            self.local_music_list = music
             song_list = self.server.build_music_list_ao2(song_list)
             # KEEP THE ASTERISK
             self.send_command('FM', *song_list)
@@ -274,289 +467,554 @@ class ClientManager:
             area_list = []
 
             if (len(areas) > 0):
-                area_list = areas
+                # This is where we can handle all the 'rendering', such as extra info etc.
+                for area in areas:
+                    #^B=1 is 'locked' color
+                    #^B=2 is 'looking for players' color
+                    #^B=3 is 'casing' color
+                    #^B=4 is 'recess' color
+                    #^B=5 is 'rp' color
+                    #^B=6 is 'gaming' color
+                    brush = ''
+                    area = f'{brush}{area.name}'
+                    area_list.append(area)
 
+            self.local_area_list = areas
             # KEEP THE ASTERISK
             self.send_command('FA', *area_list)
 
-        def change_hub(self, hub):
-            if self.hub == hub:
-                raise ClientError('User already in specified hub.')
-            self.hub = hub
-            self.change_area(hub.default_area())
-
-        def change_area(self, area, hidden=False):
-            if self.area == area:
-                raise ClientError('User already in specified area.')
-            # if self.area.jukebox:
-            #     self.area.remove_jukebox_vote(self, True)
-
-            old_area = self.area
-            allowed = self.is_cm or self.is_mod or self.get_char_name() == "Spectator"
-            if not allowed and not area.is_char_available(self.char_id):
-                try:
-                    new_char_id = area.get_rand_avail_char_id()
-                except AreaError:
-                    raise ClientError('No available characters in that area.')
-
-                self.change_character(new_char_id)
-                self.send_host_message('Character taken, switched to {}.'.format(self.get_char_name()))
-
+        def set_area(self, area, target_pos=''):
+            """
+            Unsafe method to set the client's area, sending all the relevant packet info.
+            Ignores preconditions like lock state, accessibility, char availability etc.
+            :param area: area to switch to
+            :param target_pos: which position to target in the new area
+            """
             self.area.remove_client(self)
             self.area = area
-            if len(area.pos_lock) > 0:
-                #We're going to change to the "default" poslock no matter what for the sake of puzzle rooms or the like having a "starting position".
-                self.change_position(area.pos_lock[0])
+            if len(area.pos_lock) > 0 and not (target_pos in area.pos_lock):
+                target_pos = area.pos_lock[0]
             area.new_client(self)
+            if target_pos != '':
+                self.pos = target_pos
 
-            if old_area.hub != self.area.hub:
-                old_area.hub.remove_client(self)
-                self.area.hub.new_client(self)
-            else:
-                for c in area.hub.clients():
-                    if c.following == self.id:
-                        c.change_area(area)
-                        c.send_host_message(
-                            'Following [{}] {} to {}. [HUB: {}]'.format(self.id, self.get_char_name(True), area.name, area.hub.abbreviation))
+            # Make sure the client's available areas are updated
+            self.area.broadcast_area_list(self)
 
-            if not self.sneak and not hidden and not self.get_char_name() == "Spectator":
-                old_area.send_host_message('[{}] {} leaves to [{}] {}. [HUB: {}]'.format(self.id, self.get_char_name(True), area.id, area.name, area.hub.abbreviation))
-                area.send_host_message('[{}] {} enters from [{}] {}. [HUB: {}]'.format(self.id, self.get_char_name(True), old_area.id, old_area.name, old_area.hub.abbreviation))
-            else:
-                self.send_host_message('You moved to [{}] {} unannounced. [HUB: {}]'.format(area.id, area.name, area.hub.abbreviation))
-
-            logger.log_server('Changed area from {} (A{} H{}) to {} (A{} H{}).'.format(old_area.name, old_area.id, old_area.hub.id, self.area.name, self.area.id, self.area.hub.id), self)
-            self.area.send_command('CharsCheck', *self.get_available_char_list())
+            # HAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHHAHAHAHAHA
+            # This should be remade by only sending updates to those players
+            # who would actually be affected, and all players who don't need
+            # an update are ignored.
+            self.area.area_manager.send_arup_players()
+            self.area.area_manager.send_arup_status()
+            self.area.area_manager.send_arup_cms()
+            self.area.area_manager.send_arup_lock()
+            # HAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHHAHAHAHAHA
+            
+            # Update everyone's available characters list
+            self.area.send_command('CharsCheck',
+                                   *self.get_available_char_list())
+            # Get defense HP bar
             self.send_command('HP', 1, self.area.hp_def)
+            # Get prosecution HP bar
             self.send_command('HP', 2, self.area.hp_pro)
+            # Send the background information
             self.send_command('BN', self.area.background, self.pos)
             if len(self.area.pos_lock) > 0:
-                self.send_command('SD', '*'.join(self.area.pos_lock)) #set that juicy pos dropdown
+                #set that juicy pos dropdown
+                self.send_command('SD', '*'.join(self.area.pos_lock))
+            # Send the evidence information
             self.send_command('LE', *self.area.get_evidence_list(self))
+            self.refresh_music()
             if self.area.desc != '':
                 desc = self.area.desc[:128]
                 if len(self.area.desc) > len(desc):
                     desc += "... Use /desc to read the rest."
-                self.send_host_message('Area Description: {}'.format(desc))
+                self.send_ooc(f'Description: {desc}')
 
-        def get_area_list(self, hidden=False, accessible=False):
+        def can_access_area(self, area):
+            return len(self.area.links) <= 0 or (str(area.id) in self.area.links and \
+                not self.area.links[str(area.id)]["locked"] and \
+                    (len(self.area.links[str(area.id)]["evidence"]) <= 0 or \
+                        self.hidden_in in self.area.links[str(area.id)]["evidence"]))
+
+        def change_area(self, area):
+            """
+            Switch the client to another area, unless the area is locked.
+            :param area: area to switch to
+            """
+            if self.area == area:
+                raise ClientError('User already in specified area.')
+            if not (area == area.area_manager.default_area()) and self.area.is_locked == area.Locked.LOCKED and not self.is_mod and not self.id in self.area.invite_list and not self.id in self.area.owners:
+                raise ClientError('Your current area is locked! You may not leave.')
+            target_pos = ''
+            allowed = self.is_mod or self in area.owners or self in self.area.owners
+            if len(self.area.links) > 0:
+                if not str(area.id) in self.area.links and not allowed and not self.char_id == -1 and not area == area.area_manager.default_area():
+                    raise ClientError('That area is inaccessible from your area!')
+
+                if str(area.id) in self.area.links:
+                    # Get that link reference
+                    link = self.area.links[str(area.id)]
+
+                    # Link requires us to be inside a piece of evidence
+                    if len(link["evidence"]) > 0:
+                        if not (self.hidden_in in link["evidence"]) and not allowed:
+                            raise ClientError('That area is inaccessible!')
+                    else:
+                        if self.hidden_in != None:
+                            # You gotta unhide first lol
+                            self.hide(False)
+                            self.area.broadcast_area_list(self)
+                            raise ClientError('You had to leave your hiding spot - area transfer failed.')
+
+                    # Our path is locked :(
+                    if link["locked"] and not allowed and not self.char_id == -1 and not area == area.area_manager.default_area():
+                        raise ClientError('That path is locked - cannot access area!')
+
+                    target_pos = link["target_pos"]
+
+            if area.is_locked == area.Locked.LOCKED and not self.is_mod and not self.id in area.invite_list and not self.id in area.owners:
+                raise ClientError('That area is locked!')
+
+            if not allowed and not self.char_id == -1 and not area == area.area_manager.default_area():
+                if area.max_players > 0:
+                    players = len([x for x in area.clients if (not x in area.owners and not x.is_mod and not x.hidden)])
+                    if players >= area.max_players:
+                        raise ClientError('That area is full!')
+                elif area.max_players == 0:
+                    raise ClientError('That area cannot be accessed by normal means!')
+
+            delay = self.area.time_until_move(self)
+            if delay > 0:
+                sec = int(math.ceil(delay * 0.001))
+                raise ClientError(f'You need to wait {sec} seconds until you can move again.')
+
+            if area.cannot_ic_interact(self):
+                self.send_ooc(
+                    'This area is spectatable, but not free - you cannot talk in-character unless invited.'
+                )
+
+            # Mods and area owners can be any character regardless of availability
+            if not self.char_id == -1 and not area.is_char_available(self.char_id) and not self.is_mod and self not in area.owners:
+                self.check_char_taken(area)
+
+            old_area = self.area
+            self.set_area(area, target_pos)
+            self.last_move_time = round(time.time() * 1000.0)
+
+            for c in self.server.client_manager.clients:
+                if c.following == self.id:
+                    c.change_area(area)
+                    c.send_ooc(
+                        f'Following [{self.id}] {self.char_name} to {area.name}.')
+
+            if not self.sneaking and not self.hidden:
+                old_area.broadcast_ooc(
+                    f'[{self.id}] {self.char_name} leaves to [{area.id}] {area.name}.')
+                area.broadcast_ooc(
+                    f'[{self.id}] {self.char_name} enters from [{old_area.id}] {old_area.name}.')
+            else:
+                self.send_ooc(
+                    f'Changed area to {area.name} unannounced.')
+
+        def get_area_list(self, hidden=False, linked=False):
             area_list = []
-            for area in self.hub.areas:
-                if self.area != area and len(self.area.accessible) > 0 and not (area.id in self.area.accessible):
-                    if accessible:
+            for area in self.area.area_manager.areas:
+                if self.area != area and len(self.area.links) > 0:
+                    if hidden and area.hidden:
+                        continue
+                    elif not (str(area.id) in self.area.links):
+                        if linked:
+                            continue
+                    elif hidden and self.area.links[str(area.id)]["hidden"] == True:
+                        continue
+                    elif hidden and len(self.area.links[str(area.id)]["evidence"]) > 0 and not self.hidden_in in self.area.links[str(area.id)]["evidence"]:
                         continue
 
-                if hidden and self.area != area and area.is_hidden:
-                    continue
-                
-                # if self.area == area:
-                #     continue
                 area_list.append(area)
 
             return area_list
 
-        def show_area_list(self, hidden=False, accessible=False):
-            acc = ''
-            if accessible:
-                acc = 'Accessible '
-            msg = '=== {}Areas for Hub [{}]: {} ==='.format(acc, self.hub.id, self.hub.name)
-            lock = {True: '[L]', False: ''}
-            hide = {True: '[H]', False: ''}
-            mute = {True: '[M]', False: ''}
-            for area in self.get_area_list(hidden, accessible):
-                users = ''
-                lo = ''
-                hi = ''
-                acc = ''
-                me = ''
-                mu = ''
-                if self.area != area and len(self.area.accessible) > 0 and not (area.id in self.area.accessible):
-                    if not accessible:
-                        acc = '<X>'
-
-                if not hidden:
-                    users = '(users: {}) '.format(len(area.clients))
-                    lo = lock[area.is_locked]
-                    hi = hide[area.is_hidden]
-                    mu = mute[area.mute_ic]
-                
-                if self.area == area:
-                    lo = lock[area.is_locked]
-                    hi = hide[area.is_hidden]
-                    mu = mute[area.mute_ic]
-                    me = '[*]'
-
-                msg += '\r\n{}Area {}: {}{} {}{}{}{}'.format(
-                    me, area.id, acc, area.name, users, lo, hi, mu)
-            self.send_host_message(msg)
-
-        def send_hub_list(self):
-            msg = '=== Hubs ==='.format(self.hub.name)
-            for i, hub in enumerate(self.server.hub_manager.hubs):
-                owner = 'FREE'
-                if hub.master:
-                    owner = 'MASTER: {}'.format(hub.master.name)
-                msg += '\r\nHub {}: {} (users: {}) [{}][{}]'.format(
-                    i, hub.name, len(hub.clients()), hub.status, owner)
-                if self.hub == hub:
-                    msg += ' [*]'
-            self.send_host_message(msg)
-
-        def get_area_info(self, area_id):
+        def check_char_taken(self, area):
             try:
-                area = self.hub.get_area_by_id(area_id)
+                new_char_id = area.get_rand_avail_char_id()
+            except AreaError:
+                raise ClientError('No available characters in that area.')
+
+            self.change_character(new_char_id)
+            self.send_ooc(
+                f'Character taken, switched to {self.char_name}.')
+            return new_char_id
+
+        def send_area_list(self):
+            """Send a list of areas over OOC."""
+            msg = '=== Areas ==='
+            for _, area in enumerate(self.local_area_list):
+                owner = ''
+                if len(area.owners) > 0:
+                    owner = f'[CMs: {area.get_cms()}]'
+                lock = {
+                    area.Locked.FREE: '',
+                    area.Locked.SPECTATABLE: '[SPEC]',
+                    area.Locked.LOCKED: '[LOCK]'
+                }
+                users = ''
+                if not area.hide_clients:
+                    clients = area.clients
+                    if not self.is_mod and not self in area.owners:
+                        clients = [c for c in area.clients if not c.hidden]
+                    users = len(clients)
+                    users = f'(users: {users}) '
+                msg += f'\r\n[{area.id}] {area.abbreviation}: {area.name} {users}[{area.status}]{owner}{lock[area.is_locked]}'
+                if self.area == area:
+                    msg += ' [*]'
+            self.send_ooc(msg)
+
+        def get_area_info(self, area_id, mods, afk_check):
+            """
+            Get information about a specific area.
+            :param area_id: area ID
+            :param mods: limit player list to mods
+            :param afk_check: Limit player list to afks
+            :returns: information as a string
+            """
+            info = '\r\n'
+            try:
+                area = self.area.area_manager.get_area_by_id(area_id)
             except AreaError:
                 raise
-            info = '= Area {}: {} =='.format(area.id, area.name)
+            info += f'=== {area.name} ==='
+            info += '\r\n'
+
+            lock = {
+                area.Locked.FREE: '',
+                area.Locked.SPECTATABLE: '[SPEC]',
+                area.Locked.LOCKED: '[LOCK]'
+            }
+            if afk_check:
+                player_list = area.afkers
+            else:
+                player_list = area.clients
             
+            if not self.is_mod and not self in area.owners:
+                # We exclude hidden players here because we don't want them to count for the user count
+                player_list = [c for c in player_list if not c.hidden]
+            info += f'[{area.abbreviation}]: [{len(player_list)} users][{area.status}]{lock[area.is_locked]}'
+
             sorted_clients = []
-            for client in area.clients:
-                if (not client.hidden and client.get_char_name() != "Spectator") or self.is_cm or self.is_mod or self.get_char_name() == "Spectator":
+            for client in player_list:
+                if (not mods) or client.is_mod:
                     sorted_clients.append(client)
-            sorted_clients = sorted(sorted_clients, key=lambda x: x.get_char_name(True))
+            for owner in area.owners:
+                if not (mods or owner in player_list):
+                    sorted_clients.append(owner)
+            if not sorted_clients:
+                return ''
+            sorted_clients = sorted(sorted_clients,
+                                    key=lambda x: x.char_name or '')
             for c in sorted_clients:
                 info += '\r\n'
-                if c == self:
-                    info += '[*]'
-                if c.is_cm:
-                    info += '[CM]'
-                if self.is_cm or self.is_mod:
-                    info += '[{}] {}'.format(c.id, c.get_char_name(False))
-                    if c.get_char_name() != c.get_char_name(True):
-                        info += f' / {c.get_char_name(True)}'
-                else:
-                    info += '[{}] {}'.format(c.id, c.get_char_name(True))
-                    if c.sneak and c != self: #alert the poor lad he got spotted
-                        c.send_host_message(f'You\'ve been spotted by [{self.id}] {self.get_char_name(True)}!')
-                if len(area.pos_lock) != 1 and c.pos != "": #we're not on a single-pos area
-                    info += ' <{}>'.format(c.pos)
-                if self.is_mod:
-                    info += ' ({})'.format(c.ipid)
-                if c.sneak:
-                    info += ' [S]'
+                if c in area.owners:
+                    if not c in player_list:
+                        info += '[RCM]'
+                    else:
+                        info += '[CM]'
+                if c in area.afkers:
+                    info += '[AFK]'
                 if c.hidden:
-                    info += ' [H]'
-                if c.blinded:
-                    info += ' [Z]' #for "catching some Z's"
+                    if c.hidden_in != None:
+                        name = f':{c.area.evi_list.evidences[c.hidden_in].name}'
+                    info += f'[HID{name}]'
+                info += f' [{c.id}] {c.char_name}'
+                if c.pos != '':
+                    info += f' <{c.pos}>'
+                if self.is_mod:
+                    info += f' ({c.ipid}): {c.name}'
             return info
 
-        def send_area_info(self, area_id, hidden=False): 
-            #if area_id is -1 then return all areas.
+        def send_area_info(self, area_id, mods, afk_check=False):
+            """
+            Send information over OOC about a specific area.
+            :param area_id: area ID
+            :param mods: limit player list to mods
+            :param afk_check: Limit player list to afks
+            """
+            # if area_id is -1 then return all areas. If mods is True then return only mods
             info = ''
             if area_id == -1:
                 # all areas info
                 cnt = 0
-                for i in range(len(self.hub.areas)):
-                    if len(self.hub.areas[i].clients) > 0:
-                        cnt += len(self.hub.areas[i].clients)
-                        info += '\r\n{}'.format(self.get_area_info(i))
-                if not hidden:
-                    info = 'Current online: {}'.format(cnt) + info
+                info = '\n== Area List =='
+                for i in range(len(self.area.area_manager.areas)):
+                    area = self.area.area_manager.areas[i]
+                    if afk_check:
+                        client_list = area.afkers
+                    else:
+                        client_list = area.clients
+                    if not self.is_mod and not self in area.owners:
+                        # We exclude hidden players here because we don't want them to count for the user count
+                        client_list = [c for c in client_list if not c.hidden]
+                    area_info = self.get_area_info(i, mods, afk_check)
+                    if len(client_list) > 0 or len(
+                               self.area.area_manager.areas[i].owners) > 0:
+                        cnt += len(client_list)
+                        info += f'{area_info}'
+                if afk_check:
+                    info = f'Current AFK-ers: {cnt}{info}'
+                else:
+                    info = f'Current online: {cnt}{info}'
             else:
                 try:
-                    info = ''
-                    if not hidden:
-                        info = 'People in this area: {}\n'.format(len(self.hub.clients()))
-                    info += self.get_area_info(area_id)
+                    area = self.area.area_manager.areas[area_id]
+                    if afk_check:
+                        client_list = area.afkers
+                    else:
+                        client_list = area.clients
+                    if not self.is_mod and not self in area.owners:
+                        # We exclude hidden players here because we don't want them to count for the user count
+                        client_list = [c for c in client_list if not c.hidden]
+                    area_info = self.get_area_info(area_id, mods, afk_check)
+                    area_client_cnt = len(client_list)
+                    if afk_check:
+                        info = f'People AFK-ing in this area: {area_client_cnt}'
+                    else:
+                        info = f'People in this area: {area_client_cnt}'
+                    info += area_info
+
                 except AreaError:
                     raise
-            self.send_host_message(info)
+            self.send_ooc(info)
 
-        def send_area_hdid(self, area_id):
-            try:
-                info = self.get_area_hdid(area_id)
-            except AreaError:
-                raise
-            self.send_host_message(info)
-
-        def send_all_area_hdid(self):
-            info = '== HDID List =='
-            for i in range (len(self.hub.areas)):
-                 if len(self.hub.areas[i].clients) > 0:
-                    info += '\r\n{}'.format(self.get_area_hdid(i))
-            self.send_host_message(info)
-
-        def send_all_area_ip(self):
-            info = '== IP List =='
-            for i in range (len(self.hub.areas)):
-                 if len(self.hub.areas[i].clients) > 0:
-                    info += '\r\n{}'.format(self.get_area_ip(i))
-            self.send_host_message(info)
+        def send_hub_list(self):
+            msg = '=== Hubs ==='
+            for hub in self.server.hub_manager.hubs:
+                owner = 'FREE'
+                if len(hub.owners) > 0:
+                    owner = hub.owners[0]
+                    owner = f'[{owner.id}] {owner.char_name}'
+                msg += f'\r\n[{hub.id}] {hub.abbreviation}: {hub.name} (users: {len(hub.clients)}) {owner}'
+                if self.area.area_manager == hub:
+                    msg += ' [*]'
+            self.send_ooc(msg)
 
         def send_done(self):
+            """
+            Send area information and finish the join handshake.
+            This unconditionally causes the client to show the character
+            selection screen, even if the client has already joined.
+            """
             self.send_command('CharsCheck', *self.get_available_char_list())
             self.send_command('HP', 1, self.area.hp_def)
             self.send_command('HP', 2, self.area.hp_pro)
             self.send_command('BN', self.area.background, self.pos)
-            if len(self.area.pos_lock) > 0:
-                self.send_command('SD', '*'.join(self.area.pos_lock)) #set that juicy pos dropdown
             self.send_command('LE', *self.area.get_evidence_list(self))
             self.send_command('MM', 1)
 
-            # self.server.hub_manager.send_arup_players()
-            # self.server.hub_manager.send_arup_status()
-            # self.server.hub_manager.send_arup_cms()
-            # self.server.hub_manager.send_arup_lock()
+            self.area.area_manager.send_arup_players()
+            self.area.area_manager.send_arup_status()
+            self.area.area_manager.send_arup_cms()
+            self.area.area_manager.send_arup_lock()
 
             self.send_command('DONE')
 
         def char_select(self):
+            """Force the client to select a different character."""
             self.char_id = -1
             self.send_done()
 
         def get_available_char_list(self):
+            """Get a list of character IDs that the client can select."""
             if len(self.charcurse) > 0:
-                avail_char_ids = set(range(len(self.server.char_list))) and set(self.charcurse)
+                avail_char_ids = set(range(len(
+                    self.server.char_list))) and set(self.charcurse)
             else:
-                avail_char_ids = set(range(len(self.server.char_list))) - set([x.char_id for x in self.area.clients])
+                avail_char_ids = set(range(len(self.server.char_list))) - {
+                    x.char_id
+                    for x in self.area.clients
+                }
             char_list = [-1] * len(self.server.char_list)
             for x in avail_char_ids:
                 char_list[x] = 0
             return char_list
 
         def auth_mod(self, password):
+            """
+            Attempt to log in as a moderator.
+            :param password: password string
+            :returns: name of profile which the password belongs to, if login
+            was successful
+            :raises: ClientError if password is incorrect
+            """
+            modpasses = self.server.config['modpass']
+            if isinstance(modpasses, dict):
+                matches = [k for k in modpasses
+                    if modpasses[k]['password'] == password]
+            elif modpasses == password:
+                matches = ['default']
+            else:
+                matches = []
+
             if self.is_mod:
                 raise ClientError('Already logged in.')
-            if password == self.server.config['modpass']:
+            elif len(matches) > 0:
                 self.is_mod = True
+                self.mod_profile_name = matches[0]
+                return self.mod_profile_name
             else:
                 raise ClientError('Invalid password.')
 
-        def get_ip(self):
+        @property
+        def ip(self):
+            """Get an anonymized version of the IP address."""
             return self.ipid
 
-        def get_char_name(self, custom=False):
+        @property
+        def char_name(self):
+            """Get the name of the character that the client is using."""
             if self.char_id == -1:
-                return 'CHAR_SELECT'
-            if custom and self.last_showname != '':
-                return self.last_showname
+                return 'Spectator'
             return self.server.char_list[self.char_id]
 
+        @property
+        def move_delay(self):
+            """Get the character's movement delay."""
+            return self.area.area_manager.get_character_data(self.char_id, 'move_delay', 0)
+
+        @move_delay.setter
+        def move_delay(self, value):
+            """Set the character's move delay in the character data."""
+            self.area.area_manager.set_character_data(self.char_id, 'move_delay', value)
+
+        @property
+        def keys(self):
+            """Get the character's keys."""
+            return self.area.area_manager.get_character_data(self.char_id, 'keys', [])
+
+        @keys.setter
+        def keys(self, value):
+            """Set the character's keys in the character data."""
+            self.area.area_manager.set_character_data(self.char_id, 'keys', value)
+
+        @property
+        def hidden(self):
+            """Return if the character is hidden or not. Always True if char_id is -1 (spectator)"""
+            return self.char_id == -1 or self._hidden
+
+        def hide(self, tog=True, target=None, hidden=False):
+            self._hidden = tog
+            msg = 'no longer hidden'
+            if tog:
+                msg = 'now hidden'
+                if target != None:
+                    evidence = None
+                    for i, evi in enumerate(self.area.evi_list.evidences):
+                        if not self.area.evi_list.can_see(evi, self.pos):
+                            continue
+                        if (target.lower() == evi.name.lower() or target == str(i)):
+                            if not self.area.evi_list.can_hide_in(evi):
+                                raise ClientError('Targeted evidence cannot be hidden in.')
+                            evidence = i
+                            break
+                    if evidence != None:
+                        evi = self.area.evi_list.evidences[evidence]
+                        if evi.hiding_client != None:
+                            c = evi.hiding_client
+                            c.hide(False)
+                            c.area.broadcast_area_list(c)
+                            raise ClientError(f'{c.char_name} was already hiding in that evidence!')
+                        self.hidden_in = evidence
+                        evi.hiding_client = self
+                        msg += f' inside the {evi.name}'
+                    else:
+                        raise ClientError('Targeted evidence does not exist.')
+            else:
+                if self.hidden_in != None:
+                    evi = self.area.evi_list.evidences[self.hidden_in]
+                    evi.hiding_client = None
+                    self.hidden_in = None
+                    if not hidden:
+                        self.area.broadcast_ooc(f'{self.char_name} emerges from the {evi.name}!')
+                    
+            self.send_ooc(f'You are {msg} from /getarea and playercounts.')
+            self.area.area_manager.send_arup_players()
+
+        def blind(self, tog=True):
+            self.blinded = tog
+            msg = 'no longer'
+            if tog:
+                msg = 'now'
+            self.send_ooc(f'You are {msg} blinded from the area and seeing non-broadcasted IC messages.')
+            self.send_command('LE', *self.area.get_evidence_list(self))
+
+        def sneak(self, tog=True):
+            self.sneaking = tog
+            msg = 'no longer'
+            if tog:
+                msg = 'now'
+            self.send_ooc(f'You are {msg} sneaking (area transfer announcements will {msg} be hidden).')
+
+        def follow(self, target):
+            try:
+                self.change_area(target.area)
+                self.following = target.id
+                self.send_ooc(
+                    'You are now following [{}] {}.'.format(target.id, target.char_name))
+            except ValueError:
+                raise
+            except (AreaError, ClientError):
+                raise
+        
+        def unfollow(self):
+            if self.following != None:
+                try:
+                    c = self.server.client_manager.get_targets(
+                        self, TargetType.ID, int(self.following), False)[0]
+                    self.send_ooc(
+                        'You are no longer following [{}] {}.'.format(c.id, c.char_name))
+                    self.following = None
+                except:
+                    self.following = None
+
         def change_position(self, pos=''):
-            # if pos not in ('', 'def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'jur', 'sea'):
-            #     raise ClientError('Invalid position. Possible values: def, pro, hld, hlp, jud, wit, jur, sea.')
+            """
+            Change the character's current position in the area.
+            :param pos: position in area (Default value = '')
+            """
+            if self.hidden_in != None:
+                # YOU DARE MOVE?!
+                self.hide(False)
+                self.area.broadcast_area_list(self)
             self.pos = pos
-            self.send_host_message('Position set to {}.'.format(pos))
-            self.send_command('SP', self.pos) #Send a "Set Position" packet
-            self.area.update_evidence_list(self) #Receive evidence
+            self.send_ooc(f'Position set to {pos}.')
+            # Send a "Set Position" packet
+            self.send_command('SP', self.pos)
+            # Send evidence list
+            self.send_command('LE', *self.area.get_evidence_list(self))
 
         def set_mod_call_delay(self):
+            """Begin the mod call cooldown."""
             self.mod_call_time = round(time.time() * 1000.0 + 30000)
 
         def can_call_mod(self):
+            """Whether or not the client can currently call mod."""
             return (time.time() * 1000.0 - self.mod_call_time) > 0
 
         def set_case_call_delay(self):
+            """Begin the case announcement cooldown."""
             self.case_call_time = round(time.time() * 1000.0 + 60000)
 
         def can_call_case(self):
+            """Whether or not the client can currently announce a case."""
             return (time.time() * 1000.0 - self.case_call_time) > 0
 
         def disemvowel_message(self, message):
-            message = re.sub("[aeiou]", "", message, flags=re.IGNORECASE)
-            return re.sub(r"\s+", " ", message)
+            """Disemvowel a chat message."""
+            message = re.sub('[aeiou]', '', message, flags=re.IGNORECASE)
+            return re.sub(r'\s+', ' ', message)
 
         def shake_message(self, message):
+            """Mix the words in a chat message."""
             import random
             parts = message.split()
             random.shuffle(parts)
@@ -566,34 +1024,76 @@ class ClientManager:
         self.clients = set()
         self.server = server
         self.cur_id = [i for i in range(self.server.config['playerlimit'])]
-        self.clients_list = []
+
+    def new_client_preauth(self, client):
+        maxclients = self.server.config['multiclient_limit']
+        for c in self.server.client_manager.clients:
+            if c.ipid == client.ipid:
+                if c.clientscon > maxclients:
+                    return False
+        return True
 
     def new_client(self, transport):
-        c = self.Client(self.server, transport, heappop(self.cur_id),
-                        self.server.get_ipid(transport.get_extra_info('peername')[0]))
+        """
+        Create a new client, add it to the list, and assign it a player ID.
+        :param transport: asyncio transport
+        """
+        try:
+            user_id = heappop(self.cur_id)
+        except IndexError:
+            transport.write(b'BD#This server is full.#%')
+            raise ClientError
+
+        peername = transport.get_extra_info('peername')[0]
+        
+        c = self.Client(
+            self.server, transport, user_id,
+            database.ipid(peername))
         self.clients.add(c)
+        temp_ipid = c.ipid
+        for client in self.server.client_manager.clients:
+            if client.ipid == temp_ipid:
+                client.clientscon += 1
         return c
 
     def remove_client(self, client):
-        # if client.area.jukebox:
-        #     client.area.remove_jukebox_vote(client, True)
-        # for a in self.server.hub_manager.areas:
-        #     if client in a.owners:
-        #         a.owners.remove(client)
-        #         client.server.hub_manager.send_arup_cms()
-        #         if len(a.owners) == 0:
-        #             if a.is_locked != a.Locked.FREE:
-        #                 a.unlock()
+        """
+        Remove a disconnected client from the client list.
+        :param client: disconnected client
+        """
+        if client.area.jukebox:
+            client.area.remove_jukebox_vote(client, True)
+        for a in client.area.area_manager.areas:
+            if client in a.owners:
+                a.owners.remove(client)
+                client.area.area_manager.send_arup_cms()
+                if len(a.owners) == 0:
+                    if a.is_locked != a.Locked.FREE:
+                        a.unlock()
         heappush(self.cur_id, client.id)
+        temp_ipid = client.ipid
+        for c in self.server.client_manager.clients:
+            if c.ipid == temp_ipid:
+                c.clientscon -= 1
         self.clients.remove(client)
 
-    def get_targets(self, client, key, value, local=False):
-        # possible keys: ip, OOC, id, cname, ipid, hdid
+    def get_targets(self, client, key, value, local=False, single=False):
+        """
+        Find players by a combination of identifying data.
+        Possible keys: player ID, OOC name, character name, HDID, IPID,
+        IP address (same as IPID)
+
+        :param client: client
+        :param key: the type of identifier that `value` represents
+        :param value: data identifying a client
+        :param local: search in current area only (Default value = False)
+        :param single: search only a single user (Default value = False)
+        """
         areas = None
         if local:
             areas = [client.area]
         else:
-            areas = client.hub.areas
+            areas = client.area.area_manager.areas
         targets = []
         if key == TargetType.ALL:
             for nkey in range(6):
@@ -601,13 +1101,15 @@ class ClientManager:
         for area in areas:
             for client in area.clients:
                 if key == TargetType.IP:
-                    if value.lower().startswith(client.get_ip().lower()):
+                    if value.lower().startswith(client.ip.lower()):
                         targets.append(client)
                 elif key == TargetType.OOC_NAME:
-                    if value.lower().startswith(client.name.lower()) and client.name:
+                    if value.lower().startswith(
+                            client.name.lower()) and client.name:
                         targets.append(client)
                 elif key == TargetType.CHAR_NAME:
-                    if value.lower().startswith(client.get_char_name(True).lower()):
+                    if value.lower().startswith(
+                            client.char_name.lower()):
                         targets.append(client)
                 elif key == TargetType.ID:
                     if client.id == value:
@@ -615,9 +1117,13 @@ class ClientManager:
                 elif key == TargetType.IPID:
                     if client.ipid == value:
                         targets.append(client)
+                elif key == TargetType.AFK:
+                    if client in area.afkers:
+                        targets.append(client)
         return targets
 
     def get_muted_clients(self):
+        """Get a list of muted clients."""
         clients = []
         for client in self.clients:
             if client.is_muted:
@@ -625,8 +1131,30 @@ class ClientManager:
         return clients
 
     def get_ooc_muted_clients(self):
+        """Get a list of OOC-muted clients."""
         clients = []
         for client in self.clients:
             if client.is_ooc_muted:
                 clients.append(client)
         return clients
+
+    def toggle_afk(self, client):
+            if client in client.area.afkers:
+                client.area.broadcast_ooc('{} is no longer AFK.'.format(client.char_name))
+                client.send_ooc('You are no longer AFK. Welcome back!')  # Making the server a bit friendly wouldn't hurt, right?
+                client.area.afkers.remove(client)
+            else:
+                client.area.broadcast_ooc('{} is now AFK.'.format(client.char_name))
+                client.send_ooc('You are now AFK. Have a good day!')
+                client.area.afkers.append(client)
+
+    def refresh_music(self, clients=None):
+        """
+        Refresh the listed clients' music lists.
+        :param clients: list of clients whose music lists should be regenerated.
+
+        """
+        if clients == None:
+            clients = self.clients
+        for client in clients:
+            client.refresh_music()

@@ -18,24 +18,32 @@
 import asyncio
 import re
 import unicodedata
-from enum import Enum
-from time import gmtime, localtime, strftime
 
-from server import commands
-from server import logger
+import logging
+
+logger_debug = logging.getLogger('debug')
+logger = logging.getLogger('events')
+
+from enum import Enum
+
+import arrow
+from time import localtime, strftime
+
+from server import database
 from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
 from server.fantacrypt import fanta_decrypt
+from .. import commands
 
 
 class AOProtocol(asyncio.Protocol):
-    """
-    The main class that deals with the AO protocol.
-    """
+    """The main class that deals with the AO protocol."""
 
     class ArgType(Enum):
+        """Represents the data type of an argument for a network command."""
         STR = 1,
         STR_OR_EMPTY = 2,
-        INT = 3
+        INT = 3,
+        INT_OR_STR = 3
 
     def __init__(self, server):
         super().__init__()
@@ -44,20 +52,34 @@ class AOProtocol(asyncio.Protocol):
         self.buffer = ''
         self.ping_timeout = None
 
-    def data_received(self, data):
-        """ Handles any data received from the network.
+    def dezalgo(self, input):
+        """
+        Turns any string into a de-zalgo'd version, with a tolerance to allow for normal diacritic use.
 
+        The following Unicode blocks are scrubbed:
+        U+0300 - U+036F - COMBINING DIACRITICAL MARKS
+        U+1AB0 - U+1AFF - COMBINING DIACRITICAL MARKS EXTENDED
+        U+1DC0 - U+1DFF - COMBINING DIACRITICAL MARKS SUPPLEMENT
+        U+20D0 - U+20FF - COMBINING DIACRITICAL MARKS FOR SYMBOLS
+        U+FE20 - U+FE2F - COMBINING HALF MARKS
+        """
+
+        filtered = re.sub('([\u0300-\u036f\u1ab0-\u1aff\u1dc0-\u1dff\u20d0-\u20ff\ufe20-\ufe2f]' +
+                          '{' + re.escape(str(self.server.zalgo_tolerance)) + ',})',
+                          '', input)
+        return filtered
+
+    def data_received(self, data):
+        """Handles any data received from the network.
+        
         Receives data, parses them into a command and passes it
         to the command handler.
 
         :param data: bytes of data
-        """
-        buf = data.replace(b'\0', b'')
 
-        if not self.client.is_checked and self.server.ban_manager.is_banned(self.client.ipid):
-            self.client.transport.close()
-        else:
-            self.client.is_checked = True
+        """
+        buf = data
+        ipid = self.client.ipid
 
         if buf is None:
             buf = b''
@@ -67,6 +89,8 @@ class AOProtocol(asyncio.Protocol):
             self.buffer += buf.decode('utf-8', 'ignore')
         else:
             self.buffer = buf
+
+        self.buffer = self.buffer.translate({ord(c): None for c in '\0'})
 
         if len(self.buffer) > 8192:
             self.client.disconnect()
@@ -79,85 +103,69 @@ class AOProtocol(asyncio.Protocol):
                     msg = msg[1:]
                 spl = msg.split('#', 1)
                 msg = '#'.join([fanta_decrypt(spl[0])] + spl[1:])
-                logger.log_debug('[INC][RAW]{}'.format(msg), self.client)
             try:
                 cmd, *args = msg.split('#')
                 self.net_cmd_dispatcher[cmd](self, args)
             except KeyError:
-                logger.log_debug('[INC][UNK]{}'.format(msg), self.client)
+                logger_debug.debug(f'Unknown incoming message from {ipid}: {msg}')
 
     def connection_made(self, transport):
-        """ Called upon a new client connecting
+        """Called upon a new client connecting
 
         :param transport: the transport object
         """
-        self.client = self.server.new_client(transport)
-        self.ping_timeout = asyncio.get_event_loop().call_later(self.server.config['timeout'], self.client.disconnect)
-        asyncio.get_event_loop().call_later(0.25, self.client.send_command, 'decryptor', 34)  # just fantacrypt things)
+        try:
+            self.client = self.server.new_client(transport)
+        except ClientError:
+            transport.close()
+            return
+
+        if not self.server.client_manager.new_client_preauth(self.client):
+            self.client.send_command('BD', 'Maximum clients reached.\nDisconnect one of your clients to continue.')
+            self.client.disconnect()
+            return
+
+        # Client needs to send CHECK#% within the timeout - otherwise,
+        # it will be automatically dropped.
+        self.ping_timeout = asyncio.get_event_loop().call_later(
+            self.server.config['timeout'], self.client.disconnect)
+
+        asyncio.get_event_loop().call_later(0.25, self.client.send_command,
+                                            'decryptor',
+                                            34)  # just fantacrypt things)
 
     def connection_lost(self, exc):
-        """ User disconnected
+        """User disconnected
 
         :param exc: reason
+
         """
-        self.server.remove_client(self.client)
-        self.ping_timeout.cancel()
+        if self.client is not None:
+            logger.debug(f'{self.client.ipid} disconnected.')
+            self.server.remove_client(self.client)
+        if self.ping_timeout is not None:
+            self.ping_timeout.cancel()
 
     def get_messages(self):
-        """ Parses out full messages from the buffer.
+        """Parses out full messages from the buffer.
 
         :return: yields messages
+
         """
         while '#%' in self.buffer:
             spl = self.buffer.split('#%', 1)
             self.buffer = spl[1]
             yield spl[0]
-        # exception because bad netcode
-        askchar2 = '#615810BC07D12A5A#'
-        if self.buffer == askchar2:
-            self.buffer = ''
-            yield askchar2
-
-    def parse_msg_delay(self, msg):
-        """ Parses the correct delay for the message supporting escaped characters and }}} {{{ speed-ups/slowdowns.
-
-        :param msg: the string
-        :return: delay integer in ms
-        """
-        #Fastest - Default - Slowest. These are default values in ms for KFO Client.
-        message_display_speed = [0, 10, 25, 40, 50, 70, 90]
-
-        #Starts in the middle of the messageDisplaySpeed list
-        current_display_speed = 3
-
-        #The 'meh' part of this is we can't exactly calculate accurately if color chars are used (as they could change clientside).
-        formatting_chars = "@$`|_~%\\}{" 
-
-        calculated_delay = 0
-
-        escaped = False
-
-        for symbol in msg:
-            if symbol in formatting_chars and not escaped:
-                if symbol == "\\":
-                    escaped = True
-                elif symbol == "{": #slow down
-                    current_display_speed = min(len(message_display_speed)-1, current_display_speed + 1)
-                elif symbol == "}": #speed up
-                    current_display_speed = max(0, current_display_speed - 1)
-                continue
-            elif escaped and symbol == "n": #Newline monstrosity
-                continue
-            calculated_delay += message_display_speed[current_display_speed]
-        return calculated_delay
 
     def validate_net_cmd(self, args, *types, needs_auth=True):
-        """ Makes sure the net command's arguments match expectations.
+        """Makes sure the net command's arguments match expectations.
 
         :param args: actual arguments to the net command
         :param types: what kind of data types are expected
-        :param needs_auth: whether you need to have chosen a character
-        :return: returns True if message was validated
+        :param needs_auth: whether you need to have chosen a character (Default value = True)
+        :param *types: list of types corresponding to each argument in the command
+        :returns: returns True if message was validated
+
         """
         if needs_auth and self.client.char_id == -1:
             return False
@@ -174,82 +182,69 @@ class AOProtocol(asyncio.Protocol):
         return True
 
     def net_cmd_hi(self, args):
-        """ Handshake.
+        """Handshake.
 
         HI#<hdid:string>#%
 
         :param args: a list containing all the arguments
+
         """
         if not self.validate_net_cmd(args, self.ArgType.STR, needs_auth=False):
             return
-        self.client.hdid = args[0]
-        if self.client.hdid not in self.client.server.hdid_list:
-            self.client.server.hdid_list[self.client.hdid] = []
-        if self.client.ipid not in self.client.server.hdid_list[self.client.hdid]:
-            self.client.server.hdid_list[self.client.hdid].append(self.client.ipid)
-            self.client.server.dump_hdids()
-        for ipid in self.client.server.hdid_list[self.client.hdid]:
-            if self.server.ban_manager.is_banned(ipid):
-                self.client.send_command('BD')
-                self.client.disconnect()
-                return
-        logger.log_server('Connected. HDID: {}.'.format(self.client.hdid), self.client)
-        self.client.send_command('ID', self.client.id, self.server.software, self.server.get_version_string())
-        self.client.send_command('PN', self.server.get_player_count() - 1, self.server.config['playerlimit'])
+        hdid = self.client.hdid = args[0]
+        ipid = self.client.ipid
+
+        database.add_hdid(ipid, hdid)
+        ban = database.find_ban(ipid, hdid)
+        if ban is not None:
+            if ban.unban_date is not None:
+                unban_date = arrow.get(ban.unban_date)
+            else:
+                unban_date = 'N/A'
+
+            msg = f'{ban.reason}\r\n'
+            msg += f'ID: {ban.ban_id}\r\n'
+            msg += f'Until: {unban_date.humanize()}'
+
+            database.log_connect(self.client, failed=True)
+            self.client.send_command('BD', msg)
+            self.client.disconnect()
+            return
+        else:
+            self.client.is_checked = True
+
+        database.log_connect(self.client, failed=False)
+        self.client.send_command('ID', self.client.id, self.server.software,
+                                 self.server.version)
+        self.client.send_command('PN',
+                                 self.server.player_count,
+                                 self.server.config['playerlimit'])
 
     def net_cmd_id(self, args):
-        """ Client version and PV
+        """Client version and PV
 
         ID#<pv:int>#<software:string>#<version:string>#%
-
         """
-
-        self.client.is_ao2 = False
-
-        if len(args) < 2:
-            return
-
-        version_list = args[1].split('.')
-
-        if len(version_list) < 3:
-            return
-
-        release = int(version_list[0])
-        major = int(version_list[1])
-        minor = int(version_list[2])
-
-        if args[0] != 'AO2':
-            return
-        if release < 2:
-            return
-        elif release == 2:
-            if major < 2:
-                return
-            elif major == 2:
-                if minor < 5:
-                    return
-
-        self.client.is_ao2 = True
-
-        self.client.send_command('FL', 'yellowtext', 'prezoom', 'flipping', 'customobjections', 'fastloading', 'noencryption',
-                                 'deskmod', 'evidence', 'cccc_ic_support', 'modcall_reason',
-                                 'looping_sfx', 'additive', 'effects')
+        self.client.version = args[1]
+        preflist = self.client.server.supported_features.copy()
+        if not self.client.area.area_manager.arup_enabled and 'arup' in preflist:
+            preflist.remove('arup')
+        self.client.send_command('FL', preflist)
 
     def net_cmd_ch(self, _):
-        """ Periodically checks the connection.
+        """Reset the client drop timeout (keepalive).
 
         CHECK#%
-
         """
         self.client.send_command('CHECK')
         self.ping_timeout.cancel()
-        self.ping_timeout = asyncio.get_event_loop().call_later(self.server.config['timeout'], self.client.disconnect)
+        self.ping_timeout = asyncio.get_event_loop().call_later(
+            self.server.config['timeout'], self.client.disconnect)
 
     def net_cmd_askchaa(self, _):
-        """ Ask for the counts of characters/evidence/music
+        """Ask for the counts of characters/evidence/music
 
         askchaa#%
-
         """
         char_cnt = len(self.server.char_list)
         evi_cnt = 0
@@ -257,28 +252,29 @@ class AOProtocol(asyncio.Protocol):
         self.client.send_command('SI', char_cnt, evi_cnt, music_cnt)
 
     def net_cmd_askchar2(self, _):
-        """ Asks for the character list.
+        """Asks for the character list. (AO1)
 
         askchar2#%
-
         """
         self.client.send_command('CI', *self.server.char_pages_ao1[0])
 
     def net_cmd_an(self, args):
-        """ Asks for specific pages of the character list.
+        """Asks for specific pages of the character list.
+        (AO1 only; part of askchar2 sequence)
 
         AN#<page:int>#%
-
         """
         if not self.validate_net_cmd(args, self.ArgType.INT, needs_auth=False):
             return
         if len(self.server.char_pages_ao1) > args[0] >= 0:
-            self.client.send_command('CI', *self.server.char_pages_ao1[args[0]])
+            self.client.send_command('CI',
+                                     *self.server.char_pages_ao1[args[0]])
         else:
             self.client.send_command('EM', *self.server.music_pages_ao1[0])
 
     def net_cmd_ae(self, _):
-        """ Asks for specific pages of the evidence list.
+        """Asks for specific pages of the evidence list.
+        (AO1 only; part of askchar2 sequence)
 
         AE#<page:int>#%
 
@@ -286,7 +282,8 @@ class AOProtocol(asyncio.Protocol):
         pass  # todo evidence maybe later
 
     def net_cmd_am(self, args):
-        """ Asks for specific pages of the music list.
+        """Asks for specific pages of the music list.
+        (AO1 only; part of askchar2 sequence)
 
         AM#<page:int>#%
 
@@ -294,14 +291,15 @@ class AOProtocol(asyncio.Protocol):
         if not self.validate_net_cmd(args, self.ArgType.INT, needs_auth=False):
             return
         if len(self.server.music_pages_ao1) > args[0] >= 0:
-            self.client.send_command('EM', *self.server.music_pages_ao1[args[0]])
+            self.client.send_command('EM',
+                                     *self.server.music_pages_ao1[args[0]])
         else:
             self.client.send_done()
-            self.client.show_area_list()
+            self.client.send_area_list()
             self.client.send_motd()
 
     def net_cmd_rc(self, _):
-        """ Asks for the whole character list(AO2)
+        """Asks for the whole character list (AO2)
 
         AC#%
 
@@ -310,42 +308,51 @@ class AOProtocol(asyncio.Protocol):
         self.client.send_command('SC', *self.server.char_list)
 
     def net_cmd_rm(self, _):
-        """ Asks for the whole music list(AO2)
+        """Asks for the whole music list (AO2)
 
         AM#%
 
         """
+
         song_list = []
-        allowed = self.client.is_cm or self.client.is_mod or self.client.get_char_name() == "Spectator"
-        rpmode = not allowed and self.client.hub.rpmode
-        song_list += [a.name for a in self.client.get_area_list(rpmode, rpmode)]
-        
-        if self.client.hub.replace_music:
-            song_list += self.server.build_music_list_ao2(self.client.hub.music_list)
-        else:
-            song_list += self.server.music_list_ao2 + self.server.build_music_list_ao2(self.client.hub.music_list)
+        allowed = self.client.is_mod or self.client in self.client.area.owners
+        area_list = self.client.get_area_list(not allowed, not allowed)
+        self.client.local_area_list = area_list
+        song_list += [a.name for a in area_list]
+        self.client.local_music_list = self.server.music_list
+        song_list += self.server.music_list_ao2
 
         self.client.send_command('SM', *song_list)
 
     def net_cmd_rd(self, _):
-        """ Asks for server metadata(charscheck, motd etc.) and a DONE#% signal(also best packet)
+        """Asks for server metadata(charscheck, motd etc.) and a DONE#% signal(also best packet)
 
         RD#%
 
         """
 
         self.client.send_done()
-        self.client.show_area_list()
+        self.client.send_area_list()
         self.client.send_motd()
+        # TODO: move this code to the area itself so it can handle whatever it needs to later
+        if self.client.area.music_autoplay:
+            self.client.send_command('MC', self.client.area.current_music, -1, '', self.client.area.current_music_looping, 0, self.client.area.current_music_effects)
 
     def net_cmd_cc(self, args):
-        """ Character selection.
+        """Character selection.
 
         CC#<client_id:int>#<char_id:int>#<hdid:string>#%
 
         """
-        if not self.validate_net_cmd(args, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR, needs_auth=False):
+        if not self.validate_net_cmd(args,
+                                     self.ArgType.INT,
+                                     self.ArgType.INT,
+                                     self.ArgType.STR,
+                                     needs_auth=False):
             return
+        elif not self.client.is_checked:
+            return
+
         cid = args[1]
         try:
             self.client.change_character(cid)
@@ -353,18 +360,16 @@ class AOProtocol(asyncio.Protocol):
             return
 
     def net_cmd_ms(self, args):
-        """ IC message.
+        """IC message.
 
         Refer to the implementation for details.
 
         """
+        if not self.client.is_checked:
+            return
         if self.client.is_muted:  # Checks to see if the client has been muted by a mod
-            self.client.send_host_message("You have been muted by a moderator")
+            self.client.send_ooc('You are muted by a moderator.')
             return
-        if not self.client.area.can_send_message(self.client):
-            return
-
-        target_area = []
 
         showname = ""
         charid_pair = -1
@@ -378,176 +383,177 @@ class AOProtocol(asyncio.Protocol):
         additive = 0
         effect = ""
         pair_order = 0
-        if self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
-                                 self.ArgType.STR,
-                                 self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
-                                 self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
-                                 self.ArgType.INT, self.ArgType.INT, self.ArgType.INT):
-            # Vanilla validation monstrosity.
+        if self.validate_net_cmd(args, self.ArgType.STR, # msg_type
+                                 self.ArgType.STR_OR_EMPTY, self.ArgType.STR,   # pre, folder
+                                 self.ArgType.STR, self.ArgType.STR,            # anim, text
+                                 self.ArgType.STR, self.ArgType.STR,            # pos, sfx
+                                 self.ArgType.INT, self.ArgType.INT,            # anim_type, cid
+                                 self.ArgType.INT, self.ArgType.INT_OR_STR,     # sfx_delay, button
+                                 self.ArgType.INT, self.ArgType.INT,            # evidence, flip
+                                 self.ArgType.INT, self.ArgType.INT,            # ding, color
+            ):
+            # Pre-2.6 validation monstrosity.
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color = args
-        elif self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
-                                   self.ArgType.STR,
-                                   self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
-                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
-                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR_OR_EMPTY):
-            # 1.3.0 validation monstrosity.
-            msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname = args
-            if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
-                self.client.send_host_message("Showname changes are forbidden in this hub!")
-                return
-        elif self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
-                                   self.ArgType.STR,
-                                   self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
-                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
-                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR_OR_EMPTY,
-                                   self.ArgType.INT, self.ArgType.INT):
-            # 1.3.5 validation monstrosity.
-            msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair = args
-            if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
-                self.client.send_host_message("Showname changes are forbidden in this hub!")
-                return
-        elif self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
-                                   self.ArgType.STR,
-                                   self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
-                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
-                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR_OR_EMPTY,
-                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT):
-            # 1.4.0 validation monstrosity.
+        elif self.validate_net_cmd(
+                args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,              # msg_type, pre
+                self.ArgType.STR, self.ArgType.STR, self.ArgType.STR,           # folder, anim, text
+                self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,           # pos, sfx, anim_type
+                self.ArgType.INT, self.ArgType.INT, self.ArgType.INT_OR_STR,    # cid, sfx_delay, button
+                self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,           # evidence, flip, ding
+                self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.INT,  # color, showname, charid_pair
+                self.ArgType.INT, self.ArgType.INT,                             # offset_pair, nonint_pre
+            ):
+            # 2.6 validation monstrosity.
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre = args
-            if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
-                self.client.send_host_message("Showname changes are forbidden in this hub!")
-                return
-        elif self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
-                                   self.ArgType.STR,
-                                   self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
-                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
-                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR_OR_EMPTY,
-                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR,
-                                   self.ArgType.INT, self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT):
-            # Looping sfx and frame shenanigans validation monstrosity.
-            msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive = args
-            if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
-                self.client.send_host_message("Showname changes are forbidden in this hub!")
-                return
-        elif self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
-                                   self.ArgType.STR,
-                                   self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
-                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
-                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR_OR_EMPTY,
-                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR,
-                                   self.ArgType.INT, self.ArgType.STR, self.ArgType.STR, self.ArgType.STR,
-                                   self.ArgType.INT, self.ArgType.STR):
-            # Looping sfx and frame shenanigans validation monstrosity, effect and pair order edition
-            msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive, effect = args
-            if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
-                self.client.send_host_message("Showname changes are forbidden in this hub!")
-                return
-        elif self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
-                                   self.ArgType.STR,
-                                   self.ArgType.STR, self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,
-                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,
-                                   self.ArgType.INT, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR_OR_EMPTY,
-                                   self.ArgType.STR, self.ArgType.INT, self.ArgType.INT, self.ArgType.STR,
-                                   self.ArgType.INT, self.ArgType.STR, self.ArgType.STR, self.ArgType.STR,
-                                   self.ArgType.INT, self.ArgType.STR):
-            # Looping sfx and frame shenanigans validation monstrosity, effect and pair order edition
+        elif self.validate_net_cmd(
+                args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,              # msg_type, pre
+                self.ArgType.STR, self.ArgType.STR, self.ArgType.STR,           # folder, anim, text
+                self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,           # pos, sfx, anim_type
+                self.ArgType.INT, self.ArgType.INT, self.ArgType.INT_OR_STR,    # cid, sfx_delay, button
+                self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,           # evidence, flip, ding
+                self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,  # color, showname, charid_pair
+                self.ArgType.INT, self.ArgType.INT, self.ArgType.STR,           # offset_pair, nonint_pre, sfx_looping
+                self.ArgType.INT, self.ArgType.STR, self.ArgType.STR,           # screenshake, frames_shake, frames_realization
+                self.ArgType.STR, self.ArgType.INT, self.ArgType.STR,           # frames_sfx, additive, effect
+            ):
+            # 2.8 validation monstrosity. (rip 2.7)
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive, effect = args
             pair_args = charid_pair.split("^")
             charid_pair = int(pair_args[0])
             if (len(pair_args) > 1):
                 pair_order = pair_args[1]
-            if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
-                self.client.send_host_message("Showname changes are forbidden in this hub!")
-                return
         else:
             return
-        if self.client.hub.is_iniswap(self.client, pre, anim, folder) and folder != self.client.get_char_name():
-            self.client.send_host_message("Iniswap is blocked in this area")
+
+        # Targets for whispering
+        whisper_clients = None
+
+        target_area = []
+        if self.client.is_mod or self.client in self.client.area.owners:
+            target_area = self.client.broadcast_list
+
+        if len(showname) > 0 and not self.client.area.showname_changes_allowed and not self.client.is_mod and not (self.client in self.client.area.owners):
+            self.client.send_ooc(
+                "Showname changes are forbidden in this area!")
             return
-        if len(self.client.charcurse) > 0 and folder != self.client.get_char_name():
-            self.client.send_host_message("You may not iniswap while you are charcursed!")
+        if self.client.area.is_iniswap(self.client, pre, anim,
+                folder, sfx):
+            self.client.send_ooc("Iniswap/custom emotes are blocked in this area")
             return
-        if self.client.get_char_name() == "Spectator":
-            self.client.send_host_message("You may not use ic chat when you are a Spectator!")
+        if len(self.client.charcurse) > 0 and \
+            folder != self.client.char_name:
+            self.client.send_ooc(
+                "You may not iniswap while you are charcursed!")
             return
-        if self.client.blinded:
-            self.client.send_host_message("You may not use ic chat when you are blinded!")
-            return
-        if not self.client.hub.blankposting_allowed:
+        if not self.client.area.blankposting_allowed:
             if text == ' ':
-                self.client.send_host_message("Blankposting is forbidden in this hub!")
+                self.client.send_ooc(
+                    "Blankposting is forbidden in this area!")
                 return
             if text.isspace():
-                self.client.send_host_message(
-                    "Blankposting is forbidden in this hub, and putting more spaces in does not make it not blankposting.")
+                self.client.send_ooc(
+                    "Blankposting is forbidden in this area, and putting more spaces in does not make it not blankposting."
+                )
                 return
-            if len(re.sub(r'[{}\\`|(~~)]', '', text).replace(' ', '')) < 3 and text != '<' and text != '>':
-                self.client.send_host_message(
-                    "While that is not a blankpost, it is still pretty spammy. Try forming sentences.")
+            if len(re.sub(r'[{}\\`|(~~)]', '', text).replace(
+                    ' ', '')) < 3 and text != '<' and text != '>':
+                self.client.send_ooc(
+                    "While that is not a blankpost, it is still pretty spammy. Try forming sentences."
+                )
                 return
         if text.lstrip().startswith('(('):
-            self.client.send_host_message("Please, *please* use the OOC chat instead of polluting IC. Normal OOC is local to area. You can use /h to talk hub-wide or /g to talk across the entire server.")
+            self.client.send_ooc("Please, *please* use the OOC chat instead of polluting IC. Normal OOC is local to area. You can use /g to talk across the entire server.")
             return
-        # if text.startswith('/a '):
-        #     part = text.split(' ')
-        #     try:
-        #         aid = int(part[1])
-        #         if self.client in self.server.area_manager.get_area_by_id(aid).owners:
-        #             target_area.append(aid)
-        #         if not target_area:
-        #             self.client.send_host_message(
-        #                 'You don\'t own {}!'.format(self.server.area_manager.get_area_by_id(aid).name))
-        #             return
-        #         text = ' '.join(part[2:])
-        #     except ValueError:
-        #         self.client.send_host_message("That does not look like a valid area ID!")
-        #         return
-        # elif text.startswith('/s '):
-        #     part = text.split(' ')
-        #     for a in self.server.area_manager.areas:
-        #         if self.client in a.owners:
-        #             target_area.append(a.id)
-        #     if not target_area:
-        #         self.client.send_host_message('You don\'t any areas!')
-        #         return
-        #     text = ' '.join(part[1:])
+        if text.lower().startswith('/a ') or text.lower().startswith('/s '):
+            part = text.split(' ')
+            try:
+                areas = part[1].split(',')
+                for a in areas:
+                    try:
+                        aid = int(a)
+                    except ValueError:
+                        break
+                    area = self.client.area.area_manager.get_area_by_id(aid)
+                    if self.client in area.owners:
+                        target_area.append(aid)
+                    else:
+                        self.client.send_ooc(f'You don\'t own {area.name}!')
+                        return
+                if len(target_area) <= 0:
+                    for a in self.client.area.area_manager.areas:
+                        if self.client in a.owners:
+                            target_area.append(a.id)
+                    part = part[1:]
+                else:
+                    part = part[2:]
+                if len(target_area) <= 0:
+                    self.client.send_ooc('No target areas found!')
+                    return
+                text = ' '.join(part)
+            except (ValueError, AreaError):
+                self.client.send_ooc(
+                    "That does not look like a valid area ID!")
+                return
+        if len(self.client.area.testimony) > 0 and (text.lstrip().startswith('>') or text.lstrip().startswith('<')):
+            if self.client.area.recording == True:
+                self.client.send_ooc('It is not cross-examination yet!')
+                return
+            cmd = text.strip()
+            idx = self.client.area.testimony_index
+            if len(cmd) > 1:
+                try:
+                    idx = int(cmd[1:])-1
+                    if idx <= -1:
+                        raise ValueError
+                except ValueError:
+                    self.client.send_ooc('Invalid index!')
+                    return
+            else:
+                if cmd == '>':
+                    idx += 1
+                if cmd == '<':
+                    idx -= 1
+                idx = idx % len(self.client.area.testimony)
+                self.client.area.testimony_index = idx
+            try:
+                self.client.area.testimony_send(idx)
+                self.client.area.broadcast_ooc(f'{self.client.char_name} has moved to Statement {idx+1}.')
+            except:
+                self.client.send_ooc('Invalid index!')
+            return
         if msg_type not in ('chat', '0', '1'):
             return
-        # Disable the meme functionality of desk_mod that makes you selectively hide jud/hld/hlp foregrounds when showing every other foreground due to how many
-        # characters are set up with that by accident, preventing many characters from appearing behind desk for jud unless they were specifically made for it, etc.
-        if msg_type == 'chat':
-            msg_type = '1'
         if anim_type not in (0, 1, 2, 4, 5, 6):
             return
         if cid != self.client.char_id:
             return
         if sfx_delay < 0:
             return
-        if button not in (0, 1, 2, 3, 4):
-            return
+        if '4' in str(button) and "<and>" not in str(button):
+            if not button.isdigit():
+               return
         if evidence < 0:
             return
         if ding not in (0, 1):
             return
-        if color not in (0, 1, 2, 3, 4, 5, 6, 7, 8):
+        if color >= 12:
             return
         if len(showname) > 15:
-            self.client.send_host_message("Your IC showname is way too long!")
+            self.client.send_ooc("Your IC showname is way too long!")
             return
         if nonint_pre == 1:
-            if button in (1, 2, 3, 4, 23):
+            if button in range(1, 4):
                 if anim_type == 1 or anim_type == 2:
                     anim_type = 0
                 elif anim_type == 6:
                     anim_type = 5
-        if self.client.hub.non_int_pres_only:
+        if self.client.area.non_int_pres_only:
             if anim_type == 1 or anim_type == 2:
                 anim_type = 0
-                nonint_pre = 1
             elif anim_type == 6:
                 anim_type = 5
-                nonint_pre = 1
-        if not self.client.hub.shouts_allowed:
+            nonint_pre = 1
+        if not self.client.area.shouts_allowed:
             # Old clients communicate the objecting in anim_type.
             if anim_type == 2:
                 anim_type = 1
@@ -557,30 +563,73 @@ class AOProtocol(asyncio.Protocol):
             button = 0
             # Turn off the ding.
             ding = 0
-        # if color == 2 and not (self.client.is_mod or self.client.is_cm):
-        #     color = 0
-        # if color == 6:
-        #     text = re.sub(r'[^\x00-\x7F]+', ' ', text)  # remove all unicode to prevent redtext abuse
-        #     if len(text.strip(' ')) == 1:
-        #         color = 0
-        #     else:
-        #         if text.strip(' ') in ('<num>', '<percent>', '<dollar>', '<and>'):
-        #             color = 0
+        if int(button) <= 0 and not self.client.area.can_send_message(self.client):
+            return
+        max_char = 0
+        try:
+            max_char = int(self.server.config['max_chars'])
+        except:
+            max_char = 256
 
-        msg = text[:256]
+        if len(text) > max_char:
+            return
+
+        if len(self.client.area.pos_lock) > 0 and pos not in self.client.area.pos_lock:
+            pos = self.client.area.pos_lock[0]
+        if pos != None and self.client.pos != pos:
+            self.client.change_position(pos)
+
+        if text.lower().startswith('/w ') or text.lower().startswith('[w] '):
+            if not self.client.area.can_whisper and not self.client.is_mod and not self.client in self.client.area.owners:
+                self.client.send_ooc(
+                    "You can't whisper in this area!")
+                return
+            part = text.split(' ')
+            try:
+                clients = part[1].split(',')
+                try:
+                    [int(c) for c in clients]
+                except ValueError:
+                    clients = []
+                
+                if len(clients) > 0:
+                    part = part[2:]
+                    whisper_clients = [c for c in self.client.area.clients if str(c.id) in clients]
+                    clients = ','.join(clients)
+                else:
+                    part = part[1:]
+                    whisper_clients = [c for c in self.client.area.clients if c.pos == self.client.pos]
+                    clients = ''
+                text = ' '.join(part)
+                text = "}}}[W" + clients + "] {{{" + text
+            except (ValueError, AreaError):
+                self.client.send_ooc(
+                    "Invalid targets!")
+                return
+
+        msg = self.dezalgo(text)[:256]
         if self.client.shaken:
             msg = self.client.shake_message(msg)
         if self.client.disemvowel:
             msg = self.client.disemvowel_message(msg)
-
         if evidence:
-            if evidence >= len(self.client.evi_list):
-                evidence = 0
-                
+            evi = self.client.area.evi_list.evidences[
+                    self.client.evi_list[evidence] - 1]
+
+            if evi.hiding_client != None:
+                c = evi.hiding_client
+                c.hide(False)
+                c.area.broadcast_area_list(c)
+                self.client.send_ooc(f'You discover {c.char_name} in the {evi.name}!')
+
+            if evi.pos != 'all':
+                evi.pos = 'all'
+                self.client.area.broadcast_evidence_list()
 
         # Here, we check the pair stuff, and save info about it to the client.
         # Notably, while we only get a charid_pair and an offset, we send back a chair_pair, an emote, a talker offset
         # and an other offset.
+
         self.client.charid_pair = charid_pair
         self.client.offset_pair = offset_pair
         if anim_type not in (5, 6):
@@ -593,9 +642,9 @@ class AOProtocol(asyncio.Protocol):
         other_folder = ''
 
         confirmed = False
-        for target in self.client.area.clients:
-            if charid_pair > -1 and not confirmed:
-                if target.char_id == self.client.charid_pair and target.charid_pair == self.client.char_id and target != self.client and target.pos == self.client.pos:
+        if charid_pair > -1:
+            for target in self.client.area.clients:
+                if not confirmed and target.char_id == self.client.charid_pair and target.charid_pair == self.client.char_id and target != self.client and target.pos == self.client.pos:
                     confirmed = True
                     other_offset = target.offset_pair
                     other_emote = target.last_sprite
@@ -604,95 +653,68 @@ class AOProtocol(asyncio.Protocol):
                     if (pair_order != ""):
                         charid_pair = "{}^{}".format(charid_pair, pair_order)
                     break
-        
+
         if not confirmed:
             charid_pair = -1
-            # offset_pair = 0
 
-        if self.client.is_cm and self.client.waiting_for_schedule != None:
-            args = msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid, sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname, charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip, nonint_pre
-            schedule = self.client.hub.find_schedule(self.client.waiting_for_schedule)
-            if schedule:
-                schedule.msgtype = 'ic'
-                schedule.message = args
-                self.client.send_host_message('You have succesfully updated the schedule message.')
-            else:
-                self.client.send_host_message('The schedule no longer exists. Schedule message edit cancelled.')
-            self.client.waiting_for_schedule = None
-            return
+        # Whispering not recorded for testimony
+        if whisper_clients != None:
+            whisper_clients.insert(0, self.client)
+            for client in self.client.area.clients:
+                if client in whisper_clients:
+                    continue
+                if client in self.client.area.owners:
+                    whisper_clients.append(client)
+                if client.is_mod:
+                    whisper_clients.append(client)
 
-        if self.client.is_cm and len(self.client.broadcast_ic) > 0:
-            i = 0
-            for b in self.client.broadcast_ic:
-                area = self.client.hub.get_area_by_id(b)
-                if area:
-                    if len(area.pos_lock) > 0 and pos not in area.pos_lock:
-                        pos = area.pos_lock[0]
-                    if pos != None and self.client.pos != pos:
-                        self.client.change_position(pos)
-                    if area.last_speaker != self.client:
-                        additive = 0
-                    area.send_command('MS', 'broadcast', pre, folder, anim, msg, pos, sfx, anim_type, cid,
-                                        sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
-                                        charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
-                                        nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive, effect)
-                    area.set_next_msg_delay(self.parse_msg_delay(msg))
-                    area.last_speaker = self.client
-                    
-                    logger.log_demo('[IC][' + ', '.join(str(s) for s in ['broadcast', pre, folder, anim, pos, sfx, anim_type, cid,
-                                        sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
-                                        charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
-                                        nonint_pre, self.client.area.background]) + ']{}'.format(msg), self.client)
-                    if (area.is_recording):
-                            current_time = strftime("%H:%M:%S UTC", gmtime())
-                            area.recorded_messages.append('[{}][Broadcast][{}] {}: {}'.format(
-                                current_time, self.client.id, self.client.get_char_name(), msg))
-                            #self.client.area.recorded_messages.append(args)
-                    i += 1
-            self.client.send_host_message(
-                'Broadcasting message to {} areas.'.format(len(self.client.broadcast_ic)))
-        else:
-            if len(self.client.area.pos_lock) > 0 and pos not in self.client.area.pos_lock:
-                pos = self.client.area.pos_lock[0]
-            if pos != None and self.client.pos != pos:
-                self.client.change_position(pos)
-            if self.client.area.last_speaker != self.client:
-                additive = 0
-            self.client.area.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx, anim_type, cid,
-                                        sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
-                                        charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
-                                        nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive, effect)
-            self.client.area.send_listen('MS', msg_type, pre, folder, anim, f'}}}}}}[A{self.client.area.id}] {{{{{{{msg}', pos, sfx, anim_type, cid,
-                                        sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
-                                        charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
-                                        nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive, effect)
-            self.client.area.set_next_msg_delay(self.parse_msg_delay(msg))
-            self.client.area.last_speaker = self.client
-            
-            logger.log_demo('[IC][' + ', '.join(str(s) for s in [msg_type, pre, folder, anim, pos, sfx, anim_type, cid,
-                                sfx_delay, button, self.client.evi_list[evidence], flip, ding, color, showname,
-                                charid_pair, other_folder, other_emote, offset_pair, other_offset, other_flip,
-                                nonint_pre, self.client.area.background]) + ']{}'.format(msg), self.client)
+        if len(target_area) > 0:
+            try:
+                a_list = ', '.join([f'[{a.id}] {a.abbreviation}' for a in target_area])
+                self.client.send_ooc(f'Broadcasting to areas {a_list}')
+                self.client.area.area_manager.send_remote_command(
+                    target_area, 'MS', msg_type, pre, folder, anim, msg, pos, sfx,
+                    anim_type, cid, sfx_delay, button, self.client.evi_list[evidence],
+                    flip, ding, color, showname, charid_pair, other_folder,
+                    other_emote, offset_pair, other_offset, other_flip, nonint_pre,
+                    sfx_looping, screenshake, frames_shake, frames_realization,
+                    frames_sfx, additive, effect)
+            except (AreaError, ValueError):
+                self.client.send_ooc('Your broadcast list is invalid! Do /clear_broadcast to reset it and /broadcast <id(s)> to set a new one.')
+                return
 
-        self.client.last_showname = showname
+        self.client.area.send_ic(self.client, msg_type, pre, folder, anim, msg,
+                                pos, sfx, anim_type, cid, sfx_delay,
+                                button, self.client.evi_list[evidence],
+                                flip, ding, color, showname, charid_pair,
+                                other_folder, other_emote, offset_pair,
+                                other_offset, other_flip, nonint_pre,
+                                sfx_looping, screenshake, frames_shake,
+                                frames_realization, frames_sfx,
+                                additive, effect, targets=whisper_clients)
 
-        logger.log_server('[IC] "{}"'.format(msg), self.client)
-
-        if (self.client.area.is_recording):
-            current_time = strftime("%H:%M:%S UTC", gmtime())
-            self.client.area.recorded_messages.append('[{}][{}] {}: {}'.format(
-                current_time, self.client.id, self.client.get_char_name(), msg))
+        self.client.area.send_owner_command(
+            'MS', msg_type, pre, folder, anim,
+            '}}}[' + self.client.area.abbreviation + '] {{{' + msg, pos, sfx,
+            anim_type, cid, sfx_delay, button, self.client.evi_list[evidence],
+            flip, ding, color, showname, charid_pair, other_folder,
+            other_emote, offset_pair, other_offset, other_flip, nonint_pre,
+            sfx_looping, screenshake, frames_shake, frames_realization,
+            frames_sfx, additive, effect)
 
     def net_cmd_ct(self, args):
-        """ OOC Message
+        """OOC Message
 
         CT#<name:string>#<message:string>#%
 
         """
-        if self.client.is_ooc_muted:  # Checks to see if the client has been muted by a mod
-            self.client.send_host_message("You have been muted by a moderator")
+
+        if not self.client.is_checked:
             return
-        if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR):
+        if self.client.is_ooc_muted:  # Checks to see if the client has been muted by a mod
+            self.client.send_ooc('You are muted by a moderator.')
+            return
+        if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR, needs_auth=False):
             return
         if self.client.name != args[0] and self.client.fake_name != args[0]:
             if self.client.is_valid_name(args[0]):
@@ -700,30 +722,33 @@ class AOProtocol(asyncio.Protocol):
                 self.client.fake_name = args[0]
             else:
                 self.client.fake_name = args[0]
-        self.client.name = re.sub('\s+', ' ', self.client.name).strip() #Strip the name of any excess whitespace
         if self.client.name == '':
-            self.client.send_host_message('You must insert a name with at least one letter')
+            self.client.send_ooc(
+                'You must insert a name with at least one letter')
             return
         if len(self.client.name) > 30:
-            self.client.send_host_message('Your OOC name is too long! Limit it to 30 characters.')
+            self.client.send_ooc(
+                'Your OOC name is too long! Limit it to 30 characters.')
             return
         for c in self.client.name:
             if unicodedata.category(c) == 'Cf':
-                self.client.send_host_message('You cannot use format characters in your name!')
+                self.client.send_ooc(
+                    'You cannot use format characters in your name!')
                 return
-        if self.client.name.startswith(self.server.config['hostname']) or self.client.name.startswith(
-                '<dollar>G') or self.client.name.startswith('CM') or self.client.name.startswith('GM') or self.client.name.startswith('MOD'):
-            self.client.send_host_message('That name is reserved!')
+        if self.client.name.startswith(
+                self.server.config['hostname']) or self.client.name.startswith(
+                    '<dollar>G') or self.client.name.startswith('<dollar>M'):
+            self.client.send_ooc('That name is reserved!')
             return
-        ooc_name = self.client.name
-        prefix = ''
-        if self.client.is_cm:
-            prefix = '[CM]'
-        if self.client.is_mod:
-            prefix = '[MOD]'
-        ooc_name = prefix + ooc_name
+        max_char = 0
+        try:
+            max_char = int(self.server.config['max_chars'])
+        except:
+            max_char = 256
+        if len(args[1]) > max_char:
+            return
         if args[1].startswith(' /'):
-            self.client.send_host_message(
+            self.client.send_ooc(
                 'Your message was not sent for safety reasons: you left a space before that slash.')
             return
         if args[1].startswith('/'):
@@ -733,146 +758,81 @@ class AOProtocol(asyncio.Protocol):
             if len(spl) == 2:
                 arg = spl[1][:256]
             try:
-                called_function = 'ooc_cmd_{}'.format(cmd)
-                getattr(commands, called_function)(self.client, arg)
-            except AttributeError:
-                print('Attribute error with ' + called_function)
-                self.client.send_host_message('Invalid command.')
-            except (ClientError, AreaError, ArgumentError, ServerError) as ex:
-                self.client.send_host_message(ex)
-        else:
-            if self.client.is_cm and self.client.waiting_for_schedule != None:
-                schedule = self.client.hub.find_schedule(self.client.waiting_for_schedule)
-                if schedule:
-                    schedule.msgtype = 'ooc'
-                    schedule.message = args[1]
-                    self.client.send_host_message('You have succesfully updated the schedule message.')
+                called_function = f'ooc_cmd_{cmd}'
+                if not hasattr(commands, called_function):
+                    self.client.send_ooc('Invalid command.')
                 else:
-                    self.client.send_host_message('The schedule no longer exists. Schedule message edit cancelled.')
-                self.client.waiting_for_schedule = None
-                return
+                    getattr(commands, called_function)(self.client, arg)
+            except (ClientError, AreaError, ArgumentError, ServerError) as ex:
+                self.client.send_ooc(ex)
+            except Exception as ex:
+                self.client.send_ooc('An internal error occurred. Please check the server log.')
+                logger.exception('Exception while running a command')
+        else:
+            args[1] = self.dezalgo(args[1])
             if self.client.shaken:
                 args[1] = self.client.shake_message(args[1])
             if self.client.disemvowel:
                 args[1] = self.client.disemvowel_message(args[1])
-            self.client.area.send_command('CT', ooc_name, args[1])
-            self.client.area.send_listen('CT', f'[A{self.client.area.id}] {ooc_name}', args[1])
-            # self.client.area.send_owner_command('CT', '[' + self.client.hub.abbreviation + ']' + ooc_name,
-            #                                     args[1])
-            logger.log_server('[OOC] "{}"'.format(args[1]), self.client)
+            self.client.area.send_command('CT', self.client.name, args[1])
+            self.client.area.send_owner_command(
+                'CT',
+                '[' + self.client.area.abbreviation + ']' + self.client.name,
+                args[1])
+            database.log_room('ooc', self.client, self.client.area, message=args[1])
 
     def net_cmd_mc(self, args):
-        """ Play music.
+        """Play music.
 
-        MC#<song_name:int>#<???:int>#%
+        MC#<song_name:str>#<char_id:int>#<show_name:str_or_empty>#<effects:int>#%
 
         """
+        if not self.client.is_checked:
+            return
         try:
-            area = self.client.hub.get_area_by_id_or_name(args[0])
             called_function = 'ooc_cmd_area'
-            getattr(commands, called_function)(self.client, args[0])
+            # We can get cheeky and spoof ARUP info with normal song names
+            getattr(commands, called_function)(self.client, args[0].split('\n')[0])
         except AreaError:
-            if self.client.is_muted:  # Checks to see if the client has been muted by a mod
-                self.client.send_host_message("You have been muted by a moderator")
-                return
-            if not self.client.is_dj:
-                self.client.send_host_message('You were blockdj\'d by a moderator.')
-                return
-            if self.client.area.cannot_ic_interact(self.client):
-                self.client.send_host_message(
-                    "You are not on the area's invite list, and thus, you cannot change music!")
-                return
-
             if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT):
                 if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT, self.ArgType.STR_OR_EMPTY):
                     if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.INT):
-                        if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.INT, self.ArgType.INT):
-                            return
-
-            if args[1] != self.client.char_id:
-                return
-            if self.client.change_music_cd():
-                self.client.send_host_message(
-                    'You changed song too many times. Please try again after {} seconds.'.format(
-                        int(self.client.change_music_cd())))
-                return
-            try:
-                if args[0].startswith('==') or args[0].lower() == 'stop': #Trying to stop music because we pressed a category track
-                    name = 'Stop'
-                    length = 0
-                else:
-                    name, length = self.server.get_song_data(self.server.music_list + self.client.hub.music_list, args[0])
-
-                if (self.client.is_mod or self.client.is_cm) and self.client.ambience_editing:
-                    self.client.area.set_ambience(name)
-                    self.client.send_host_message(
-                        'Setting current area\'s ambience to {}.'.format(name))
-                    return
-                if len(args) > 2:
-                    showname = args[2]
-                    if len(showname) > 0 and not self.client.hub.showname_changes_allowed:
-                        self.client.send_host_message("Showname changes are forbidden in this hub!")
                         return
-
-                    effects = 0
-                    if len(args) > 3:
-                        effects = int(args[3])
-
-                    if self.client.is_cm and len(self.client.broadcast_ic) > 0:
-                        i = 0
-                        for b in self.client.broadcast_ic:
-                            area = self.client.hub.get_area_by_id(b)
-                            if area:
-                                area.play_music(
-                                    name, self.client.char_id, length, showname, effects)
-                                i += 1
-                        self.client.send_host_message(
-                            'Broadcasting music to {} areas.'.format(len(self.client.broadcast_ic)))
-                    else:
-                        self.client.area.play_music(name, self.client.char_id, length, showname, effects)
-                else:
-                    if self.client.is_cm and len(self.client.broadcast_ic) > 0:
-                        i = 0
-                        for b in self.client.broadcast_ic:
-                            area = self.client.hub.get_area_by_id(b)
-                            if area:
-                                area.play_music(
-                                    name, self.client.char_id, length)
-                                i += 1
-                        self.client.send_host_message(
-                            'Broadcasting music to {} areas.'.format(len(self.client.broadcast_ic)))
-                    else:
-                        self.client.area.play_music(name, self.client.char_id, length)
-                    # self.client.area.add_music_playing(self.client, name)
-
-                logger.log_server('[MUS]Changed music to {}.'.format(name), self.client)
-                logger.log_demo('[MUS]{}'.format(name), self.client)
-            except ServerError:
-                self.client.send_host_message('Error: song {} isn\'t recognized by server!'.format(args[0]))
+            self.client.change_music(args)
         except ClientError as ex:
-            self.client.send_host_message(ex)
+            self.client.send_ooc(ex)
 
     def net_cmd_rt(self, args):
-        """ Plays the Testimony/CE animation.
+        """Plays the Testimony/CE animation.
 
         RT#<type:string>#%
 
         """
-        if not self.client.hub.shouts_allowed:
-            self.client.send_host_message("You cannot use the testimony buttons here!")
+        if not self.client.is_checked:
+            return
+        if not self.client.area.shouts_allowed:
+            self.client.send_ooc(
+                "You cannot use the testimony buttons here!")
             return
         if self.client.is_muted:  # Checks to see if the client has been muted by a mod
-            self.client.send_host_message("You have been muted by a moderator")
+            self.client.send_ooc('You are muted by a moderator.')
             return
         if not self.client.can_wtce:
-            self.client.send_host_message('You were blocked from using judge signs by a moderator.')
+            self.client.send_ooc(
+                'You were blocked from using judge signs by a moderator.')
+            return
+        if not self.client.area.can_wtce and not self.client.is_mod and not self in self.client.area.owners:
+            self.client.send_ooc(
+                'Only CMs and mods may use judge buttons in this area!')
             return
         if self.client.area.cannot_ic_interact(self.client):
-            self.client.send_host_message(
-                "You are not on the area's invite list, and thus, you cannot use the WTCE buttons!")
+            self.client.send_ooc(
+                "You are not on the area's invite list, and thus, you cannot use the WTCE buttons!"
+            )
             return
-        if not self.validate_net_cmd(args, self.ArgType.STR) and not self.validate_net_cmd(args, self.ArgType.STR,
-                                                                                           self.ArgType.INT):
+        if not self.validate_net_cmd(
+                args, self.ArgType.STR) and not self.validate_net_cmd(
+                    args, self.ArgType.STR, self.ArgType.INT):
             return
         if args[0] == 'testimony1':
             sign = 'WT'
@@ -883,41 +843,70 @@ class AOProtocol(asyncio.Protocol):
         else:
             return
         if self.client.wtce_mute():
-            self.client.send_host_message(
-                'You used witness testimony/cross examination signs too many times. Please try again after {} seconds.'.format(
-                    int(self.client.wtce_mute())))
+            self.client.send_ooc(
+                f'You used witness testimony/cross examination signs too many times. Please try again after {int(self.client.wtce_mute())} seconds.')
             return
-        if self.client.is_cm and len(self.client.broadcast_ic) > 0:
-            i = 0
-            for b in self.client.broadcast_ic:
-                area = self.client.hub.get_area_by_id(b)
-                if area:
-                    if len(args) == 1:
-                        area.send_command('RT', args[0])
-                        logger.log_demo('[WTCE][{}]'.format(args[0]), self.client)
-                    elif len(args) == 2:
-                        area.send_command('RT', args[0], args[1])
-                        logger.log_demo('[WTCE][{} {}]'.format(
-                            args[0], args[1]), self.client)
-                    area.add_to_judgelog(self.client, 'used {}'.format(sign))
-                    i += 1
-            self.client.send_host_message(
-                'Broadcasting judge animation to {} areas.'.format(len(self.client.broadcast_ic)))
-        else:
-            area = self.client.area
-            if len(args) == 1:
-                area.send_command('RT', args[0])
-                logger.log_demo('[WTCE][{}]'.format(args[0]), self.client)
-            elif len(args) == 2:
-                area.send_command('RT', args[0], args[1])
-                logger.log_demo('[WTCE][{} {}]'.format(
-                    args[0], args[1]), self.client)
-            area.add_to_judgelog(self.client, 'used {}'.format(sign))
 
-        logger.log_server('[WTCE]Used WT/CE.', self.client)
+        if len(self.client.broadcast_list) > 0:
+            try:
+                a_list = ', '.join([f'[{a.id}] {a.abbreviation}' for a in self.client.broadcast_list])
+                self.client.send_ooc(f'Broadcasting to areas {a_list}')
+                if len(args) == 1:
+                    self.client.area.area_manager.send_remote_command(self.client.broadcast_list, 'RT', args[0])
+                elif len(args) == 2:
+                    self.client.area.area_manager.send_remote_command(self.client.broadcast_list, 'RT', args[0], args[1])
+            except (AreaError, ValueError):
+                self.client.send_ooc('Your broadcast list is invalid! Do /clear_broadcast to reset it and /broadcast <id(s)> to set a new one.')
+                return
+
+        if len(args) == 1:
+            self.client.area.send_command('RT', args[0])
+        elif len(args) == 2:
+            self.client.area.send_command('RT', args[0], args[1])
+        self.client.area.add_to_judgelog(self.client, f'used {sign}')
+        database.log_room('wtce', self.client, self.client.area, message=sign)
+
+        if self.client in self.client.area.owners:
+            if self.client.area.last_ic_message != None and sign == 'WT':
+                # remove centering chars and strip space chars
+                msg = self.client.area.last_ic_message.replace('~', '').strip()
+                if msg.startswith('--') and msg.endswith('--'):
+                    msg = msg.replace('-', '')
+                    msg = msg.strip()
+                    # actual title possible lol!
+                    if len(msg) > 0:
+                        self.client.area.testimony.clear()
+                        self.client.area.testimony_index = -1
+                        self.client.area.testimony_title = msg
+                        self.client.area.recording = True
+                        self.client.area.broadcast_ooc(f'-- {self.client.area.testimony_title} --\nTestimony recording started! All new messages will be recorded as testimony lines. Say "End" to stop recording.')
+                        return
+            if sign == 'CE':
+                if self.client.area.recording:
+                    self.client.area.recording = False
+                    self.client.area.broadcast_ooc('Testimony recording stopped!')
+                # Display the testimony title
+                if len(self.client.area.testimony) > 0:
+                    statement = self.client.area.testimony[0]
+                    lst = list(statement)
+                    # See if the testimony is supposed to end here.
+
+                    # Center it and make it speedy
+                    lst[4] = "~~}}-- " + self.client.area.testimony_title + " --"
+
+                    # Make it orange
+                    lst[14] = 3
+                    statement = tuple(lst)
+                    targets = self.client.area.clients
+                    for c in targets:
+                        # Blinded clients don't receive IC messages
+                        if c.blinded:
+                            continue
+                        # Ignore those losers with listenpos for testimony
+                        c.send_command('MS', *statement)
 
     def net_cmd_setcase(self, args):
-        """ Sets the casing preferences of the given client.
+        """Sets the casing preferences of the given client.
 
         SETCASE#<cases:string>#<will_cm:int>#<will_def:int>#<will_pro:int>#<will_judge:int>#<will_jury:int>#<will_steno:int>#%
 
@@ -932,150 +921,186 @@ class AOProtocol(asyncio.Protocol):
         self.client.casing_jur = args[5] == "1"
         self.client.casing_steno = args[6] == "1"
 
-
     def net_cmd_casea(self, args):
-        """ Announces a case with a title, and specific set of people to look for.
+        """Announces a case with a title, and specific set of people to look for.
 
         CASEA#<casetitle:string>#<need_cm:int>#<need_def:int>#<need_pro:int>#<need_judge:int>#<need_jury:int>#<need_steno:int>#%
 
         Note: Though all but the first arguments are ints, they technically behave as bools of 0 and 1 value.
 
         """
-        if self.client.is_cm:
+        if not self.client.is_checked:
+            return
+        if self.client in self.client.area.owners:
             if not self.client.can_call_case():
-                raise ClientError('Please wait 60 seconds between case announcements!')
+                self.client.send_ooc(
+                    'Please wait 60 seconds between case announcements!')
+                return
 
-            if not args[1] == "1" and not args[2] == "1" and not args[3] == "1" and not args[4] == "1" and not args[5] == "1":
-                raise ArgumentError('You should probably announce the case to at least one person.')
-            msg = '=== Case Announcement ===\r\n{} [{}] is hosting {}, looking for '.format(self.client.get_char_name(),
-                                                                                            self.client.id, args[0])
+            if not args[1] == "1" and not args[2] == "1" and not args[
+                    3] == "1" and not args[4] == "1" and not args[5] == "1":
+                self.client.send_ooc(
+                    'You should probably announce the case to at least one person.'
+                )
+                return
+            msg = '=== Case Announcement ===\r\n{} [{}] is hosting {}, looking for '.format(
+                self.client.char_name, self.client.id, args[0])
 
-            lookingfor = []
+            lookingfor = [p for p, q in
+                zip(['defense', 'prosecutor', 'judge', 'juror', 'stenographer'], args[1:])
+                if q == '1']
 
-            if args[1] == "1":
-                lookingfor.append("defence")
-            if args[2] == "1":
-                lookingfor.append("prosecutor")
-            if args[3] == "1":
-                lookingfor.append("judge")
-            if args[4] == "1":
-                lookingfor.append("juror")
-            if args[5] == "1":
-                lookingfor.append("stenographer")
+            msg += ', '.join(lookingfor) + '.\r\n=================='
 
-            msg = msg + ', '.join(lookingfor) + '.\r\n=================='
-
-            self.client.server.send_all_cmd_pred('CASEA', msg, args[1], args[2], args[3], args[4], args[5], '1')
+            self.client.server.send_all_cmd_pred('CASEA', msg, args[1],
+                                                 args[2], args[3], args[4],
+                                                 args[5], '1')
 
             self.client.set_case_call_delay()
 
-            logger.log_server('[CASE_ANNOUNCEMENT]{}, DEF: {}, PRO: {}, JUD: {}, JUR: {}, STENO: {}.'.format(
-                args[0], args[1], args[2], args[3], args[4], args[5]),
-                self.client)
+            log_data = {k: v for k, v in
+                zip(('message', 'def', 'pro', 'jud', 'jur', 'steno'), args)}
+            database.log_room('case', self.client, self.client.area, message=log_data)
         else:
-            raise ClientError('You cannot announce a case in an area where you are not a CM!')
-
+            self.client.send_ooc('You cannot announce a case in an area where you are not a CM!')
 
     def net_cmd_hp(self, args):
-        """ Sets the penalty bar.
+        """Sets the penalty bar.
 
         HP#<type:int>#<new_value:int>#%
 
         """
+        if not self.client.is_checked:
+            return
         if self.client.is_muted:  # Checks to see if the client has been muted by a mod
-            self.client.send_host_message("You have been muted by a moderator")
+            self.client.send_ooc('You are muted by a moderator.')
             return
         if self.client.area.cannot_ic_interact(self.client):
-            self.client.send_host_message(
-                "You are not on the area's invite list, and thus, you cannot change the Confidence bars!")
+            self.client.send_ooc(
+                "You are not on the area's invite list, and thus, you cannot change the Confidence bars!"
+            )
             return
         if not self.validate_net_cmd(args, self.ArgType.INT, self.ArgType.INT):
             return
         try:
             self.client.area.change_hp(args[0], args[1])
-            self.client.area.add_to_judgelog(self.client, 'changed the penalties')
-            logger.log_server('[HP]Changed HP ({}) to {}'.format(args[0], args[1]), self.client)
-            logger.log_demo('[HP][{} {}]'.format(
-                args[0], args[1]), self.client)
+            self.client.area.add_to_judgelog(self.client,
+                                             'changed the penalties')
+            database.log_room('hp', self.client, self.client.area)
         except AreaError:
             return
 
     def net_cmd_pe(self, args):
-        """ Adds a piece of evidence.
+        """Adds a piece of evidence.
 
         PE#<name: string>#<description: string>#<image: string>#%
 
+        :param args:
+
         """
+        if not self.client.is_checked:
+            return
+        if not self.validate_net_cmd(args, self.ArgType.STR_OR_EMPTY, self.ArgType.STR_OR_EMPTY, self.ArgType.STR_OR_EMPTY):
+            return
         if len(args) < 3:
             return
         # evi = Evidence(args[0], args[1], args[2], self.client.pos)
-        self.client.area.evi_list.add_evidence(self.client, args[0], args[1], args[2], 'all')
+        self.client.area.evi_list.add_evidence(self.client, args[0], args[1],
+                                               args[2], 'all')
+        database.log_room('evidence.add', self.client, self.client.area)
         self.client.area.broadcast_evidence_list()
 
     def net_cmd_de(self, args):
-        """ Deletes a piece of evidence.
+        """Deletes a piece of evidence.
 
         DE#<id: int>#%
 
         """
-        idx = int(args[0])
-        self.client.area.evi_list.del_evidence(self.client, idx)
+        if not self.client.is_checked:
+            return
+        if not self.validate_net_cmd(args, self.ArgType.INT):
+            return
+        self.client.area.evi_list.del_evidence(
+            self.client, self.client.evi_list[int(args[0])])
+        database.log_room('evidence.del', self.client, self.client.area)
         self.client.area.broadcast_evidence_list()
 
     def net_cmd_ee(self, args):
-        """ Edits a piece of evidence.
+        """Edits a piece of evidence.
 
         EE#<id: int>#<name: string>#<description: string>#<image: string>#%
 
         """
-
-        if len(args) < 4:
+        if not self.client.is_checked:
             return
-        idx = int(args[0])
+        if not self.validate_net_cmd(args, self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.STR_OR_EMPTY, self.ArgType.STR_OR_EMPTY):
+            return
+        elif len(args) < 4:
+            return
+
         evi = (args[1], args[2], args[3], 'all')
 
-        self.client.area.evi_list.edit_evidence(self.client, idx, evi)
+        self.client.area.evi_list.edit_evidence(
+            self.client, self.client.evi_list[int(args[0])], evi)
+        database.log_room('evidence.edit', self.client, self.client.area)
         self.client.area.broadcast_evidence_list()
 
-    def make_valid_string(self, name):
-        printable = string.ascii_letters + string.digits + string.punctuation
-        if not set(name).issubset(set(printable)):
-            name = re.sub('[{}]'.format(printable), '', name)
-        return name
-
     def net_cmd_zz(self, args):
-        """ Sent on mod call.
+        """Sent on mod call.
 
         """
+        if not self.client.is_checked:
+            return
+
         if self.client.is_muted:  # Checks to see if the client has been muted by a mod
-            self.client.send_host_message("You have been muted by a moderator")
+            self.client.send_ooc('You are muted by a moderator.')
+            return
+
+        if self.client.char_id == -1:
+            self.client.send_ooc(
+                "You cannot call a moderator while spectating.")
             return
 
         if not self.client.can_call_mod():
-            self.client.send_host_message("You must wait 30 seconds between mod calls.")
+            self.client.send_ooc(
+                "You must wait 30 seconds between mod calls.")
             return
 
         current_time = strftime("%H:%M", localtime())
 
         if len(args) < 1:
-            self.server.send_all_cmd_pred('ZZ', '[{}] {} ({}) in {} without reason (not using the Case Café client?)'
-                                          .format(current_time, self.client.get_char_name(), self.client.get_ip(),
-                                                  self.client.area.name), pred=lambda c: c.is_mod)
+            self.server.send_all_cmd_pred(
+                'ZZ',
+                '[{}] {} ({}) in {} without reason (not using 2.6?)'.format(
+                    current_time, self.client.char_name,
+                    self.client.ip, self.client.area.name),
+                pred=lambda c: c.is_mod)
             self.client.set_mod_call_delay()
-            logger.log_server('Called a moderator.', self.client)
-            logger.log_mod('Called a moderator.', self.client)
+            database.log_room('modcall', self.client, self.client.area)
         else:
-            self.server.send_all_cmd_pred('ZZ', '[{}] {} ({}) in {} with reason: {}'
-                                          .format(current_time, self.client.get_char_name(), self.client.get_ip(),
-                                                  self.client.area.name, args[0][:100]), pred=lambda c: c.is_mod)
+            args[0] = self.dezalgo(args[0])
+            self.server.send_all_cmd_pred(
+                'ZZ',
+                '[{}] {} ({}) in {} with reason: {}'.format(
+                    current_time, self.client.char_name,
+                    self.client.ip, self.client.area.name,
+                    args[0][:100]),
+                pred=lambda c: c.is_mod)
             self.client.set_mod_call_delay()
-            logger.log_server('Called a moderator: {}.'.format(args[0]), self.client)
-            logger.log_mod('Called a moderator: {}.'.format(args[0]), self.client)
+            database.log_room('modcall', self.client, self.client.area, message=args[0])
 
     def net_cmd_opKICK(self, args):
+        """
+        Unused; kick a user from the client UI.
+
+        """
         self.net_cmd_ct(['opkick', '/kick {}'.format(args[0])])
 
     def net_cmd_opBAN(self, args):
+        """
+        Unused; ban a user from the client UI.
+
+        """
         self.net_cmd_ct(['opban', '/ban {}'.format(args[0])])
 
     net_cmd_dispatcher = {
@@ -1095,8 +1120,9 @@ class AOProtocol(asyncio.Protocol):
         'CT': net_cmd_ct,  # OOC message
         'MC': net_cmd_mc,  # play song
         'RT': net_cmd_rt,  # WT/CE buttons
-        'SETCASE': net_cmd_setcase, # set case-announcement preferences for user
-        'CASEA': net_cmd_casea, # announce a case
+        'SETCASE':
+        net_cmd_setcase,  # set case-announcement preferences for user
+        'CASEA': net_cmd_casea,  # announce a case
         'HP': net_cmd_hp,  # penalties
         'PE': net_cmd_pe,  # add evidence
         'DE': net_cmd_de,  # delete evidence

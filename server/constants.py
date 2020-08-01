@@ -20,7 +20,7 @@ from enum import IntFlag
 
 
 class TargetType(Enum):
-    # possible keys: ip, OOC, id, cname, ipid, hdid
+    # possible keys: ip, OOC, id, cname, ipid, hdid, afk
     IP = 0
     OOC_NAME = 1
     ID = 2
@@ -28,6 +28,7 @@ class TargetType(Enum):
     IPID = 4
     HDID = 5
     ALL = 6
+    AFK = 7
 
 class MusicEffect(IntFlag):
     FADE_IN = 1

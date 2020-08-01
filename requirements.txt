@@ -1,3 +1,5 @@
-PyYAML
-websockets
 oyaml
+websockets
+arrow
+timeparse-plus
+geoip2

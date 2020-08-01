@@ -1,9 +1,12 @@
-/config*/*
 ### Server related
 # Sensitive data
 config/
 storage/**/*.json
+storage/**/*.yaml
+storage/db.sqlite*
+storage/GeoLite*
 logs/**/*.log
+logs/*
 
 ### Python related
 # Virtual environments
@@ -74,7 +77,6 @@ coverage.xml
 .idea/**/dynamic.xml
 .idea/**/uiDesigner.xml
 .idea/**/dbnavigator.xml
-storage/
-logs/
-_Saved_Logs/
+
+### VSCode
 .vscode/

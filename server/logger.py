@@ -15,109 +15,58 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import sys
+
 import logging
-from logging.handlers import TimedRotatingFileHandler
-
+import logging.handlers
 import time
-import datetime as dt
 
-class MyFormatter(logging.Formatter):
-    converter = dt.datetime.utcfromtimestamp
-
-    def formatTime(self, record, datefmt=None):
-        ct = self.converter(record.created)
-        if datefmt:
-            s = ct.strftime(datefmt)
-        else:
-            t = ct.strftime("%H:%M:%S")
-            s = "%s.%03d" % (t, record.msecs)
-        return s
 
 def setup_logger(debug):
+    """
+    Set up all loggers.
+    :param debug: whether debug mode should be enabled
+
+    """
     logging.Formatter.converter = time.gmtime
-    base_formatter = logging.Formatter('[%(asctime)s UTC]%(message)s')
-    # suffix = time.strftime("%A, %B %d, %Y", time.gmtime())
+    debug_formatter = logging.Formatter('[%(asctime)s UTC] %(message)s')
+
+    stdoutHandler = logging.StreamHandler(sys.stdout)
+    stdoutHandler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('[%(name)s] %(module)s@%(lineno)d : %(message)s')
+    stdoutHandler.setFormatter(formatter)
+    logging.getLogger().addHandler(stdoutHandler)
 
     debug_log = logging.getLogger('debug')
     debug_log.setLevel(logging.DEBUG)
 
-    debug_handler = TimedRotatingFileHandler(
-        'logs/debug/debug.log', when='midnight', interval=1, encoding='utf-8')
-    # debug_handler.suffix = '{}.log'.format(suffix)
+    debug_handler = logging.handlers.RotatingFileHandler('logs/debug.log', encoding='utf-8',
+                                                            maxBytes=1024 * 1024 * 4)
     debug_handler.setLevel(logging.DEBUG)
-    debug_handler.setFormatter(base_formatter)
+    debug_handler.setFormatter(debug_formatter)
     debug_log.addHandler(debug_handler)
+
+    # Intended to be a brief log for `tail -f`. To search through events,
+    # use the database.
+    info_log = logging.getLogger('events')
+    info_log.setLevel(logging.INFO)
+    file_handler = logging.handlers.RotatingFileHandler('logs/server.log', encoding='utf-8',
+                                                            maxBytes=1024 * 512)
+    file_handler.setFormatter(logging.Formatter('[%(asctime)s UTC] %(message)s'))
+    info_log.addHandler(file_handler)
 
     if not debug:
         debug_log.disabled = True
-
-    mod_log = logging.getLogger('mod')
-    mod_log.setLevel(logging.INFO)
-
-    mod_handler = TimedRotatingFileHandler(
-        'logs/mod/mod.log', when='midnight', interval=1, encoding='utf-8')
-    # mod_handler.suffix = '{}.log'.format(suffix)
-    mod_handler.setLevel(logging.INFO)
-    mod_handler.setFormatter(base_formatter)
-    mod_log.addHandler(mod_handler)
-
-    server_log = logging.getLogger('server')
-    server_log.setLevel(logging.INFO)
-
-    server_handler = TimedRotatingFileHandler(
-        'logs/server/server.log', when='midnight', interval=1, encoding='utf-8')
-    # server_handler.suffix = '{}.log'.format(suffix)
-    server_handler.setLevel(logging.INFO)
-    server_handler.setFormatter(base_formatter)
-    server_log.addHandler(server_handler)
-
-    #Extreme logging for future demo playback
-    demo_log = logging.getLogger('demo')
-    demo_log.setLevel(logging.INFO)
-
-    demo_formatter = MyFormatter('[%(asctime)s]%(message)s')
-
-    demo_handler = TimedRotatingFileHandler(
-        'logs/demo/demo.log', when='midnight', interval=1, encoding='utf-8')
-    # demo_handler.suffix = '{}.log'.format(suffix)
-    demo_handler.setLevel(logging.INFO)
-    demo_handler.setFormatter(demo_formatter)
-    demo_log.addHandler(demo_handler)
-
-def log_debug(msg, client=None):
-    msg = parse_client_info(client) + msg
-    logging.getLogger('debug').debug(msg)
-
-
-def log_server(msg, client=None):
-    msg = parse_client_info(client) + msg
-    logging.getLogger('server').info(msg)
-
-
-def log_mod(msg, client=None):
-    msg = parse_client_info(client) + msg
-    logging.getLogger('mod').info(msg)
-
-
-def log_demo(msg, client=None):
-    msg = parse_client_demo_info(client) + msg
-    logging.getLogger('demo').info(msg)
-
+    else:
+        debug_log.debug('Logger started')
 
 def parse_client_info(client):
+    """Prepend information about a client to a log entry."""
     if client is None:
         return ''
-    info = client.get_ip()
-    extra = ''
+    ipid = client.ip
+    prefix = f'[{ipid:<15}][{client.id:<3}][{client.name}]'
     if client.is_mod:
-        extra = '[MOD]'
-    if client.is_cm:
-        extra = '[CM]'
-
-    return '[{} {} {} H{} A{}][{}]{}'.format(info, client.id, client.name, client.hub.id, client.area.id, client.get_char_name(True), extra)
-
-def parse_client_demo_info(client):
-    if client is None:
-        return ''
-
-    return '[H{} A{} C{}]'.format(client.hub.id, client.area.id, client.id)
+        prefix += '[MOD]'
+    return prefix
+    
