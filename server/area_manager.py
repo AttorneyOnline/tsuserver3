@@ -310,35 +310,19 @@ class AreaManager:
             self.music_looper = asyncio.get_event_loop().call_later(
                 vote_picked.length, lambda: self.start_jukebox())
 
-        def play_music(self, name, cid, length=-1):
+        def play_music(self, name, cid, loop=0, showname="", effects=0):
             """
             Play a track.
             :param name: track name
             :param cid: origin character ID
-            :param length: track length (Default value = -1)
-            """
-            self.send_command('MC', name, cid)
-            if self.music_looper:
-                self.music_looper.cancel()
-            if length > 0:
-                self.music_looper = asyncio.get_event_loop().call_later(
-                    length, lambda: self.play_music(name, -1, length))
-
-        def play_music_shownamed(self, name, cid, showname, length=-1):
-            """
-            Play a track, but show showname as the player instead of character
-            ID.
-            :param name: track name
-            :param cid: origin character ID
+            :param loop: 1 for clientside looping, 0 for no looping (2.8)
             :param showname: showname of origin user
-            :param length: track length (Default value = -1)
+            :param effects: fade out/fade in/sync/etc. effect bitflags
             """
-            self.send_command('MC', name, cid, showname)
-            if self.music_looper:
-                self.music_looper.cancel()
-            if length > 0:
-                self.music_looper = asyncio.get_event_loop().call_later(
-                    length, lambda: self.play_music(name, -1, length))
+            # If it's anything other than 0, it's looping. (Legacy music.yaml support)
+            if loop != 0:
+                loop = 1
+            self.send_command('MC', name, cid, showname, loop, 0, effects)
 
         def can_send_message(self, client):
             """
@@ -420,24 +404,17 @@ class AreaManager:
             self.judgelog.append(
                 f'{client.char_name} ({client.ip}) {msg}.')
 
-        def add_music_playing(self, client, name):
+        def add_music_playing(self, client, name, showname=''):
             """
             Set info about the current track playing.
             :param client: player
+            :param showname: showname of player (can be blank)
             :param name: track name
             """
-            self.current_music_player = client.char_name
-            self.current_music_player_ipid = client.ipid
-            self.current_music = name
-
-        def add_music_playing_shownamed(self, client, showname, name):
-            """
-            Set info about the current track playing.
-            :param client: player
-            :param showname: showname of player
-            :param name: track name
-            """
-            self.current_music_player = f'{showname} ({client.char_name})'
+            if showname != '':
+                self.current_music_player = f'{showname} ({client.char_name})'
+            else:
+                self.current_music_player = client.char_name
             self.current_music_player_ipid = client.ipid
             self.current_music = name
 
