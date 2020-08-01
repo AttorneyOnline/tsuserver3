@@ -158,11 +158,14 @@ def ooc_cmd_area_create(client, arg):
     Create a new area.
     Usage: /area_create [name]
     """
-    area = client.area.area_manager.create_area()
-    if arg != '':
-        area.name = arg
-    client.area.area_manager.broadcast_area_list()
-    client.send_ooc(f'New area created! ({area.name})')
+    try:
+        area = client.area.area_manager.create_area()
+        if arg != '':
+            area.name = arg
+        client.area.area_manager.broadcast_area_list()
+        client.send_ooc(f'New area created! {area.name} ({len(client.area.area_manager.areas)}/{client.area.area_manager.max_areas})')
+    except AreaError:
+        raise
 
 
 @mod_only(hub_owners=True)

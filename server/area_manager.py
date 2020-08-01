@@ -48,6 +48,7 @@ class AreaManager:
         self.can_gm = False
         self.music_ref = ''
         self.music_override = False
+        self.max_areas = 50
         # /prefs
 
         self.music_list = []
@@ -122,6 +123,8 @@ class AreaManager:
             self.music_ref = hub['music_ref']
         if 'music_override' in hub:
             self.music_override = hub['music_override']
+        if 'max_areas' in hub:
+            self.max_areas = hub['max_areas']
 
         if 'character_data' in hub:
             try:
@@ -154,6 +157,7 @@ class AreaManager:
         hub['can_gm'] = self.can_gm
         hub['music_ref'] = self.music_ref
         hub['music_override'] = self.music_override
+        hub['max_areas'] = self.max_areas
         areas = []
         for area in self.areas:
             areas.append(area.save())
@@ -247,6 +251,8 @@ class AreaManager:
     def create_area(self):
         """Create a new area instance and return it."""
         idx = len(self.areas)
+        if idx >= self.max_areas:
+            raise AreaError(f'Area limit reached! ({self.max_areas})')
         area = Area(self, f'Area {idx}')
         self.areas.append(area)
         return area
