@@ -330,8 +330,8 @@ def ooc_cmd_remote_listen(client, arg):
 
 def ooc_cmd_testimony(client, arg):
     """
-    Display the currently recorded testimony.
-    Usage: /testimony
+    Display the currently recorded testimony. Optionally, idx can be passed to move to that statement.
+    Usage: /testimony [idx]
     """
     if len(client.area.testimony) <= 0:
         client.send_ooc('There is no testimony recorded!')
@@ -409,7 +409,7 @@ def ooc_cmd_testimony_remove(client, arg):
 @mod_only(area_owners=True)
 def ooc_cmd_testimony_amend(client, arg):
     """
-    Edit the spoken message of the specified testimony
+    Edit the spoken message of the statement at idx.
     Usage: /testimony_amend <idx> <msg>
     """
     if len(client.area.testimony) <= 0:

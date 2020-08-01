@@ -71,6 +71,7 @@ class Area:
         self.hidden = False
         self.can_whisper = True
         self.can_wtce = True
+        self.music_autoplay = False
         # /prefs end
 
         self.music_looper = None
@@ -81,7 +82,6 @@ class Area:
         self.current_music_player_ipid = -1
         self.current_music_looping = 0
         self.current_music_effects = 0
-        self.music_autoplay = False
         self.evi_list = EvidenceList()
         self.testimony = []
         self.testimony_title = ''

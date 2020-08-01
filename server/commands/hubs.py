@@ -471,9 +471,9 @@ def ooc_cmd_gm(client, arg):
                 id = int(id)
                 c = client.server.client_manager.get_targets(
                     client, TargetType.ID, id, False)[0]
-                if not c in client.area.clients:
+                if not c in client.area.area_manager.clients:
                     raise ArgumentError(
-                        'You can only \'nominate\' people to be GMs when they are in the area.'
+                        'You can only \'nominate\' people to be GMs when they are in the hub.'
                     )
                 elif c in client.area.area_manager.owners:
                     client.send_ooc(
@@ -507,7 +507,7 @@ def ooc_cmd_ungm(client, arg):
                 client, TargetType.ID, _id, False)[0]
             if c in client.area.area_manager.owners:
                 client.area.area_manager.remove_owner(c)
-                database.log_room('cm.remove', client, client.area, target=c)
+                database.log_room('gm.remove', client, client.area, target=c)
             else:
                 client.send_ooc(
                     'You cannot remove someone from GMing when they aren\'t a GM.'
