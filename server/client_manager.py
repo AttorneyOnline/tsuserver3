@@ -167,7 +167,14 @@ class ClientManager:
         def send_motd(self):
             """Send the message of the day to the client."""
             motd = self.server.config['motd']
-            self.send_ooc(f'=== MOTD ===\r\n{motd}\r\n=============')
+            if motd != '':
+                self.send_ooc(f'=== MOTD ===\r\n{motd}\r\n=============')
+
+        def send_hub_info(self):
+            """Send the hub info to the client."""
+            info = self.area.area_manager.info
+            if info != '':
+                self.send_ooc(f'=== HUB INFO ===\r\n{info}\r\n=============')
 
         def send_player_count(self):
             """

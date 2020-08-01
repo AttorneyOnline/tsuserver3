@@ -54,6 +54,7 @@ def ooc_cmd_hub(client, arg):
                 if hub == client.area.area_manager:
                     raise AreaError('User already in specified hub.')
                 client.change_area(hub.default_area())
+                client.send_hub_info()
                 return
         raise AreaError('Targeted hub not found!')
     except ValueError:
@@ -434,7 +435,7 @@ def ooc_cmd_info(client, arg):
     Usage: /info [str]
     """
     if len(arg) == 0:
-        client.send_ooc(f'Info: {client.area.area_manager.info}')
+        client.send_hub_info()
         database.log_room('info.request', client, client.area)
     else:
         if not client.is_mod and not client in client.area.area_manager.owners:
