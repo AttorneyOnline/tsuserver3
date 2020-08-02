@@ -8,6 +8,7 @@ __all__ = [
     'ooc_cmd_a',
     'ooc_cmd_s',
     'ooc_cmd_g',
+    'ooc_cmd_h',
     'ooc_cmd_m',
     'ooc_cmd_lm',
     'ooc_cmd_announce',
@@ -65,7 +66,7 @@ def message_areas_cm(client, areas, message):
 
 def ooc_cmd_g(client, arg):
     """
-    Broadcast a message to all areas.
+    Broadcast a server-wide message.
     Usage: /g <message>
     """
     if client.muted_global:
@@ -74,6 +75,25 @@ def ooc_cmd_g(client, arg):
         raise ArgumentError("You can't send an empty message.")
     client.server.broadcast_global(client, arg, client.is_mod)
     database.log_room('chat.global', client, client.area, message=arg)
+
+
+def ooc_cmd_h(client, arg):
+    """
+    Broadcast a hub-wide message.
+    Usage: /h <message>
+    """
+    if len(arg) == 0:
+        raise ArgumentError("You can't send an empty message.")
+
+    for area in client.area.area_manager.areas:
+        is_mod = ''
+        is_gm = ''
+        if client.is_mod:
+            is_mod = '[M]'
+        if client in client.area.area_manager.owners:
+            is_gm = '[GM]'
+        area.send_command('CT', f'<dollar>H[{client.area.area_manager.abbreviation}][{client.char_name}]{is_gm}{is_mod}', arg, '0')
+    database.log_room('chat.hub', client, client.area, message=arg)
 
 
 @mod_only()
