@@ -184,11 +184,9 @@ def ooc_cmd_area_kick(client, arg):
     target_pos is the optional position that everyone should end up in when kicked.
     Usage: /area_kick <id> [destination] [target_pos]
     """
-    if client.area.is_locked == client.area.Locked.FREE:
-        raise ClientError('Area isn\'t locked.')
     if not arg:
         raise ClientError(
-            'You must specify a target. Use /area_kick <id> [destination #]')
+            'You must specify a target. Use /area_kick <id> [destination #] [target_pos]')
 
     args = arg.split(' ')
     if args[0] == 'afk':
@@ -203,6 +201,9 @@ def ooc_cmd_area_kick(client, arg):
     if targets:
         try:
             for c in targets:
+                # We're a puny CM, we can't do this.
+                if not client.is_mod and not client in client.area_manager.owners and not c in client.area:
+                    raise ArgumentError("You can't kick someone from another area as a CM!")
                 if len(args) == 1:
                     area = client.area.area_manager.default_area()
                     output = area.id
@@ -224,6 +225,8 @@ def ooc_cmd_area_kick(client, arg):
                 database.log_room('area_kick', client, client.area, target=c, message=output)
                 if client.area.is_locked != client.area.Locked.FREE:
                     client.area.invite_list.discard(c.id)
+        except ValueError:
+            raise ArgumentError('Area ID must be a number.')
         except AreaError:
             raise
         except ClientError:

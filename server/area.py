@@ -337,6 +337,9 @@ class Area:
         if client in self.afkers:
             self.afkers.remove(client)
             self.server.client_manager.toggle_afk(client)
+        if self.area_manager.single_cm and client in self.owners:
+            self.remove_owner(client)
+            client.send_ooc('You can only be a CM of a single area in this hub.')
         if self.jukebox:
             self.remove_jukebox_vote(client, True)
         if len(self.clients) == 0:

@@ -19,21 +19,29 @@ class HubManager:
             clients = clients | hub.clients
         return clients
 
-    def load(self, path='config/areas.yaml'):
+    def load(self, path='config/areas.yaml', hub_id=-1):
         try:
             with open(path, 'r', encoding='utf-8') as stream:
                 hubs = yaml.safe_load(stream)
         except:
             raise AreaError(f'File path {path} is invalid!')
 
+        if hub_id != -1:
+            try:
+                self.hubs[hub_id].load(hubs[hub_id], destructive=True)
+            except ValueError:
+                raise AreaError(f'Invalid Hub ID {hub_id}! Please contact the server host.')
+            return
+
+        if 'area' in hubs[0]:
+            # Legacy support triggered! Abort operation
+            if len(self.hubs) <= 0:
+                self.hubs.append(AreaManager(self, f'Hub 0'))
+            self.hubs[0].load_areas(hubs)
+            return
+
         i = 0
         for hub in hubs:
-            if 'area' in hub:
-                # Legacy support triggered! Abort operation
-                if len(self.hubs) <= 0:
-                    self.hubs.append(AreaManager(self, f'Hub 0'))
-                self.hubs[0].load_areas(hubs)
-                break
             while len(self.hubs) < len(hubs):
                 # Make sure that the hub manager contains enough hubs to update with new information
                 self.hubs.append(AreaManager(self, f'Hub {len(self.hubs)}'))

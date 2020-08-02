@@ -49,6 +49,7 @@ class AreaManager:
         self.music_ref = ''
         self.music_override = False
         self.max_areas = 50
+        self.single_cm = False
         # /prefs
 
         self.music_list = []
@@ -95,10 +96,11 @@ class AreaManager:
             return self.name[:3].upper()
         return self.name.upper()
 
-    def load(self, hub):
+    def load(self, hub, destructive=False):
         """
         Create all hub data from a YAML dictionary.
         :param hub: what to parse.
+        :param destructive: if we should wipe the old areas before loading the new ones in
 
         """
         # Legacy
@@ -125,12 +127,19 @@ class AreaManager:
             self.music_override = hub['music_override']
         if 'max_areas' in hub:
             self.max_areas = hub['max_areas']
+        if 'single_cm' in hub:
+            self.single_cm = hub['single_cm']
 
         if 'character_data' in hub:
             try:
                 self.load_character_data(hub['character_data'])
             except:
                 print('Character data reference path invalid!')
+        if destructive:
+            for area in self.areas.copy():
+                if area == self.default_area(): # Do not remove the default area
+                    continue
+                self.remove_area(area)
         if 'areas' in hub:
             self.load_areas(hub['areas'])
 
@@ -158,6 +167,7 @@ class AreaManager:
         hub['music_ref'] = self.music_ref
         hub['music_override'] = self.music_override
         hub['max_areas'] = self.max_areas
+        hub['single_cm'] = self.single_cm
         areas = []
         for area in self.areas:
             areas.append(area.save())
@@ -410,10 +420,6 @@ class AreaManager:
         """Broadcast an OOC message to all areas in this hub."""
         for area in self.areas:
             area.send_command('CT', area.server.config['hostname'], msg, '1')
-        area.send_owner_command(
-            'CT',
-            '[ALL]' + area.server.config['hostname'],
-            msg, '1')
 
     def send_arup_players(self):
         """Broadcast ARUP packet containing player counts."""

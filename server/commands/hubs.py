@@ -15,6 +15,7 @@ __all__ = [
     'ooc_cmd_save_hub',
     'ooc_cmd_load_hub',
     'ooc_cmd_list_hubs',
+    'ooc_cmd_clear_hub',
     # Area Creation system
     'ooc_cmd_area_create',
     'ooc_cmd_area_remove',
@@ -135,7 +136,6 @@ def ooc_cmd_load_hub(client, arg):
 
     except AreaError:
         raise
-    
 
 
 @mod_only()
@@ -153,6 +153,27 @@ def ooc_cmd_list_hubs(client, arg):
 
 
 @mod_only(hub_owners=True)
+def ooc_cmd_clear_hub(client, arg):
+    """
+    Clear the current hub and reset it to its default state.
+    Usage: /clear_hub
+    """
+    if arg != '':
+        raise ArgumentError('This command takes no arguments!')
+    try:
+        client.server.hub_manager.load(hub_id=client.area.area_manager.id)
+        client.area.area_manager.broadcast_ooc('Hub clearing initiated...')
+        client.area.area_manager.send_arup_players()
+        client.area.area_manager.send_arup_status()
+        client.area.area_manager.send_arup_cms()
+        client.area.area_manager.send_arup_lock()
+        client.server.client_manager.refresh_music(client.area.area_manager.clients)
+        client.send_ooc('Success, sending ARUP and refreshing music...')
+    except AreaError:
+        raise
+
+
+@mod_only(hub_owners=True)
 def ooc_cmd_area_create(client, arg):
     """
     Create a new area.
@@ -162,7 +183,10 @@ def ooc_cmd_area_create(client, arg):
         area = client.area.area_manager.create_area()
         if arg != '':
             area.name = arg
+        # Areas are HiddenCM by default to preserve legacy functionality
+        area.evidence_mod = 'HiddenCM'
         client.area.area_manager.broadcast_area_list()
+        client.area.area_manager.send_arup_cms()
         client.send_ooc(f'New area created! {area.name} ({len(client.area.area_manager.areas)}/{client.area.area_manager.max_areas})')
     except AreaError:
         raise
