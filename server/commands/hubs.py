@@ -199,7 +199,9 @@ def ooc_cmd_area_rename(client, arg):
     """
     if arg != '':
         try:
-            client.area.rename_area(arg)
+            client.area.name = arg
+            client.area.area_manager.broadcast_area_list()
+            client.send_ooc(f'Renamed area {client.area.id} to {client.area.name}.')
         except ValueError:
             raise ArgumentError('Area ID must be a number.')
         except (AreaError, ClientError):
