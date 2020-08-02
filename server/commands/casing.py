@@ -24,6 +24,7 @@ __all__ = [
     'ooc_cmd_testimony_clear',
     'ooc_cmd_testimony_remove',
     'ooc_cmd_testimony_amend',
+    'ooc_cmd_testimony_swap',
 ]
 
 
@@ -342,7 +343,7 @@ def ooc_cmd_testimony(client, arg):
             if client.area.recording == True:
                 client.send_ooc('It is not cross-examination yet!')
                 return
-            idx = int(args[0])
+            idx = int(args[0]) - 1
             client.area.testimony_send(idx)
             client.area.broadcast_ooc(f'{client.char_name} has moved to Statement {idx+1}.')
         except ValueError:
@@ -351,7 +352,8 @@ def ooc_cmd_testimony(client, arg):
             raise
         return
 
-    msg = f'-- {client.area.testimony_title} --'
+    msg = f'Use > IC to progress, < to backtrack, >3 or <3 to go to specific statements.'
+    msg += f'\n-- {client.area.testimony_title} --'
     for i, statement in enumerate(client.area.testimony):
         # [15] SHOWNAME
         name = statement[15]
@@ -359,8 +361,10 @@ def ooc_cmd_testimony(client, arg):
             # [8] CID
             name = client.server.char_list[statement[8]]
         txt = statement[4].replace('{', '').replace('}', '')
-        msg += f'\n[{i+1}] {name}: {txt}'
-    msg += f'\nUse > IC to progress, < to backtrack, >3 or <3 to go to specific statements.'
+        here = '  '
+        if i == client.area.testimony_index:
+            here = '->'
+        msg += f'\n{here}[{i+1}] {name}: {txt}'
     client.send_ooc(msg)
 
 
@@ -421,9 +425,34 @@ def ooc_cmd_testimony_amend(client, arg):
     try:
         idx = int(args[0]) - 1
         lst = list(client.area.testimony[idx])
-        lst[4] = "}}}" + args[1]
+        lst[4] = "}}}" + args[1:]
         client.area.testimony[idx] = tuple(lst)
         client.area.broadcast_ooc(f'{client.char_name} has amended Statement {idx+1}.')
+    except ValueError:
+        raise ArgumentError('Index must be a number!')
+    except IndexError:
+        raise ArgumentError('Index out of bounds!')
+    except ClientError:
+        raise
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_testimony_swap(client, arg):
+    """
+    Swap the two statements by idx.
+    Usage: /testimony_swap <idx1> <idx2>
+    """
+    if len(client.area.testimony) <= 0:
+        client.send_ooc('There is no testimony recorded!')
+        return
+    args = arg.split()
+    if len(args) < 2:
+        raise ArgumentError('Usage: /testimony_remove <idx1> <idx2>.')
+    try:
+        idx1 = int(args[0]) - 1
+        idx2 = int(args[1]) - 1
+        client.area.testimony[idx2], client.area.testimony[idx1] = client.area.testimony[idx1], client.area.testimony[idx2]
+        client.area.broadcast_ooc(f'{client.char_name} has swapped Statements {idx1+1} and {idx2+1}.')
     except ValueError:
         raise ArgumentError('Index must be a number!')
     except IndexError:

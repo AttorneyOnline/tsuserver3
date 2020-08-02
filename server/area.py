@@ -450,7 +450,7 @@ class Area:
         if client.hidden_in != None:
             client.hide(False)
             client.area.broadcast_area_list(client)
-        if args[4].startswith('**') and len(client.testimony) > 0:
+        if args[4].startswith('**') and len(self.testimony) > 0:
             idx = self.testimony_index
             if idx == -1:
                 idx = 0
@@ -459,11 +459,16 @@ class Area:
                 lst[4] = "}}}" + args[4][2:]
                 self.testimony[idx] = tuple(lst)
                 self.broadcast_ooc(f'{client.char_name} has amended Statement {idx+1}.')
+                if not self.recording:
+                    self.testimony_send(idx)
             except IndexError:
                 client.send_ooc(f'Something went wrong, couldn\'t amend Statement {idx+1}!')
             return
         adding = self.recording
         if args[4].lstrip().startswith('++') and len(self.testimony) > 0:
+            if len(self.testimony) >= 30:
+                client.send_ooc('Maximum testimony statement amount reached! (30)')
+                return
             adding = True
         else:
             if targets == None:
@@ -508,6 +513,9 @@ class Area:
                     return
 
         if adding:
+            if len(self.testimony) >= 30:
+                client.send_ooc('Maximum testimony statement amount reached! (30)')
+                return
             lst = list(args)
             if lst[4].startswith('++'):
                 lst[4] = lst[4][2:]
@@ -523,10 +531,13 @@ class Area:
             # Make it green
             lst[14] = 1
             rec = tuple(lst)
-            self.testimony.append(rec)
+            idx = self.testimony_index
+            if self.testimony_index == -1:
+                idx = len(self.testimony)-1
+            self.testimony.insert(idx, rec)
             self.broadcast_ooc(f'Statement {len(self.testimony)} added.')
             if not self.recording:
-                self.testimony_send(len(self.testimony)-1)
+                self.testimony_send(idx)
     
     def testimony_send(self, idx):
         """Send the testimony statement at index"""
