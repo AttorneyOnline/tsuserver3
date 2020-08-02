@@ -1074,13 +1074,15 @@ class ClientManager:
         """
         if client.area.jukebox:
             client.area.remove_jukebox_vote(client, True)
+        if client in client.area.area_manager.owners:
+            client.area.area_manager.owners.remove(self)
         for a in client.area.area_manager.areas:
             if client in a.owners:
-                a.owners.remove(client)
-                client.area.area_manager.send_arup_cms()
-                if len(a.owners) == 0:
+                a._owners.remove(client)
+                if len(a._owners) == 0:
                     if a.is_locked != a.Locked.FREE:
                         a.unlock()
+        client.area.area_manager.send_arup_cms()
         heappush(self.cur_id, client.id)
         temp_ipid = client.ipid
         for c in self.server.client_manager.clients:
