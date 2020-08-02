@@ -420,7 +420,7 @@ class AreaManager:
         if not self.arup_enabled:
             return
         players_list = [0]
-        for client in self.server.client_manager.clients:
+        for client in self.clients:
             for area in client.local_area_list:
                 playercount = -1
                 if not self.hide_clients and not area.hide_clients:
@@ -433,7 +433,7 @@ class AreaManager:
         if not self.arup_enabled:
             return
         status_list = [1]
-        for client in self.server.client_manager.clients:
+        for client in self.clients:
             for area in client.local_area_list:
                 status_list.append(area.status)
             self.server.send_arup(client, status_list)
@@ -443,11 +443,11 @@ class AreaManager:
         if not self.arup_enabled:
             return        
         cms_list = [2]
-        for client in self.server.client_manager.clients:
+        for client in self.clients:
             for area in client.local_area_list:
                 cm = 'FREE'
                 if len(area.owners) > 0:
-                    cm = area.get_cms()
+                    cm = area.get_owners()
                 cms_list.append(cm)
             self.server.send_arup(client, cms_list)
 
@@ -456,7 +456,7 @@ class AreaManager:
         if not self.arup_enabled:
             return        
         lock_list = [3]
-        for client in self.server.client_manager.clients:
+        for client in self.clients:
             for area in client.local_area_list:
                 lock_list.append(area.is_locked.name)
             self.server.send_arup(client, lock_list)

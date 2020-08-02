@@ -663,7 +663,7 @@ class ClientManager:
             for _, area in enumerate(self.local_area_list):
                 owner = ''
                 if len(area.owners) > 0:
-                    owner = f'[CMs: {area.get_cms()}]'
+                    owner = f'[CMs: {area.get_owners()}]'
                 lock = {
                     area.Locked.FREE: '',
                     area.Locked.SPECTATABLE: '[SPEC]',

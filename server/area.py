@@ -849,9 +849,9 @@ class Area:
         for client in self.clients:
             client.send_command('LE', *self.get_evidence_list(client))
 
-    def get_cms(self):
+    def get_owners(self):
         """
-        Get a list of CMs.
+        Get a string of area's owners (GMs and CMs).
         :return: message
         """
         msg = ''
