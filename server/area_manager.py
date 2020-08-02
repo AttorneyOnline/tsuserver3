@@ -345,6 +345,18 @@ class AreaManager:
         self.broadcast_ooc(
             f'{client.char_name} [{client.id}] is no longer GM in this hub.')
 
+    def get_gms(self):
+        """
+        Get a list of GMs.
+        :return: message
+        """
+        msg = ''
+        for i in self.owners:
+            msg += f'[{str(i.id)}] {i.char_name}, '
+        if len(msg) > 2:
+            msg = msg[:-2]
+        return msg
+
     def default_area(self):
         """Get the default area."""
         return self.areas[0]

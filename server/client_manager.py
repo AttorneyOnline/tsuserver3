@@ -802,8 +802,7 @@ class ClientManager:
             for hub in self.server.hub_manager.hubs:
                 owner = 'FREE'
                 if len(hub.owners) > 0:
-                    owner = hub.owners[0]
-                    owner = f'[{owner.id}] {owner.char_name}'
+                    owner = hub.get_gms()
                 msg += f'\r\n[{hub.id}] {hub.abbreviation}: {hub.name} (users: {len(hub.clients)}) {owner}'
                 if self.area.area_manager == hub:
                     msg += ' [*]'
@@ -1075,7 +1074,7 @@ class ClientManager:
         if client.area.jukebox:
             client.area.remove_jukebox_vote(client, True)
         if client in client.area.area_manager.owners:
-            client.area.area_manager.owners.remove(self)
+            client.area.area_manager.owners.remove(client)
         for a in client.area.area_manager.areas:
             if client in a.owners:
                 a._owners.remove(client)
