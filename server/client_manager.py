@@ -671,10 +671,11 @@ class ClientManager:
                 f'Character taken, switched to {self.char_name}.')
             return new_char_id
 
-        def send_area_list(self):
+        def send_area_list(self, full=True):
             """Send a list of areas over OOC."""
             msg = '=== Areas ==='
-            for _, area in enumerate(self.local_area_list):
+            area_list = self.get_area_list(not full, not full)
+            for _, area in enumerate(area_list):
                 owner = ''
                 if len(area._owners) > 0:
                     owner = f'[CMs: {area.get_owners()}]'
@@ -686,7 +687,7 @@ class ClientManager:
                 users = ''
                 if not area.hide_clients and not area.area_manager.hide_clients:
                     clients = area.clients
-                    if not self.is_mod and not self in area.owners:
+                    if not full:
                         clients = [c for c in area.clients if not c.hidden]
                     users = len(clients)
                     users = f'(users: {users}) '

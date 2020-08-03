@@ -10,6 +10,7 @@ __all__ = [
     'ooc_cmd_bg',
     'ooc_cmd_status',
     'ooc_cmd_area',
+    'ooc_cmd_area_visible',
     'ooc_cmd_getarea',
     'ooc_cmd_getareas',
     'ooc_cmd_invite',
@@ -91,6 +92,17 @@ def ooc_cmd_area(client, arg):
         raise ArgumentError('Area ID must be a name, abbreviation or a number.')
     except (AreaError, ClientError):
         raise
+
+
+@mod_only(hub_owners=True)
+def ooc_cmd_area_visible(client, arg):
+    """
+    Display only linked and non-hidden areas. Useful to GMs.
+    Usage: /area_visible
+    """
+    if arg != '':
+        raise ArgumentError('This command takes no arguments!')
+    client.send_area_list(full=True)
 
 
 def ooc_cmd_getarea(client, arg):

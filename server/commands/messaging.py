@@ -92,7 +92,7 @@ def ooc_cmd_h(client, arg):
             is_mod = '[M]'
         if client in client.area.area_manager.owners:
             is_gm = '[GM]'
-        area.send_command('CT', f'<dollar>H[{client.area.area_manager.abbreviation}][{client.char_name}]{is_gm}{is_mod}', arg, '0')
+        area.send_command('CT', f'<dollar>HUB[{client.char_name}]{is_gm}{is_mod}', arg, '0')
     database.log_room('chat.hub', client, client.area, message=arg)
 
 
