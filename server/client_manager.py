@@ -676,7 +676,7 @@ class ClientManager:
             msg = '=== Areas ==='
             for _, area in enumerate(self.local_area_list):
                 owner = ''
-                if len(area.owners) > 0:
+                if len(area._owners) > 0:
                     owner = f'[CMs: {area.get_owners()}]'
                 lock = {
                     area.Locked.FREE: '',
@@ -690,7 +690,10 @@ class ClientManager:
                         clients = [c for c in area.clients if not c.hidden]
                     users = len(clients)
                     users = f'(users: {users}) '
-                msg += f'\r\n[{area.id}] {area.abbreviation}: {area.name} {users}[{area.status}]{owner}{lock[area.is_locked]}'
+                status = ''
+                if self.area.area_manager.arup_enabled:
+                    status = f'[{area.status}]'
+                msg += f'\r\n[{area.id}] {area.name} {users}{status}{owner}{lock[area.is_locked]}'
                 if self.area == area:
                     msg += ' [*]'
             self.send_ooc(msg)
@@ -726,8 +729,8 @@ class ClientManager:
                 player_list = [c for c in player_list if not c.hidden]
             status = ''
             if self.area.area_manager.arup_enabled:
-                status = f'[{area.status}]'
-            info += f'[{area.abbreviation}]: [{len(player_list)} users]{status}{lock[area.is_locked]}'
+                status = f' [{area.status}]'
+            info += f'{len(player_list)} users{status}{lock[area.is_locked]}'
 
             sorted_clients = []
             for client in player_list:

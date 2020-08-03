@@ -366,7 +366,7 @@ class TsuServer3:
 
         """
         char_name = client.char_name
-        ooc_name = '{}[{}][{}]'.format('<dollar>G', client.area.abbreviation,
+        ooc_name = '{}[{}][{}]'.format('<dollar>G', client.area.area_manager.abbreviation,
                                        char_name)
         if as_mod:
             ooc_name += '[M]'
