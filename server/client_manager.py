@@ -642,19 +642,20 @@ class ClientManager:
                 self.send_ooc(
                     f'Changed area to {area.name} unannounced.')
 
-        def get_area_list(self, hidden=False, linked=False):
+        def get_area_list(self, hidden=False, unlinked=False):
             area_list = []
             for area in self.area.area_manager.areas:
-                if self.area != area and len(self.area.links) > 0:
-                    if hidden and area.hidden:
+                if self.area != area:
+                    if not hidden and area.hidden:
                         continue
-                    elif not (str(area.id) in self.area.links):
-                        if linked:
+                    if len(self.area.links) > 0:
+                        if not (str(area.id) in self.area.links):
+                            if not unlinked:
+                                continue
+                        if not hidden and self.area.links[str(area.id)]["hidden"] == True:
                             continue
-                    elif hidden and self.area.links[str(area.id)]["hidden"] == True:
-                        continue
-                    elif hidden and len(self.area.links[str(area.id)]["evidence"]) > 0 and not self.hidden_in in self.area.links[str(area.id)]["evidence"]:
-                        continue
+                        if not hidden and len(self.area.links[str(area.id)]["evidence"]) > 0 and not self.hidden_in in self.area.links[str(area.id)]["evidence"]:
+                            continue
 
                 area_list.append(area)
 
@@ -674,7 +675,7 @@ class ClientManager:
         def send_area_list(self, full=False):
             """Send a list of areas over OOC."""
             msg = '=== Areas ==='
-            area_list = self.get_area_list(not full, not full)
+            area_list = self.get_area_list(full, full)
             for _, area in enumerate(area_list):
                 owner = ''
                 if len(area._owners) > 0:

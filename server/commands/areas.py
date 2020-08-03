@@ -79,7 +79,7 @@ def ooc_cmd_area(client, arg):
     """
     args = arg.split()
     if len(args) == 0:
-        client.send_area_list()
+        client.send_area_list(full=client.is_mod or client in client.area.owners)
         return
 
     try:
@@ -94,7 +94,6 @@ def ooc_cmd_area(client, arg):
         raise
 
 
-@mod_only(hub_owners=True)
 def ooc_cmd_area_visible(client, arg):
     """
     Display only linked and non-hidden areas. Useful to GMs.
@@ -102,7 +101,7 @@ def ooc_cmd_area_visible(client, arg):
     """
     if arg != '':
         raise ArgumentError('This command takes no arguments!')
-    client.send_area_list(full=True)
+    client.send_area_list(full=False)
 
 
 def ooc_cmd_getarea(client, arg):

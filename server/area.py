@@ -926,8 +926,8 @@ class Area:
             clients.append(client)
 
         for c in clients:
-            allowed = c in self.owners or c.is_mod
-            c.reload_area_list(c.get_area_list(not allowed, not allowed))
+            allowed = c.is_mod or c in self.owners
+            c.reload_area_list(c.get_area_list(allowed, allowed))
 
     def time_until_move(self, client):
         """
