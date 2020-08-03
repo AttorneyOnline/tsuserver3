@@ -477,14 +477,14 @@ class AOProtocol(asyncio.Protocol):
                         break
                     area = self.client.area.area_manager.get_area_by_id(aid)
                     if self.client in area.owners:
-                        target_area.append(aid)
+                        target_area.append(area)
                     else:
                         self.client.send_ooc(f'You don\'t own {area.name}!')
                         return
                 if len(target_area) <= 0:
                     for a in self.client.area.area_manager.areas:
                         if self.client in a.owners:
-                            target_area.append(a.id)
+                            target_area.append(a)
                     part = part[1:]
                 else:
                     part = part[2:]
