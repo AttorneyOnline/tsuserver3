@@ -555,10 +555,10 @@ class ClientManager:
             """
             if self.area == area:
                 raise ClientError('User already in specified area.')
-            if not (area == area.area_manager.default_area()) and self.area.is_locked == area.Locked.LOCKED and not self.is_mod and not self.id in self.area.invite_list and not self.id in self.area.owners:
+            allowed = self.is_mod or self in area.owners or self in self.area.owners
+            if not allowed and not (area == area.area_manager.default_area()) and self.area.is_locked == area.Locked.LOCKED and not self.id in self.area.invite_list:
                 raise ClientError('Your current area is locked! You may not leave.')
             target_pos = ''
-            allowed = self.is_mod or self in area.owners or self in self.area.owners
             if len(self.area.links) > 0:
                 if not str(area.id) in self.area.links and not allowed and not self.char_id == -1 and not area == area.area_manager.default_area():
                     raise ClientError('That area is inaccessible from your area!')
@@ -584,7 +584,7 @@ class ClientManager:
 
                     target_pos = link["target_pos"]
 
-            if area.is_locked == area.Locked.LOCKED and not self.is_mod and not self.id in area.invite_list and not self.id in area.owners:
+            if area.is_locked == area.Locked.LOCKED and not allowed and not self.id in area.invite_list:
                 raise ClientError('That area is locked!')
 
             if not allowed and not self.char_id == -1 and not area == area.area_manager.default_area():
@@ -596,7 +596,7 @@ class ClientManager:
                     raise ClientError('That area cannot be accessed by normal means!')
 
             delay = self.area.time_until_move(self)
-            if delay > 0:
+            if delay > 0 and not allowed:
                 sec = int(math.ceil(delay * 0.001))
                 raise ClientError(f'You need to wait {sec} seconds until you can move again.')
 
@@ -710,7 +710,10 @@ class ClientManager:
             if not self.is_mod and not self in area.owners:
                 # We exclude hidden players here because we don't want them to count for the user count
                 player_list = [c for c in player_list if not c.hidden]
-            info += f'[{area.abbreviation}]: [{len(player_list)} users][{area.status}]{lock[area.is_locked]}'
+            status = ''
+            if self.area.area_manager.arup_enabled:
+                status = f'[{area.status}]'
+            info += f'[{area.abbreviation}]: [{len(player_list)} users]{status}{lock[area.is_locked]}'
 
             sorted_clients = []
             for client in player_list:

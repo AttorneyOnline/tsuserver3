@@ -325,7 +325,7 @@ def ooc_cmd_remote_listen(client, arg):
         return
     try:
         client.remote_listen = options[arg]
-    except:
+    except KeyError:
         raise ArgumentError('Invalid option! Your options are NONE, IC, OOC or ALL.')
 
 

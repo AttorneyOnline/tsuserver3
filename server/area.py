@@ -858,7 +858,7 @@ class Area:
         :return: message
         """
         msg = ''
-        for i in self.owners:
+        for i in self._owners:
             msg += f'[{str(i.id)}] {i.char_name}, '
         if len(msg) > 2:
             msg = msg[:-2]

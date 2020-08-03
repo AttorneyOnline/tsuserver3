@@ -53,6 +53,9 @@ def ooc_cmd_status(client, arg):
     Show or modify the current status of a room.
     Usage: /status <idle|rp|casing|looking-for-players|lfp|recess|gaming>
     """
+    if not client.area.area_manager.arup_enabled:
+        client.send_ooc('This hub does not use the /status system.')
+        return
     if len(arg) == 0:
         client.send_ooc(f'Current status: {client.area.status}')
     else:
@@ -80,7 +83,7 @@ def ooc_cmd_area(client, arg):
 
     try:
         for area in client.area.area_manager.areas:
-            if (args[0].isdigit() and area.id == int(args[0])) or area.abbreviation.lower() == args[0].lower() or area.name.lower() == arg.lower():
+            if (args[0].isdigit() and area.id == int(args[0])) or area.name.lower() == arg.lower() or area.abbreviation == arg:
                 client.change_area(area)
                 return
         raise AreaError('Targeted area not found!')

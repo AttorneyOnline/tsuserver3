@@ -409,9 +409,9 @@ def ooc_cmd_hub_unhide_clients(client, arg):
     Unhide the playercounts for this Hub's areas.
     Usage: /hub_unhide_clients
     """
-    if not client.area.area_manager.arup_enabled:
+    if not client.area.area_manager.hide_clients:
         raise ClientError('Client playercounts already revealed! Use /hub_hide_clients to hide.')
-    client.area.area_manager.arup_enabled = False
+    client.area.area_manager.hide_clients = False
     client.area.area_manager.broadcast_area_list()
     client.area.area_manager.broadcast_ooc('Client playercounts are no longer hidden for this hub.')
 

@@ -48,7 +48,7 @@ def ooc_cmd_switch(client, arg):
     try:
         # loser wants to spectate
         if arg == '-1' or arg.lower() == 'spectator':
-            cid = int(arg)
+            cid = -1
         else:
             cid = client.server.get_char_id_by_name(arg)
     except ServerError:
