@@ -671,7 +671,7 @@ class ClientManager:
                 f'Character taken, switched to {self.char_name}.')
             return new_char_id
 
-        def send_area_list(self, full=True):
+        def send_area_list(self, full=False):
             """Send a list of areas over OOC."""
             msg = '=== Areas ==='
             area_list = self.get_area_list(not full, not full)
