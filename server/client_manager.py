@@ -711,8 +711,6 @@ class ClientManager:
                 area = self.area.area_manager.get_area_by_id(area_id)
             except AreaError:
                 raise
-            info += f'=== {area.name} ==='
-            info += '\r\n'
 
             lock = {
                 area.Locked.FREE: '',
@@ -730,7 +728,8 @@ class ClientManager:
             status = ''
             if self.area.area_manager.arup_enabled:
                 status = f' [{area.status}]'
-            info += f'{len(player_list)} users{status}{lock[area.is_locked]}'
+
+            info += f'=== {area.name} (users: {len(player_list)}) {status}{lock[area.is_locked]}==='
 
             sorted_clients = []
             for client in player_list:
