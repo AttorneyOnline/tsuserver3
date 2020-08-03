@@ -416,7 +416,6 @@ def ooc_cmd_hub_unhide_clients(client, arg):
     client.area.area_manager.broadcast_ooc('Client playercounts are no longer hidden for this hub.')
 
 
-@mod_only(hub_owners=True)
 def ooc_cmd_follow(client, arg):
     if len(arg) == 0:
         try:
@@ -435,6 +434,8 @@ def ooc_cmd_follow(client, arg):
         c = targets[0]
         if client == c:
             raise ClientError('Can\'t follow yourself!')
+        if c not in client.area.clients and not client.is_mod and not client in client.area.area_manager.owners:
+            raise ClientError('You are not a mod/GM - Target must be present in your area!')
         if client.following == c.id:
             raise ClientError(
                 f'Already following [{c.id}] {c.char_name}!')
