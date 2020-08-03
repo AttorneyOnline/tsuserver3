@@ -54,6 +54,10 @@ def ooc_cmd_hub(client, arg):
             if (args[0].isdigit() and hub.id == int(args[0])) or hub.abbreviation.lower() == args[0].lower() or hub.name.lower() == arg.lower():
                 if hub == client.area.area_manager:
                     raise AreaError('User already in specified hub.')
+                preflist = client.server.supported_features.copy()
+                if not hub.arup_enabled:
+                    preflist.remove('arup')
+                client.send_command('FL', preflist)
                 client.change_area(hub.default_area())
                 client.send_hub_info()
                 return
