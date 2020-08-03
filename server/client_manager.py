@@ -614,10 +614,24 @@ class ClientManager:
             self.last_move_time = round(time.time() * 1000.0)
 
             for c in self.server.client_manager.clients:
+                # If target c is following us
                 if c.following == self.id:
-                    c.change_area(area)
-                    c.send_ooc(
-                        f'Following [{self.id}] {self.char_name} to {area.name}.')
+                    # If we're not hidden/sneaking or they're a mod, gm or cm
+                    if not (self.hidden or self.sneaking) or allowed:
+                        # Attempt to transfer to their area
+                        try:
+                            c.change_area(area)
+                            c.send_ooc(
+                                f'Following [{self.id}] {self.char_name} to {area.name}.')
+                        # Something obstructed us.
+                        except ClientError:
+                            c.send_ooc(
+                                f'Cannot follow [{self.id}] {self.char_name} to {area.name}!')
+                            c.unfollow(silent=True)
+                            raise
+                    else:
+                        # Stop following a ghost.
+                        c.unfollow(silent=True)
 
             if not self.sneaking and not self.hidden:
                 old_area.broadcast_ooc(
@@ -666,11 +680,11 @@ class ClientManager:
                     owner = f'[CMs: {area.get_owners()}]'
                 lock = {
                     area.Locked.FREE: '',
-                    area.Locked.SPECTATABLE: '[SPEC]',
-                    area.Locked.LOCKED: '[LOCK]'
+                    area.Locked.SPECTATABLE: '[S]',
+                    area.Locked.LOCKED: '[L]'
                 }
                 users = ''
-                if not area.hide_clients:
+                if not area.hide_clients and not area.area_manager.hide_clients:
                     clients = area.clients
                     if not self.is_mod and not self in area.owners:
                         clients = [c for c in area.clients if not c.hidden]
@@ -719,9 +733,6 @@ class ClientManager:
             for client in player_list:
                 if (not mods) or client.is_mod:
                     sorted_clients.append(client)
-            for owner in area.owners:
-                if not (mods or owner in player_list):
-                    sorted_clients.append(owner)
             if not sorted_clients:
                 return ''
             sorted_clients = sorted(sorted_clients,
@@ -806,7 +817,7 @@ class ClientManager:
                 owner = 'FREE'
                 if len(hub.owners) > 0:
                     owner = hub.get_gms()
-                msg += f'\r\n[{hub.id}] {hub.abbreviation}: {hub.name} (users: {len(hub.clients)}) {owner}'
+                msg += f'\r\n[{hub.id}] {hub.name} (users: {len(hub.clients)}) {owner}'
                 if self.area.area_manager == hub:
                     msg += ' [*]'
             self.send_ooc(msg)
@@ -978,13 +989,14 @@ class ClientManager:
             except (AreaError, ClientError):
                 raise
         
-        def unfollow(self):
+        def unfollow(self, silent=False):
             if self.following != None:
                 try:
                     c = self.server.client_manager.get_targets(
                         self, TargetType.ID, int(self.following), False)[0]
-                    self.send_ooc(
-                        'You are no longer following [{}] {}.'.format(c.id, c.char_name))
+                    if not silent:
+                        self.send_ooc(
+                            'You are no longer following [{}] {}.'.format(c.id, c.char_name))
                     self.following = None
                 except:
                     self.following = None
