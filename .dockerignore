@@ -1,9 +1,10 @@
+.git
+
 ### Server related
 # Sensitive data
 config/
 storage/**/*.json
 storage/db.sqlite*
-storage/GeoLite*
 logs/**/*.log
 logs/*
 

@@ -40,8 +40,8 @@ def setup_logger(debug):
     debug_log = logging.getLogger('debug')
     debug_log.setLevel(logging.DEBUG)
 
-    debug_handler = logging.handlers.RotatingFileHandler('logs/debug.log',
-        maxBytes=1024 * 1024 * 4)
+    debug_handler = logging.handlers.RotatingFileHandler('logs/debug.log', encoding='utf-8',
+                                                            maxBytes=1024 * 1024 * 4)
     debug_handler.setLevel(logging.DEBUG)
     debug_handler.setFormatter(debug_formatter)
     debug_log.addHandler(debug_handler)
@@ -50,8 +50,8 @@ def setup_logger(debug):
     # use the database.
     info_log = logging.getLogger('events')
     info_log.setLevel(logging.INFO)
-    file_handler = logging.handlers.RotatingFileHandler('logs/server.log',
-        maxBytes=1024 * 512)
+    file_handler = logging.handlers.RotatingFileHandler('logs/server.log', encoding='utf-8',
+                                                            maxBytes=1024 * 512)
     file_handler.setFormatter(logging.Formatter('[%(asctime)s UTC] %(message)s'))
     info_log.addHandler(file_handler)
 
@@ -59,7 +59,6 @@ def setup_logger(debug):
         debug_log.disabled = True
     else:
         debug_log.debug('Logger started')
-
 
 def parse_client_info(client):
     """Prepend information about a client to a log entry."""
@@ -70,3 +69,4 @@ def parse_client_info(client):
     if client.is_mod:
         prefix += '[MOD]'
     return prefix
+    

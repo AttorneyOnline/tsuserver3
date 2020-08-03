@@ -20,3 +20,13 @@
   evidence_mod: HiddenCM
   locking_allowed: false
   iniswap_allowed: false
+
+# Default options
+## evidence_mod: FFA
+## locking_allowed: false
+## iniswap_allowed: true
+## showname_changes_allowed: true
+## shouts_allowed: true
+## jukebox: false
+## noninterrupting_pres: false
+## abbreviation: self.abbreviate(area)

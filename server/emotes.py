@@ -4,8 +4,8 @@ from configparser import ConfigParser
 import logging
 logger = logging.getLogger('debug')
 
-
 char_dir = 'characters'
+
 
 class Emotes:
     """
@@ -20,7 +20,7 @@ class Emotes:
 
     def read_ini(self):
         char_ini = ConfigParser(comment_prefixes=('#', ';', '//', '\\\\'),
-            strict=False)
+                                strict=False)
         try:
             char_path = path.join(char_dir, self.name, 'char.ini')
             with open(char_path) as f:
@@ -47,6 +47,10 @@ class Emotes:
                 self.emotes.add((preanim, anim, None))
         except KeyError as e:
             logger.warn(f'Unknown key {e.args[0]} in character file {char_path}. '
+                        'This indicates a malformed character INI file.')
+            return
+        except ValueError as e:
+            logger.warn(f'Value error in character file {char_path}:\n{e}\n'
                          'This indicates a malformed character INI file.')
             return
 
