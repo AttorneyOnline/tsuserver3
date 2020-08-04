@@ -759,14 +759,6 @@ class AOProtocol(asyncio.Protocol):
                     '<dollar>G') or self.client.name.startswith('<dollar>M'):
             self.client.send_ooc('That name is reserved!')
             return
-        max_char = 0
-        try:
-            max_char = int(self.server.config['max_chars'])
-        except:
-            max_char = 256
-        if len(args[1]) > max_char:
-            self.client.send_ooc('Your message is too long!')
-            return
         if args[1].startswith(' /'):
             self.client.send_ooc(
                 'Your message was not sent for safety reasons: you left a space before that slash.')
@@ -788,18 +780,28 @@ class AOProtocol(asyncio.Protocol):
             except Exception as ex:
                 self.client.send_ooc('An internal error occurred. Please check the server log.')
                 logger.exception('Exception while running a command')
-        else:
-            args[1] = self.dezalgo(args[1])
-            if self.client.shaken:
-                args[1] = self.client.shake_message(args[1])
-            if self.client.disemvowel:
-                args[1] = self.client.disemvowel_message(args[1])
-            self.client.area.send_command('CT', self.client.name, args[1])
-            self.client.area.send_owner_command(
-                'CT',
-                f'[{self.client.area.id}]{self.client.name}',
-                args[1])
-            database.log_room('ooc', self.client, self.client.area, message=args[1])
+            return
+
+        max_char = 0
+        try:
+            max_char = int(self.server.config['max_chars'])
+        except:
+            max_char = 256
+        if len(args[1]) > max_char:
+            self.client.send_ooc('Your message is too long!')
+            return
+
+        args[1] = self.dezalgo(args[1])
+        if self.client.shaken:
+            args[1] = self.client.shake_message(args[1])
+        if self.client.disemvowel:
+            args[1] = self.client.disemvowel_message(args[1])
+        self.client.area.send_command('CT', self.client.name, args[1])
+        self.client.area.send_owner_command(
+            'CT',
+            f'[{self.client.area.id}]{self.client.name}',
+            args[1])
+        database.log_room('ooc', self.client, self.client.area, message=args[1])
 
     def net_cmd_mc(self, args):
         """Play music.
