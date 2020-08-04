@@ -399,17 +399,17 @@ class AreaManager:
         for area in self.areas:
             area.send_command(cmd, *args)
 
-    def send_remote_command(self, area_ids, cmd, *args):
+    def send_remote_command(self, area_list, cmd, *args):
         """
         Broadcast an AO-compatible command to a specified
         list of areas and their owners.
-        :param area_ids: list of area IDs
+        :param area_list: list of areas
         :param cmd: command name
         :param *args: command arguments
         """
-        for a_id in area_ids:
-            self.get_area_by_id(a_id).send_command(cmd, *args)
-            self.get_area_by_id(a_id).send_owner_command(cmd, *args)
+        for a in area_list:
+            a.send_command(cmd, *args)
+            a.send_owner_command(cmd, *args)
 
     def broadcast_area_list(self):
         """Global update of all areas for the client music lists in the hub."""

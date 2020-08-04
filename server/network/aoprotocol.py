@@ -659,7 +659,6 @@ class AOProtocol(asyncio.Protocol):
         if not confirmed:
             charid_pair = -1
 
-        # Whispering not recorded for testimony
         if whisper_clients != None:
             whisper_clients.insert(0, self.client)
             for client in self.client.area.clients:
@@ -748,6 +747,7 @@ class AOProtocol(asyncio.Protocol):
         except:
             max_char = 256
         if len(args[1]) > max_char:
+            self.client.send_ooc('Your message is too long!')
             return
         if args[1].startswith(' /'):
             self.client.send_ooc(

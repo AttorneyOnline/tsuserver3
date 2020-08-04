@@ -930,7 +930,6 @@ class ClientManager:
             return self.char_id == -1 or self._hidden
 
         def hide(self, tog=True, target=None, hidden=False):
-            self._hidden = tog
             msg = 'no longer hidden'
             if tog:
                 msg = 'now hidden'
@@ -963,7 +962,8 @@ class ClientManager:
                     self.hidden_in = None
                     if not hidden:
                         self.area.broadcast_ooc(f'{self.char_name} emerges from the {evi.name}!')
-                    
+
+            self._hidden = tog
             self.send_ooc(f'You are {msg} from /getarea and playercounts.')
             self.area.area_manager.send_arup_players()
 
