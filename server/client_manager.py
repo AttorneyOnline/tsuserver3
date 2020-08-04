@@ -962,6 +962,8 @@ class ClientManager:
                     self.hidden_in = None
                     if not hidden:
                         self.area.broadcast_ooc(f'{self.char_name} emerges from the {evi.name}!')
+                        # Impose all move delays as if we moved an area when unhiding so people have to be smart about it
+                        self.last_move_time = round(time.time() * 1000.0)
 
             self._hidden = tog
             self.send_ooc(f'You are {msg} from /getarea and playercounts.')
