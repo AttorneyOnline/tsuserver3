@@ -686,7 +686,8 @@ class AOProtocol(asyncio.Protocol):
                         flip, ding, color, showname, charid_pair, other_folder,
                         other_emote, offset_pair, other_offset, other_flip, nonint_pre,
                         sfx_looping, screenshake, frames_shake, frames_realization,
-                        frames_sfx, additive, effect)
+                        frames_sfx, add, effect)
+                return
             except (AreaError, ValueError):
                 self.client.send_ooc('Your broadcast list is invalid! Do /clear_broadcast to reset it and /broadcast <id(s)> to set a new one.')
                 return
