@@ -698,6 +698,10 @@ class AOProtocol(asyncio.Protocol):
             if self.client.hidden_in != None:
                 self.client.hide(False)
                 self.client.area.broadcast_area_list(client)
+
+        # Additive only works on same-char messages
+        if self.client.area.last_ic_message == None or cid != self.client.area.last_ic_message[8]:
+            additive = 0
         self.client.area.send_ic(self.client, msg_type, pre, folder, anim, msg,
                                 pos, sfx, anim_type, cid, sfx_delay,
                                 button, self.client.evi_list[evidence],
