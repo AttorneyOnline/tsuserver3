@@ -291,7 +291,7 @@ class ClientManager:
                 target_areas = [self.area]
                 if len(self.broadcast_list) > 0 and (self.is_mod or self in self.area.owners):
                     try:
-                        a_list = ', '.join([f'[{a.id}] {a.abbreviation}' for a in self.broadcast_list])
+                        a_list = ', '.join([str(a.id) for a in self.broadcast_list])
                         self.send_ooc(f'Broadcasting to areas {a_list}')
                         target_areas = self.broadcast_list
                     except (AreaError, ValueError):
@@ -1012,6 +1012,9 @@ class ClientManager:
             Change the character's current position in the area.
             :param pos: position in area (Default value = '')
             """
+            if not (pos in self.area.pos_lock):
+                poslist = ' '.join(str(l) for l in self.area.pos_lock)
+                raise ClientError(f'Invalid pos! Available pos are {poslist}.')
             if self.hidden_in != None:
                 # YOU DARE MOVE?!
                 self.hide(False)

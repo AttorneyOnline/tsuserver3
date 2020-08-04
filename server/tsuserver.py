@@ -383,7 +383,7 @@ class TsuServer3:
 
         """
         name = client.name
-        ooc_name = '{}[{}][{}]'.format('<dollar>M', client.area.abbreviation,
+        ooc_name = '{}[{}][{}]'.format('<dollar>M', client.area.id,
                                        name)
         self.send_all_cmd_pred('CT', ooc_name, msg, pred=lambda x: x.is_mod)
 
@@ -397,7 +397,7 @@ class TsuServer3:
         """
         char_name = client.char_name
         area_name = client.area.name
-        area_id = client.area.abbreviation
+        area_id = client.area.id
         self.send_all_cmd_pred(
             'CT',
             '{}'.format(self.config['hostname']),

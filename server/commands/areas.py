@@ -266,15 +266,14 @@ def ooc_cmd_pos_lock(client, arg):
     if not client.is_mod and (client not in client.area.owners):
         raise ClientError('You must be authorized to do that.')
 
+    client.area.pos_lock.clear()
     args = arg.split()
     args = sorted(set(args),key=args.index) #remove duplicates while preserving order
     for pos in args:
         if len(pos) < 3:
             raise ClientError('Position names may not be shorter than 3 symbols!')
-    #     if pos not in ('def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'sea', 'jur'):
-    #         raise ClientError('Invalid pos.')
-       
-    client.area.pos_lock = args
+        client.area.pos_lock.append(pos.lower())
+
     pos = ' '.join(str(l) for l in client.area.pos_lock)
     client.area.broadcast_ooc(f'Locked pos into {pos}.')
     client.area.send_command('SD', '*'.join(pos)) #set that juicy pos dropdown
@@ -302,7 +301,7 @@ def ooc_cmd_peek(client, arg):
     try:
         area = None
         for _area in client.area.area_manager.areas:
-            if (args[0].isdigit() and _area.id == int(args[0])) or _area.abbreviation.lower() == args[0].lower() or _area.name.lower() == arg.lower():
+            if (args[0].isdigit() and _area.id == int(args[0])) or _area.name.lower() == arg.lower() or _area.abbreviation == args[0]:
                 area = _area
                 break
         if area == None:

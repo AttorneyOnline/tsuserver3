@@ -152,7 +152,7 @@ def ooc_cmd_rollp(client, arg):
 
     client.area.broadcast_ooc(f'{client.char_name} rolled in secret.')
     for c in client.area.owners:
-        c.send_ooc(f'[{client.area.abbreviation}]{client.char_name} secretly rolled {roll} out of {chosen_max}.')
+        c.send_ooc(f'[{client.area.id}]{client.char_name} secretly rolled {roll} out of {chosen_max}.')
 
     database.log_room('rollp', client, client.area, message=f'{roll} out of {chosen_max}')
 

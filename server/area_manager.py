@@ -388,7 +388,7 @@ class AreaManager:
     def get_area_by_abbreviation(self, abbr):
         """Get an area by abbreviation."""
         for area in self.areas:
-            if area.abbreviation.lower() == abbr.lower():
+            if area.abbreviation == abbr:
                 return area
         raise AreaError('Area not found.')
 

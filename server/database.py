@@ -320,13 +320,13 @@ class Database:
 
     def log_ic(self, client, room, showname, message):
         """Log an IC message."""
-        event_logger.info(f'[{room.abbreviation}] {showname}/{client.char_name}' +
+        event_logger.info(f'[{room.id}] {showname}/{client.char_name}' +
                           f'/{client.name} ({client.ipid}): {message}')
         with self.db as conn:
             conn.execute(dedent('''
                 INSERT INTO ic_events(ipid, room_name, char_name, ic_name,
                     message) VALUES (?, ?, ?, ?, ?)
-                '''), (client.ipid, room.abbreviation, client.char_name,
+                '''), (client.ipid, room.id, client.char_name,
                     showname, message))
 
     def log_room(self, event_subtype, client, room, message=None, target=None):
@@ -342,14 +342,14 @@ class Database:
         if isinstance(message, dict):
             message = json.dumps(message)
 
-        event_logger.info(f'[{room.abbreviation}] {client.char_name}' +
+        event_logger.info(f'[{room.id}] {client.char_name}' +
                     f'/{client.name} ({client.ipid}): event {event_subtype} ({message})')
         with self.db as conn:
             conn.execute(dedent('''
                 INSERT INTO room_events(ipid, room_name, char_name, ooc_name,
                     event_subtype, message, target_ipid)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
-                '''), (ipid, room.abbreviation, char_name, ooc_name,
+                '''), (ipid, room.id, char_name, ooc_name,
                     subtype_id, message, target_ipid))
 
     def log_connect(self, client, failed=False):

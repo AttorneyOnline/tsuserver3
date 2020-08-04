@@ -51,7 +51,7 @@ def ooc_cmd_hub(client, arg):
 
     try:
         for hub in client.server.hub_manager.hubs:
-            if (args[0].isdigit() and hub.id == int(args[0])) or hub.abbreviation.lower() == args[0].lower() or hub.name.lower() == arg.lower():
+            if (args[0].isdigit() and hub.id == int(args[0])) or hub.name.lower() == arg.lower() or hub.abbreviation == args[0]:
                 if hub == client.area.area_manager:
                     raise AreaError('User already in specified hub.')
                 preflist = client.server.supported_features.copy()
@@ -561,7 +561,7 @@ def ooc_cmd_broadcast(client, arg):
     """
     args = arg.split()
     if len(args) <= 0:
-        a_list = ', '.join([f'[{a.id}] {a.abbreviation}' for a in client.broadcast_list])
+        a_list = ', '.join([str(a.id) for a in client.broadcast_list])
         client.send_ooc(f'Your broadcast list is {a_list}')
         return
     try:

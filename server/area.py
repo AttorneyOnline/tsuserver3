@@ -183,7 +183,7 @@ class Area:
             for pos in _pos_lock:
                 pos = pos.lower()
                 if pos != "none" and not (pos in self.pos_lock):
-                    self.pos_lock.append(pos)
+                    self.pos_lock.append(pos.lower())
 
         if 'evidence_mod' in area:
             self.evidence_mod = area['evidence_mod']
@@ -439,7 +439,7 @@ class Area:
         self.send_command('CT', self.server.config['hostname'], msg, '1')
         self.send_owner_command(
             'CT',
-            '[' + self.abbreviation + '] ' + self.server.config['hostname'],
+            '[' + self.id + '] ' + self.server.config['hostname'],
             msg, '1')
     
     def send_ic(self, client, *args, targets=None):

@@ -671,7 +671,7 @@ class AOProtocol(asyncio.Protocol):
 
         if len(target_area) > 0:
             try:
-                a_list = ', '.join([f'[{a.id}] {a.abbreviation}' for a in target_area])
+                a_list = ', '.join([str(a.id) for a in target_area])
                 self.client.send_ooc(f'Broadcasting to areas {a_list}')
                 self.client.area.area_manager.send_remote_command(
                     target_area, 'MS', msg_type, pre, folder, anim, msg, pos, sfx,
@@ -702,7 +702,7 @@ class AOProtocol(asyncio.Protocol):
 
         self.client.area.send_owner_command(
             'MS', msg_type, pre, folder, anim,
-            '}}}[' + self.client.area.abbreviation + '] {{{' + msg, pos, sfx,
+            '}}}[' + self.client.area.id + '] {{{' + msg, pos, sfx,
             anim_type, cid, sfx_delay, button, self.client.evi_list[evidence],
             flip, ding, color, showname, charid_pair, other_folder,
             other_emote, offset_pair, other_offset, other_flip, nonint_pre,
@@ -785,7 +785,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.area.send_command('CT', self.client.name, args[1])
             self.client.area.send_owner_command(
                 'CT',
-                '[' + self.client.area.abbreviation + ']' + self.client.name,
+                '[' + self.client.area.id + ']' + self.client.name,
                 args[1])
             database.log_room('ooc', self.client, self.client.area, message=args[1])
 
@@ -857,7 +857,7 @@ class AOProtocol(asyncio.Protocol):
 
         if len(self.client.broadcast_list) > 0:
             try:
-                a_list = ', '.join([f'[{a.id}] {a.abbreviation}' for a in self.client.broadcast_list])
+                a_list = ', '.join([str(a.id) for a in self.client.broadcast_list])
                 self.client.send_ooc(f'Broadcasting to areas {a_list}')
                 if len(args) == 1:
                     self.client.area.area_manager.send_remote_command(self.client.broadcast_list, 'RT', args[0])
