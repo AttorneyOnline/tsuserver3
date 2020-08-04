@@ -676,13 +676,17 @@ class AOProtocol(asyncio.Protocol):
             try:
                 a_list = ', '.join([str(a.id) for a in target_area])
                 self.client.send_ooc(f'Broadcasting to areas {a_list}')
-                self.client.area.area_manager.send_remote_command(
-                    target_area, 'MS', msg_type, pre, folder, anim, msg, pos, sfx,
-                    anim_type, cid, sfx_delay, button, self.client.evi_list[evidence],
-                    flip, ding, color, showname, charid_pair, other_folder,
-                    other_emote, offset_pair, other_offset, other_flip, nonint_pre,
-                    sfx_looping, screenshake, frames_shake, frames_realization,
-                    frames_sfx, additive, effect)
+                for area in target_area:
+                    add = additive
+                    if area.last_ic_message == None or cid != area.last_ic_message[8]:
+                        add = 0
+                    self.client.area.area_manager.send_remote_command(
+                        area, 'MS', msg_type, pre, folder, anim, msg, pos, sfx,
+                        anim_type, cid, sfx_delay, button, self.client.evi_list[evidence],
+                        flip, ding, color, showname, charid_pair, other_folder,
+                        other_emote, offset_pair, other_offset, other_flip, nonint_pre,
+                        sfx_looping, screenshake, frames_shake, frames_realization,
+                        frames_sfx, additive, effect)
             except (AreaError, ValueError):
                 self.client.send_ooc('Your broadcast list is invalid! Do /clear_broadcast to reset it and /broadcast <id(s)> to set a new one.')
                 return
@@ -880,7 +884,7 @@ class AOProtocol(asyncio.Protocol):
         if self.client in self.client.area.owners:
             if self.client.area.last_ic_message != None and sign == 'WT':
                 # remove centering chars and strip space chars
-                msg = self.client.area.last_ic_message.replace('~', '').strip()
+                msg = self.client.area.last_ic_message[4].replace('~', '').strip()
                 if msg.startswith('--') and msg.endswith('--'):
                     msg = msg.replace('-', '')
                     msg = msg.strip()

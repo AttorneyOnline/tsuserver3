@@ -501,7 +501,7 @@ class Area:
             if args[15] != '':
                 name = args[15]
             self.set_next_msg_delay(len(args[4]))
-            self.last_ic_message = args[4]
+            self.last_ic_message = args
             database.log_ic(client, self, name, args[4])
 
             if self.recording:
