@@ -187,8 +187,10 @@ def ooc_cmd_area_create(client, arg):
         area = client.area.area_manager.create_area()
         if arg != '':
             area.name = arg
-        # Areas are HiddenCM by default to preserve legacy functionality
+        # Legacy functionality:
         area.evidence_mod = 'HiddenCM'
+        area.locking_allowed = True
+
         client.area.area_manager.broadcast_area_list()
         client.area.area_manager.send_arup_cms()
         client.send_ooc(f'New area created! {area.name} ({len(client.area.area_manager.areas)}/{client.area.area_manager.max_areas})')
@@ -251,6 +253,7 @@ def ooc_cmd_area_swap(client, arg):
         area1 = client.area.area_manager.get_area_by_id(int(args[0]))
         area2 = client.area.area_manager.get_area_by_id(int(args[1]))
         client.area.area_manager.swap_area(area1, area2)
+        client.area.area_manager.broadcast_area_list()
         client.send_ooc(f'Area {area1.name} has been swapped with Area {area2.name}!')
     except ValueError:
         raise ArgumentError('Area IDs must be a number.')
