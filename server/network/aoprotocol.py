@@ -687,9 +687,9 @@ class AOProtocol(asyncio.Protocol):
         # If we are not whispering...
         if whisper_clients == None:
             # Reveal ourselves from the evidence we were hiding in if it exists
-            if self.client.client.hidden_in != None:
-                self.client.client.hide(False)
-                self.client.client.area.broadcast_area_list(client)
+            if self.client.hidden_in != None:
+                self.client.hide(False)
+                self.client.area.broadcast_area_list(client)
         self.client.area.send_ic(self.client, msg_type, pre, folder, anim, msg,
                                 pos, sfx, anim_type, cid, sfx_delay,
                                 button, self.client.evi_list[evidence],
