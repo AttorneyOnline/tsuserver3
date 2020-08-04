@@ -536,7 +536,7 @@ class Area:
             rec = tuple(lst)
             idx = self.testimony_index
             if self.testimony_index == -1:
-                idx = len(self.testimony)-1
+                idx = len(self.testimony)
             self.testimony.insert(idx, rec)
             self.broadcast_ooc(f'Statement {len(self.testimony)} added.')
             if not self.recording:
