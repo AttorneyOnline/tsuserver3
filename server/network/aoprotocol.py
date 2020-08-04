@@ -684,6 +684,12 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_ooc('Your broadcast list is invalid! Do /clear_broadcast to reset it and /broadcast <id(s)> to set a new one.')
                 return
 
+        # If we are not whispering...
+        if whisper_clients == None:
+            # Reveal ourselves from the evidence we were hiding in if it exists
+            if self.client.client.hidden_in != None:
+                self.client.client.hide(False)
+                self.client.client.area.broadcast_area_list(client)
         self.client.area.send_ic(self.client, msg_type, pre, folder, anim, msg,
                                 pos, sfx, anim_type, cid, sfx_delay,
                                 button, self.client.evi_list[evidence],

@@ -450,9 +450,6 @@ class Area:
         """
         if client in self.afkers:
             client.server.client_manager.toggle_afk(client)
-        if client.hidden_in != None:
-            client.hide(False)
-            client.area.broadcast_area_list(client)
         if args[4].startswith('**') and len(self.testimony) > 0:
             idx = self.testimony_index
             if idx == -1:
