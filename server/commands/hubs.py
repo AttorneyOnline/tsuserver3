@@ -569,7 +569,8 @@ def ooc_cmd_broadcast(client, arg):
         for aid in args:
             area = client.area.area_manager.get_area_by_id(int(aid))
             client.broadcast_list.append(area)
-        client.send_ooc(f'Your broadcast list now contains [{area.id}] {area.name}.')
+        a_list = ', '.join([str(a.id) for a in client.broadcast_list])
+        client.send_ooc(f'Your broadcast list is now {a_list}')
     except ValueError:
         client.send_ooc('Bad arguments!')
     except (ClientError, AreaError):
