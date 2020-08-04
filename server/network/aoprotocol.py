@@ -702,7 +702,7 @@ class AOProtocol(asyncio.Protocol):
 
         self.client.area.send_owner_command(
             'MS', msg_type, pre, folder, anim,
-            '}}}[' + self.client.area.id + '] {{{' + msg, pos, sfx,
+            '}}}[' + str(self.client.area.id) + '] {{{' + msg, pos, sfx,
             anim_type, cid, sfx_delay, button, self.client.evi_list[evidence],
             flip, ding, color, showname, charid_pair, other_folder,
             other_emote, offset_pair, other_offset, other_flip, nonint_pre,
@@ -785,7 +785,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.area.send_command('CT', self.client.name, args[1])
             self.client.area.send_owner_command(
                 'CT',
-                '[' + self.client.area.id + ']' + self.client.name,
+                f'[{self.client.area.id}]{self.client.name}',
                 args[1])
             database.log_room('ooc', self.client, self.client.area, message=args[1])
 
