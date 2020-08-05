@@ -367,9 +367,6 @@ def ooc_cmd_max_players(client, arg):
         client.send_ooc(f'Max amount of players for the area is {client.area.max_players}.')
         return
 
-    if not client.area.locking_allowed:
-        raise ClientError('You cannot modify this area.')
-
     try:
         arg = int(arg)
         if arg < -1 or arg > 99:

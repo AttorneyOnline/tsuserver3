@@ -189,7 +189,6 @@ def ooc_cmd_area_create(client, arg):
             area.name = arg
         # Legacy functionality:
         area.evidence_mod = 'HiddenCM'
-        area.locking_allowed = True
 
         client.area.area_manager.broadcast_area_list()
         client.area.area_manager.send_arup_cms()

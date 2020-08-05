@@ -41,17 +41,13 @@ def ooc_cmd_area_lock(client, arg):
                 target_id = int(aid)
             area = client.area.area_manager.get_area_by_id(target_id)
 
-            if not client.is_mod:
-                if not area.locking_allowed:
-                    client.send_ooc(f'Area locking is disabled in area {area.name}.')
+            if not client.is_mod and not client in area.owners:
+                if not area.locking_allowed and not str(target_id) in client.keys:
+                    client.send_ooc(f'You don\'t have the keys to {area.name}.')
                     continue
-                if not client in area.owners:
-                    if not str(target_id) in client.keys:
-                        client.send_ooc(f'You don\'t have the keys to this {area.name}.')
-                        continue
-                    if not client.can_access_area(area):
-                        client.send_ooc(f'You have the keys to {area.name} but it is not accessible from your area.')
-                        continue
+                if not client.can_access_area(area):
+                    client.send_ooc(f'You have the keys to {area.name} but it is not accessible from your area.')
+                    continue
             if area.is_locked == client.area.Locked.LOCKED:
                 client.send_ooc(f'Area {area.name} is already locked.')
                 continue
