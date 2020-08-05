@@ -432,7 +432,7 @@ class AOProtocol(asyncio.Protocol):
 
         target_area = []
         if self.client.is_mod or self.client in self.client.area.owners:
-            target_area = self.client.broadcast_list
+            target_area = self.client.broadcast_list.copy()
 
         if len(showname) > 0 and not self.client.area.showname_changes_allowed and not self.client.is_mod and not (self.client in self.client.area.owners):
             self.client.send_ooc(
@@ -468,6 +468,9 @@ class AOProtocol(asyncio.Protocol):
             return
         if text.lower().startswith('/a ') or text.lower().startswith('/s '):
             part = text.split(' ')
+            if len(part) <= 1:
+                self.client.send_ooc('Please supply a message!')
+                return
             try:
                 areas = part[1].split(',')
                 for a in areas:
@@ -674,23 +677,30 @@ class AOProtocol(asyncio.Protocol):
 
         if len(target_area) > 0:
             try:
-                a_list = ', '.join([str(a.id) for a in target_area])
-                self.client.send_ooc(f'Broadcasting to areas {a_list}')
-                for area in target_area:
+                for a in target_area:
                     add = additive
-                    if area.last_ic_message == None or cid != area.last_ic_message[8]:
+                    if a.last_ic_message == None or cid != a.last_ic_message[8]:
                         add = 0
-                    self.client.area.area_manager.send_remote_command(
-                        area, 'MS', msg_type, pre, folder, anim, msg, pos, sfx,
+                    a.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx,
                         anim_type, cid, sfx_delay, button, self.client.evi_list[evidence],
                         flip, ding, color, showname, charid_pair, other_folder,
                         other_emote, offset_pair, other_offset, other_flip, nonint_pre,
                         sfx_looping, screenshake, frames_shake, frames_realization,
                         frames_sfx, add, effect)
-                return
+                a_list = ', '.join([str(a.id) for a in target_area])
+                if not (self.client.area in target_area):
+                    if msg == '':
+                        msg = ' '
+                    self.client.send_command('MS', msg_type, pre, folder, anim, '}}}[' + a_list + '] {{{' + msg, pos, sfx,
+                        anim_type, cid, sfx_delay, button, self.client.evi_list[evidence],
+                        flip, ding, color, showname, charid_pair, other_folder,
+                        other_emote, offset_pair, other_offset, other_flip, nonint_pre,
+                        sfx_looping, screenshake, frames_shake, frames_realization,
+                        frames_sfx, add, effect)
+                self.client.send_ooc(f'Broadcasting to areas {a_list}')
             except (AreaError, ValueError):
                 self.client.send_ooc('Your broadcast list is invalid! Do /clear_broadcast to reset it and /broadcast <id(s)> to set a new one.')
-                return
+            return
 
         # If we are not whispering...
         if whisper_clients == None:
