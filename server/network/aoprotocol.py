@@ -468,9 +468,6 @@ class AOProtocol(asyncio.Protocol):
             return
         if text.lower().startswith('/a ') or text.lower().startswith('/s '):
             part = text.split(' ')
-            if len(part) <= 1:
-                self.client.send_ooc('Please supply a message!')
-                return
             try:
                 areas = part[1].split(',')
                 for a in areas:
