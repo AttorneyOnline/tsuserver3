@@ -72,7 +72,7 @@ def ooc_cmd_help(client, arg):
                 msg += list_commands(arg)
                 client.send_ooc(msg)
             except AttributeError:
-                client.send_ooc('No such command or submodule has been found in the help docs.')
+                client.send_ooc(f'No such command or submodule ({arg}) has been found in the help docs.')
 
 
 @mod_only()

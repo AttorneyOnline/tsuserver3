@@ -779,7 +779,60 @@ class AOProtocol(asyncio.Protocol):
             try:
                 called_function = f'ooc_cmd_{cmd}'
                 if not hasattr(commands, called_function):
-                    self.client.send_ooc('Invalid command.')
+                    lookup = ' Use /help to find up-to-date commands.'
+                    lookup_dict = {
+                        'poslock': 'pos_lock',
+                        'savehub': 'save_hub',
+                        'loadhub': 'load_hub',
+                        'clearhub': 'clear_hub',
+                        'cleanup': 'clear_hub',
+                        'key_add': 'keys_add',
+                        'key_set': 'keys_set',
+                        'key_remove': 'keys_remove',
+                        'key': 'keys',
+                        'akick': 'area_kick',
+                        'area_add': 'area_create',
+                        'create': 'area_create',
+                        'rename': 'area_rename',
+                        'destroy': 'area_remove',
+                        'music_list': 'musiclist',
+                        'music_lists': 'musiclists',
+                        'clearmusiclist': 'musiclist',
+                        'loadmlist': 'musiclist',
+                        'area_music_list': 'area_musiclist',
+                        'hub_music_list': 'hub_musiclist',
+                        'access': 'links',
+                        'area_access': 'links',
+                        'connectlist': 'links',
+                        'minimap': 'links',
+                        'area_link': 'link',
+                        'area_unlink': 'unlink',
+                        'connect': 'onelink',
+                        'disconnect': 'oneunlink',
+                        'biconnect': 'link',
+                        'bidisconnect': 'unlink',
+                        'spectate': 'switch Spectator',
+                        'editambience': 'edit_ambience',
+                        'areakick': 'area_kick',
+                        'clear_testimony': 'testimony_clear',
+                        'cleartestimony': 'testimony_clear',
+                        'remotelisten': 'remote_listen',
+                        'force_pos': 'forcepos',
+                        'listenpos': 'listen_pos',
+                        'unlistenpos': 'unlisten_pos',
+                        'evi_mod': 'evidence_mod',
+                        'broadcast_ic': 'broadcast',
+                        'music': 'currentmusic',
+                        'playrandom': 'random_music',
+                        'shuffle': 'random_music',
+                        'eviswap': 'evi_swap',
+                        'evidence_swap': 'evi_swap',
+                        'currentbg': 'bg',
+                        'autopass': 'sneak',
+                    }
+                    if cmd in lookup_dict:
+                        lookup = f'Did you mean {lookup_dict[cmd]}?'
+                    self.client.send_ooc(f'Invalid command: {cmd}. {lookup}')
                 else:
                     getattr(commands, called_function)(self.client, arg)
             except (ClientError, AreaError, ArgumentError, ServerError) as ex:
