@@ -536,7 +536,7 @@ class ClientManager:
             # Send the evidence information
             self.send_command('LE', *self.area.get_evidence_list(self))
             self.refresh_music()
-            if self.area.desc != '':
+            if self.area.desc != '' and not self.blinded:
                 desc = self.area.desc[:128]
                 if len(self.area.desc) > len(desc):
                     desc += "... Use /desc to read the rest."

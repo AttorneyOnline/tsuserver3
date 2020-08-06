@@ -109,6 +109,8 @@ def ooc_cmd_getarea(client, arg):
     Show information about the current area.
     Usage: /getarea
     """
+    if client.blinded:
+        raise ClientError('You are blinded!')
     client.send_area_info(client.area.id, False)
 
 
@@ -118,6 +120,8 @@ def ooc_cmd_getareas(client, arg):
     Show information about all areas.
     Usage: /getareas
     """
+    if client.blinded:
+        raise ClientError('You are blinded!')
     client.send_area_info(-1, False)
 
 
@@ -297,7 +301,8 @@ def ooc_cmd_peek(client, arg):
     args = arg.split()
     if len(args) == 0:
         raise ArgumentError('You need to input an accessible area name or ID to peek into it!')
-
+    if client.blinded:
+        raise ClientError('You are blinded!')
     try:
         area = None
         for _area in client.area.area_manager.areas:
@@ -306,6 +311,9 @@ def ooc_cmd_peek(client, arg):
                 break
         if area == None:
             raise ClientError('Target area not found.')
+        if area == client.area:
+            ooc_cmd_getarea(client, '')
+            return
 
         sorted_clients = []
         for c in area.clients:
@@ -384,6 +392,8 @@ def ooc_cmd_desc(client, arg):
     Set an area description that appears to the user any time they enter the area.
     Usage: /desc [str]
     """
+    if client.blinded:
+        raise ClientError('You are blinded!')
     if len(arg) == 0:
         client.send_ooc(f'Description: {client.area.desc}')
         database.log_room('desc.request', client, client.area)
