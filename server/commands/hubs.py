@@ -564,10 +564,12 @@ def ooc_cmd_broadcast(client, arg):
         client.send_ooc(f'Your broadcast list is {a_list}')
         return
     try:
-        client.broadcast_list.clear()
+        broadcast_list = []
         for aid in args:
             area = client.area.area_manager.get_area_by_id(int(aid))
-            client.broadcast_list.append(area)
+            broadcast_list.append(area)
+        # We don't modify the client.broadcast_list directly until now just in case there's an exception.
+        client.broadcast_list = broadcast_list
         a_list = ', '.join([str(a.id) for a in client.broadcast_list])
         client.send_ooc(f'Your broadcast list is now {a_list}')
     except ValueError:
