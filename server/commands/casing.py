@@ -9,8 +9,8 @@ from . import mod_only
 __all__ = [
     'ooc_cmd_doc',
     'ooc_cmd_cleardoc',
-    'ooc_cmd_evidence_mod',
-    'ooc_cmd_evi_swap',
+    'ooc_cmd_evidence_mod', # Not strictly casing - to be reorganized
+    'ooc_cmd_evi_swap', # Not strictly casing - to be reorganized
     'ooc_cmd_cm',
     'ooc_cmd_uncm',
     'ooc_cmd_setcase',
@@ -18,8 +18,8 @@ __all__ = [
     'ooc_cmd_blockwtce',
     'ooc_cmd_unblockwtce',
     'ooc_cmd_judgelog',
-    'ooc_cmd_afk',
-    'ooc_cmd_remote_listen',
+    'ooc_cmd_afk', # Not strictly casing - to be reorganized
+    'ooc_cmd_remote_listen', # Not strictly casing - to be reorganized
     'ooc_cmd_testimony',
     'ooc_cmd_testimony_clear',
     'ooc_cmd_testimony_remove',
@@ -321,10 +321,11 @@ def ooc_cmd_remote_listen(client, arg):
         'ALL': 3,
     }
     if arg == '':
-        client.send_ooc(f'Your current option is: {options[client.remote_listen]}')
+        opt = options[client.remote_listen]
+        client.send_ooc(f'Your current option is: {opt}')
         return
     try:
-        client.remote_listen = options[arg]
+        client.remote_listen = options[arg.upper()]
     except KeyError:
         raise ArgumentError('Invalid option! Your options are NONE, IC, OOC or ALL.')
 

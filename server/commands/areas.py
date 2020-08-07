@@ -153,8 +153,7 @@ def ooc_cmd_invite(client, arg):
         c = client.server.client_manager.get_targets(client, TargetType.ID,
                                                      int(arg), False)[0]
         client.area.invite_list.add(c.id)
-        client.send_ooc('{} is invited to your area.'.format(
-            c.char_name))
+        client.send_ooc(f'{c.char_name} is invited to your area.')
         c.send_ooc(
             f'You were invited and given access to {client.area.name}.')
         database.log_room('invite', client, client.area, target=c)
