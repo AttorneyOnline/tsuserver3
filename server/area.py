@@ -744,7 +744,7 @@ class Area:
 
     def cannot_ic_interact(self, client):
         """
-        Check if this room is locked to a client.
+        Check if this area is locked to a client.
         :param client: sender
         """
         return self.is_locked == self.Locked.SPECTATABLE and not client.is_mod and not client in self.owners and not client.id in self.invite_list
@@ -783,7 +783,7 @@ class Area:
 
     def change_status(self, value):
         """
-        Set the status of the room.
+        Set the status of the area.
         :param value: status code
         """
         allowed_values = ('idle', 'rp', 'casing', 'looking-for-players',

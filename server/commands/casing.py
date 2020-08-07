@@ -100,7 +100,8 @@ def ooc_cmd_evi_swap(client, arg):
 
 def ooc_cmd_cm(client, arg):
     """
-    Add a case manager for the current room.
+    Add a case manager for the current area.
+    Leave id blank to promote yourself if there are no CMs.
     Usage: /cm <id>
     """
     if not client.area.can_cm:
@@ -311,7 +312,9 @@ def ooc_cmd_afk(client, arg):
 @mod_only(area_owners=True)
 def ooc_cmd_remote_listen(client, arg):
     """
-    Change the remote listen logs to either NONE, IC, OOC or ALL. It will send you those messages from the areas you are an owner of.
+    Change the remote listen logs to either NONE, IC, OOC or ALL.
+    It will send you those messages from the areas you are an owner of.
+    Leave blank to see your current option.
     Usage: /remote_listen [option]
     """
     options = {
@@ -332,8 +335,9 @@ def ooc_cmd_remote_listen(client, arg):
 
 def ooc_cmd_testimony(client, arg):
     """
-    Display the currently recorded testimony. Optionally, idx can be passed to move to that statement.
-    Usage: /testimony [idx]
+    Display the currently recorded testimony.
+    Optionally, id can be passed to move to that statement.
+    Usage: /testimony [id]
     """
     if len(client.area.testimony) <= 0:
         client.send_ooc('There is no testimony recorded!')
@@ -389,7 +393,7 @@ def ooc_cmd_testimony_clear(client, arg):
 def ooc_cmd_testimony_remove(client, arg):
     """
     Remove the statement at index.
-    Usage: /testimony_remove <idx>
+    Usage: /testimony_remove <id>
     """
     if len(client.area.testimony) <= 0:
         client.send_ooc('There is no testimony recorded!')
@@ -414,15 +418,15 @@ def ooc_cmd_testimony_remove(client, arg):
 @mod_only(area_owners=True)
 def ooc_cmd_testimony_amend(client, arg):
     """
-    Edit the spoken message of the statement at idx.
-    Usage: /testimony_amend <idx> <msg>
+    Edit the spoken message of the statement at id.
+    Usage: /testimony_amend <id> <msg>
     """
     if len(client.area.testimony) <= 0:
         client.send_ooc('There is no testimony recorded!')
         return
     args = arg.split()
     if len(args) < 2:
-        raise ArgumentError('Usage: /testimony_remove <idx> <msg>.')
+        raise ArgumentError('Usage: /testimony_remove <id> <msg>.')
     try:
         idx = int(args[0]) - 1
         lst = list(client.area.testimony[idx])
@@ -441,14 +445,14 @@ def ooc_cmd_testimony_amend(client, arg):
 def ooc_cmd_testimony_swap(client, arg):
     """
     Swap the two statements by idx.
-    Usage: /testimony_swap <idx1> <idx2>
+    Usage: /testimony_swap <id> <id>
     """
     if len(client.area.testimony) <= 0:
         client.send_ooc('There is no testimony recorded!')
         return
     args = arg.split()
     if len(args) < 2:
-        raise ArgumentError('Usage: /testimony_remove <idx1> <idx2>.')
+        raise ArgumentError('Usage: /testimony_remove <id> <id>.')
     try:
         idx1 = int(args[0]) - 1
         idx2 = int(args[1]) - 1

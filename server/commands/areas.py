@@ -13,10 +13,10 @@ __all__ = [
     'ooc_cmd_area_visible',
     'ooc_cmd_getarea',
     'ooc_cmd_getareas',
+    'ooc_cmd_getafk',
     'ooc_cmd_invite',
     'ooc_cmd_uninvite',
     'ooc_cmd_area_kick',
-    'ooc_cmd_getafk',
     'ooc_cmd_pos_lock',
     'ooc_cmd_pos_lock_clear',
     'ooc_cmd_peek',
@@ -28,7 +28,7 @@ __all__ = [
 
 def ooc_cmd_bg(client, arg):
     """
-    Set the background of a room.
+    Set the background of an area.
     Usage: /bg <background>
     """
     if len(arg) == 0:
@@ -51,7 +51,7 @@ def ooc_cmd_bg(client, arg):
 
 def ooc_cmd_status(client, arg):
     """
-    Show or modify the current status of a room.
+    Show or modify the current status of an area.
     Usage: /status <idle|rp|casing|looking-for-players|lfp|recess|gaming>
     """
     if not client.area.area_manager.arup_enabled:
@@ -142,7 +142,7 @@ def ooc_cmd_getafk(client, arg):
 @mod_only(area_owners=True)
 def ooc_cmd_invite(client, arg):
     """
-    Allow a particular user to join a locked or spectator-only area.
+    Allow a particular user to join a locked or speak in spectator-only area.
     Usage: /invite <id>
     """
     if not arg:
@@ -198,6 +198,7 @@ def ooc_cmd_area_kick(client, arg):
     """
     Remove a user from the current area and move them to another area.
     If id is a * char, it will kick everyone but you and CMs from current area to destination.
+    If the destination is not specified, the destination defaults to area 0.
     target_pos is the optional position that everyone should end up in when kicked.
     Usage: /area_kick <id> [destination] [target_pos]
     """
@@ -254,9 +255,9 @@ def ooc_cmd_area_kick(client, arg):
 
 def ooc_cmd_pos_lock(client, arg):
     """
-    Lock current area's available positions into a list of pos.
-    Usage:  /pos_lock <pos> [pos]
+    Lock current area's available positions into a list of pos separated by space.
     Use /pos_lock_clear to make the list empty.
+    Usage:  /pos_lock <pos(s)>
     """
     if not arg:
         if len(client.area.pos_lock) > 0:
@@ -294,7 +295,7 @@ def ooc_cmd_pos_lock_clear(client, arg):
 
 def ooc_cmd_peek(client, arg):
     """
-    Peek into a room to see if there's people in it or if it's locked.
+    Peek into an area to see if there's people in it.
     Usage:  /peek <id>
     """
     args = arg.split()
@@ -389,7 +390,7 @@ def ooc_cmd_max_players(client, arg):
 def ooc_cmd_desc(client, arg):
     """
     Set an area description that appears to the user any time they enter the area.
-    Usage: /desc [str]
+    Usage: /desc [desc]
     """
     if client.blinded:
         raise ClientError('You are blinded!')
@@ -409,6 +410,7 @@ def ooc_cmd_desc(client, arg):
 def ooc_cmd_edit_ambience(client, arg):
     """
     Toggle edit mode for setting ambience. Playing music will set it as the area's ambience.
+    tog can be `on`, `off` or empty.
     Usage: /edit_ambience [tog]
     """
     if len(arg.split()) > 1:

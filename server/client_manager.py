@@ -34,7 +34,7 @@ class ClientManager:
     class Client:
         """Represents a single instance of a user.
 
-        Clients may only belong to a single room.
+        Clients may only belong to a single area.
         """
         def __init__(self, server, transport, user_id, ipid):
             self.is_checked = False

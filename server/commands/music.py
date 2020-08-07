@@ -45,7 +45,7 @@ def ooc_cmd_currentmusic(client, arg):
 
 def ooc_cmd_getmusic(client, arg):
     """
-    Grab the last played track in an area.
+    Grab the last played track in this area.
     Usage: /getmusic
     """
     if len(arg) != 0:

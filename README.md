@@ -2,6 +2,10 @@
 
 tsuserver3 is the official Python-based server for Attorney Online.
 
+## Commands
+
+Documentation: ["Commands"](https://github.com/Crystalwarrior/KFO-Server/blob/master/docs/commands.md). You may also use the /help documentation on the server.
+
 ## Easy setup instructions
 
 The server will not work out of the box. **You must follow these instructions.**
@@ -110,10 +114,6 @@ To keep the server running even after closing the terminal:
  * Use a multiplexer, such as screen or tmux. These programs let you have multiple terminals open in a single window, and detach/reattach with them freely. They are extremely convenient.
  * Create a systemd service. Not for the faint of heart.
  * Use Docker instead.
-
-## Commands
-
-Up-to-date documentation pending! For the latest, most relevant documentation, please use the /help documentation on the server. For the newest Killing Fever Online rewrite, refer to the ["Changelog"](https://hackmd.io/@4L8eX0EIS3mS3np3tyF0Sg/HkobSUQ-P) for more information.
 
 ## License
 

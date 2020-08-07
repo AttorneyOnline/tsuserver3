@@ -129,9 +129,10 @@ def rtd(arg):
 def ooc_cmd_roll(client, arg):
     """
     Roll a die. The result is shown publicly.
-    Usage: /roll [max value] OR [2d6] ["+5"/"-5"/"*5"/"/5"]
     Example: /roll 2d6 +5 would roll two 6-sided die and add 5 to every result.
-    Rolls a 1D6 if blank
+    Rolls a 1d6 if blank
+    X is the number of dice, Y is the maximum value on the die.
+    Usage: /rollp [value/XdY] ["+5"/"-5"/"*5"/"/5"]
     """
     roll, num_dice, chosen_max, modifiers, Sum = rtd(arg)
 
@@ -142,9 +143,10 @@ def ooc_cmd_roll(client, arg):
 def ooc_cmd_rollp(client, arg):
     """
     Roll a die privately. Same as /roll but the result is only shown to you and the CMs.
-    Usage: /rollp <max value> OR [2d6] ["+5"/"-5"/"*5"/"/5"]
     Example: /roll 2d6 +5 would roll two 6-sided die and add 5 to every result.
-    Rolls a 1D6 if blank
+    Rolls a 1d6 if blank
+    X is the number of dice, Y is the maximum value on the die.
+    Usage: /rollp [value/XdY] ["+5"/"-5"/"*5"/"/5"]
     """
     roll, num_dice, chosen_max, modifiers, Sum = rtd(arg)
 

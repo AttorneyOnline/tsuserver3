@@ -62,7 +62,7 @@ def ooc_cmd_switch(client, arg):
 
 def ooc_cmd_pos(client, arg):
     """
-    Set the place your character resides in the room.
+    Set the place your character resides in the area.
     Usage: /pos <name>
     """
     if len(arg) == 0:
@@ -79,7 +79,7 @@ def ooc_cmd_pos(client, arg):
 @mod_only(area_owners=True)
 def ooc_cmd_forcepos(client, arg):
     """
-    Set the place another character resides in the room.
+    Set the place another character resides in the area.
     Usage: /forcepos <pos> <target>
     """
     args = arg.split()
@@ -268,7 +268,7 @@ def ooc_cmd_reload(client, arg):
 def ooc_cmd_blind(client, arg):
     """
     Blind the targeted player(s) from being able to see or talk IC.
-    Usage: /blind <id> [id(s)]
+    Usage: /blind <id(s)>
     """
     if len(arg) == 0:
         raise ArgumentError('You must specify a target.')
@@ -297,7 +297,7 @@ def ooc_cmd_blind(client, arg):
 def ooc_cmd_unblind(client, arg):
     """
     Undo effects of the /blind command.
-    Usage: /unblind <id> [id(s)]
+    Usage: /unblind <id(s)>
     """
     if len(arg) == 0:
         raise ArgumentError('You must specify a target.')
@@ -356,7 +356,7 @@ def ooc_cmd_player_hide(client, arg):
     """
     Hide player(s) from /getarea and playercounts.
     If <id> is *, it will hide everyone in the area excluding yourself and CMs.
-    Usage: /player_hide <id> [id(s)]
+    Usage: /player_hide <id(s)>
     """
     if len(arg) == 0:
         raise ArgumentError('You must specify a target.')
@@ -389,8 +389,8 @@ def ooc_cmd_player_hide(client, arg):
 def ooc_cmd_player_unhide(client, arg):
     """
     Unhide player(s) from /getarea and playercounts.
-    If <id> is *, it will hide everyone in the area excluding yourself and CMs.
-    Usage: /player_unhide <id> [id(s)]
+    If <id> is *, it will unhide everyone in the area excluding yourself and CMs.
+    Usage: /player_unhide <id(s)>
     """
     if len(arg) == 0:
         raise ArgumentError('You must specify a target.')
@@ -421,10 +421,10 @@ def ooc_cmd_player_unhide(client, arg):
 def ooc_cmd_hide(client, arg):
     """
     Try to hide in the targeted evidence name or ID.
-    Usage: /hide <evi_name/evi_id>
+    Usage: /hide <evi_name/id>
     """
     if arg == '':
-        raise ArgumentError('Use /hide <evi_name/evi_id> to hide in evidence, or /unhide to stop hiding.')
+        raise ArgumentError('Use /hide <evi_name/id> to hide in evidence, or /unhide to stop hiding.')
     try:
         client.hide(True, arg)
         client.area.broadcast_area_list(client)
@@ -472,7 +472,7 @@ def ooc_cmd_listen_pos(client, arg):
     Start only listening to your currently occupied pos.
     All messages outside of that pos will be reflected in the OOC.
     Optional argument is a list of positions you want to listen to.
-    Usage: /listen_pos [pos1] [pos2] [posX]
+    Usage: /listen_pos [pos(s)]
     """
     args = arg.split()
     value = 'self'
@@ -609,7 +609,7 @@ def ooc_cmd_keys_add(client, arg):
 def ooc_cmd_keys_remove(client, arg):
     """
     Remvove the keys of the target client/character folder/character id from the key(s). Keys must be a number like 5 or a link eg. 1-5.
-    Usage: /keys_remove <char>  [key(s)]
+    Usage: /keys_remove <char> [key(s)]
     """
     if not arg:
         raise ArgumentError("Usage: /keys_remove <char> [area id(s)]. Removes the selected 'keys' from the user.")

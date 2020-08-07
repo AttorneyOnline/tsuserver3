@@ -18,6 +18,7 @@ __all__ = [
     'ooc_cmd_link_unhide',
     'ooc_cmd_link_pos',
     'ooc_cmd_link_peekable',
+    'ooc_cmd_link_unpeekable',
     'ooc_cmd_link_evidence',
     'ooc_cmd_unlink_evidence',
 ]
@@ -189,8 +190,8 @@ def ooc_cmd_unlock(client, arg):
 @mod_only(area_owners=True)
 def ooc_cmd_link(client, arg):
     """
-    Set up a two-way link from your current area with a targeted area(s).
-    Usage:  /link <aid> [aid(s)]
+    Set up a two-way link from your current area with targeted area(s).
+    Usage:  /link <id(s)>
     """
     args = arg.split()
     if len(args) <= 0:
@@ -212,6 +213,39 @@ def ooc_cmd_link(client, arg):
             links.append(target_id)
         links = ', '.join(str(l) for l in links)
         client.send_ooc(f'Area {client.area.name} has been linked with {links} (two-way).')
+    except ValueError:
+        raise ArgumentError('Area ID must be a number or abbreviation.')
+    except (AreaError, ClientError):
+        raise
+
+@mod_only(area_owners=True)
+def ooc_cmd_unlink(client, arg):
+    """
+    Remove a two-way link from your current area with targeted area(s).
+    Usage:  /unlink <id(s)>
+    """
+    args = arg.split()
+    if len(args) <= 0:
+        raise ArgumentError('Invalid number of arguments. Use /unlink <aid>')
+    try:
+        links = []
+        for aid in args:
+            try:
+                area = client.area.area_manager.get_area_by_abbreviation(aid)
+                target_id = area.id
+            except:
+                area = client.area.area_manager.get_area_by_id(int(aid))
+                target_id = area.id
+
+            try:
+                client.area.unlink(target_id)
+                # Disconnect the target area from us
+                area.unlink(client.area.id)
+                links.append(target_id)
+            except:
+                continue
+        links = ', '.join(str(l) for l in links)
+        client.send_ooc(f'Area {client.area.name} has been unlinked with {links} (two-way).')
     except ValueError:
         raise ArgumentError('Area ID must be a number or abbreviation.')
     except (AreaError, ClientError):
@@ -250,44 +284,10 @@ def ooc_cmd_links(client, arg):
 
 
 @mod_only(area_owners=True)
-def ooc_cmd_unlink(client, arg):
-    """
-    Remove a two-way link from your current area with a targeted area(s).
-    Usage:  /unlink <aid> [aid(s)]
-    """
-    args = arg.split()
-    if len(args) <= 0:
-        raise ArgumentError('Invalid number of arguments. Use /unlink <aid>')
-    try:
-        links = []
-        for aid in args:
-            try:
-                area = client.area.area_manager.get_area_by_abbreviation(aid)
-                target_id = area.id
-            except:
-                area = client.area.area_manager.get_area_by_id(int(aid))
-                target_id = area.id
-
-            try:
-                client.area.unlink(target_id)
-                # Disconnect the target area from us
-                area.unlink(client.area.id)
-                links.append(target_id)
-            except:
-                continue
-        links = ', '.join(str(l) for l in links)
-        client.send_ooc(f'Area {client.area.name} has been unlinked with {links} (two-way).')
-    except ValueError:
-        raise ArgumentError('Area ID must be a number or abbreviation.')
-    except (AreaError, ClientError):
-        raise
-
-
-@mod_only(area_owners=True)
 def ooc_cmd_onelink(client, arg):
     """
-    Set up a one-way link from your current area with a targeted area(s).
-    Usage:  /onelink <aid> [aid(s)]
+    Set up a one-way link from your current area with targeted area(s).
+    Usage:  /onelink <id(s)>
     """
     args = arg.split()
     if len(args) <= 0:
@@ -316,8 +316,8 @@ def ooc_cmd_onelink(client, arg):
 @mod_only(area_owners=True)
 def ooc_cmd_oneunlink(client, arg):
     """
-    Remove a one-way link from your current area with a targeted area(s).
-    Usage:  /oneunlink <aid> [aid(s)]
+    Remove a one-way link from your current area with targeted area(s).
+    Usage:  /oneunlink <id(s)>
     """
     args = arg.split()
     if len(args) <= 0:
@@ -345,7 +345,7 @@ def ooc_cmd_oneunlink(client, arg):
 def ooc_cmd_link_lock(client, arg):
     """
     Lock the path leading to target area(s).
-    Usage:  /link_lock <aid> [aid(s)]
+    Usage:  /link_lock <id(s)>
     """
     args = arg.split()
     if len(args) <= 0:
@@ -375,7 +375,7 @@ def ooc_cmd_link_lock(client, arg):
 def ooc_cmd_link_unlock(client, arg):
     """
     Unlock the path leading to target area(s).
-    Usage:  /link_unlock <aid> [aid(s)]
+    Usage:  /link_unlock <id(s)>
     """
     args = arg.split()
     if len(args) <= 0:
@@ -406,7 +406,7 @@ def ooc_cmd_link_unlock(client, arg):
 def ooc_cmd_link_hide(client, arg):
     """
     Hide the path leading to target area(s).
-    Usage:  /link_hide <aid> [aid(s)]
+    Usage:  /link_hide <id(s)>
     """
     args = arg.split()
     if len(args) <= 0:
@@ -434,7 +434,7 @@ def ooc_cmd_link_hide(client, arg):
 def ooc_cmd_link_unhide(client, arg):
     """
     Unhide the path leading to target area(s).
-    Usage:  /link_unhide <aid> [aid(s)]
+    Usage:  /link_unhide <id(s)>
     """
     args = arg.split()
     if len(args) <= 0:
@@ -462,7 +462,7 @@ def ooc_cmd_link_unhide(client, arg):
 def ooc_cmd_link_pos(client, arg):
     """
     Set the link's targeted pos when using it. Leave blank to reset.
-    Usage:  /link_pos <aid> [pos]
+    Usage:  /link_pos <id> [pos]
     """
     args = arg.split()
     if len(args) <= 0:
@@ -486,7 +486,7 @@ def ooc_cmd_link_pos(client, arg):
 def ooc_cmd_link_peekable(client, arg):
     """
     Make the path(s) leading to target area(s) /peek-able.
-    Usage:  /link_peekable <aid> [aid(s)]
+    Usage:  /link_peekable <id(s)>
     """
     args = arg.split()
     if len(args) <= 0:
@@ -514,7 +514,7 @@ def ooc_cmd_link_peekable(client, arg):
 def ooc_cmd_link_unpeekable(client, arg):
     """
     Make the path(s) leading to target area(s) no longer /peek-able.
-    Usage:  /link_unpeekable <aid> [aid(s)]
+    Usage:  /link_unpeekable <id(s)>
     """
     args = arg.split()
     if len(args) <= 0:
@@ -543,7 +543,7 @@ def ooc_cmd_link_evidence(client, arg):
     """
     Make specific link only accessible from evidence ID(s).
     Pass evidence ID's which you can see by mousing over evidence, or blank to see current evidences.
-    Usage:  /link_evidence <aid> [evi_id(s)]
+    Usage:  /link_evidence <id> [evi_id(s)]
     """
     args = arg.split()
     if len(args) <= 0:

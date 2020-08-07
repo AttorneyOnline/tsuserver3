@@ -42,7 +42,7 @@ __all__ = [
 def ooc_cmd_hub(client, arg):
     """
     List hubs, or go to another hub.
-    Usage: /hub [id] or /hub [name]
+    Usage: /hub [id/name]
     """
     args = arg.split()
     if len(args) == 0:
@@ -72,6 +72,7 @@ def ooc_cmd_hub(client, arg):
 def ooc_cmd_save_hub(client, arg):
     """
     Save the current Hub in the server's storage/hubs/<name>.yaml file.
+    If blank and you're a mod, it will save to server's config/areas_new.yaml for the server owner to approve.
     Usage: /save_hub <name>
     """
     if not client.is_mod:
@@ -181,6 +182,8 @@ def ooc_cmd_clear_hub(client, arg):
 def ooc_cmd_area_create(client, arg):
     """
     Create a new area.
+    Newly created area's evidence mod will be HiddenCM.
+    Optional name will rename it to that as soon as its created.
     Usage: /area_create [name]
     """
     try:
@@ -201,7 +204,7 @@ def ooc_cmd_area_create(client, arg):
 def ooc_cmd_area_remove(client, arg):
     """
     Remove specified area by Area ID.
-    Usage: /area_remove <aid>
+    Usage: /area_remove <id>
     """
     args = arg.split()
 
@@ -242,8 +245,8 @@ def ooc_cmd_area_rename(client, arg):
 @mod_only(hub_owners=True)
 def ooc_cmd_area_swap(client, arg):
     """
-    Swap areas by Area IDs <aid1> and <aid2>.
-    Usage: /area_rename <aid1> <aid2>
+    Swap areas by Area IDs.
+    Usage: /area_rename <id> <id>
     """
     args = arg.split()
     if len(args) != 2:
@@ -264,9 +267,9 @@ def ooc_cmd_area_swap(client, arg):
 def ooc_cmd_area_pref(client, arg):
     """
     Toggle a preference on/off for an area.
-    Usage:  /area_pref - display list of prefs
-            /area_pref <pref> - toggle pref on/off
-            /area_pref <pref> <on/true|off/false> - set pref to on or off
+    Leave pref out to see available prefs.
+    Leave on/true and off/false to toggle the pref.
+    Usage:  /area_pref [pref] [on/true/off/false]
     """
     cm_allowed = [
         'locking_allowed',
@@ -369,7 +372,8 @@ def ooc_cmd_hub_move_delay(client, arg):
 @mod_only(hub_owners=True)
 def ooc_cmd_hub_arup_enable(client, arg):
     """
-    Enable the ARUP system for this hub.
+    Enable the ARea UPdate system for this hub.
+    ARUP system is the extra information displayed in the A/M area list, as well as being able to set /status.
     Usage: /hub_arup_enable
     """
     if client.area.area_manager.arup_enabled:
@@ -383,7 +387,7 @@ def ooc_cmd_hub_arup_enable(client, arg):
 @mod_only(hub_owners=True)
 def ooc_cmd_hub_arup_disable(client, arg):
     """
-    Disable the ARUP system for this hub.
+    Disable the ARea UPdate system for this hub.
     Usage: /hub_arup_disable
     """
     if not client.area.area_manager.arup_enabled:
@@ -423,6 +427,10 @@ def ooc_cmd_hub_unhide_clients(client, arg):
 
 
 def ooc_cmd_follow(client, arg):
+    """
+    Follow targeted character ID.
+    Usage: /follow [id]
+    """
     if len(arg) == 0:
         try:
             c = client.server.client_manager.get_targets(client, TargetType.ID, int(client.following), False)[0]
@@ -454,6 +462,10 @@ def ooc_cmd_follow(client, arg):
 
 
 def ooc_cmd_unfollow(client, arg):
+    """
+    Stop following whoever you are following.
+    Usage: /unfollow
+    """
     try:
         c = client.server.client_manager.get_targets(
             client, TargetType.ID, int(client.following), False)[0]
@@ -467,8 +479,8 @@ def ooc_cmd_unfollow(client, arg):
 
 def ooc_cmd_info(client, arg):
     """
-    Check the information for the current Hub
-    Usage: /info [str]
+    Check the information for the current Hub, or set it.
+    Usage: /info [info]
     """
     if len(arg) == 0:
         client.send_hub_info()
@@ -527,6 +539,7 @@ def ooc_cmd_gm(client, arg):
 def ooc_cmd_ungm(client, arg):
     """
     Remove a game master from the current Hub.
+    If blank, demote yourself from being a GM.
     Usage: /ungm <id>
     """
     if len(arg) > 0:
@@ -580,7 +593,7 @@ def ooc_cmd_broadcast(client, arg):
 def ooc_cmd_clear_broadcast(client, arg):
     """
     Stop broadcasting your IC, Music and Judge buttons.
-    Usage: /broadcast <id(s)>
+    Usage: /clear_broadcast
     """
     if len(client.broadcast_list) <= 0:
         client.send_ooc('Your broadcast list is already empty!')
