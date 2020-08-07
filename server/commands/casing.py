@@ -83,10 +83,9 @@ def ooc_cmd_evidence_mod(client, arg):
         )
 
 
-def ooc_cmd_evi_swap(client, arg):
+def ooc_cmd_evidence_swap(client, arg):
     """
     Swap the positions of two evidence items on the evidence list.
-    Usage: /evi_swap <id> <id>
     The ID of each evidence can be displayed by mousing over it in 2.8 client,
     or simply its number starting from 1.
     Usage: /evidence_swap <id> <id>

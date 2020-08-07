@@ -835,6 +835,7 @@ class AOProtocol(asyncio.Protocol):
                         'evidence_swap': 'evi_swap',
                         'currentbg': 'bg',
                         'autopass': 'sneak',
+                        'evi_swap': 'evidence_swap',
                     }
                     if cmd in lookup_dict:
                         lookup = f'Did you mean {lookup_dict[cmd]}?'
