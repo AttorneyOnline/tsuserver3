@@ -109,8 +109,10 @@
     - Show currently AFK-ing players in the current area or in all areas.
 * **invite** \<id>
     - Allow a particular user to join a locked or speak in spectator-only area.
+    - ID can be * to invite everyone in the current area.
 * **uninvite** \<id>
     - Revoke an invitation for a particular user.
+    - ID can be * to uninvite everyone in the current area.
 * **area_kick** \<id> [destination] [target_pos]
     - Remove a user from the current area and move them to another area.
     - If id is a * char, it will kick everyone but you and CMs from current area to destination.

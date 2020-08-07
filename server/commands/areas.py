@@ -143,20 +143,31 @@ def ooc_cmd_getafk(client, arg):
 def ooc_cmd_invite(client, arg):
     """
     Allow a particular user to join a locked or speak in spectator-only area.
+    ID can be * to invite everyone in the current area.
     Usage: /invite <id>
     """
     if not arg:
         raise ClientError('You must specify a target. Use /invite <id>')
     elif client.area.is_locked == client.area.Locked.FREE:
         raise ClientError('Area isn\'t locked.')
+    args = arg.split(' ')
+
     try:
-        c = client.server.client_manager.get_targets(client, TargetType.ID,
-                                                     int(arg), False)[0]
-        client.area.invite_list.add(c.id)
-        client.send_ooc(f'{c.char_name} is invited to your area.')
-        c.send_ooc(
-            f'You were invited and given access to {client.area.name}.')
-        database.log_room('invite', client, client.area, target=c)
+        if args[0] == '*':
+            targets = [c for c in client.area.clients if c != client and c != client.area.owners]
+        else:
+            targets = client.server.client_manager.get_targets(client, TargetType.ID,
+                                                            int(args[0]), False)
+    except ValueError:
+        raise ArgumentError('Area ID must be a number or *.')
+
+    try:
+        for c in targets:
+            client.area.invite_list.add(c.id)
+            client.send_ooc(f'{c.char_name} is invited to your area.')
+            c.send_ooc(
+                f'You were invited and given access to {client.area.name}.')
+            database.log_room('invite', client, client.area, target=c)
     except:
         raise ClientError('You must specify a target. Use /invite <id>')
 
@@ -165,15 +176,23 @@ def ooc_cmd_invite(client, arg):
 def ooc_cmd_uninvite(client, arg):
     """
     Revoke an invitation for a particular user.
+    ID can be * to uninvite everyone in the area.
     Usage: /uninvite <id>
     """
     if client.area.is_locked == client.area.Locked.FREE:
         raise ClientError('Area isn\'t locked.')
     elif not arg:
         raise ClientError('You must specify a target. Use /uninvite <id>')
-    arg = arg.split(' ')
-    targets = client.server.client_manager.get_targets(client, TargetType.ID,
-                                                       int(arg[0]), True)
+    args = arg.split(' ')
+    try:
+        if args[0] == '*':
+            targets = [c for c in client.area.clients if c != client and c != client.area.owners]
+        else:
+            targets = client.server.client_manager.get_targets(client, TargetType.ID,
+                                                            int(args[0]), False)
+    except ValueError:
+        raise ArgumentError('Area ID must be a number or *.')
+
     if targets:
         try:
             for c in targets:
@@ -207,14 +226,17 @@ def ooc_cmd_area_kick(client, arg):
             'You must specify a target. Use /area_kick <id> [destination #] [target_pos]')
 
     args = arg.split(' ')
-    if args[0] == 'afk':
-        targets = client.server.client_manager.get_targets(client, TargetType.AFK,
-                                                           args[0], False)
-    elif args[0] == '*':
-        targets = [c for c in client.area.clients if c != client and c != client.area.owners]
-    else:
-        targets = client.server.client_manager.get_targets(client, TargetType.ID,
-                                                           int(args[0]), False)
+    try:
+        if args[0] == 'afk':
+            targets = client.server.client_manager.get_targets(client, TargetType.AFK,
+                                                            args[0], False)
+        elif args[0] == '*':
+            targets = [c for c in client.area.clients if c != client and c != client.area.owners]
+        else:
+            targets = client.server.client_manager.get_targets(client, TargetType.ID,
+                                                            int(args[0]), False)
+    except ValueError:
+        raise ArgumentError('Area ID must be a number, afk or *.')
 
     if targets:
         try:
