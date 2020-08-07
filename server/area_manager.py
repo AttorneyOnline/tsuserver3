@@ -47,7 +47,7 @@ class AreaManager:
         self.info = ''
         self.can_gm = False
         self.music_ref = ''
-        self.music_override = False
+        self.client_music = True
         self.max_areas = 50
         self.single_cm = False
         # /prefs
@@ -123,8 +123,8 @@ class AreaManager:
             self.can_gm = hub['can_gm']
         if 'music_ref' in hub:
             self.music_ref = hub['music_ref']
-        if 'music_override' in hub:
-            self.music_override = hub['music_override']
+        if 'client_music' in hub:
+            self.client_music = hub['client_music']
         if 'max_areas' in hub:
             self.max_areas = hub['max_areas']
         if 'single_cm' in hub:
@@ -165,7 +165,7 @@ class AreaManager:
         hub['info'] = self.info
         hub['can_gm'] = self.can_gm
         hub['music_ref'] = self.music_ref
-        hub['music_override'] = self.music_override
+        hub['client_music'] = self.client_music
         hub['max_areas'] = self.max_areas
         hub['single_cm'] = self.single_cm
         areas = []

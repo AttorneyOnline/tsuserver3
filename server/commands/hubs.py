@@ -279,7 +279,7 @@ def ooc_cmd_area_pref(client, arg):
         'hide_clients',
         'music_autoplay',
         'replace_music',
-        'music_override',
+        'client_music',
         'can_dj',
         'hidden',
         'can_whisper',

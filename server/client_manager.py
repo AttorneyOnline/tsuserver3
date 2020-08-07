@@ -125,8 +125,10 @@ class ClientManager:
             self.local_music_list = []
             # reference to the storage/musiclists/ref.yaml for displaying purposes
             self.music_ref = ''
-            # a music list override that was loaded manually by the client
-            self.override_music_list = []
+            # a music list that was loaded manually by the client
+            self.music_list = []
+            # whether or not to replace music list with ours
+            self.replace_music = False
             # list of areas to broadcast the message, music and judge buttons to
             self.broadcast_list = []
 
@@ -287,7 +289,7 @@ class ClientManager:
                 )
                 return
             try:
-                name, length = self.server.get_song_data(self.construct_music_list(self.area.music_override), args[0])
+                name, length = self.server.get_song_data(self.construct_music_list(), args[0])
                 target_areas = [self.area]
                 if len(self.broadcast_list) > 0 and (self.is_mod or self in self.area.owners):
                     try:
@@ -387,7 +389,7 @@ class ClientManager:
 
         def clear_music(self):
             self.music_ref = ''
-            self.override_music_list.clear()
+            self.music_list.clear()
 
         def load_music(self, music_ref):
             """Load a music list from a music_ref. Use it for the local music list and reload it."""
@@ -409,45 +411,50 @@ class ClientManager:
                     for song in item['songs']:
                         song['name'] = prepath + song['name']
                 self.music_ref = music_ref
-                self.override_music_list = music_list
+                self.music_list = music_list
             except ValueError:
                 raise
             except AreaError:
                 raise
         
-        def construct_music_list(self, music_override = False):
+        def construct_music_list(self):
             """
             Obtain the most relevant music list for the client.
-            :param music_override: when True, include the client's music override in the equation.
+            :param client_music: when True, include the client's music in the equation.
             """
             # Server music list
             song_list = self.server.music_list
 
             # Hub music list
-            if self.area.area_manager.replace_music:
-                song_list = self.area.area_manager.music_list
-            else:
-                song_list = song_list + self.area.area_manager.music_list
+            if self.area.area_manager.music_ref != '' and len(self.area.area_manager.music_list) > 0:
+                if self.area.area_manager.replace_music:
+                    song_list = self.area.area_manager.music_list
+                else:
+                    song_list = song_list + self.area.area_manager.music_list
 
             # Area music list
-            if self.area.replace_music:
-                song_list = self.area.music_list
-            else:
-                song_list = song_list + self.area.music_list
+            if self.area.music_ref != '' and self.area.music_ref != self.area.area_manager.music_ref and len(self.area.music_list) > 0:
+                if self.area.replace_music:
+                    song_list = self.area.music_list
+                else:
+                    song_list = song_list + self.area.music_list
 
-            # Client override
-            if music_override and self.music_ref != '' and len(self.override_music_list) > 0:
-                song_list = self.override_music_list
+            # Client music list
+            if self.area.client_music and self.area.area_manager.client_music and \
+               self.music_ref != '' and not (self.music_ref in [self.area.music_ref, self.area.area_manager.music_ref]) and \
+               len(self.music_list) > 0:
+                if self.replace_music:
+                    song_list = self.music_list
+                else:
+                    song_list = song_list + self.music_list
 
             return song_list
 
         def refresh_music(self):
             """
-            Rebuild the client's music list according to a priority Client override -> Area override -> Hub override.
+            Rebuild the client's music list, updating the local music list if there was a change.
             """
-            song_list = self.construct_music_list(music_override=True)
-
-            # Update that boi's music list if there's a change
+            song_list = self.construct_music_list()
             if self.local_music_list != song_list:
                 self.reload_music_list(song_list)
 

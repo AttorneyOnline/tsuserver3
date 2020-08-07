@@ -64,7 +64,7 @@ class Area:
         self.max_players = -1
         self.desc = ''
         self.music_ref = ''
-        self.music_override = False
+        self.client_music = True
         self.replace_music = False
         self.ambience = ''
         self.can_dj = True
@@ -235,8 +235,8 @@ class Area:
         if self.music_ref != '':
             self.load_music(f'storage/musiclists/{self.music_ref}.yaml')
             
-        if 'music_override' in area:
-            self.music_override = area['music_override']
+        if 'client_music' in area:
+            self.client_music = area['client_music']
         if 'replace_music' in area:
             self.replace_music = area['replace_music']
         if 'ambience' in area:
@@ -303,7 +303,7 @@ class Area:
         if self.music_ref != '':
             area['music_ref'] = self.music_ref
             area['replace_music'] = self.replace_music
-        area['music_override'] = self.music_override
+        area['client_music'] = self.client_music
         if self.music_autoplay:
             area['music'] = self.current_music
         area['ambience'] = self.ambience
