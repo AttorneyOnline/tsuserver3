@@ -553,7 +553,7 @@ def ooc_cmd_link_evidence(client, arg):
         if len(args) > 1:
             evidences = []
             for evi_id in args[1:]:
-                evi_id = int(evi_id)
+                evi_id = int(evi_id)-1
                 evidences.append(client.area.evi_list.evidences[evi_id].name)
                 link["evidence"].append(evi_id)
             evidences = ', '.join(f'\'{l}\'' for l in evidences)
@@ -584,7 +584,7 @@ def ooc_cmd_unlink_evidence(client, arg):
         if len(args) > 1:
             evidences = []
             for evi_id in args:
-                evi_id = int(evi_id)
+                evi_id = int(evi_id)-1
                 link["evidence"].remove(evi_id)
             evidences = ', '.join(str(l) for l in link["evidence"])
             client.send_ooc(f'Area {client.area.name} link {args[0]} is now unlinked from evidence IDs {evidences}.')

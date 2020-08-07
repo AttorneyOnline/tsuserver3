@@ -87,12 +87,15 @@ def ooc_cmd_evi_swap(client, arg):
     """
     Swap the positions of two evidence items on the evidence list.
     Usage: /evi_swap <id> <id>
+    The ID of each evidence can be displayed by mousing over it in 2.8 client,
+    or simply its number starting from 1.
+    Usage: /evidence_swap <id> <id>
     """
     args = list(arg.split(' '))
     if len(args) != 2:
         raise ClientError("you must specify 2 numbers")
     try:
-        client.area.evi_list.evidence_swap(client, int(args[0]), int(args[1]))
+        client.area.evi_list.evidence_swap(client, int(args[0])-1, int(args[1])-1)
         client.area.broadcast_evidence_list()
     except:
         raise ClientError("you must specify 2 numbers")
