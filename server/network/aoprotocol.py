@@ -516,7 +516,6 @@ class AOProtocol(asyncio.Protocol):
                 if cmd == '<':
                     idx -= 1
                 idx = idx % len(self.client.area.testimony)
-                self.client.area.testimony_index = idx
             try:
                 self.client.area.testimony_send(idx)
                 self.client.area.broadcast_ooc(f'{self.client.char_name} has moved to Statement {idx+1}.')

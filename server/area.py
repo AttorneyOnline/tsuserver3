@@ -535,10 +535,15 @@ class Area:
             lst[14] = 1
             rec = tuple(lst)
             idx = self.testimony_index
-            if self.testimony_index == -1:
-                idx = len(self.testimony)
-            self.testimony.insert(idx, rec)
-            self.broadcast_ooc(f'Statement {len(self.testimony)} added.')
+            if idx == -1:
+                # Add one statement at the very end.
+                self.testimony.append(rec)
+                idx = self.testimony.index(rec)
+            else:
+                # Add one statement ahead of the one we're currently on.
+                idx += 1
+                self.testimony.insert(idx, rec)
+            self.broadcast_ooc(f'Statement {idx+1} added.')
             if not self.recording:
                 self.testimony_send(idx)
     
@@ -546,6 +551,7 @@ class Area:
         """Send the testimony statement at index"""
         try:
             statement = self.testimony[idx]
+            self.testimony_index = idx
             targets = self.clients
             for c in targets:
                 # Blinded clients don't receive IC messages
