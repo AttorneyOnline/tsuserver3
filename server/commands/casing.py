@@ -10,7 +10,7 @@ __all__ = [
     'ooc_cmd_doc',
     'ooc_cmd_cleardoc',
     'ooc_cmd_evidence_mod', # Not strictly casing - to be reorganized
-    'ooc_cmd_evi_swap', # Not strictly casing - to be reorganized
+    'ooc_cmd_evidence_swap', # Not strictly casing - to be reorganized
     'ooc_cmd_cm',
     'ooc_cmd_uncm',
     'ooc_cmd_setcase',
@@ -21,6 +21,7 @@ __all__ = [
     'ooc_cmd_afk', # Not strictly casing - to be reorganized
     'ooc_cmd_remote_listen', # Not strictly casing - to be reorganized
     'ooc_cmd_testimony',
+    'ooc_cmd_testimony_start',
     'ooc_cmd_testimony_clear',
     'ooc_cmd_testimony_remove',
     'ooc_cmd_testimony_amend',
@@ -374,6 +375,22 @@ def ooc_cmd_testimony(client, arg):
         msg += f'\n{here}[{i+1}] {name}: {txt}'
     client.send_ooc(msg)
 
+
+@mod_only(area_owners=True)
+def ooc_cmd_testimony_start(client, arg):
+    """
+    Manually start a testimony with the given title.
+    Usage: /testimony_start <title>
+    """
+    if arg == '':
+        raise ArgumentError('You must provite a title! /testimony_start <title>.')
+    if len(arg) < 3:
+        raise ArgumentError('Title must contain at least 3 characters!')
+    client.area.testimony.clear()
+    client.area.testimony_index = -1
+    client.area.testimony_title = arg
+    client.area.recording = True
+    client.area.broadcast_ooc(f'-- {client.area.testimony_title} --\nTestimony recording started! All new messages will be recorded as testimony lines. Say "End" to stop recording.')
 
 @mod_only(area_owners=True)
 def ooc_cmd_testimony_clear(client, arg):
