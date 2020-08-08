@@ -312,17 +312,6 @@ class AreaManager:
 
         # Make sure the client's available areas are updated
         client.area.broadcast_area_list(client)
-
-        # HAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHHAHAHAHAHA
-        # This should be remade by only sending updates to those players
-        # who would actually be affected, and all players who don't need
-        # an update are ignored.
-        self.send_arup_players()
-        self.send_arup_status()
-        self.send_arup_cms()
-        self.send_arup_lock()
-        # HAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHHAHAHAHAHA
-
         client.area.broadcast_evidence_list()
 
         self.broadcast_ooc(
@@ -339,17 +328,6 @@ class AreaManager:
 
         # Make sure the client's available areas are updated
         client.area.broadcast_area_list(client)
-
-        # HAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHHAHAHAHAHA
-        # This should be remade by only sending updates to those players
-        # who would actually be affected, and all players who don't need
-        # an update are ignored.
-        self.send_arup_players()
-        self.send_arup_status()
-        self.send_arup_cms()
-        self.send_arup_lock()
-        # HAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHHAHAHAHAHA
-
         client.area.broadcast_evidence_list()
 
         self.broadcast_ooc(

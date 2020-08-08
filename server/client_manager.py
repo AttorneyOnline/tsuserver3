@@ -519,15 +519,11 @@ class ClientManager:
             # Make sure the client's available areas are updated
             self.area.broadcast_area_list(self)
 
-            # HAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHHAHAHAHAHA
-            # This should be remade by only sending updates to those players
-            # who would actually be affected, and all players who don't need
-            # an update are ignored.
             self.area.area_manager.send_arup_players()
-            self.area.area_manager.send_arup_status()
-            self.area.area_manager.send_arup_cms()
-            self.area.area_manager.send_arup_lock()
-            # HAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHHAHAHAHAHA
+            # TODO: make ARUP be smart about this as this could be causing massive clientsided lag at the moment
+            # self.area.area_manager.send_arup_status()
+            # self.area.area_manager.send_arup_cms()
+            # self.area.area_manager.send_arup_lock()
             
             # Update everyone's available characters list
             # Commented out due to potentially causing clientside lag...
@@ -848,10 +844,11 @@ class ClientManager:
             self.send_command('LE', *self.area.get_evidence_list(self))
             self.send_command('MM', 1)
 
-            self.area.area_manager.send_arup_players()
-            self.area.area_manager.send_arup_status()
-            self.area.area_manager.send_arup_cms()
-            self.area.area_manager.send_arup_lock()
+            # TODO: make ARUP be smart about this as this could be causing massive clientsided lag at the moment
+            # self.area.area_manager.send_arup_players()
+            # self.area.area_manager.send_arup_status()
+            # self.area.area_manager.send_arup_cms()
+            # self.area.area_manager.send_arup_lock()
 
             self.send_command('DONE')
 
@@ -1114,7 +1111,8 @@ class ClientManager:
                 if len(a._owners) == 0:
                     if a.is_locked != a.Locked.FREE:
                         a.unlock()
-        client.area.area_manager.send_arup_cms()
+        if not client.hidden:
+            client.area.area_manager.send_arup_players()
         heappush(self.cur_id, client.id)
         temp_ipid = client.ipid
         for c in self.server.client_manager.clients:

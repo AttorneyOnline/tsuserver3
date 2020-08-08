@@ -194,7 +194,6 @@ def ooc_cmd_area_create(client, arg):
         area.evidence_mod = 'HiddenCM'
 
         client.area.area_manager.broadcast_area_list()
-        client.area.area_manager.send_arup_cms()
         client.send_ooc(f'New area created! {area.name} ({len(client.area.area_manager.areas)}/{client.area.area_manager.max_areas})')
     except AreaError:
         raise
