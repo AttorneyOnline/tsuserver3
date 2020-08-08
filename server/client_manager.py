@@ -235,8 +235,9 @@ class ClientManager:
             self.char_id = char_id
             self.pos = ''
             self.send_command('PV', self.id, 'CID', self.char_id)
-            self.area.send_command('CharsCheck',
-                                   *self.get_available_char_list())
+            # Commented out due to potentially causing clientside lag...
+            # self.area.send_command('CharsCheck',
+            #                        *self.get_available_char_list())
 
             new_char = self.char_name
             database.log_room('char.change', self, self.area,
@@ -529,8 +530,9 @@ class ClientManager:
             # HAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHHAHAHAHAHA
             
             # Update everyone's available characters list
-            self.area.send_command('CharsCheck',
-                                   *self.get_available_char_list())
+            # Commented out due to potentially causing clientside lag...
+            # self.area.send_command('CharsCheck',
+            #                        *self.get_available_char_list())
             # Get defense HP bar
             self.send_command('HP', 1, self.area.hp_def)
             # Get prosecution HP bar

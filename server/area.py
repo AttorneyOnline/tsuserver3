@@ -348,8 +348,9 @@ class Area:
             database.log_room('area.leave', client, self)
 
         # Update everyone's available characters list
-        self.send_command('CharsCheck',
-                            *client.get_available_char_list())
+        # Commented out due to potentially causing clientside lag...
+        # self.send_command('CharsCheck',
+        #                     *client.get_available_char_list())
 
     def unlock(self):
         """Mark the area as unlocked."""
