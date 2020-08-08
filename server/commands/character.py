@@ -33,6 +33,7 @@ __all__ = [
     'ooc_cmd_keys_add',
     'ooc_cmd_keys_remove',
     'ooc_cmd_keys',
+    'ooc_cmd_kms',
 ]
 
 
@@ -649,3 +650,18 @@ def ooc_cmd_keys(client, arg):
             raise ArgumentError('Target not found.')
     else:
         raise ArgumentError("Usage: /keys [target_id].")
+
+
+def ooc_cmd_kms(client, arg):
+    """
+    Stands for Kick MySelf - Kick other instances of the client opened by you.
+    Useful if you lose connection and the old client is ghosting.
+    Usage: /kms
+    """
+    if arg != '':
+        raise ArgumentError('This command takes no arguments!')
+    for target in client.server.client_manager.get_multiclients(client):
+        if target != client:
+            target.disconnect()
+    client.send_ooc('Kicked other instances of client.')
+    database.log_misc('kms', client)

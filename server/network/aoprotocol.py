@@ -821,6 +821,9 @@ class AOProtocol(asyncio.Protocol):
                         'areakick': 'area_kick',
                         'clear_testimony': 'testimony_clear',
                         'cleartestimony': 'testimony_clear',
+                        'start_testimony': 'testimony_start',
+                        'swaptestimony': 'testimony_swap',
+                        'swap_testimony': 'testimony_swap',
                         'remotelisten': 'remote_listen',
                         'force_pos': 'forcepos',
                         'listenpos': 'listen_pos',
@@ -835,6 +838,7 @@ class AOProtocol(asyncio.Protocol):
                         'currentbg': 'bg',
                         'autopass': 'sneak',
                         'evi_swap': 'evidence_swap',
+                        'kickself': 'kms',
                     }
                     if cmd in lookup_dict:
                         lookup = f'Did you mean {lookup_dict[cmd]}?'

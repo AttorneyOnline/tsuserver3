@@ -245,6 +245,9 @@ needing a certain list of positions to be filled up.
 * **keys** [target_id]
     - Check your own keys, or someone else's (if admin).
     - Keys allow you to /lock or /unlock specific areas, OR area links if it's formatted like 1-5
+* **kms**
+    - Stands for Kick MySelf - Kick other instances of the client opened by you.
+    - Useful if you lose connection and the old client is ghosting.
 ## Fun
 * **disemvowel** \<id>
     - Remove all vowels from a user's IC chat.
