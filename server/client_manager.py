@@ -117,7 +117,7 @@ class ClientManager:
             # 1 = listen to IC
             # 2 = listen to OOC
             # 3 = Listen to ALL
-            self.remote_listen = 3
+            self.remote_listen = 2
 
             # a list of all areas the client can currently see
             self.local_area_list = []
