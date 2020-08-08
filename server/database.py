@@ -338,7 +338,7 @@ class Database:
                                      client.name) if client is not None else (
                                          None, None, None)
         target_ipid = target.ipid if target is not None else None
-        subtype_id = self._subtype_atom('area', event_subtype)
+        subtype_id = self._subtype_atom('room', event_subtype)
         if isinstance(message, dict):
             message = json.dumps(message)
 
@@ -392,7 +392,7 @@ class Database:
                     '''), (count,)).fetchall()]
 
     def _subtype_atom(self, event_type, event_subtype):
-        if event_type not in ('area', 'misc'):
+        if event_type not in ('room', 'misc'):
             raise AssertionError()
 
         with self.db as conn:
