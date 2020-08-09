@@ -917,7 +917,7 @@ class Area:
             area_list = c.get_area_list(allowed, allowed)
             if c.local_area_list != area_list:
                 update_clients.append(c)
-            c.reload_area_list()
+                c.reload_area_list()
 
         # Update ARUP information only for those that need it
         if len(update_clients) > 0:
