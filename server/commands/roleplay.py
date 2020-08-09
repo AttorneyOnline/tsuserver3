@@ -136,7 +136,7 @@ def ooc_cmd_roll(client, arg):
     """
     roll, num_dice, chosen_max, modifiers, Sum = rtd(arg)
 
-    client.area.broadcast_ooc(f'{client.char_name} rolled {roll} out of {chosen_max}.\nThe total sum is {Sum}.')
+    client.area.broadcast_ooc(f'{client.showname} rolled {roll} out of {chosen_max}.\nThe total sum is {Sum}.')
     database.log_room('roll', client, client.area, message=f'{roll} out of {chosen_max}')
 
 
@@ -152,9 +152,9 @@ def ooc_cmd_rollp(client, arg):
 
     client.send_ooc(f'[Hidden] You rolled {roll} out of {chosen_max}.\nThe total sum is {Sum}.')
 
-    client.area.broadcast_ooc(f'{client.char_name} rolled in secret.')
+    client.area.broadcast_ooc(f'{client.showname} rolled in secret.')
     for c in client.area.owners:
-        c.send_ooc(f'[{client.area.id}]{client.char_name} secretly rolled {roll} out of {chosen_max}.')
+        c.send_ooc(f'[{client.area.id}]{client.showname} secretly rolled {roll} out of {chosen_max}.')
 
     database.log_room('rollp', client, client.area, message=f'{roll} out of {chosen_max}')
 
@@ -264,7 +264,7 @@ def ooc_cmd_rolla(client, arg):
     ability_dice = client.area.ability_dice[client.ability_dice_set]
     roll, max_roll, ability = rolla(ability_dice)
     client.area.broadcast_ooc('{} rolled a {} (out of {}): {}.'.format(
-        client.char_name, roll, max_roll, ability))
+        client.showname, roll, max_roll, ability))
     database.log_room('rolla', client, client.area,
                         message=f'{roll} out of {max_roll}: {ability}')
 
@@ -279,7 +279,7 @@ def ooc_cmd_coinflip(client, arg):
     coin = ['heads', 'tails']
     flip = random.choice(coin)
     client.area.broadcast_ooc('{} flipped a coin and got {}.'.format(
-        client.char_name, flip))
+        client.showname, flip))
     database.log_room('coinflip', client, client.area, message=flip)
 
 
@@ -294,6 +294,6 @@ def ooc_cmd_8ball(client, arg):
         raise ArgumentError('You need to ask a question')
     rolla_reload(client.area)
     ability_dice = client.area.ability_dice['8ball']
-    client.area.broadcast_ooc('{} asked a question: {} and the answer is: {}.'.format(
-        client.char_name, arg, rolla(ability_dice)[2]))
+    client.area.broadcast_ooc('{} asked a question: "{}" and the answer is: "{}".'.format(
+        client.showname, arg, rolla(ability_dice)[2]))
         

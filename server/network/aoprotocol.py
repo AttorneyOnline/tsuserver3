@@ -518,7 +518,7 @@ class AOProtocol(asyncio.Protocol):
                 idx = idx % len(self.client.area.testimony)
             try:
                 self.client.area.testimony_send(idx)
-                self.client.area.broadcast_ooc(f'{self.client.char_name} has moved to Statement {idx+1}.')
+                self.client.area.broadcast_ooc(f'{self.client.showname} has moved to Statement {idx+1}.')
             except:
                 self.client.send_ooc('Invalid index!')
             return
@@ -630,11 +630,13 @@ class AOProtocol(asyncio.Protocol):
                 c = evi.hiding_client
                 c.hide(False)
                 c.area.broadcast_area_list(c)
-                self.client.send_ooc(f'You discover {c.char_name} in the {evi.name}!')
+                self.client.send_ooc(f'You discover {c.showname} in the {evi.name}!')
 
             if evi.pos != 'all':
                 evi.pos = 'all'
                 self.client.area.broadcast_evidence_list()
+        # Update the showname ref for the client
+        self.client.showname = showname
 
         # Here, we check the pair stuff, and save info about it to the client.
         # Notably, while we only get a charid_pair and an offset, we send back a chair_pair, an emote, a talker offset
@@ -1037,7 +1039,7 @@ class AOProtocol(asyncio.Protocol):
                 )
                 return
             msg = '=== Case Announcement ===\r\n{} [{}] is hosting {}, looking for '.format(
-                self.client.char_name, self.client.id, args[0])
+                self.client.showname, self.client.id, args[0])
 
             lookingfor = [p for p, q in
                 zip(['defense', 'prosecutor', 'judge', 'juror', 'stenographer'], args[1:])
@@ -1164,8 +1166,8 @@ class AOProtocol(asyncio.Protocol):
         if len(args) < 1:
             self.server.send_all_cmd_pred(
                 'ZZ',
-                '[{}] {} ({}) in {} without reason (not using 2.6?)'.format(
-                    current_time, self.client.char_name,
+                '[{}] {} ({}) in {} without reason (not using 2.6+?)'.format(
+                    current_time, self.client.showname,
                     self.client.ip, self.client.area.name),
                 pred=lambda c: c.is_mod)
             self.client.set_mod_call_delay()
@@ -1175,7 +1177,7 @@ class AOProtocol(asyncio.Protocol):
             self.server.send_all_cmd_pred(
                 'ZZ',
                 '[{}] {} ({}) in {} with reason: {}'.format(
-                    current_time, self.client.char_name,
+                    current_time, self.client.showname,
                     self.client.ip, self.client.area.name,
                     args[0][:100]),
                 pred=lambda c: c.is_mod)

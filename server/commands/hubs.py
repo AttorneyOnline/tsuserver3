@@ -437,7 +437,7 @@ def ooc_cmd_follow(client, arg):
         try:
             c = client.server.client_manager.get_targets(client, TargetType.ID, int(client.following), False)[0]
             client.send_ooc(
-                f'You are currently following [{c.id}] {c.char_name}.')
+                f'You are currently following [{c.id}] {c.showname}.')
         except:
             raise ArgumentError('You must specify a target. Use /follow <id>.')
         return
@@ -454,10 +454,10 @@ def ooc_cmd_follow(client, arg):
             raise ClientError('You are not a mod/GM - Target must be present in your area!')
         if client.following == c.id:
             raise ClientError(
-                f'Already following [{c.id}] {c.char_name}!')
+                f'Already following [{c.id}] {c.showname}!')
         client.following = c.id
         client.send_ooc(
-            f'You are now following [{c.id}] {c.char_name}.')
+            f'You are now following [{c.id}] {c.showname}.')
         client.change_area(c.area)
     else:
         client.send_ooc('No targets found.')
@@ -472,7 +472,7 @@ def ooc_cmd_unfollow(client, arg):
         c = client.server.client_manager.get_targets(
             client, TargetType.ID, int(client.following), False)[0]
         client.send_ooc(
-            f'You are no longer following [{c.id}] {c.char_name}.')
+            f'You are no longer following [{c.id}] {c.showname}.')
         client.following = None
     except:
         client.following = None
@@ -492,7 +492,7 @@ def ooc_cmd_info(client, arg):
             raise ClientError('You must be a GM of the Hub to do that.')
         client.area.area_manager.info = arg
         client.area.area_manager.broadcast_ooc('{} changed the Hub info.'.format(
-            client.char_name))
+            client.showname))
         database.log_room('info.change', client, client.area, message=arg)
 
 
@@ -524,7 +524,7 @@ def ooc_cmd_gm(client, arg):
                     )
                 elif c in client.area.area_manager.owners:
                     client.send_ooc(
-                        f'{c.char_name} [{c.id}] is already a GM here.')
+                        f'{c.showname} [{c.id}] is already a GM here.')
                 else:
                     client.area.area_manager.add_owner(c)
                     database.log_room('gm.add', client, client.area, target=c)

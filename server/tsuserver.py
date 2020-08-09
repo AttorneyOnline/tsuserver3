@@ -365,9 +365,8 @@ class TsuServer3:
         :param as_mod: add moderator prefix (Default value = False)
 
         """
-        char_name = client.char_name
         ooc_name = '{}[{}][{}]'.format('<dollar>G', client.area.area_manager.abbreviation,
-                                       char_name)
+                                       client.showname)
         if as_mod:
             ooc_name += '[M]'
         self.send_all_cmd_pred('CT',
@@ -382,9 +381,8 @@ class TsuServer3:
         :param msg: message
 
         """
-        name = client.name
         ooc_name = '{}[{}][{}]'.format('<dollar>M', client.area.id,
-                                       name)
+                                       client.name)
         self.send_all_cmd_pred('CT', ooc_name, msg, pred=lambda x: x.is_mod)
 
     def broadcast_need(self, client, msg):

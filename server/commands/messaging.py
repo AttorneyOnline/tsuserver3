@@ -92,7 +92,7 @@ def ooc_cmd_h(client, arg):
             is_mod = '[M]'
         if client in client.area.area_manager.owners:
             is_gm = '[GM]'
-        area.send_command('CT', f'<dollar>HUB[{client.char_name}]{is_gm}{is_mod}', arg, '0')
+        area.send_command('CT', f'<dollar>HUB[{client.showname}]{is_gm}{is_mod}', arg, '0')
     database.log_room('chat.hub', client, client.area, message=arg)
 
 
@@ -118,7 +118,7 @@ def ooc_cmd_lm(client, arg):
         raise ArgumentError("Can't send an empty message.")
     client.area.send_command(
         'CT', '{}[MOD][{}]'.format(client.server.config['hostname'],
-                                   client.char_name), arg)
+                                   client.showname), arg)
     database.log_room('chat.local-mod', client, client.area, message=arg)
 
 
@@ -223,11 +223,11 @@ def ooc_cmd_pm(client, arg):
             c.send_ooc(
                 'PM from {} (ID: {}, IPID: {}) in {} ({}): {}'.format(
                     client.name, client.id, client.ipid, client.area.name,
-                    client.char_name, msg))
+                    client.showname, msg))
         else:
             c.send_ooc('PM from {} (ID: {}) in {} ({}): {}'.format(
                 client.name, client.id, client.area.name,
-                client.char_name, msg))
+                client.showname, msg))
         client.send_ooc('PM sent to {}. Message: {}'.format(
             args[0], msg))
 

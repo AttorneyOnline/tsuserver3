@@ -118,7 +118,7 @@ def ooc_cmd_forcepos(client, arg):
             raise
 
     client.area.broadcast_ooc(
-        '{} forced {} client(s) into /pos {}.'.format(client.char_name,
+        '{} forced {} client(s) into /pos {}.'.format(client.showname,
                                                       len(targets), pos))
 
 
@@ -341,9 +341,9 @@ def ooc_cmd_player_move_delay(client, arg):
                 move_delay = int(args[1])
             move_delay = min(1800, max(-1800, move_delay)) # Move delay is limited between -1800 and 1800
             c.move_delay = move_delay
-            client.send_ooc(f'Set move delay for [{c.id}] {c.char_name} to {move_delay}.')
+            client.send_ooc(f'Set move delay for {c.char_name} to {move_delay}.')
         else:
-            client.send_ooc(f'Current move delay for [{c.id}] {c.char_name} is {c.move_delay}.')
+            client.send_ooc(f'Current move delay for {c.char_name} is {c.move_delay}.')
     except ValueError:
         raise ArgumentError('Delay must be an integer between -1800 and 1800.')
     except IndexError:
@@ -378,10 +378,10 @@ def ooc_cmd_player_hide(client, arg):
         for c in targets:
             if c.hidden:
                 raise ClientError(
-                    f'Client [{c.id}] {c.char_name} already hidden!')
+                    f'Client [{c.id}] {c.showname} already hidden!')
             c.hide(True)
             client.send_ooc(
-                f'You have hidden [{c.id}] {c.char_name} from /getarea and playercounts.')
+                f'You have hidden [{c.id}] {c.showname} from /getarea and playercounts.')
     else:
         client.send_ooc('No targets found.')
 
@@ -412,10 +412,10 @@ def ooc_cmd_player_unhide(client, arg):
         for c in targets:
             if not c.hidden:
                 raise ClientError(
-                    f'Client [{c.id}] {c.char_name} already revealed!')
+                    f'Client [{c.id}] {c.showname} already revealed!')
             c.hide(False)
             client.send_ooc(
-                f'You have revealed [{c.id}] {c.char_name} for /getarea and playercounts.')
+                f'You have revealed [{c.id}] {c.showname} for /getarea and playercounts.')
     else:
         client.send_ooc('No targets found.')
 

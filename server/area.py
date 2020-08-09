@@ -461,7 +461,7 @@ class Area:
                 lst = list(self.testimony[idx])
                 lst[4] = "}}}" + args[4][2:]
                 self.testimony[idx] = tuple(lst)
-                self.broadcast_ooc(f'{client.char_name} has amended Statement {idx+1}.')
+                self.broadcast_ooc(f'{client.showname} has amended Statement {idx+1}.')
                 if not self.recording:
                     self.testimony_send(idx)
             except IndexError:
@@ -512,7 +512,7 @@ class Area:
                 scrunched = ''.join(e for e in args[4] if e.isalnum())
                 if len(scrunched) > 0 and scrunched.lower() == 'end':
                     self.recording = False
-                    self.broadcast_ooc(f'[{client.id}] {client.char_name} has ended the testimony.')
+                    self.broadcast_ooc(f'[{client.id}] {client.showname} has ended the testimony.')
                     return
 
         if adding:
@@ -865,7 +865,7 @@ class Area:
         """
         msg = ''
         for i in self._owners:
-            msg += f'[{str(i.id)}] {i.char_name}, '
+            msg += f'[{str(i.id)}] {i.showname}, '
         if len(msg) > 2:
             msg = msg[:-2]
         return msg
@@ -882,7 +882,7 @@ class Area:
         self.broadcast_evidence_list()
 
         self.broadcast_ooc(
-            f'{client.char_name} [{client.id}] is CM in this area now.')
+            f'{client.showname} [{client.id}] is CM in this area now.')
 
     def remove_owner(self, client):
         """
@@ -899,7 +899,7 @@ class Area:
         self.broadcast_evidence_list()
 
         self.broadcast_ooc(
-            f'{client.char_name} [{client.id}] is no longer CM in this area.')
+            f'{client.showname} [{client.id}] is no longer CM in this area.')
 
     def broadcast_area_list(self, client=None):
         """

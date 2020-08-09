@@ -315,7 +315,7 @@ class AreaManager:
         client.area.broadcast_evidence_list()
 
         self.broadcast_ooc(
-            f'{client.char_name} [{client.id}] is GM in this hub now.')
+            f'{client.showname} [{client.id}] is GM in this hub now.')
 
     def remove_owner(self, client):
         """
@@ -331,7 +331,7 @@ class AreaManager:
         client.area.broadcast_evidence_list()
 
         self.broadcast_ooc(
-            f'{client.char_name} [{client.id}] is no longer GM in this hub.')
+            f'{client.showname} [{client.id}] is no longer GM in this hub.')
 
     def get_gms(self):
         """
@@ -340,7 +340,7 @@ class AreaManager:
         """
         msg = ''
         for i in self.owners:
-            msg += f'[{str(i.id)}] {i.char_name}, '
+            msg += f'[{str(i.id)}] {i.showname}, '
         if len(msg) > 2:
             msg = msg[:-2]
         return msg

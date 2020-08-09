@@ -197,7 +197,7 @@ class EvidenceList:
         if c != None:
             c.hide(False)
             c.area.broadcast_area_list(c)
-            c.send_ooc(f'You discover {c.char_name} in the {self.evidences[id].name}!')
+            c.send_ooc(f'You discover {c.showname} in the {self.evidences[id].name}!')
 
         self.evidences.pop(id)
 
@@ -234,6 +234,6 @@ class EvidenceList:
             if c != None:
                 c.hide(False)
                 c.area.broadcast_area_list(c)
-                client.send_ooc(f'You discover {c.char_name} in the {self.evidences[idx].name}!')
+                client.send_ooc(f'You discover {c.showname} in the {self.evidences[idx].name}!')
             self.evidences[idx] = self.Evidence(
                 arg[0], arg[1], arg[2], self.evidences[idx].pos)

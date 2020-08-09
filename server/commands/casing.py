@@ -40,7 +40,7 @@ def ooc_cmd_doc(client, arg):
     else:
         client.area.change_doc(arg)
         client.area.broadcast_ooc('{} changed the doc link.'.format(
-            client.char_name))
+            client.showname))
         database.log_room('doc.change', client, client.area, message=arg)
 
 
@@ -53,7 +53,7 @@ def ooc_cmd_cleardoc(client, arg):
         raise ArgumentError('This command has no arguments.')
     client.area.change_doc()
     client.area.broadcast_ooc('{} cleared the doc link.'.format(
-        client.char_name))
+        client.showname))
     database.log_room('doc.clear', client, client.area)
 
 
@@ -130,7 +130,7 @@ def ooc_cmd_cm(client, arg):
                     )
                 elif c in client.area.owners:
                     client.send_ooc(
-                        f'{c.char_name} [{c.id}] is already a CM here.')
+                        f'{c.showname} [{c.id}] is already a CM here.')
                 else:
                     client.area.add_owner(c)
                     database.log_room('cm.add', client, client.area, target=c)
@@ -217,7 +217,7 @@ def ooc_cmd_anncase(client, arg):
                     'You should probably announce the case to at least one person.'
                 )
             msg = '=== Case Announcement ===\r\n{} [{}] is hosting {}, looking for '.format(
-                client.char_name, client.id, args[0])
+                client.showname, client.id, args[0])
 
             lookingfor = [p for p, q in
                 zip(['defense', 'prosecutor', 'judge', 'juror', 'stenographer'], args[1:])
@@ -353,7 +353,7 @@ def ooc_cmd_testimony(client, arg):
                 return
             idx = int(args[0]) - 1
             client.area.testimony_send(idx)
-            client.area.broadcast_ooc(f'{client.char_name} has moved to Statement {idx+1}.')
+            client.area.broadcast_ooc(f'{client.showname} has moved to Statement {idx+1}.')
         except ValueError:
             raise ArgumentError('Index must be a number!')
         except ClientError:
@@ -405,7 +405,7 @@ def ooc_cmd_testimony_clear(client, arg):
         raise ArgumentError('This command does not take any arguments.')
     client.area.testimony.clear()
     client.area.testimony_title = ''
-    client.area.broadcast_ooc(f'{client.char_name} cleared the current testimony.')
+    client.area.broadcast_ooc(f'{client.showname} cleared the current testimony.')
 
 
 @mod_only(area_owners=True)
@@ -425,7 +425,7 @@ def ooc_cmd_testimony_remove(client, arg):
         client.area.testimony.pop(idx)
         if client.area.testimony_index == idx:
             client.area.testimony_index = -1
-        client.area.broadcast_ooc(f'{client.char_name} has removed Statement {idx+1}.')
+        client.area.broadcast_ooc(f'{client.showname} has removed Statement {idx+1}.')
     except ValueError:
         raise ArgumentError('Index must be a number!')
     except IndexError:
@@ -451,7 +451,7 @@ def ooc_cmd_testimony_amend(client, arg):
         lst = list(client.area.testimony[idx])
         lst[4] = "}}}" + args[1:]
         client.area.testimony[idx] = tuple(lst)
-        client.area.broadcast_ooc(f'{client.char_name} has amended Statement {idx+1}.')
+        client.area.broadcast_ooc(f'{client.showname} has amended Statement {idx+1}.')
     except ValueError:
         raise ArgumentError('Index must be a number!')
     except IndexError:
@@ -476,7 +476,7 @@ def ooc_cmd_testimony_swap(client, arg):
         idx1 = int(args[0]) - 1
         idx2 = int(args[1]) - 1
         client.area.testimony[idx2], client.area.testimony[idx1] = client.area.testimony[idx1], client.area.testimony[idx2]
-        client.area.broadcast_ooc(f'{client.char_name} has swapped Statements {idx1+1} and {idx2+1}.')
+        client.area.broadcast_ooc(f'{client.showname} has swapped Statements {idx1+1} and {idx2+1}.')
     except ValueError:
         raise ArgumentError('Index must be a number!')
     except IndexError:

@@ -105,6 +105,7 @@ class ClientManager:
             self.last_move_time = 0
         
             # client status stuff
+            self._showname = ''
             self.blinded = False
             self._hidden = False
             self.hidden_in = None
@@ -625,11 +626,11 @@ class ClientManager:
                         try:
                             c.change_area(area)
                             c.send_ooc(
-                                f'Following [{self.id}] {self.char_name} to {area.name}.')
+                                f'Following [{self.id}] {self.showname} to {area.name}.')
                         # Something obstructed us.
                         except ClientError:
                             c.send_ooc(
-                                f'Cannot follow [{self.id}] {self.char_name} to {area.name}!')
+                                f'Cannot follow [{self.id}] {self.showname} to {area.name}!')
                             c.unfollow(silent=True)
                             raise
                     else:
@@ -638,9 +639,9 @@ class ClientManager:
 
             if not self.sneaking and not self.hidden:
                 old_area.broadcast_ooc(
-                    f'[{self.id}] {self.char_name} leaves to [{area.id}] {area.name}.')
+                    f'[{self.id}] {self.showname} leaves to [{area.id}] {area.name}.')
                 area.broadcast_ooc(
-                    f'[{self.id}] {self.char_name} enters from [{old_area.id}] {old_area.name}.')
+                    f'[{self.id}] {self.showname} enters from [{old_area.id}] {old_area.name}.')
             else:
                 self.send_ooc(
                     f'Changed area to {area.name} unannounced.')
@@ -719,8 +720,8 @@ class ClientManager:
 
             lock = {
                 area.Locked.FREE: '',
-                area.Locked.SPECTATABLE: '[SPEC]',
-                area.Locked.LOCKED: '[LOCK]'
+                area.Locked.SPECTATABLE: '[S]',
+                area.Locked.LOCKED: '[L]'
             }
             if afk_check:
                 player_list = area.afkers
@@ -734,7 +735,7 @@ class ClientManager:
             if self.area.area_manager.arup_enabled:
                 status = f' [{area.status}]'
 
-            info += f'=== {area.name} (users: {len(player_list)}) {status}{lock[area.is_locked]}==='
+            info += f'=== [{area.id}] {area.name} (users: {len(player_list)}) {status}{lock[area.is_locked]}==='
 
             sorted_clients = []
             for client in player_list:
@@ -758,7 +759,9 @@ class ClientManager:
                     if c.hidden_in != None:
                         name = f':{c.area.evi_list.evidences[c.hidden_in].name}'
                     info += f'[HID{name}]'
-                info += f' [{c.id}] {c.char_name}'
+                info += f' [{c.id}] {c.showname}'
+                if c.showname != c.char_name:
+                    info += f' ({c.char_name})'
                 if c.pos != '':
                     info += f' <{c.pos}>'
                 if self.is_mod:
@@ -908,6 +911,17 @@ class ClientManager:
             return self.server.char_list[self.char_id]
 
         @property
+        def showname(self):
+            """Get the showname of this client, or the char name if none."""
+            if self._showname == '':
+                return self.char_name
+            return self._showname
+
+        @showname.setter
+        def showname(self, value):
+            self._showname = value
+
+        @property
         def move_delay(self):
             """Get the character's movement delay."""
             return self.area.area_manager.get_character_data(self.char_id, 'move_delay', 0)
@@ -952,7 +966,7 @@ class ClientManager:
                             c = evi.hiding_client
                             c.hide(False)
                             c.area.broadcast_area_list(c)
-                            raise ClientError(f'{c.char_name} was already hiding in that evidence!')
+                            raise ClientError(f'{c.showname} was already hiding in that evidence!')
                         self.hidden_in = evidence
                         evi.hiding_client = self
                         msg += f' inside the {evi.name}'
@@ -964,7 +978,7 @@ class ClientManager:
                     evi.hiding_client = None
                     self.hidden_in = None
                     if not hidden:
-                        self.area.broadcast_ooc(f'{self.char_name} emerges from the {evi.name}!')
+                        self.area.broadcast_ooc(f'{self.showname} emerges from the {evi.name}!')
                         # Impose all move delays as if we moved an area when unhiding so people have to be smart about it
                         self.last_move_time = round(time.time() * 1000.0)
 
@@ -992,7 +1006,7 @@ class ClientManager:
                 self.change_area(target.area)
                 self.following = target.id
                 self.send_ooc(
-                    'You are now following [{}] {}.'.format(target.id, target.char_name))
+                    'You are now following [{}] {}.'.format(target.id, target.showname))
             except ValueError:
                 raise
             except (AreaError, ClientError):
@@ -1005,7 +1019,7 @@ class ClientManager:
                         self, TargetType.ID, int(self.following), False)[0]
                     if not silent:
                         self.send_ooc(
-                            'You are no longer following [{}] {}.'.format(c.id, c.char_name))
+                            'You are no longer following [{}] {}.'.format(c.id, c.showname))
                     self.following = None
                 except:
                     self.following = None
@@ -1180,11 +1194,11 @@ class ClientManager:
 
     def toggle_afk(self, client):
             if client in client.area.afkers:
-                client.area.broadcast_ooc('{} is no longer AFK.'.format(client.char_name))
+                client.area.broadcast_ooc('{} is no longer AFK.'.format(client.showname))
                 client.send_ooc('You are no longer AFK. Welcome back!')  # Making the server a bit friendly wouldn't hurt, right?
                 client.area.afkers.remove(client)
             else:
-                client.area.broadcast_ooc('{} is now AFK.'.format(client.char_name))
+                client.area.broadcast_ooc('{} is now AFK.'.format(client.showname))
                 client.send_ooc('You are now AFK. Have a good day!')
                 client.area.afkers.append(client)
 

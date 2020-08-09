@@ -67,7 +67,7 @@ def ooc_cmd_jukebox_toggle(client, arg):
     client.area.jukebox = not client.area.jukebox
     client.area.jukebox_votes = []
     client.area.broadcast_ooc('{} [{}] has set the jukebox to {}.'.format(
-        client.char_name, client.id, client.area.jukebox))
+        client.showname, client.id, client.area.jukebox))
     database.log_room('jukebox_toggle', client, client.area,
         message=client.area.jukebox)
 
@@ -89,11 +89,11 @@ def ooc_cmd_jukebox_skip(client, arg):
     if len(client.area.jukebox_votes) == 1:
         client.area.broadcast_ooc(
             '{} [{}] has forced a skip, restarting the only jukebox song.'.
-            format(client.char_name, client.id))
+            format(client.showname, client.id))
     else:
         client.area.broadcast_ooc(
             '{} [{}] has forced a skip to the next jukebox song.'.format(
-                client.char_name, client.id))
+                client.showname, client.id))
     database.log_room('jukebox_skip', client, client.area)
 
 
@@ -135,7 +135,7 @@ def ooc_cmd_jukebox(client, arg):
                     first = False
                 else:
                     message += ', '
-                message += voter.char_name + ' [' + str(voter.id) + ']'
+                message += voter.showname + ' [' + str(voter.id) + ']'
                 if client.is_mod:
                     message += '(' + str(voter.ipid) + ')'
             message += '\n'
