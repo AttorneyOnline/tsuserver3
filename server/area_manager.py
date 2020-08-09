@@ -399,12 +399,14 @@ class AreaManager:
         for area in self.areas:
             area.send_command('CT', area.server.config['hostname'], msg, '1')
 
-    def send_arup_players(self):
+    def send_arup_players(self, clients=None):
         """Broadcast ARUP packet containing player counts."""
         if not self.arup_enabled:
             return
         players_list = [0]
-        for client in self.clients:
+        if clients==None:
+            clients = self.clients
+        for client in clients:
             for area in client.local_area_list:
                 playercount = -1
                 if not self.hide_clients and not area.hide_clients:
@@ -412,22 +414,26 @@ class AreaManager:
                 players_list.append(playercount)
             self.server.send_arup(client, players_list)
 
-    def send_arup_status(self):
+    def send_arup_status(self, clients=None):
         """Broadcast ARUP packet containing area statuses."""        
         if not self.arup_enabled:
             return
         status_list = [1]
-        for client in self.clients:
+        if clients==None:
+            clients = self.clients
+        for client in clients:
             for area in client.local_area_list:
                 status_list.append(area.status)
             self.server.send_arup(client, status_list)
 
-    def send_arup_cms(self):
+    def send_arup_cms(self, clients=None):
         """Broadcast ARUP packet containing area CMs."""
         if not self.arup_enabled:
             return        
         cms_list = [2]
-        for client in self.clients:
+        if clients==None:
+            clients = self.clients
+        for client in clients:
             for area in client.local_area_list:
                 cm = 'FREE'
                 if len(area.owners) > 0:
@@ -435,12 +441,14 @@ class AreaManager:
                 cms_list.append(cm)
             self.server.send_arup(client, cms_list)
 
-    def send_arup_lock(self):
+    def send_arup_lock(self, clients=None):
         """Broadcast ARUP packet containing the lock status of each area."""
         if not self.arup_enabled:
             return        
         lock_list = [3]
-        for client in self.clients:
+        if clients==None:
+            clients = self.clients
+        for client in clients:
             for area in client.local_area_list:
                 lock_list.append(area.is_locked.name)
             self.server.send_arup(client, lock_list)

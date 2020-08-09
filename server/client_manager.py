@@ -232,6 +232,8 @@ class ClientManager:
                     else:
                         raise ClientError('Character not available.')
             old_char = self.char_name
+            if (self.char_id == -1 or char_id == -1) and self.char_id != char_id:
+                self.area.area_manager.send_arup_players()
             self.char_id = char_id
             self.pos = ''
             self.send_command('PV', self.id, 'CID', self.char_id)
@@ -520,10 +522,6 @@ class ClientManager:
             self.area.broadcast_area_list(self)
 
             self.area.area_manager.send_arup_players()
-            # TODO: make ARUP be smart about this as this could be causing massive clientsided lag at the moment
-            # self.area.area_manager.send_arup_status()
-            # self.area.area_manager.send_arup_cms()
-            # self.area.area_manager.send_arup_lock()
             
             # Update everyone's available characters list
             # Commented out due to potentially causing clientside lag...
@@ -844,11 +842,10 @@ class ClientManager:
             self.send_command('LE', *self.area.get_evidence_list(self))
             self.send_command('MM', 1)
 
-            # TODO: make ARUP be smart about this as this could be causing massive clientsided lag at the moment
-            # self.area.area_manager.send_arup_players()
-            # self.area.area_manager.send_arup_status()
-            # self.area.area_manager.send_arup_cms()
-            # self.area.area_manager.send_arup_lock()
+            self.area.area_manager.send_arup_players([self])
+            self.area.area_manager.send_arup_status([self])
+            self.area.area_manager.send_arup_cms([self])
+            self.area.area_manager.send_arup_lock([self])
 
             self.send_command('DONE')
 

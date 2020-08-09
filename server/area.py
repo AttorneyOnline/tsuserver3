@@ -911,9 +911,19 @@ class Area:
         else:
             clients.append(client)
 
+        update_clients = []
         for c in clients:
             allowed = c.is_mod or c in self.owners
-            c.reload_area_list(c.get_area_list(allowed, allowed))
+            area_list = c.get_area_list(allowed, allowed)
+            if c.local_area_list != area_list:
+                update_clients.append(c)
+            c.reload_area_list()
+
+        # Update ARUP information only for those that need it
+        if len(update_clients) > 0:
+            self.area_manager.send_arup_status(update_clients)
+            self.area_manager.send_arup_lock(update_clients)
+            self.area_manager.send_arup_cms(update_clients)
 
     def time_until_move(self, client):
         """

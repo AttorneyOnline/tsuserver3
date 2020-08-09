@@ -59,6 +59,9 @@ def ooc_cmd_hub(client, arg):
                     preflist.remove('arup')
                 client.send_command('FL', preflist)
                 client.change_area(hub.default_area())
+                client.area.area_manager.send_arup_status([client])
+                client.area.area_manager.send_arup_cms([client])
+                client.area.area_manager.send_arup_lock([client])
                 client.send_hub_info()
                 return
         raise AreaError('Targeted hub not found!')
