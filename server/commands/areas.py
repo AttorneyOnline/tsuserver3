@@ -315,6 +315,51 @@ def ooc_cmd_pos_lock_clear(client, arg):
     client.area.broadcast_ooc('Position lock cleared.')
 
 
+def ooc_cmd_knock(client, arg):
+    """
+    Knock knock bitch
+    Usage:  /knock <id>
+    """
+    args = arg.split()
+    if len(args) == 0:
+        raise ArgumentError('You need to input an accessible area name or ID to peek into it!')
+    if client.blinded:
+        raise ClientError('You are blinded!')
+    try:
+        area = None
+        for _area in client.area.area_manager.areas:
+            if (args[0].isdigit() and _area.id == int(args[0])) or _area.name.lower() == arg.lower() or _area.abbreviation == args[0]:
+                area = _area
+                break
+        if area == None:
+            raise ClientError('Target area not found.')
+        if area == client.area:
+            client.area.broadcast_ooc(f'[{client.id}] {client.showname} knocks for attention.')
+            return
+        allowed = client.is_mod or client in area.owners or client in client.area.owners
+        if not allowed and client.area.is_locked == area.Locked.LOCKED and not client.id in client.area.invite_list:
+            raise ClientError('Your current area is locked!')
+
+        if len(client.area.links) > 0:
+            if not str(area.id) in client.area.links and not allowed:
+                raise ClientError('That area is inaccessible from your area!')
+
+            if str(area.id) in client.area.links:
+                # Get that link reference
+                link = client.area.links[str(area.id)]
+
+                # Link requires us to be inside a piece of evidence
+                if len(link["evidence"]) > 0 and not (client.hidden_in in link["evidence"]) and not allowed:
+                    raise ClientError('That area is inaccessible!')
+
+        client.area.broadcast_ooc(f'[{client.id}] {client.showname} knocks on [{area.id}] {area.name}.')
+        area.broadcast_ooc(f'[!] Someone is knocking from [{client.area.id}] {client.area.name} [!]')
+    except ValueError:
+        raise ArgumentError('Area ID must be a number or name.')
+    except (AreaError, ClientError):
+        raise
+
+
 def ooc_cmd_peek(client, arg):
     """
     Peek into an area to see if there's people in it.
@@ -342,7 +387,11 @@ def ooc_cmd_peek(client, arg):
             if not c.hidden and not c in area.owners and not c.is_mod: #pure IC
                 sorted_clients.append(c)
 
+        # TODO: condense this monstrosity into a single func
         allowed = client.is_mod or client in area.owners or client in client.area.owners
+        if not allowed and client.area.is_locked == area.Locked.LOCKED and not client.id in client.area.invite_list:
+            raise ClientError('Your current area is locked!')
+
         if len(client.area.links) > 0:
             if not str(area.id) in client.area.links and not allowed:
                 raise ClientError('That area is inaccessible from your area!')
