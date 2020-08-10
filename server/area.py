@@ -751,7 +751,7 @@ class Area:
 
     def cannot_ic_interact(self, client):
         """
-        Check if this area is locked to a client.
+        Check if this area is spectatable to a client.
         :param client: sender
         """
         return self.is_locked == self.Locked.SPECTATABLE and not client.is_mod and not client in self.owners and not client.id in self.invite_list
