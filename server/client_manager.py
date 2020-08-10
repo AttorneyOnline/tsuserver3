@@ -838,7 +838,7 @@ class ClientManager:
                 owner = 'FREE'
                 if len(hub.owners) > 0:
                     owner = hub.get_gms()
-                msg += f'\r\n[{hub.id}] {hub.name} (users: {len(hub.clients)}) {owner}'
+                msg += f'\r\n[{hub.id}] {hub.name} (users: {len([c for c in hub.clients if not c.hidden])}) {owner}'
                 if self.area.area_manager == hub:
                     msg += ' [*]'
             self.send_ooc(msg)
