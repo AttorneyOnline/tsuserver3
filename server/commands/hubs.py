@@ -123,7 +123,6 @@ def ooc_cmd_load_hub(client, arg):
                 raise AreaError(f'File path {arg} is invalid!')
             client.area.area_manager.load(hub)
             client.send_ooc(f'Loading as {arg}...')
-            client.area.area_manager.send_arup_players()
             client.area.area_manager.send_arup_status()
             client.area.area_manager.send_arup_cms()
             client.area.area_manager.send_arup_lock()
@@ -134,7 +133,6 @@ def ooc_cmd_load_hub(client, arg):
             client.send_ooc('Loading all Hubs from areas.yaml...')
             clients = set()
             for hub in client.server.hub_manager.hubs:
-                hub.send_arup_players()
                 hub.send_arup_status()
                 hub.send_arup_cms()
                 hub.send_arup_lock()
@@ -171,10 +169,6 @@ def ooc_cmd_clear_hub(client, arg):
     try:
         client.server.hub_manager.load(hub_id=client.area.area_manager.id)
         client.area.area_manager.broadcast_ooc('Hub clearing initiated...')
-        client.area.area_manager.send_arup_players()
-        client.area.area_manager.send_arup_status()
-        client.area.area_manager.send_arup_cms()
-        client.area.area_manager.send_arup_lock()
         client.server.client_manager.refresh_music(client.area.area_manager.clients)
         client.send_ooc('Success, sending ARUP and refreshing music...')
     except AreaError:

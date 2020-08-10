@@ -233,15 +233,15 @@ class ClientManager:
                     else:
                         raise ClientError('Character not available.')
             old_char = self.char_name
-            if (self.char_id == -1 or char_id == -1) and self.char_id != char_id:
-                self.area.area_manager.send_arup_players()
+            arup = (self.char_id == -1 or char_id == -1) and self.char_id != char_id
             self.char_id = char_id
             self.pos = ''
             self.send_command('PV', self.id, 'CID', self.char_id)
             # Commented out due to potentially causing clientside lag...
             # self.area.send_command('CharsCheck',
             #                        *self.get_available_char_list())
-
+            if arup:
+                self.area.area_manager.send_arup_players()
             new_char = self.char_name
             database.log_room('char.change', self, self.area,
                 message={'from': old_char, 'to': new_char})
@@ -1133,8 +1133,6 @@ class ClientManager:
                 if len(a._owners) == 0:
                     if a.is_locked != a.Locked.FREE:
                         a.unlock()
-        if not client.hidden:
-            client.area.area_manager.send_arup_players()
         heappush(self.cur_id, client.id)
         temp_ipid = client.ipid
         for c in self.server.client_manager.clients:
