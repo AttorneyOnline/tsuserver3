@@ -318,7 +318,7 @@ def ooc_cmd_pos_lock_clear(client, arg):
 
 def ooc_cmd_knock(client, arg):
     """
-    Knock on the target ID to make anyone in that area aware of you trying to access it.
+    Knock on the target area ID to call on their attention to your area.
     Usage:  /knock <id>
     """
     args = arg.split()
@@ -354,7 +354,7 @@ def ooc_cmd_knock(client, arg):
                     raise ClientError('That area is inaccessible!')
 
         client.area.broadcast_ooc(f'[{client.id}] {client.showname} knocks on [{area.id}] {area.name}.')
-        area.broadcast_ooc(f'[!] Someone is knocking from [{client.area.id}] {client.area.name} [!]')
+        area.broadcast_ooc(f'!! Someone is knocking from [{client.area.id}] {client.area.name} !!')
     except ValueError:
         raise ArgumentError('Area ID must be a number or name.')
     except (AreaError, ClientError):

@@ -124,6 +124,8 @@
     - Use /pos_lock_clear to make the list empty.
 * **pos_lock_clear**
     - Clear the current area's position lock and make all positions available.
+* **knock** \<id>
+    - Knock on the target area ID to call on their attention to your area.
 * **peek** \<id>
     - Peek into an area to see if there's people in it.
 * **max_players** [num]
@@ -248,6 +250,16 @@ needing a certain list of positions to be filled up.
 * **kms**
     - Stands for Kick MySelf - Kick other instances of the client opened by you.
     - Useful if you lose connection and the old client is ghosting.
+* **chardesc** [desc/id]
+    - Look at your own character description if no arugments are provided.
+    - Look at another person's character description if only ID is provided.
+    - Set your own character description if description is provided instead of ID.
+        - Do note that the first sentence of your chardesc is displayed during area transfer messages!
+    - To set someone else's char desc as an admin/GM, or look at their desc, use /chardesc_set or /chardesc_get.
+* **chardesc_set**
+    - hehehe
+* **chardesc_get**
+    - hehehe
 ## Fun
 * **disemvowel** \<id>
     - Remove all vowels from a user's IC chat.
