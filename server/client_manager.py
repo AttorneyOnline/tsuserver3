@@ -953,6 +953,16 @@ class ClientManager:
             self.area.area_manager.set_character_data(self.char_id, 'keys', value)
 
         @property
+        def desc(self):
+            """Get the character's description."""
+            return self.area.area_manager.get_character_data(self.char_id, 'desc', '')
+
+        @desc.setter
+        def desc(self, value):
+            """Set the character's description character data."""
+            self.area.area_manager.set_character_data(self.char_id, 'desc', value)
+
+        @property
         def hidden(self):
             """Return if the character is hidden or not. Always True if char_id is -1 (spectator)"""
             return self.char_id == -1 or self._hidden

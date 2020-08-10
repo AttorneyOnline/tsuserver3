@@ -34,6 +34,9 @@ __all__ = [
     'ooc_cmd_keys_remove',
     'ooc_cmd_keys',
     'ooc_cmd_kms',
+    'ooc_cmd_chardesc',
+    'ooc_cmd_chardesc_set',
+    'ooc_cmd_chardesc_get',
 ]
 
 
@@ -545,17 +548,18 @@ def mod_keys(client, arg, mod=0):
     if len(args) <= 1 and mod != 0:
         raise ArgumentError("Please provide the key(s) to set. Keys must be a number 5 or a link eg. 1-5.")
     try:
-        target = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), False)
-        if target:
-            target = target[0].char_id
-        else:
-            if args[0] != '-1' and (int(args[0]) in client.server.char_list):
-                target = int(args[0])
+        if args[0].isnumeric():
+            target = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), False)
+            if target:
+                target = target[0].char_id
             else:
-                try:
-                    target = client.server.get_char_id_by_name(arg)
-                except (ServerError):
-                    raise
+                if args[0] != '-1' and (int(args[0]) in client.server.char_list):
+                    target = int(args[0])
+        else:
+            try:
+                target = client.server.get_char_id_by_name(arg)
+            except (ServerError):
+                raise
 
         if len(args) > 1:
             args = args[1:]
@@ -629,23 +633,24 @@ def ooc_cmd_keys(client, arg):
     if len(args) < 1:
         client.send_ooc(f'Your current keys are {client.keys}')
         return
-    if not client.is_mod:
-        raise ClientError('Only mods can check other people\'s keys.')
+    if not client.is_mod and not (client in client.area.area_manager.owners):
+        raise ClientError('Only mods and GMs can check other people\'s keys.')
     if len(args) == 1:
         try:
-            target = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), False)
-            if target:
-                target = target[0].char_id
-            else:
-                if args[0] != '-1' and (int(args[0]) in client.server.char_list):
-                    target = int(args[0])
+            if args[0].isnumeric():
+                target = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), False)
+                if target:
+                    target = target[0].char_id
                 else:
-                    try:
-                        target = client.server.get_char_id_by_name(arg)
-                    except (ServerError):
-                        raise
+                    if args[0] != '-1' and (int(args[0]) in client.server.char_list):
+                        target = int(args[0])
+            else:
+                try:
+                    target = client.server.get_char_id_by_name(arg)
+                except (ServerError):
+                    raise
             keys = client.area.area_manager.get_character_data(target, 'keys', [])
-            client.send_ooc(f'Target\'s current keys are {keys}')
+            client.send_ooc(f'{client.server.char_list[target]} current keys are {keys}')
         except:
             raise ArgumentError('Target not found.')
     else:
@@ -665,3 +670,94 @@ def ooc_cmd_kms(client, arg):
             target.disconnect()
     client.send_ooc('Kicked other instances of client.')
     database.log_misc('kms', client)
+
+
+def ooc_cmd_chardesc(client, arg):
+    """
+    Look at your own character description if no arugments are provided.
+    Look at another person's character description if only ID is provided.
+    Set your own character description if description is provided instead of ID.
+    To set someone else's char desc as an admin/GM, or look at their desc, use /chardesc_set or /chardesc_get.
+    Usage: /chardesc [desc/id]
+    """
+    if client.blinded:
+        raise ClientError('You are blinded!')
+    if len(arg) == 0:
+        client.send_ooc(f'{client.char_name} Description: {client.desc}')
+        database.log_room('chardesc.request', client, client.area)
+    elif arg.isnumeric():
+        try:
+            target = client.server.client_manager.get_targets(client, TargetType.ID, int(arg[0]), True)[0].char_id
+            desc = client.area.area_manager.get_character_data(target, 'desc', '')
+            target = client.server.char_list[target]
+            client.send_ooc(f'{target} Description: {desc}')
+            database.log_room('chardesc.request', client, client.area, message=target)
+        except:
+            raise ArgumentError('Target not found.')
+    else:
+        client.desc = arg
+        desc = arg[:128]
+        if len(arg) > len(desc):
+            desc += "... Use /chardesc to read the rest."
+        client.area.broadcast_ooc(f'{client.showname} changed their character description to: {desc}.')
+        database.log_room('chardesc.change', client, client.area, message=arg)
+
+
+@mod_only(hub_owners=True)
+def ooc_cmd_chardesc_set(client, arg):
+    """
+    Set someone else's character description to desc or clear it.
+    Usage: /chardesc_set <id> [desc]
+    """
+    args = arg.split(' ')
+    if len(args) < 1:
+        raise ArgumentError('Not enough arguments. Usage: /chardesc_set <id> [desc]')
+    try:
+        if args[0].isnumeric():
+            target = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), False)
+            if target:
+                target = target[0].char_id
+            else:
+                if args[0] != '-1' and (int(args[0]) in client.server.char_list):
+                    target = int(args[0])
+        else:
+            try:
+                target = client.server.get_char_id_by_name(arg)
+            except (ServerError):
+                raise
+        desc = ''
+        if len(args) > 1:
+            desc = ' '.join(args[1:])
+        client.area.area_manager.set_character_data(target, 'desc', desc)
+        target = client.server.char_list[target]
+        client.send_ooc(f'{target} Description: {desc}')
+        database.log_room('chardesc.set', client, client.area, message=f'{target}: {desc}')
+    except:
+        raise ArgumentError('Target not found.')
+
+
+@mod_only(hub_owners=True)
+def ooc_cmd_chardesc_get(client, arg):
+    """
+    Get someone else's character description.
+    Usage: /chardesc_get <id>
+    """
+    try:
+        if arg.isnumeric():
+            target = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), False)
+            if target:
+                target = target[0].char_id
+            else:
+                if arg != '-1' and (int(arg) in client.server.char_list):
+                    target = int(arg)
+        else:
+            try:
+                target = client.server.get_char_id_by_name(arg)
+            except (ServerError):
+                raise
+        desc = client.area.area_manager.get_character_data(target, 'desc', '')
+        target = client.server.char_list[target]
+        client.send_ooc(f'{target} Description: {desc}')
+        database.log_room('chardesc.get', client, client.area, message=f'{target}: {desc}')
+    except:
+        raise ArgumentError('Target not found.')
