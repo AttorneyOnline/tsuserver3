@@ -292,14 +292,14 @@ needing a certain list of positions to be filled up.
 * **hub_move_delay** [delay]
     - Set the hub's move delay to a value in seconds. Can be negative.
     - Delay must be from -1800 to 1800 in seconds or empty to check.
-* **hub_arup_enable**
+* **arup_enable**
     - Enable the ARea UPdate system for this hub.
     - ARUP system is the extra information displayed in the A/M area list, as well as being able to set /status.
-* **hub_arup_disable**
+* **arup_disable**
     - Disable the ARea UPdate system for this hub.
-* **hub_hide_clients**
+* **hide_clients**
     - Hide the playercounts for this Hub's areas.
-* **hub_unhide_clients**
+* **unhide_clients**
     - Unhide the playercounts for this Hub's areas.
 ### General
 * **follow**
