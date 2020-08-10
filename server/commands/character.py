@@ -676,7 +676,8 @@ def ooc_cmd_chardesc(client, arg):
     """
     Look at your own character description if no arugments are provided.
     Look at another person's character description if only ID is provided.
-    Set your own character description if description is provided instead of ID.
+    Set your own character description* if description is provided instead of ID.
+    * Do note that the first sentence of your chardesc is displayed during area transfer messages!
     To set someone else's char desc as an admin/GM, or look at their desc, use /chardesc_set or /chardesc_get.
     Usage: /chardesc [desc/id]
     """

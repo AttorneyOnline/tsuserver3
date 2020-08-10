@@ -651,8 +651,18 @@ class ClientManager:
             if not self.sneaking and not self.hidden:
                 old_area.broadcast_ooc(
                     f'[{self.id}] {self.showname} leaves to [{area.id}] {area.name}.')
+                desc = ''
+                if self.desc != '':
+                    desc = ' ' + self.desc
+                    # Find the first sentence (assuming it ends in a period).
+                    if desc.find('.') != -1:
+                        desc = ' ' + self.desc[:desc.find('.') + 1]
+                    # Limit that to 64 chars
+                    desc = desc[:64]
+                    if len(self.desc) > 64:
+                        desc += f'... Use /chardesc {self.id} to read the rest.'
                 area.broadcast_ooc(
-                    f'[{self.id}] {self.showname} enters from [{old_area.id}] {old_area.name}.')
+                    f'[{self.id}] {self.showname} enters from [{old_area.id}] {old_area.name}.{desc}')
             else:
                 self.send_ooc(
                     f'Changed area to {area.name} unannounced.')
