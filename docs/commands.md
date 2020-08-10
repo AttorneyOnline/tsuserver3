@@ -54,7 +54,7 @@
         - /lock 1 - lock area ID 1.
         - /lock !1 - lock a link connected to area ID 1 (if it exists).
         - /lock 1 2 3 - lock area IDs 1, 2 and 3.
-* **lock** \<area(s)> or \<!link(s)>
+* **unlock** \<area(s)> or \<!link(s)>
     - Context-sensitive function to unlock area(s) and/or area link(s).
     - Multiple targets may be passed.
     - Examples:
