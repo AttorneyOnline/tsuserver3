@@ -195,9 +195,9 @@ def ooc_cmd_notecard_reveal(client, arg):
     """
     if len(client.area.cards) == 0:
         raise ClientError('There are no cards to reveal in this area.')
-    msg = 'Note cards have been revealed.\n'
+    msg = 'Note cards have been revealed.'
     for card_owner, card_msg in client.area.cards.items():
-        msg += f'{card_owner}: {card_msg}\n'
+        msg += f'\n{card_owner}: {card_msg}'
     client.area.cards.clear()
     client.area.broadcast_ooc(msg)
     database.log_room('notecard_reveal', client, client.area)
@@ -211,11 +211,11 @@ def ooc_cmd_notecard_check(client, arg):
     """
     if len(client.area.cards) == 0:
         raise ClientError('There are no cards to check in this area.')
-    msg = 'Note cards in this area:\n'
-    for card_owner, card_msg in client.area.cards.items():
-        msg += f'{card_owner}: {card_msg}\n'
-    client.send_ooc(msg)
     client.area.broadcast_ooc(f'[{client.id}] {client.showname} has checked the notecards in this area.')
+    msg = 'Note cards in this area:'
+    for card_owner, card_msg in client.area.cards.items():
+        msg += f'\n{card_owner}: {card_msg}'
+    client.send_ooc(msg)
     database.log_room('notecard_check', client, client.area)
 
 
