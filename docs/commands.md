@@ -256,10 +256,10 @@ needing a certain list of positions to be filled up.
     - Set your own character description if description is provided instead of ID.
         - Do note that the first sentence of your chardesc is displayed during area transfer messages!
     - To set someone else's char desc as an admin/GM, or look at their desc, use /chardesc_set or /chardesc_get.
-* **chardesc_set**
-    - hehehe
-* **chardesc_get**
-    - hehehe
+* **chardesc_set** \<id> [desc]
+    - Set someone else's character description to desc or clear it.
+* **chardesc_get** \<id>
+    - Get someone else's character description.
 ## Fun
 * **disemvowel** \<id>
     - Remove all vowels from a user's IC chat.
