@@ -45,7 +45,7 @@ def ooc_cmd_bg(client, arg):
     except AreaError:
         raise
     client.area.broadcast_ooc(
-        f'{client.char_name} changed the background to {arg}.')
+        f'{client.showname} changed the background to {arg}.')
     database.log_room('bg', client, client.area, message=arg)
 
 
@@ -66,7 +66,7 @@ def ooc_cmd_status(client, arg):
         try:
             client.area.change_status(arg)
             client.area.broadcast_ooc('{} changed status to {}.'.format(
-                client.char_name, client.area.status))
+                client.showname, client.area.status))
             database.log_room('status', client, client.area, message=arg)
         except AreaError:
             raise
@@ -164,7 +164,7 @@ def ooc_cmd_invite(client, arg):
     try:
         for c in targets:
             client.area.invite_list.add(c.id)
-            client.send_ooc(f'{c.char_name} is invited to your area.')
+            client.send_ooc(f'{c.showname} is invited to your area.')
             c.send_ooc(
                 f'You were invited and given access to {client.area.name}.')
             database.log_room('invite', client, client.area, target=c)
@@ -198,7 +198,7 @@ def ooc_cmd_uninvite(client, arg):
             for c in targets:
                 client.send_ooc(
                     "You have removed {} from the whitelist.".format(
-                        c.char_name))
+                        c.showname))
                 c.send_ooc(
                     "You were removed from the area whitelist.")
                 database.log_room('uninvite', client, client.area, target=c)
@@ -258,7 +258,7 @@ def ooc_cmd_area_kick(client, arg):
                 if len(args) >= 3:
                     target_pos = args[2]
                 client.send_ooc(
-                    f'Attempting to kick {c.char_name} to area {output}.')
+                    f'Attempting to kick {c.showname} to area {output}.')
                 c.set_area(area, target_pos)
                 c.send_ooc(
                     f"You were kicked from the area to area {output}.")
@@ -366,7 +366,7 @@ def ooc_cmd_peek(client, arg):
         if area.is_locked == area.Locked.LOCKED and not client.is_mod and not client.id in area.invite_list and not client.id in area.owners:
             raise ClientError('That area is locked!')
 
-        _sort = [c.char_name for c in sorted(sorted_clients, key=lambda x: x.char_name)]
+        _sort = [c.showname for c in sorted(sorted_clients, key=lambda x: x.showname)]
 
         # this would be nice to be a separate "make human readable list" func
         if len(_sort) == 2:
@@ -380,7 +380,7 @@ def ooc_cmd_peek(client, arg):
         if len(sorted_clients) <= 0:
             sorted_clients = 'nobody'
 
-        client.area.broadcast_ooc(f'[{client.id}] {client.char_name} peeks into [{area.id}] {area.name}...')
+        client.area.broadcast_ooc(f'[{client.id}] {client.showname} peeks into [{area.id}] {area.name}...')
         client.send_ooc(f'There\'s {sorted_clients} in [{area.id}] {area.name}.')
     except ValueError:
         raise ArgumentError('Area ID must be a number or name.')
@@ -424,7 +424,7 @@ def ooc_cmd_desc(client, arg):
         desc = arg[:128]
         if len(arg) > len(desc):
             desc += "... Use /desc to read the rest."
-        client.area.broadcast_ooc(f'{client.char_name} changed the area description to: {desc}.')
+        client.area.broadcast_ooc(f'{client.showname} changed the area description to: {desc}.')
         database.log_room('desc.change', client, client.area, message=arg)
 
 

@@ -111,7 +111,7 @@ def ooc_cmd_kick(client, arg):
         for c in targets:
             database.log_misc('kick', client, target=c, data={'reason': reason})
             client.send_ooc("{} was kicked.".format(
-                c.char_name))
+                c.showname))
             c.send_command('KK', reason)
             c.disconnect()
     else:
@@ -229,7 +229,7 @@ def ooc_cmd_mute(client, arg):
                 for c in clients:
                     c.is_muted = True
                     database.log_misc('mute', client, target=c)
-                    msg += ' ' + c.char_name + ' [' + str(c.id) + '],'
+                    msg += ' ' + c.showname + ' [' + str(c.id) + '],'
                 msg = msg[:-1]
                 msg += '.'
                 client.send_ooc(msg)
@@ -261,7 +261,7 @@ def ooc_cmd_unmute(client, arg):
                 for c in clients:
                     c.is_muted = False
                     database.log_misc('unmute', client, target=c)
-                    msg += ' ' + c.char_name + ' [' + str(c.id) + '],'
+                    msg += ' ' + c.showname + ' [' + str(c.id) + '],'
                 msg = msg[:-1]
                 msg += '.'
                 client.send_ooc(msg)
