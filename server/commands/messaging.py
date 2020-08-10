@@ -59,8 +59,9 @@ def message_areas_cm(client, areas, message):
         if not client in a.owners:
             client.send_ooc(f'You are not a CM in {a.name}!')
             return
-        a.send_command('CT', client.name, message)
-        a.send_owner_command('CT', client.name, message)
+        name = f'[CM] {client.name}'
+        a.send_command('CT', name, message)
+        a.send_owner_command('CT', name, message)
         database.log_room('chat.cm', client, a, message=message)
 
 
@@ -84,15 +85,15 @@ def ooc_cmd_h(client, arg):
     """
     if len(arg) == 0:
         raise ArgumentError("You can't send an empty message.")
+    prefix = ''
+    if client.is_mod:
+        prefix = '[M]'
+    elif client in client.area.area_manager.owners:
+        prefix = '[GM]'
 
+    name = f'{prefix}{client.name}'
     for area in client.area.area_manager.areas:
-        is_mod = ''
-        is_gm = ''
-        if client.is_mod:
-            is_mod = '[M]'
-        if client in client.area.area_manager.owners:
-            is_gm = '[GM]'
-        area.send_command('CT', f'<dollar>HUB[{client.showname}]{is_gm}{is_mod}', arg, '0')
+        area.send_command('CT', f'<dollar>HUB|{name}', arg, '0')
     database.log_room('chat.hub', client, client.area, message=arg)
 
 
@@ -117,8 +118,7 @@ def ooc_cmd_lm(client, arg):
     if len(arg) == 0:
         raise ArgumentError("Can't send an empty message.")
     client.area.send_command(
-        'CT', '{}[MOD][{}]'.format(client.server.config['hostname'],
-                                   client.showname), arg)
+        'CT', f'<dollar>MOD|{client.name}', arg)
     database.log_room('chat.local-mod', client, client.area, message=arg)
 
 
@@ -131,7 +131,7 @@ def ooc_cmd_announce(client, arg):
     if len(arg) == 0:
         raise ArgumentError("Can't send an empty message.")
     client.server.send_all_cmd_pred(
-        'CT', '{}'.format(client.server.config['hostname']),
+        'CT', client.server.config['hostname'],
         f'=== Announcement ===\r\n{arg}\r\n==================', '1')
     database.log_room('chat.announce', client, client.area, message=arg)
 

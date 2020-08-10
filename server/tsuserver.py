@@ -368,10 +368,11 @@ class TsuServer3:
         :param as_mod: add moderator prefix (Default value = False)
 
         """
-        ooc_name = '{}[{}][{}]'.format('<dollar>G', client.area.area_manager.abbreviation,
-                                       client.showname)
         if as_mod:
-            ooc_name += '[M]'
+            as_mod = '[M]'
+        else:
+            as_mod = ''
+        ooc_name = f'<dollar>G[{client.area.area_manager.abbreviation}]|{as_mod}{client.name}'
         self.send_all_cmd_pred('CT',
                                ooc_name,
                                msg,
@@ -396,14 +397,10 @@ class TsuServer3:
         :param msg: message
 
         """
-        char_name = client.char_name
-        area_name = client.area.name
-        area_id = client.area.id
         self.send_all_cmd_pred(
             'CT',
-            '{}'.format(self.config['hostname']),
-            '=== Advert ===\r\n{} in {} [{}] needs {}\r\n==============='.
-            format(char_name, area_name, area_id, msg),
+            self.config['hostname'],
+            f'=== Advert ===\r\n{client.name} in {client.area.name} [{client.area.id}] (Hub {client.area.area_manager.id}) needs {msg}\r\n===============',
             '1',
             pred=lambda x: not x.muted_adverts)
 

@@ -548,6 +548,9 @@ class AOProtocol(asyncio.Protocol):
         if len(showname) > 15:
             self.client.send_ooc("Your IC showname is way too long!")
             return
+        if not self.client.is_mod and showname.lstrip().lower().startswith('[m'):
+            self.client.send_ooc("Nice try! You may not spoof [M] tag in your showname.")
+            return
         if nonint_pre == 1:
             if button in range(1, 4):
                 if anim_type == 1 or anim_type == 2:
@@ -637,6 +640,12 @@ class AOProtocol(asyncio.Protocol):
                 self.client.area.broadcast_evidence_list()
         # Update the showname ref for the client
         self.client.showname = showname
+
+        # Mod prefix if we're logged in as one
+        if self.client.is_mod:
+            if showname == '':
+                showname = self.client.char_name
+            showname = f'[M] {showname}'
 
         # Here, we check the pair stuff, and save info about it to the client.
         # Notably, while we only get a charid_pair and an offset, we send back a chair_pair, an emote, a talker offset
@@ -863,15 +872,24 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_ooc('Your message is too long!')
             return
 
+        prefix = ''
+        if self.client.is_mod:
+            prefix = '[M]'
+        elif self.client in self.client.area.area_manager.owners:
+            prefix = '[GM]'
+        elif self.client in self.client.area._owners:
+            name = '[CM]'
+
+        name = f'{prefix}{self.client.name}'
         args[1] = self.dezalgo(args[1])
         if self.client.shaken:
             args[1] = self.client.shake_message(args[1])
         if self.client.disemvowel:
             args[1] = self.client.disemvowel_message(args[1])
-        self.client.area.send_command('CT', self.client.name, args[1])
+        self.client.area.send_command('CT', name, args[1])
         self.client.area.send_owner_command(
             'CT',
-            f'[{self.client.area.id}]{self.client.name}',
+            f'[{self.client.area.id}]{name}',
             args[1])
         database.log_room('ooc', self.client, self.client.area, message=args[1])
 
