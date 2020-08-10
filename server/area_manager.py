@@ -389,10 +389,10 @@ class AreaManager:
             a.send_command(cmd, *args)
             a.send_owner_command(cmd, *args)
 
-    def broadcast_area_list(self):
+    def broadcast_area_list(self, refresh=False):
         """Global update of all areas for the client music lists in the hub."""
         for area in self.areas:
-            area.broadcast_area_list()
+            area.broadcast_area_list(refresh=refresh)
 
     def broadcast_ooc(self, msg):
         """Broadcast an OOC message to all areas in this hub."""

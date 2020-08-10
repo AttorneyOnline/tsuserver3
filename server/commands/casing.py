@@ -327,7 +327,8 @@ def ooc_cmd_remote_listen(client, arg):
         'ALL': 3,
     }
     if arg == '':
-        opt = options[client.remote_listen]
+        reversed_options = dict(map(reversed, options.items()))
+        opt = reversed_options[client.remote_listen]
         client.send_ooc(f'Your current option is: {opt}')
         return
     try:

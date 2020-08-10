@@ -19,6 +19,7 @@ __all__ = [
     'ooc_cmd_area_kick',
     'ooc_cmd_pos_lock',
     'ooc_cmd_pos_lock_clear',
+    'ooc_cmd_knock',
     'ooc_cmd_peek',
     'ooc_cmd_max_players',
     'ooc_cmd_desc',
@@ -317,7 +318,7 @@ def ooc_cmd_pos_lock_clear(client, arg):
 
 def ooc_cmd_knock(client, arg):
     """
-    Knock knock bitch
+    Knock on the target ID to make anyone in that area aware of you trying to access it.
     Usage:  /knock <id>
     """
     args = arg.split()

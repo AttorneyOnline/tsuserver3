@@ -24,10 +24,10 @@ __all__ = [
     'ooc_cmd_area_pref',
     'ooc_cmd_area_move_delay',
     'ooc_cmd_hub_move_delay',
-    'ooc_cmd_hub_arup_enable',
-    'ooc_cmd_hub_arup_disable',
-    'ooc_cmd_hub_hide_clients',
-    'ooc_cmd_hub_unhide_clients',
+    'ooc_cmd_arup_enable',
+    'ooc_cmd_arup_disable',
+    'ooc_cmd_hide_clients',
+    'ooc_cmd_unhide_clients',
     # General
     'ooc_cmd_follow',
     'ooc_cmd_unfollow',
@@ -366,25 +366,25 @@ def ooc_cmd_hub_move_delay(client, arg):
 
 
 @mod_only(hub_owners=True)
-def ooc_cmd_hub_arup_enable(client, arg):
+def ooc_cmd_arup_enable(client, arg):
     """
     Enable the ARea UPdate system for this hub.
     ARUP system is the extra information displayed in the A/M area list, as well as being able to set /status.
-    Usage: /hub_arup_enable
+    Usage: /arup_enable
     """
     if client.area.area_manager.arup_enabled:
         raise ClientError('ARUP system is already enabled! Use /arup_disable to disable it.')
     client.area.area_manager.arup_enabled = True
     client.area.area_manager.send_command('FL', client.server.supported_features)
-    client.area.area_manager.broadcast_area_list()
+    client.area.area_manager.broadcast_area_list(refresh=True)
     client.area.area_manager.broadcast_ooc('ARUP system has been enabled for this hub.')
 
 
 @mod_only(hub_owners=True)
-def ooc_cmd_hub_arup_disable(client, arg):
+def ooc_cmd_arup_disable(client, arg):
     """
     Disable the ARea UPdate system for this hub.
-    Usage: /hub_arup_disable
+    Usage: /arup_disable
     """
     if not client.area.area_manager.arup_enabled:
         raise ClientError('ARUP system is already disabled! Use /arup_enable to enable it.')
@@ -392,31 +392,31 @@ def ooc_cmd_hub_arup_disable(client, arg):
     preflist = client.server.supported_features.copy()
     preflist.remove('arup')
     client.area.area_manager.send_command('FL', preflist)
-    client.area.area_manager.broadcast_area_list()
+    client.area.area_manager.broadcast_area_list(refresh=True)
     client.area.area_manager.broadcast_ooc('ARUP system has been disabled for this hub.')
 
 
 @mod_only(hub_owners=True)
-def ooc_cmd_hub_hide_clients(client, arg):
+def ooc_cmd_hide_clients(client, arg):
     """
     Hide the playercounts for this Hub's areas.
-    Usage: /hub_hide_clients
+    Usage: /hide_clients
     """
     if client.area.area_manager.hide_clients:
-        raise ClientError('Client playercounts already hidden! Use /hub_unhide_clients to unhide.')
+        raise ClientError('Client playercounts already hidden! Use /unhide_clients to unhide.')
     client.area.area_manager.hide_clients = True
     client.area.area_manager.broadcast_area_list()
     client.area.area_manager.broadcast_ooc('Client playercounts are now hidden for this hub.')
 
 
 @mod_only(hub_owners=True)
-def ooc_cmd_hub_unhide_clients(client, arg):
+def ooc_cmd_unhide_clients(client, arg):
     """
     Unhide the playercounts for this Hub's areas.
-    Usage: /hub_unhide_clients
+    Usage: /unhide_clients
     """
     if not client.area.area_manager.hide_clients:
-        raise ClientError('Client playercounts already revealed! Use /hub_hide_clients to hide.')
+        raise ClientError('Client playercounts already revealed! Use /hide_clients to hide.')
     client.area.area_manager.hide_clients = False
     client.area.area_manager.broadcast_area_list()
     client.area.area_manager.broadcast_ooc('Client playercounts are no longer hidden for this hub.')

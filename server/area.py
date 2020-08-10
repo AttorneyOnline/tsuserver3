@@ -333,13 +333,13 @@ class Area:
         """Remove a disconnected client from the area."""
         if client.hidden_in != None:
             client.hide(False, hidden=True)
+        if self.area_manager.single_cm and client in self.owners:
+            self.remove_owner(client)
+            client.send_ooc('You can only be a CM of a single area in this hub.')
         self.clients.remove(client)
         if client in self.afkers:
             self.afkers.remove(client)
             self.server.client_manager.toggle_afk(client)
-        if self.area_manager.single_cm and client in self.owners:
-            self.remove_owner(client)
-            client.send_ooc('You can only be a CM of a single area in this hub.')
         if self.jukebox:
             self.remove_jukebox_vote(client, True)
         if len(self.clients) == 0:
@@ -901,7 +901,7 @@ class Area:
         self.broadcast_ooc(
             f'{client.showname} [{client.id}] is no longer CM in this area.')
 
-    def broadcast_area_list(self, client=None):
+    def broadcast_area_list(self, client=None, refresh=False):
         """
         Send the accessible and visible areas to the client.
         """
@@ -915,7 +915,7 @@ class Area:
         for c in clients:
             allowed = c.is_mod or c in self.owners
             area_list = c.get_area_list(allowed, allowed)
-            if c.local_area_list != area_list:
+            if refresh or c.local_area_list != area_list:
                 update_clients.append(c)
                 c.reload_area_list(area_list)
 
