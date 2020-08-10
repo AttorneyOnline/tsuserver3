@@ -403,6 +403,8 @@ needing a certain list of positions to be filled up.
     - Erase a notecard.
 * **notecard_reveal**
     - Reveal all notecards and their owners.
+* **notecard_check**
+    - Check all notecards and their owners privately with a message telling others you've done so.
 * **rolla_reload**
     - Reload ability dice sets from a configuration file.
     - The configuration file is located in `config/dice.yaml`.

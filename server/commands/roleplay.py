@@ -11,6 +11,7 @@ __all__ = [
     'ooc_cmd_notecard',
     'ooc_cmd_notecard_clear',
     'ooc_cmd_notecard_reveal',
+    'ooc_cmd_notecard_check',
     'ooc_cmd_rolla_reload',
     'ooc_cmd_rolla_set',
     'ooc_cmd_rolla',
@@ -168,7 +169,7 @@ def ooc_cmd_notecard(client, arg):
         raise ArgumentError('You must specify the contents of the note card.')
     client.area.cards[client.char_name] = arg
     client.area.broadcast_ooc('{} wrote a note card.'.format(
-        client.char_name))
+        client.showname))
     database.log_room('notecard', client, client.area)
 
 
@@ -180,8 +181,8 @@ def ooc_cmd_notecard_clear(client, arg):
     try:
         del client.area.cards[client.char_name]
         client.area.broadcast_ooc('{} erased their note card.'.format(
-            client.char_name))
-        database.log_room('notecard_erase', client, client.area)
+            client.showname))
+        database.log_room('notecard_clear', client, client.area)
     except KeyError:
         raise ClientError('You do not have a note card.')
 
@@ -200,6 +201,22 @@ def ooc_cmd_notecard_reveal(client, arg):
     client.area.cards.clear()
     client.area.broadcast_ooc(msg)
     database.log_room('notecard_reveal', client, client.area)
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_notecard_check(client, arg):
+    """
+    Check all notecards and their owners privately with a message telling others you've done so.
+    Usage: /notecard_check
+    """
+    if len(client.area.cards) == 0:
+        raise ClientError('There are no cards to check in this area.')
+    msg = 'Note cards in this area:\n'
+    for card_owner, card_msg in client.area.cards.items():
+        msg += f'{card_owner}: {card_msg}\n'
+    client.send_ooc(msg)
+    client.area.broadcast_ooc(f'[{client.id}] {client.showname} has checked the notecards in this area.')
+    database.log_room('notecard_check', client, client.area)
 
 
 @mod_only()
