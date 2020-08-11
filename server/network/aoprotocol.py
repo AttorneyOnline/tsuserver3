@@ -229,7 +229,7 @@ class AOProtocol(asyncio.Protocol):
         preflist = self.client.server.supported_features.copy()
         if not self.client.area.area_manager.arup_enabled and 'arup' in preflist:
             preflist.remove('arup')
-        self.client.send_command('FL', preflist)
+        self.client.send_command('FL', *preflist)
 
     def net_cmd_ch(self, _):
         """Reset the client drop timeout (keepalive).

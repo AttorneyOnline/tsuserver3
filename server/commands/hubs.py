@@ -57,7 +57,7 @@ def ooc_cmd_hub(client, arg):
                 preflist = client.server.supported_features.copy()
                 if not hub.arup_enabled:
                     preflist.remove('arup')
-                client.send_command('FL', preflist)
+                client.send_command('FL', *preflist)
                 client.change_area(hub.default_area())
                 client.area.area_manager.send_arup_status([client])
                 client.area.area_manager.send_arup_cms([client])
@@ -391,7 +391,7 @@ def ooc_cmd_arup_disable(client, arg):
     client.area.area_manager.arup_enabled = False
     preflist = client.server.supported_features.copy()
     preflist.remove('arup')
-    client.area.area_manager.send_command('FL', preflist)
+    client.area.area_manager.send_command('FL', *preflist)
     client.area.area_manager.broadcast_area_list(refresh=True)
     client.area.area_manager.broadcast_ooc('ARUP system has been disabled for this hub.')
 
