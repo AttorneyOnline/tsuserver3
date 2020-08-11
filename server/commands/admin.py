@@ -26,7 +26,8 @@ __all__ = [
     'ooc_cmd_ooc_mute',
     'ooc_cmd_ooc_unmute',
     'ooc_cmd_bans',
-    'ooc_cmd_baninfo'
+    'ooc_cmd_baninfo',
+    'ooc_cmd_time',
 ]
 
 
@@ -433,3 +434,17 @@ def ooc_cmd_baninfo(client, arg):
         else:
             msg += 'Unban date: N/A'
         client.send_ooc(msg)
+
+
+def ooc_cmd_time(client, arg):
+    """
+    Returns the current server time.
+    Usage:  /time
+    """
+    if len(arg) > 0:
+        raise ArgumentError('This command takes no arguments')
+    from time import asctime, gmtime, time
+    msg = 'The current time in UTC (aka GMT) is:\n['
+    msg += asctime(gmtime(time()))
+    msg += ']'
+    client.send_ooc(msg)

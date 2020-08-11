@@ -39,6 +39,8 @@
 * **baninfo** \<id> ['ban_id'|'ipid'|'hdid']
     - Get information about a ban.
     - By default, id identifies a ban_id.
+* **time**
+    - Returns the current server time.
 ## Area Access
 * **area_lock**
     - Prevent users from joining the current area.
