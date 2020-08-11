@@ -237,7 +237,8 @@ def ooc_cmd_musiclist(client, arg):
             client.clear_music()
             client.send_ooc('Clearing local musiclist.')
         else:
-            client.load_music(arg)#f'storage/musiclists/{arg}.yaml')
+            client.load_music(f'storage/musiclists/{arg}.yaml')
+            client.music_ref = arg
             client.send_ooc(f'Loading local musiclist {arg}...')
         client.refresh_music()
     except AreaError:
@@ -258,6 +259,7 @@ def ooc_cmd_area_musiclist(client, arg):
             client.send_ooc('Clearing area musiclist.')
         else:
             client.area.load_music(f'storage/musiclists/{arg}.yaml')
+            client.area.music_ref = arg
             client.send_ooc(f'Loading area musiclist {arg}...')
         client.server.client_manager.refresh_music(client.area.clients)
     except AreaError:
@@ -279,6 +281,7 @@ def ooc_cmd_hub_musiclist(client, arg):
             client.send_ooc('Clearing hub musiclist.')
         else:
             client.area.area_manager.load_music(f'storage/musiclists/{arg}.yaml')
+            client.area.area_manager.music_ref = arg
             client.send_ooc(f'Loading hub musiclist {arg}...')
         client.server.client_manager.refresh_music(client.area.area_manager.clients)
     except AreaError:

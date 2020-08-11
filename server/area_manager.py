@@ -181,10 +181,10 @@ class AreaManager:
     def load_music(self, path):
         try:
             with open(path, 'r', encoding='utf-8') as stream:
-                self.music_list = yaml.safe_load(stream)
+                music_list = yaml.safe_load(stream)
 
             prepath = ''
-            for item in self.music_list:
+            for item in music_list:
                 # deprecated, use 'replace_music' area pref instead
                 # if 'replace' in item:
                 #    self.replace_music = item['replace'] == True
@@ -197,6 +197,7 @@ class AreaManager:
                 if 'songs' in item:
                     for song in item['songs']:
                         song['name'] = prepath + song['name']
+            self.music_list = music_list
         except ValueError:
             raise
         except AreaError:

@@ -19,6 +19,7 @@ import re
 import string
 import time
 import math
+import os
 from heapq import heappop, heappush
 
 from enum import Enum
@@ -395,26 +396,23 @@ class ClientManager:
             self.music_ref = ''
             self.music_list.clear()
 
-        def load_music(self, music_ref):
-            """Load a music list from a music_ref. Use it for the local music list and reload it."""
+        def load_music(self, path):
+            """Load a music list from a path. Use it for the local music list and reload it."""
             #TODO: Move the musiclist parsing function to tsuserver3.py or something
             try:
-                with open(f'storage/musiclists/{music_ref}.yaml', 'r', encoding='utf-8') as stream:
+                with open(path, 'r', encoding='utf-8') as stream:
                     music_list = yaml.safe_load(stream)
 
                 prepath = ''
                 for item in music_list:
-                    if 'replace' in item:
-                        if 'use_unique_folder' in item and item['use_unique_folder'] == True:
-                            prepath = music_ref + '/'
-                        continue
+                    if 'use_unique_folder' in item and item['use_unique_folder'] == True:
+                        prepath = os.path.splitext(os.path.basename(path))[0] + '/'
 
                     if 'category' not in item:
                         continue
 
                     for song in item['songs']:
                         song['name'] = prepath + song['name']
-                self.music_ref = music_ref
                 self.music_list = music_list
             except ValueError:
                 raise
