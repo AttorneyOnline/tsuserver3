@@ -92,8 +92,15 @@ def ooc_cmd_save_hub(client, arg):
                 raise AreaError('Server storage full! Please contact the server host to resolve this issue.')
             try:
                 arg = f'{path}/{arg}.yaml'
+                if os.path.isfile(arg):
+                    with open(arg, 'r', encoding='utf-8') as stream:
+                        hub = yaml.safe_load(stream)
+                    if 'read_only' in hub and hub['read_only'] == True:
+                        raise ArgumentError(f'Hub {arg} already exists and it is read-only!')
                 with open(arg, 'w', encoding='utf-8') as stream:
                     yaml.dump(client.area.area_manager.save(), stream, default_flow_style=False)
+            except ArgumentError:
+                raise
             except:
                 raise AreaError(f'File path {arg} is invalid!')
             client.send_ooc(f'Saving as {arg}...')
