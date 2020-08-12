@@ -334,9 +334,16 @@ class Area:
         """Remove a disconnected client from the area."""
         if client.hidden_in != None:
             client.hide(False, hidden=True)
-        if self.area_manager.single_cm and client in self.owners:
-            self.remove_owner(client)
-            client.send_ooc('You can only be a CM of a single area in this hub.')
+        if self.area_manager.single_cm:
+            # Remove their owner status due to single_cm pref. remove_owner will unlock the area if they were the last CM.
+            if client in self.owners:
+                self.remove_owner(client)
+                client.send_ooc('You can only be a CM of a single area in this hub.')
+        if self.locking_allowed:
+            # Since anyone can lock/unlock, unlock if we were the last client in this area and it was locked.
+            if len(self.clients) - 1 <= 0:
+                if self.is_locked != self.Locked.FREE:
+                    self.unlock()
         self.clients.remove(client)
         if client in self.afkers:
             self.afkers.remove(client)
@@ -894,6 +901,10 @@ class Area:
         if len(client.broadcast_list) > 0:
             client.broadcast_list.clear()
             client.send_ooc('Your broadcast list has been cleared.')
+
+        if self.area_manager.single_cm and len(self._owners) == 0:
+            if self.is_locked != self.Locked.FREE:
+                self.unlock()
 
         # Make sure the client's available areas are updated
         self.broadcast_area_list(client)

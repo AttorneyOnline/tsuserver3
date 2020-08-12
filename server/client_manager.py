@@ -1148,7 +1148,7 @@ class ClientManager:
         for a in client.area.area_manager.areas:
             if client in a.owners:
                 a._owners.remove(client)
-                if len(a._owners) == 0:
+                if client.area.area_manager.single_cm and len(a._owners) == 0:
                     if a.is_locked != a.Locked.FREE:
                         a.unlock()
         heappush(self.cur_id, client.id)
