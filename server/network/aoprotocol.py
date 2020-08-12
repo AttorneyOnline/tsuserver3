@@ -553,18 +553,13 @@ class AOProtocol(asyncio.Protocol):
         if not self.client.is_mod and showname.lstrip().lower().startswith('[m'):
             self.client.send_ooc("Nice try! You may not spoof [M] tag in your showname.")
             return
-        if nonint_pre == 1:
-            if button in range(1, 4):
-                if anim_type == 1 or anim_type == 2:
-                    anim_type = 0
-                elif anim_type == 6:
-                    anim_type = 5
-        if self.client.area.non_int_pres_only:
+        if (nonint_pre == 1 and button in range(1, 4)) or self.client.area.non_int_pres_only:
             if anim_type == 1 or anim_type == 2:
                 anim_type = 0
+                nonint_pre = 1
             elif anim_type == 6:
                 anim_type = 5
-            nonint_pre = 1
+                nonint_pre = 1
         if not self.client.area.shouts_allowed:
             # Old clients communicate the objecting in anim_type.
             if anim_type == 2:
