@@ -285,6 +285,8 @@ needing a certain list of positions to be filled up.
     - Show all the available hubs for loading in the storage/hubs/ folder.
 * **clear_hub**
     - Clear the current hub and reset it to its default state.
+* **rename_hub** \<name>
+    - Rename the hub you are currently in to \<name>.
 ### Area Creation system
 * **area_create** [name]
     - Create a new area.
