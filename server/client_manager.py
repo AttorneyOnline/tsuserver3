@@ -768,11 +768,12 @@ class ClientManager:
                                     key=lambda x: x.char_name or '')
             for c in sorted_clients:
                 info += '\r\n'
-                if c in area.owners:
-                    if not c in player_list:
-                        info += '[RCM]'
-                    else:
-                        info += '[CM]'
+                if c.is_mod:
+                    info += '[M]'
+                elif c in area.area_manager.owners:
+                    info += '[GM]'
+                elif c in area._owners:
+                    info += '[CM]'
                 if c in area.afkers:
                     info += '[AFK]'
                 if c.hidden:
