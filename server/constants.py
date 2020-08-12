@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import re
 from enum import Enum
 from enum import IntFlag
 
@@ -36,3 +37,20 @@ class MusicEffect(IntFlag):
     FADE_IN = 1
     FADE_OUT = 2
     SYNC_POS = 4
+
+def dezalgo(input, tolerance=3):
+    """
+    Turns any string into a de-zalgo'd version, with a tolerance to allow for normal diacritic use.
+
+    The following Unicode blocks are scrubbed:
+    U+0300 - U+036F - COMBINING DIACRITICAL MARKS
+    U+1AB0 - U+1AFF - COMBINING DIACRITICAL MARKS EXTENDED
+    U+1DC0 - U+1DFF - COMBINING DIACRITICAL MARKS SUPPLEMENT
+    U+20D0 - U+20FF - COMBINING DIACRITICAL MARKS FOR SYMBOLS
+    U+FE20 - U+FE2F - COMBINING HALF MARKS
+    """
+
+    filtered = re.sub('([\u0300-\u036f\u1ab0-\u1aff\u1dc0-\u1dff\u20d0-\u20ff\ufe20-\ufe2f]' +
+                        '{' + re.escape(str(tolerance)) + ',})',
+                        '', input)
+    return filtered

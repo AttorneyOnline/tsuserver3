@@ -34,6 +34,7 @@ from time import localtime, strftime
 from server import database
 from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
 from server.fantacrypt import fanta_decrypt
+from server.constants import dezalgo
 from .. import commands
 
 
@@ -53,23 +54,6 @@ class AOProtocol(asyncio.Protocol):
         self.client = None
         self.buffer = ''
         self.ping_timeout = None
-
-    def dezalgo(self, input):
-        """
-        Turns any string into a de-zalgo'd version, with a tolerance to allow for normal diacritic use.
-
-        The following Unicode blocks are scrubbed:
-        U+0300 - U+036F - COMBINING DIACRITICAL MARKS
-        U+1AB0 - U+1AFF - COMBINING DIACRITICAL MARKS EXTENDED
-        U+1DC0 - U+1DFF - COMBINING DIACRITICAL MARKS SUPPLEMENT
-        U+20D0 - U+20FF - COMBINING DIACRITICAL MARKS FOR SYMBOLS
-        U+FE20 - U+FE2F - COMBINING HALF MARKS
-        """
-
-        filtered = re.sub('([\u0300-\u036f\u1ab0-\u1aff\u1dc0-\u1dff\u20d0-\u20ff\ufe20-\ufe2f]' +
-                          '{' + re.escape(str(self.server.zalgo_tolerance)) + ',})',
-                          '', input)
-        return filtered
 
     def data_received(self, data):
         """Handles any data received from the network.
@@ -617,7 +601,7 @@ class AOProtocol(asyncio.Protocol):
                     "Invalid targets!")
                 return
 
-        msg = self.dezalgo(text)[:256]
+        msg = dezalgo(text, self.server.zalgo_tolerance)[:256]
         if self.client.shaken:
             msg = self.client.shake_message(msg)
         if self.client.disemvowel:
@@ -878,7 +862,7 @@ class AOProtocol(asyncio.Protocol):
             name = '[CM]'
 
         name = f'{prefix}{self.client.name}'
-        args[1] = self.dezalgo(args[1])
+        args[1] = dezalgo(args[1], self.server.zalgo_tolerance)
         if self.client.shaken:
             args[1] = self.client.shake_message(args[1])
         if self.client.disemvowel:
@@ -1188,7 +1172,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.set_mod_call_delay()
             database.log_room('modcall', self.client, self.client.area)
         else:
-            args[0] = self.dezalgo(args[0])
+            args[0] = dezalgo(args[0], self.server.zalgo_tolerance)
             self.server.send_all_cmd_pred(
                 'ZZ',
                 '[{}] {} ({}) in {} with reason: {}'.format(
