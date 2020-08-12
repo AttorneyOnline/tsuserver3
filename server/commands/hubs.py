@@ -190,10 +190,11 @@ def ooc_cmd_rename_hub(client, arg):
     Usage: /rename_hub <name>
     """
     if arg != '':
-        client.area.area_manager.name = arg
-        client.send_ooc(f'Renamed hub {client.area.area_manager.id} to {client.area.area_manager.name}.')
+        arg = arg.strip()[:64]
+        client.area.area_manager.name = ''.join(e for e in arg if (e.isalnum() or e == ' '))
+        client.send_ooc(f'Renamed hub [{client.area.area_manager.id}] to {client.area.area_manager.name}.')
     else:
-        raise ArgumentError('Invalid number of arguments. Use /area_rename <name>.')
+        raise ArgumentError('Invalid number of arguments. Use /rename_hub <name>.')
 
 
 @mod_only(hub_owners=True)
@@ -247,10 +248,11 @@ def ooc_cmd_area_rename(client, arg):
     Usage: /area_rename <name>
     """
     if arg != '':
-        client.area.name = arg
+        arg = arg.strip()[:64]
+        client.area.name = ''.join(e for e in arg if (e.isalnum() or e == ' '))
         # Renaming doesn't change the actual area objects in that list so we have to tell it manually
         client.area.area_manager.broadcast_area_list(refresh=True)
-        client.send_ooc(f'Renamed area {client.area.id} to {client.area.name}.')
+        client.send_ooc(f'Renamed area [{client.area.id}] to {client.area.name}.')
     else:
         raise ArgumentError('Invalid number of arguments. Use /area_rename <name>.')
 
@@ -259,7 +261,7 @@ def ooc_cmd_area_rename(client, arg):
 def ooc_cmd_area_swap(client, arg):
     """
     Swap areas by Area IDs.
-    Usage: /area_rename <id> <id>
+    Usage: /area_swap <id> <id>
     """
     args = arg.split()
     if len(args) != 2:
