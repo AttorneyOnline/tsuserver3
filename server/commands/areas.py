@@ -290,6 +290,10 @@ def ooc_cmd_pos_lock(client, arg):
             client.send_ooc('No pos lock set.')
         return
 
+    if arg.strip().lower() == 'none':
+        ooc_cmd_pos_lock_clear(client, arg)
+        return
+
     if not client.is_mod and (client not in client.area.owners):
         raise ClientError('You must be authorized to do that.')
 
@@ -297,9 +301,12 @@ def ooc_cmd_pos_lock(client, arg):
     args = arg.split()
     args = sorted(set(args),key=args.index) #remove duplicates while preserving order
     for pos in args:
+        pos = pos.lower()
+        if pos == 'none':
+            continue
         if len(pos) < 3:
             raise ClientError('Position names may not be shorter than 3 symbols!')
-        client.area.pos_lock.append(pos.lower())
+        client.area.pos_lock.append(pos)
 
     pos = ' '.join(str(l) for l in client.area.pos_lock)
     client.area.broadcast_ooc(f'Locked pos into {pos}.')

@@ -277,6 +277,7 @@ class Area:
         area = OrderedDict()
         area['area'] = self.name
         area['background'] = self.background
+        area['pos_lock'] = 'none'
         if len(self.pos_lock) > 0:
             area['pos_lock'] = ' '.join(map(str, self.pos_lock))
         area['bg_lock'] = self.bg_lock
