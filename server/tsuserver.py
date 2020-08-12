@@ -67,7 +67,7 @@ class TsuServer3:
         self.supported_features = ['yellowtext', 'customobjections',
                                    'flipping', 'fastloading', 'noencryption',
                                    'deskmod', 'evidence', 'modcall_reason',
-                                   'cccc_ic_support', 'casing_alerts', 'prezoom',
+                                   'cccc_ic_support', 'casing_alerts',
                                    'arup', 'looping_sfx', 'additive', 'effects']
 
         try:
