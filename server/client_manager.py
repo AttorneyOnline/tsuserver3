@@ -558,13 +558,13 @@ class ClientManager:
             if self.area == area:
                 raise ClientError('User already in specified area.')
             allowed = self.is_mod or self in area.owners or self in self.area.owners
-            if not allowed and not (area == area.area_manager.default_area()) and self.area.is_locked == area.Locked.LOCKED and not self.id in self.area.invite_list:
+            if not allowed and area != area.area_manager.default_area() and self.area.is_locked == area.Locked.LOCKED and not self.id in self.area.invite_list:
                 if not self.sneaking and not self.hidden:
                     self.area.broadcast_ooc(f'[{self.id}] {self.showname} tried to leave this area but it is locked!')
                 raise ClientError('Your current area is locked! You may not leave.')
             target_pos = ''
             if len(self.area.links) > 0:
-                if not str(area.id) in self.area.links and not allowed and not self.char_id == -1 and not area == area.area_manager.default_area():
+                if not str(area.id) in self.area.links and not allowed and not self.char_id == -1 and area != area.area_manager.default_area():
                     raise ClientError('That area is inaccessible!')
 
                 if str(area.id) in self.area.links:
@@ -583,7 +583,7 @@ class ClientManager:
                             raise ClientError('You had to leave your hiding spot - area transfer failed.')
 
                     # Our path is locked :(
-                    if link["locked"] and not allowed and not self.char_id == -1 and not area == area.area_manager.default_area():
+                    if link["locked"] and not allowed and not self.char_id == -1 and area != area.area_manager.default_area():
                         if not self.sneaking and not self.hidden:
                             self.area.broadcast_ooc(f'[{self.id}] {self.showname} tried to leave to [{area.id}] {area.name} but the path is locked!')
                             area.broadcast_ooc(f'Someone tried to enter from [{self.area.id}] {self.area.name} but the path is locked!')
@@ -591,13 +591,13 @@ class ClientManager:
 
                     target_pos = link["target_pos"]
 
-            if area.is_locked == area.Locked.LOCKED and not allowed and not self.id in area.invite_list:
+            if area.is_locked == area.Locked.LOCKED and not allowed and not self.id in area.invite_list and area != area.area_manager.default_area():
                 if not self.sneaking and not self.hidden:
                     self.area.broadcast_ooc(f'[{self.id}] {self.showname} tried to leave to [{area.id}] {area.name} but that area is locked!')
                 area.broadcast_ooc(f'Someone tried to enter from [{self.area.id}] {self.area.name} but this area is locked!')
                 raise ClientError('That area is locked!')
 
-            if not allowed and not self.char_id == -1 and not area == area.area_manager.default_area():
+            if not allowed and not self.char_id == -1 and area != area.area_manager.default_area():
                 if area.max_players > 0:
                     players = len([x for x in area.clients if (not x in area.owners and not x.is_mod and not x.hidden)])
                     if players >= area.max_players:

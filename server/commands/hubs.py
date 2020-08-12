@@ -16,6 +16,7 @@ __all__ = [
     'ooc_cmd_load_hub',
     'ooc_cmd_list_hubs',
     'ooc_cmd_clear_hub',
+    'ooc_cmd_rename_hub',
     # Area Creation system
     'ooc_cmd_area_create',
     'ooc_cmd_area_remove',
@@ -183,6 +184,19 @@ def ooc_cmd_clear_hub(client, arg):
 
 
 @mod_only(hub_owners=True)
+def ooc_cmd_rename_hub(client, arg):
+    """
+    Rename the hub you are currently in to <name>.
+    Usage: /rename_hub <name>
+    """
+    if arg != '':
+        client.area.area_manager.name = arg
+        client.send_ooc(f'Renamed hub {client.area.area_manager.id} to {client.area.area_manager.name}.')
+    else:
+        raise ArgumentError('Invalid number of arguments. Use /area_rename <name>.')
+
+
+@mod_only(hub_owners=True)
 def ooc_cmd_area_create(client, arg):
     """
     Create a new area.
@@ -233,14 +247,9 @@ def ooc_cmd_area_rename(client, arg):
     Usage: /area_rename <name>
     """
     if arg != '':
-        try:
-            client.area.name = arg
-            client.area.area_manager.broadcast_area_list()
-            client.send_ooc(f'Renamed area {client.area.id} to {client.area.name}.')
-        except ValueError:
-            raise ArgumentError('Area ID must be a number.')
-        except (AreaError, ClientError):
-            raise
+        client.area.name = arg
+        client.area.area_manager.broadcast_area_list()
+        client.send_ooc(f'Renamed area {client.area.id} to {client.area.name}.')
     else:
         raise ArgumentError('Invalid number of arguments. Use /area_rename <name>.')
 
