@@ -513,7 +513,10 @@ class Area:
                 name = self.server.char_list[args[8]]
             if args[15] != '':
                 name = args[15]
-            self.set_next_msg_delay(len(args[4]))
+
+            delay = 200 + self.parse_msg_delay(args[4])
+            self.next_message_time = round(time.time() * 1000.0 + delay)
+
             self.last_ic_message = args
             database.log_ic(client, self, name, args[4])
 
@@ -572,13 +575,37 @@ class Area:
         except (ValueError, IndexError):
             raise AreaError('Invalid testimony reference!')
 
-    def set_next_msg_delay(self, msg_length):
+    def parse_msg_delay(self, msg):
+        """ Parses the correct delay for the message supporting escaped characters and }}} {{{ speed-ups/slowdowns.
+        :param msg: the string
+        :return: delay integer in ms
         """
-        Set the delay when the next IC message can be send by any client.
-        :param msg_length: estimated length of message (ms)
-        """
-        delay = min(3000, 100 + 60 * msg_length)
-        self.next_message_time = round(time.time() * 1000.0 + delay)
+        #Fastest - Default - Slowest. These are default values in ms for KFO Client.
+        message_display_speed = [0, 10, 25, 40, 50, 70, 90]
+
+        #Starts in the middle of the messageDisplaySpeed list
+        current_display_speed = 3
+
+        #The 'meh' part of this is we can't exactly calculate accurately if color chars are used (as they could change clientside).
+        formatting_chars = "@$`|_~%\\}{" 
+
+        calculated_delay = 0
+
+        escaped = False
+
+        for symbol in msg:
+            if symbol in formatting_chars and not escaped:
+                if symbol == "\\":
+                    escaped = True
+                elif symbol == "{": #slow down
+                    current_display_speed = min(len(message_display_speed)-1, current_display_speed + 1)
+                elif symbol == "}": #speed up
+                    current_display_speed = max(0, current_display_speed - 1)
+                continue
+            elif escaped and symbol == "n": #Newline monstrosity
+                continue
+            calculated_delay += message_display_speed[current_display_speed]
+        return calculated_delay
 
     def is_iniswap(self, client, preanim, anim, char, sfx):
         """
