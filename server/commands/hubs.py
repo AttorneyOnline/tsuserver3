@@ -98,7 +98,7 @@ def ooc_cmd_save_hub(client, arg):
                     if 'read_only' in hub and hub['read_only'] == True:
                         raise ArgumentError(f'Hub {arg} already exists and it is read-only!')
                 with open(arg, 'w', encoding='utf-8') as stream:
-                    yaml.dump(client.area.area_manager.save(), stream, default_flow_style=False)
+                    yaml.dump(client.area.area_manager.save(ignore=['can_gm', 'max_areas']), stream, default_flow_style=False)
             except ArgumentError:
                 raise
             except:
@@ -128,7 +128,7 @@ def ooc_cmd_load_hub(client, arg):
                     hub = yaml.safe_load(stream)
             except:
                 raise AreaError(f'File path {arg} is invalid!')
-            client.area.area_manager.load(hub)
+            client.area.area_manager.load(hub, ignore=['can_gm', 'max_areas'])
             client.send_ooc(f'Loading as {arg}...')
             client.area.area_manager.send_arup_status()
             client.area.area_manager.send_arup_cms()

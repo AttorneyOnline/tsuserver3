@@ -96,41 +96,36 @@ class AreaManager:
             return self.name[:3].upper()
         return self.name.upper()
 
-    def load(self, hub, destructive=False):
+    def load(self, hub, destructive=False, ignore=[]):
         """
         Create all hub data from a YAML dictionary.
         :param hub: what to parse.
         :param destructive: if we should wipe the old areas before loading the new ones in
 
         """
-        # Legacy
         if 'doc' in hub:
-            self.info = hub['doc']
-
+            hub['info'] = hub['doc']
         if 'hub' in hub:
-            self.name = hub['hub']
-        if 'abbreviation' in hub:
-            self.abbreviation = hub['abbreviation']
-        if 'move_delay' in hub:
-            self.move_delay = hub['move_delay']
-        if 'arup_enabled' in hub:
-            self.arup_enabled = hub['arup_enabled']
-        if 'hide_clients' in hub:
-            self.hide_clients = hub['hide_clients']
-        if 'info' in hub:
-            self.info = hub['info']
-        if 'can_gm' in hub:
-            self.can_gm = hub['can_gm']
-        if 'music_ref' in hub:
-            self.music_ref = hub['music_ref']
-        if 'client_music' in hub:
-            self.client_music = hub['client_music']
-        if 'max_areas' in hub:
-            self.max_areas = hub['max_areas']
-        if 'single_cm' in hub:
-            self.single_cm = hub['single_cm']
+            hub['name'] = hub['hub']
 
-        if 'character_data' in hub:
+        load_list = [
+            'name',
+            'abbreviation',
+            'move_delay',
+            'arup_enabled',
+            'hide_clients',
+            'info',
+            'can_gm',
+            'music_ref',
+            'client_music',
+            'max_areas',
+            'single_cm',
+        ]
+        for entry in list(set(load_list) - set(ignore)):
+            if entry in hub:
+                setattr(self, entry, hub[entry])
+
+        if not ('character_data' in ignore) and 'character_data' in hub:
             try:
                 self.load_character_data(hub['character_data'])
             except:
@@ -140,7 +135,7 @@ class AreaManager:
                 if area == self.default_area(): # Do not remove the default area
                     continue
                 self.remove_area(area)
-        if 'areas' in hub:
+        if not ('areas' in ignore) and 'areas' in hub:
             self.load_areas(hub['areas'])
 
         self.broadcast_area_list()
@@ -155,23 +150,29 @@ class AreaManager:
                 self.areas[i].load(area)
                 i += 1
 
-    def save(self):
+    def save(self, ignore=[]):
         hub = OrderedDict()
-        hub['hub'] = self.name
-        hub['abbreviation'] = self.abbreviation
-        hub['move_delay'] = self.move_delay
-        hub['arup_enabled'] = self.arup_enabled
-        hub['hide_clients'] = self.hide_clients
-        hub['info'] = self.info
-        hub['can_gm'] = self.can_gm
-        hub['music_ref'] = self.music_ref
-        hub['client_music'] = self.client_music
-        hub['max_areas'] = self.max_areas
-        hub['single_cm'] = self.single_cm
-        areas = []
-        for area in self.areas:
-            areas.append(area.save())
-        hub['areas'] = areas
+        save_list = [
+            'name',
+            'abbreviation',
+            'move_delay',
+            'arup_enabled',
+            'hide_clients',
+            'info',
+            'can_gm',
+            'music_ref',
+            'client_music',
+            'max_areas',
+            'single_cm',
+        ]
+        for entry in list(set(save_list) - set(ignore)):
+            hub[entry] = getattr(self, entry)
+
+        if not 'areas' in ignore:
+            areas = []
+            for area in self.areas:
+                areas.append(area.save())
+            hub['areas'] = areas
         return hub
 
     def clear_music(self):
