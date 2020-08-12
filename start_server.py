@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
-# tsuserver3, an Attorney Online server
+# KFO-Server, an Attorney Online server
 #
-# Copyright (C) 2016 argoneus <argoneuscze@gmail.com>
+# Copyright (C) 2020 Crystalwarrior <varsash@gmail.com>
+#
+# Derivative of tsuserver3, an Attorney Online server. Copyright (C) 2016 argoneus <argoneuscze@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
