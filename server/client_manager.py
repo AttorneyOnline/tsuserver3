@@ -1242,7 +1242,5 @@ class ClientManager:
         for client in clients:
             client.refresh_music()
 
-    def get_multiclients(self, client):
-        ipid = self.get_targets(client, TargetType.IPID, client.ipid, False)
-        hdid = self.get_targets(client, TargetType.HDID, client.hdid, False)
-        return list(set(ipid + hdid))
+    def get_multiclients(self, ipid):
+        return [c for c in self.clients if c.ipid == ipid]

@@ -521,6 +521,9 @@ def ooc_cmd_gm(client, arg):
             raise ArgumentError(
                 'You cannot \'nominate\' people to be GMs when you are not one.'
             )
+        for c in client.server.client_manager.get_multiclients(client.ipid):
+            if c in c.area.area_manager.owners:
+                raise ClientError('One of your clients is already a GM in another hub!')
         client.area.area_manager.add_owner(client)
         database.log_room('gm.add', client, client.area, target=client, message='self-added')
     elif client in client.area.area_manager.owners:
@@ -539,9 +542,12 @@ def ooc_cmd_gm(client, arg):
                     client.send_ooc(
                         f'{c.showname} [{c.id}] is already a GM here.')
                 else:
+                    for mc in c.server.client_manager.get_multiclients(c.ipid):
+                        if mc in mc.area.area_manager.owners and mc.area.area_manager != c.area.area_manager:
+                            raise ClientError(f'One of {c.showname} [{c.id}]\'s clients is already a GM in another hub!')
                     client.area.area_manager.add_owner(c)
                     database.log_room('gm.add', client, client.area, target=c)
-            except ValueError:
+            except (ValueError, IndexError):
                 client.send_ooc(
                     f'{id} does not look like a valid ID.')
             except (ClientError, ArgumentError):
@@ -573,7 +579,7 @@ def ooc_cmd_ungm(client, arg):
                 client.send_ooc(
                     'You cannot remove someone from GMing when they aren\'t a GM.'
                 )
-        except ValueError:
+        except (ValueError, IndexError):
             client.send_ooc(
                 f'{id} does not look like a valid ID.')
         except (ClientError, ArgumentError):

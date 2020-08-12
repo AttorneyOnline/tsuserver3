@@ -134,7 +134,7 @@ def ooc_cmd_cm(client, arg):
                 else:
                     client.area.add_owner(c)
                     database.log_room('cm.add', client, client.area, target=c)
-            except ValueError:
+            except (ValueError, IndexError):
                 client.send_ooc(
                     f'{id} does not look like a valid ID.')
             except (ClientError, ArgumentError):
@@ -165,7 +165,7 @@ def ooc_cmd_uncm(client, arg):
                 client.send_ooc(
                     'You cannot remove someone from CMing when they aren\'t a CM.'
                 )
-        except ValueError:
+        except (ValueError, IndexError):
             client.send_ooc(
                 f'{_id} does not look like a valid ID.')
         except (ClientError, ArgumentError):

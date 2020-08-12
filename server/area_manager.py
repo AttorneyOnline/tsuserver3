@@ -54,6 +54,10 @@ class AreaManager:
         self.single_cm = False
         # /prefs
 
+        # optimization memes
+        self.o_name = self._name
+        self.o_abbreviation = self.abbreviation
+
         self.music_list = []
         self.replace_music = False
 
@@ -329,6 +333,11 @@ class AreaManager:
         if len(client.broadcast_list) > 0:
             client.broadcast_list.clear()
             client.send_ooc('Your broadcast list has been cleared.')
+        
+        if len(self.owners) == 0:
+            # To prevent people egging on the hub list by making epic meme names and bailing
+            self.name = self.o_name
+            self.abbreviation = self.o_abbreviation
 
         # Make sure the client's available areas are updated
         client.area.broadcast_area_list(client)

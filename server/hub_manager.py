@@ -53,6 +53,8 @@ class HubManager:
                     client.set_area(self.default_hub().default_area())
 
             self.hubs[i].load(hub)
+            self.hubs[i].o_name = self.hubs[i].name
+            self.hubs[i].o_abbreviation = self.hubs[i].abbreviation
             i += 1
 
     def save(self, path='config/areas.yaml'):
