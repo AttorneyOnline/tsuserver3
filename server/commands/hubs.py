@@ -248,7 +248,8 @@ def ooc_cmd_area_rename(client, arg):
     """
     if arg != '':
         client.area.name = arg
-        client.area.area_manager.broadcast_area_list()
+        # Renaming doesn't change the actual area objects in that list so we have to tell it manually
+        client.area.area_manager.broadcast_area_list(refresh=True)
         client.send_ooc(f'Renamed area {client.area.id} to {client.area.name}.')
     else:
         raise ArgumentError('Invalid number of arguments. Use /area_rename <name>.')

@@ -310,7 +310,7 @@ def ooc_cmd_pos_lock(client, arg):
 
     pos = ' '.join(str(l) for l in client.area.pos_lock)
     client.area.broadcast_ooc(f'Locked pos into {pos}.')
-    client.area.send_command('SD', '*'.join(pos)) #set that juicy pos dropdown
+    client.area.send_command('SD', '*'.join(client.area.pos_lock)) #set that juicy pos dropdown
 
 
 @mod_only(area_owners=True)
