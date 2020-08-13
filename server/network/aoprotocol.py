@@ -29,7 +29,7 @@ logger = logging.getLogger('events')
 from enum import Enum
 
 import arrow
-from time import localtime, strftime
+from time import gmtime, strftime
 
 from server import database
 from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
@@ -1170,7 +1170,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_ooc('You are muted by a moderator.')
             return
 
-        if self.client.char_id == -1:
+        if self.client.char_id is -1:
             self.client.send_ooc(
                 "You cannot call a moderator while spectating.")
             return
@@ -1180,28 +1180,28 @@ class AOProtocol(asyncio.Protocol):
                 "You must wait 30 seconds between mod calls.")
             return
 
-        current_time = strftime("%H:%M", localtime())
-
+        current_time = strftime("%H:%M", gmtime())
         if len(args) < 1:
             self.server.send_all_cmd_pred(
                 'ZZ',
-                '[{}] {} ({}) in {} without reason (not using 2.6+?)'.format(
-                    current_time, self.client.showname,
-                    self.client.ip, self.client.area.name),
+                '[{} UTC] {} ({}) in hub {} [{}]{} without reason (not using 2.6?)'.format(
+                    current_time, self.client.char_name,
+                    self.client.ip, self.client.area.area_manager.name, self.client.area.abbreviation, self.client.area.name),
                 pred=lambda c: c.is_mod)
             self.client.set_mod_call_delay()
             database.log_room('modcall', self.client, self.client.area)
+            self.server.webhooks.modcall(char=self.client.char_name, ipid=self.client.ip, area=self.client.area)
         else:
-            args[0] = dezalgo(args[0], self.server.zalgo_tolerance)
             self.server.send_all_cmd_pred(
                 'ZZ',
-                '[{}] {} ({}) in {} with reason: {}'.format(
-                    current_time, self.client.showname,
-                    self.client.ip, self.client.area.name,
+                '[{} UTC] {} ({}) in hub {} [{}]{} with reason: {}'.format(
+                    current_time, self.client.char_name,
+                    self.client.ip, self.client.area.area_manager.name, self.client.area.abbreviation, self.client.area.name,
                     args[0][:100]),
                 pred=lambda c: c.is_mod)
             self.client.set_mod_call_delay()
             database.log_room('modcall', self.client, self.client.area, message=args[0])
+            self.server.webhooks.modcall(char=self.client.char_name, ipid=self.client.ip, area=self.client.area, reason=args[0][:100])
 
     def net_cmd_opKICK(self, args):
         """

@@ -40,6 +40,7 @@ from server.exceptions import ClientError,ServerError
 from server.network.aoprotocol import AOProtocol
 from server.network.aoprotocol_ws import new_websocket_client
 from server.network.masterserverclient import MasterServerClient
+from server.network.webhooks import Webhooks
 import server.logger
 
 class TsuServer3:
@@ -100,6 +101,7 @@ class TsuServer3:
             sys.exit(1)
 
         self.client_manager = ClientManager(self)
+        self.webhooks = Webhooks(self)
         server.logger.setup_logger(debug=self.config['debug'])
 
     def start(self):

@@ -1245,3 +1245,6 @@ class ClientManager:
 
     def get_multiclients(self, ipid):
         return [c for c in self.clients if c.ipid == ipid]
+
+    def get_mods(self):
+        return [c for c in self.clients if c.is_mod]
