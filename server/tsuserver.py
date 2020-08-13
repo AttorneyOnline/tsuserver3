@@ -51,6 +51,7 @@ class TsuServer3:
         self.minor_version = 0
 
         self.config = None
+        self.censors = None
         self.allowed_iniswaps = []
         self.char_list = None
         self.char_emotes = None
@@ -82,6 +83,7 @@ class TsuServer3:
 
         try:
             self.load_config()
+            self.load_censors()
             self.hub_manager = HubManager(self)
             self.load_iniswaps()
             self.load_characters()
@@ -234,6 +236,15 @@ class TsuServer3:
             self.config['modpass'] = {'default': {'password': self.config['modpass']}}
         if 'multiclient_limit' not in self.config:
             self.config['multiclient_limit'] = 16
+    
+    def load_censors(self):
+        """Load a list of banned words to scrub from chats."""
+        try:
+            with open('config/censors.yaml', 'r',
+                      encoding='utf-8') as censors:
+                self.censors = yaml.safe_load(censors)
+        except:
+            logger.debug('Cannot find censors.yaml')
 
     def load_characters(self):
         """Load the character list from a YAML file."""
@@ -447,6 +458,7 @@ class TsuServer3:
         Refresh as many parts of the server as possible:
          - MOTD
          - Mod credentials (unmodding users if necessary)
+         - Censors
          - Characters
          - Music
          - Backgrounds
@@ -477,6 +489,7 @@ class TsuServer3:
                             'Your moderator credentials have been revoked.')
             self.config['modpass'] = cfg_yaml['modpass']
 
+        self.load_censors()
         self.load_characters()
         self.load_iniswaps()
         self.load_music()

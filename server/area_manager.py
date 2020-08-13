@@ -52,6 +52,8 @@ class AreaManager:
         self.client_music = True
         self.max_areas = 50
         self.single_cm = False
+        self.censor_ic = True
+        self.censor_ooc = True
         # /prefs
 
         # optimization memes
@@ -126,6 +128,8 @@ class AreaManager:
             'client_music',
             'max_areas',
             'single_cm',
+            'censor_ic',
+            'censor_ooc',
         ]
         for entry in list(set(load_list) - set(ignore)):
             if entry in hub:
@@ -170,6 +174,8 @@ class AreaManager:
             'client_music',
             'max_areas',
             'single_cm',
+            'censor_ic',
+            'censor_ooc',
         ]
         for entry in list(set(save_list) - set(ignore)):
             hub[entry] = getattr(self, entry)
@@ -209,7 +215,6 @@ class AreaManager:
             raise
         except AreaError:
             raise
-
 
     def load_character_data(self, path='config/character_data.yaml'):
         """

@@ -34,7 +34,7 @@ from time import localtime, strftime
 from server import database
 from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
 from server.fantacrypt import fanta_decrypt
-from server.constants import dezalgo
+from server.constants import dezalgo, censor
 from .. import commands
 
 
@@ -452,6 +452,13 @@ class AOProtocol(asyncio.Protocol):
         if text.lstrip().startswith('(('):
             self.client.send_ooc("Please, *please* use the OOC chat instead of polluting IC. Normal OOC is local to area. You can use /g to talk across the entire server.")
             return
+        # Scrub text and showname for bad words
+        if self.client.area.area_manager.censor_ic:
+            text = censor(text, self.server.censors['whole'], self.server.censors['replace'], True)
+            text = censor(text, self.server.censors['partial'], self.server.censors['replace'], False)
+            if len(showname) > 0:
+                showname = censor(showname, self.server.censors['whole'], self.server.censors['replace'], True)
+                showname = censor(showname, self.server.censors['partial'], self.server.censors['replace'], False)
         if text.lower().startswith('/a ') or text.lower().startswith('/s '):
             part = text.split(' ')
             try:
@@ -739,30 +746,43 @@ class AOProtocol(asyncio.Protocol):
             return
         if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.STR, needs_auth=False):
             return
+        if args[0] == '':
+            self.client.send_ooc(
+                'You must insert a name with at least one letter')
+            return
+        if len(args[0]) > 30:
+            self.client.send_ooc(
+                'Your OOC name is too long! Limit it to 30 characters.')
+            return
+        for c in args[0]:
+            if unicodedata.category(c) == 'Cf':
+                self.client.send_ooc(
+                    'You cannot use format characters in your name!')
+                return
+        if args[0].startswith(
+                self.server.config['hostname']) or args[0].startswith(
+                    '<dollar>G') or args[0].startswith('<dollar>M'):
+            self.client.send_ooc('That name is reserved!')
+            return
+
+        # Scrub text and OOC name for bad words, even if you're trying to pass bad words to a command as args.
+        if self.client.area.area_manager.censor_ooc:
+            # Censor the name
+            args[0] = censor(args[0], self.server.censors['whole'], self.server.censors['replace'], True)
+            args[0] = censor(args[0], self.server.censors['partial'], self.server.censors['replace'], False)
+
+            # Censor the text
+            args[1] = censor(args[1], self.server.censors['whole'], self.server.censors['replace'], True)
+            args[1] = censor(args[1], self.server.censors['partial'], self.server.censors['replace'], False)
+
+        # All validation checks passed, set the name
         if self.client.name != args[0] and self.client.fake_name != args[0]:
             if self.client.is_valid_name(args[0]):
                 self.client.name = args[0]
                 self.client.fake_name = args[0]
             else:
                 self.client.fake_name = args[0]
-        if self.client.name == '':
-            self.client.send_ooc(
-                'You must insert a name with at least one letter')
-            return
-        if len(self.client.name) > 30:
-            self.client.send_ooc(
-                'Your OOC name is too long! Limit it to 30 characters.')
-            return
-        for c in self.client.name:
-            if unicodedata.category(c) == 'Cf':
-                self.client.send_ooc(
-                    'You cannot use format characters in your name!')
-                return
-        if self.client.name.startswith(
-                self.server.config['hostname']) or self.client.name.startswith(
-                    '<dollar>G') or self.client.name.startswith('<dollar>M'):
-            self.client.send_ooc('That name is reserved!')
-            return
+
         if args[1].startswith(' /'):
             self.client.send_ooc(
                 'Your message was not sent for safety reasons: you left a space before that slash.')
@@ -772,7 +792,7 @@ class AOProtocol(asyncio.Protocol):
             cmd = spl[0].lower()
             arg = ''
             if len(spl) == 2:
-                arg = spl[1][:256]
+                arg = spl[1][:1024]
             try:
                 called_function = f'ooc_cmd_{cmd}'
                 if not hasattr(commands, called_function):

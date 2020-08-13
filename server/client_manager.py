@@ -196,7 +196,7 @@ class ClientManager:
             Check if the given string is valid as an OOC name.
             :param name: name to check
             """
-            printset = set(string.ascii_letters + string.digits + "~ -_.',")
+            printset = set(string.ascii_letters + string.digits + "*~ -_.',")
             name_ws = name.replace(' ', '')
             if not name_ws or name_ws.isdigit():
                 return False
