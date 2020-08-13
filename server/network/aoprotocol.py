@@ -453,7 +453,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_ooc("Please, *please* use the OOC chat instead of polluting IC. Normal OOC is local to area. You can use /g to talk across the entire server.")
             return
         # Scrub text and showname for bad words
-        if self.client.area.area_manager.censor_ic:
+        if self.client.area.area_manager.censor_ic and self.server.censors != None:
             text = censor(text, self.server.censors['whole'], self.server.censors['replace'], True)
             text = censor(text, self.server.censors['partial'], self.server.censors['replace'], False)
             if len(showname) > 0:
@@ -766,7 +766,7 @@ class AOProtocol(asyncio.Protocol):
             return
 
         # Scrub text and OOC name for bad words, even if you're trying to pass bad words to a command as args.
-        if self.client.area.area_manager.censor_ooc:
+        if self.client.area.area_manager.censor_ooc and self.server.censors != None:
             # Censor the name
             args[0] = censor(args[0], self.server.censors['whole'], self.server.censors['replace'], True)
             args[0] = censor(args[0], self.server.censors['partial'], self.server.censors['replace'], False)
@@ -1170,7 +1170,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_ooc('You are muted by a moderator.')
             return
 
-        if self.client.char_id is -1:
+        if self.client.char_id == -1:
             self.client.send_ooc(
                 "You cannot call a moderator while spectating.")
             return
