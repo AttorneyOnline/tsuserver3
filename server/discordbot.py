@@ -10,6 +10,7 @@ class Bridgebot(commands.Bot):
     def __init__(self, server):
         super().__init__(command_prefix='$')
         self.server = server
+        self.pending_messages = []
 
     @classmethod
     def init(bot, server, token=None):
@@ -19,6 +20,9 @@ class Bridgebot(commands.Bot):
             new.run(token)
         except Exception as e:
             print(e)
+    
+    def prepare_message(self, name, message, charname):
+        self.pending_messages.append([name, message, ''])
 
     async def on_ready(self, ):
         print('Successfully logged in.')
@@ -26,6 +30,7 @@ class Bridgebot(commands.Bot):
         print('ID -> ' + str(self.user.id))
         self.guild = self.guilds[0]
         self.channel = discord.utils.get(self.guild.text_channels, name='ao2-listener')
+        self.loop.create_task(self.main_thread())
         await self.channel.send('Hi I exist now')
 
     async def on_message(self, message):
@@ -67,3 +72,12 @@ class Bridgebot(commands.Bot):
             await self.channel.send('Insufficient permissions.')
         except HTTPException:
             await self.channel.send('HTTP failure.')
+
+    async def main_thread(self):
+        await self.wait_until_ready()
+
+        while 1:
+            if len(self.pending_messages) > 0:
+                self.send_char_message(*self.pending_messages.pop())
+
+            await asyncio.sleep(1) # Wait for one second
