@@ -713,7 +713,7 @@ class AOProtocol(asyncio.Protocol):
             # Reveal ourselves from the evidence we were hiding in if it exists
             if self.client.hidden_in != None:
                 self.client.hide(False)
-                self.client.area.broadcast_area_list(client)
+                self.client.area.broadcast_area_list(self.client)
 
         # Additive only works on same-char messages
         if self.client.area.last_ic_message == None or cid != self.client.area.last_ic_message[8]:
