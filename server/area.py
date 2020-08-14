@@ -519,10 +519,10 @@ class Area:
 
             self.last_ic_message = args
             database.log_ic(client, self, name, args[4])
-            webname = name
-            if name != client.char_name:
-                webname = f'{name} ({client.char_name})'
-            if 'area_webhook_url' in self.server.config and client.area.area_manager.id == 0 and client.area.id == 0:
+            if 'area_webhook_url' in self.server.config and targets == self.clients and client.area.area_manager.id == 0 and client.area.id == 0:
+                webname = name
+                if name != client.char_name:
+                    webname = f'{name} ({client.char_name})'
                 # you'll hate me for this
                 msg = args[4].replace('}', '').replace('{', '').replace('`', '').replace('|', '').replace('~', '').replace('º', '').replace('№', '').replace('√', '').replace('\\s', '').replace('\\f', '')
                 # escape chars
