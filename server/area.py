@@ -525,6 +525,11 @@ class Area:
             if 'area_webhook_url' in self.server.config and client.area.area_manager.id == 0 and client.area.id == 0:
                 # you'll hate me for this
                 msg = args[4].replace('}', '').replace('{', '').replace('`', '').replace('|', '').replace('~', '').replace('º', '').replace('№', '').replace('√', '').replace('\\s', '').replace('\\f', '')
+                # escape chars
+                msg = msg.replace('@', '\\@')
+                msg = msg.replace('<num>', '\\#')
+                msg = msg.replace('*', '\\*')
+                msg = msg.replace('_', '\\_')
                 # String is empty if we're strippin
                 if not msg.strip():
                     # Discord blankpost

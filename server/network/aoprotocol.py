@@ -34,7 +34,7 @@ from time import gmtime, strftime
 from server import database
 from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
 from server.fantacrypt import fanta_decrypt
-from server.constants import dezalgo, censor
+from server.constants import dezalgo, censor, contains_URL
 from .. import commands
 
 
@@ -607,6 +607,11 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_ooc(
                     "Invalid targets!")
                 return
+        if contains_URL(text):
+            self.client.send_ooc(
+                "You shouldn't send links in IC!"
+            )
+            return
 
         msg = dezalgo(text, self.server.zalgo_tolerance)[:256]
         if self.client.shaken:
