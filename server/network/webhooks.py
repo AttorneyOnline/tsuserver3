@@ -16,9 +16,10 @@ class Webhooks:
 	def __init__(self, server):
 		self.server = server
 
-	def send_webhook(self, username=None, avatar_url=None, message=None, embed=False, title=None, description=None):
+	def send_webhook(self, username=None, avatar_url=None, message=None, embed=False, title=None, description=None, url=None):
 		is_enabled = self.server.config['webhooks_enabled']
-		url = self.server.config['webhook_url']
+		if url==None:
+			url = self.server.config['webhook_url']
 		
 		if not is_enabled:
 			return

@@ -519,6 +519,17 @@ class Area:
 
             self.last_ic_message = args
             database.log_ic(client, self, name, args[4])
+            webname = name
+            if name != client.char_name:
+                webname = f'{name} ({client.char_name})'
+            if 'area_webhook_url' in self.server.config and client.area.area_manager.id == 0 and client.area.id == 0:
+                # you'll hate me for this
+                msg = args[4].replace('}', '').replace('{', '').replace('`', '').replace('|', '').replace('~', '').replace('º', '').replace('№', '').replace('√', '').replace('\\s', '').replace('\\f', '')
+
+                self.server.webhooks.send_webhook(
+                    username=webname, avatar_url=None, message=msg, url=self.server.config['area_webhook_url'])
+                    # embed=True, title=f'Hub [{client.area.area_manager.id}] {client.area.area_manager.name} Area [{client.area.id}] {client.area.name}',
+                    # description=None)
 
             if self.recording:
                 # See if the testimony is supposed to end here.
