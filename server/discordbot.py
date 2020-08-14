@@ -1,6 +1,7 @@
 import asyncio
 import discord
 from discord.ext import commands
+from discord.utils import escape_markdown
 from discord.errors import Forbidden, HTTPException
 
 class Bridgebot(commands.Bot):
@@ -11,21 +12,26 @@ class Bridgebot(commands.Bot):
         super().__init__(command_prefix='$')
         self.server = server
         self.pending_messages = []
+        self.hub_id = 0
+        self.area_id = 0
 
     @classmethod
     def init(bot, server, token=None):
         '''Starts the actual bot'''
         new = bot(server)
+        print('Trying to start the Discord Bridge bot...')
         try:
             new.run(token)
+            return new
         except Exception as e:
             print(e)
+            raise
     
-    def prepare_message(self, name, message, charname):
-        self.pending_messages.append([name, message, ''])
+    def queue_message(self, name, message, charname):
+        self.pending_messages.append([name, message, None])
 
     async def on_ready(self, ):
-        print('Successfully logged in.')
+        print('Discord Bridge Successfully logged in.')
         print('Username -> ' + self.user.name)
         print('ID -> ' + str(self.user.id))
         self.guild = self.guilds[0]
@@ -37,27 +43,16 @@ class Bridgebot(commands.Bot):
         # don't process our own messages
         if message.author == self:
             return
+        
+        if message.channel != self.channel:
+            return
 
-        if message.content.startswith('thumb me up scotty'):
-            channel = message.channel
-            await channel.send('Send me that 👍 reaction, mate')
+        if not message.content.startswith('$'):
+            self.server.send_discord_chat(message.author.name, escape_markdown(message.clean_content), self.hub_id, self.area_id)
 
-            def check(reaction, user):
-                return user == message.author and str(reaction.emoji) == '👍'
-
-            try:
-                reaction, user = await self.wait_for('reaction_add', timeout=5.0, check=check)
-            except asyncio.TimeoutError:
-                await channel.send('👎')
-            else:
-                await channel.send('👍')
-
-        if message.content.startswith('webhook test'):
-            await self.send_char_message('Foo', 'Hello World', 'https://cdn.discordapp.com/attachments/721774936649367644/743714648632721459/Button1_off.png')
-
-        await self.process_commands(message)
+        # await self.process_commands(message)
     
-    async def send_char_message(self, name, message, avatar=''):
+    async def send_char_message(self, name, message, avatar=None):
         webhook = None
         try:
             webhooks = await self.channel.webhooks()

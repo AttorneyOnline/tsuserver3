@@ -463,7 +463,7 @@ class Area:
         """
         if client in self.afkers:
             client.server.client_manager.toggle_afk(client)
-        if args[4].startswith('**') and len(self.testimony) > 0:
+        if client and args[4].startswith('**') and len(self.testimony) > 0:
             idx = self.testimony_index
             if idx == -1:
                 idx = 0
@@ -477,8 +477,8 @@ class Area:
             except IndexError:
                 client.send_ooc(f'Something went wrong, couldn\'t amend Statement {idx+1}!')
             return
-        adding = self.recording
-        if args[4].lstrip().startswith('++') and len(self.testimony) > 0:
+        adding = self.recording and client != None
+        if client and args[4].lstrip().startswith('++') and len(self.testimony) > 0:
             if len(self.testimony) >= 30:
                 client.send_ooc('Maximum testimony statement amount reached! (30)')
                 return
@@ -494,7 +494,7 @@ class Area:
                 if c.listen_pos != None:
                     if type(c.listen_pos) is list and not (args[5] in c.listen_pos) or \
                         c.listen_pos == 'self' and args[5] != c.pos:
-                        name = client.name
+                        name = ''
                         if args[8] != -1:
                             name = self.server.char_list[args[8]]
                         if args[15] != '':
@@ -508,7 +508,7 @@ class Area:
 
             # args[4] = msg
             # args[15] = showname
-            name = client.name
+            name = ''
             if args[8] != -1:
                 name = self.server.char_list[args[8]]
             if args[15] != '':
@@ -518,35 +518,15 @@ class Area:
             self.next_message_time = round(time.time() * 1000.0 + delay)
 
             self.last_ic_message = args
-            database.log_ic(client, self, name, args[4])
-            if 'area_webhook_url' in self.server.config and targets == self.clients and client.area.area_manager.id == 0 and client.area.id == 0:
-                webname = name
-                if name != client.char_name:
-                    webname = f'{name} ({client.char_name})'
-                # you'll hate me for this
-                msg = args[4].replace('}', '').replace('{', '').replace('`', '').replace('|', '').replace('~', '').replace('º', '').replace('№', '').replace('√', '').replace('\\s', '').replace('\\f', '')
-                # escape chars
-                msg = msg.replace('@', '@\u200b') # The only way to escape a Discord ping is a zero width space...
-                msg = msg.replace('<num>', '\\#')
-                msg = msg.replace('<and>', '&')
-                msg = msg.replace('*', '\\*')
-                msg = msg.replace('_', '\\_')
-                # String is empty if we're strippin
-                if not msg.strip():
-                    # Discord blankpost
-                    msg = '_ _'
-                self.server.webhooks.send_webhook(
-                    username=webname, avatar_url=None, message=msg, url=self.server.config['area_webhook_url'])
-                    # embed=True, title=f'Hub [{client.area.area_manager.id}] {client.area.area_manager.name} Area [{client.area.id}] {client.area.name}',
-                    # description=None)
-
-            if self.recording:
-                # See if the testimony is supposed to end here.
-                scrunched = ''.join(e for e in args[4] if e.isalnum())
-                if len(scrunched) > 0 and scrunched.lower() == 'end':
-                    self.recording = False
-                    self.broadcast_ooc(f'[{client.id}] {client.showname} has ended the testimony.')
-                    return
+            if client:
+                database.log_ic(client, self, name, args[4])
+                if self.recording:
+                    # See if the testimony is supposed to end here.
+                    scrunched = ''.join(e for e in args[4] if e.isalnum())
+                    if len(scrunched) > 0 and scrunched.lower() == 'end':
+                        self.recording = False
+                        self.broadcast_ooc(f'[{client.id}] {client.showname} has ended the testimony.')
+                        return
 
         if adding:
             if len(self.testimony) >= 30:

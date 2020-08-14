@@ -717,6 +717,26 @@ class AOProtocol(asyncio.Protocol):
                 self.client.hide(False)
                 self.client.area.broadcast_area_list(self.client)
 
+            # Discord Bridgebot
+            if 'bridgebot_enabled' in self.server.config and self.server.config['bridgebot_enabled'] and \
+                  self.client.area.area_manager.id == self.server.bridgebot.hub_id and self.client.area.id == self.server.bridgebot.area_id:
+                webname = self.client.char_name
+                if showname != self.server.char_list[cid]:
+                    webname = f'{showname} ({webname})'
+                # you'll hate me for this
+                text = msg.replace('}', '').replace('{', '').replace('`', '').replace('|', '').replace('~', '').replace('º', '').replace('№', '').replace('√', '').replace('\\s', '').replace('\\f', '')
+                # escape chars
+                text = text.replace('@', '@\u200b') # The only way to escape a Discord ping is a zero width space...
+                text = text.replace('<num>', '\\#')
+                text = text.replace('<and>', '&')
+                text = text.replace('*', '\\*')
+                text = text.replace('_', '\\_')
+                # String is empty if we're strippin
+                if not text.strip():
+                    # Discord blankpost
+                    text = '_ _'
+                self.server.bridgebot.queue_message(webname, text, self.client.char_name)
+
         # Additive only works on same-char messages
         if self.client.area.last_ic_message == None or cid != self.client.area.last_ic_message[8]:
             additive = 0
