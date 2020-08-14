@@ -25,10 +25,14 @@ class Bridgebot(commands.Bot):
         print('Username -> ' + self.user.name)
         print('ID -> ' + str(self.user.id))
         self.guild = self.guilds[0]
-        channel = discord.utils.get(self.guild.text_channels, name='ao2-listener')
-        await channel.send('Hi I exist now')
+        self.channel = discord.utils.get(self.guild.text_channels, name='ao2-listener')
+        await self.channel.send('Hi I exist now')
 
     async def on_message(self, message):
+        # don't process our own messages
+        if message.author == self:
+            return
+
         if message.content.startswith('thumb me up scotty'):
             channel = message.channel
             await channel.send('Send me that 👍 reaction, mate')
@@ -44,23 +48,25 @@ class Bridgebot(commands.Bot):
                 await channel.send('👍')
 
         if message.content.startswith('webhook test'):
-            channel = message.channel
-            webhook = None
-            try:
-                webhooks = await channel.webhooks()
-                for hook in webhooks:
-                    if hook.user == self.user:
-                        webhook = hook
-                        break
-                if webhook == None:
-                    webhook = await channel.create_webhook(name='AO2_Bridgebot')
-                await webhook.send('Hello World', username='Foo')#, avatar_url='https://cdn.discordapp.com/attachments/721774936649367644/743714648632721459/Button1_off.png')
-            except Forbidden:
-                await channel.send('Insufficient permissions.')
-            except HTTPException:
-                await channel.send('HTTP failure.')
+            await self.send_char_message('Foo', 'Hello World', 'https://cdn.discordapp.com/attachments/721774936649367644/743714648632721459/Button1_off.png')
 
         await self.process_commands(message)
+    
+    async def send_char_message(self, name, message, avatar=''):
+        webhook = None
+        try:
+            webhooks = await self.channel.webhooks()
+            for hook in webhooks:
+                if hook.user == self.user:
+                    webhook = hook
+                    break
+            if webhook == None:
+                webhook = await self.channel.create_webhook(name='AO2_Bridgebot')
+            await webhook.send(message, username=name, avatar_url=avatar)
+        except Forbidden:
+            await self.channel.send('Insufficient permissions.')
+        except HTTPException:
+            await self.channel.send('HTTP failure.')
 
 if __name__ == '__main__':
-    Bridgebot.init(None, 'LOL IMAGINE POSTING YOUR TOKEN')
+    Bridgebot.init(None, 'NzIxNzczNDA3Njc0NTY0NzQ5.XuZZ3g.XRHqqMUYJgJWP1X1rD8Lfn_mPnU')
