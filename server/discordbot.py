@@ -67,6 +67,3 @@ class Bridgebot(commands.Bot):
             await self.channel.send('Insufficient permissions.')
         except HTTPException:
             await self.channel.send('HTTP failure.')
-
-if __name__ == '__main__':
-    Bridgebot.init(None, 'NzIxNzczNDA3Njc0NTY0NzQ5.XuZZ3g.XRHqqMUYJgJWP1X1rD8Lfn_mPnU')
