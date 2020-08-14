@@ -37,7 +37,7 @@ class Webhooks:
 		try:
 			result.raise_for_status()
 		except requests.exceptions.HTTPError as err:
-			database.log_misc('webhook.err', data=err)
+			database.log_misc('webhook.err', data=err.response.status_code)
 		else:
 			database.log_misc('webhook.ok', data="successfully delivered payload, code {}".format(result.status_code))
 
