@@ -528,6 +528,7 @@ class Area:
                 # escape chars
                 msg = msg.replace('@', '@\u200b') # The only way to escape a Discord ping is a zero width space...
                 msg = msg.replace('<num>', '\\#')
+                msg = msg.replace('<and>', '&')
                 msg = msg.replace('*', '\\*')
                 msg = msg.replace('_', '\\_')
                 # String is empty if we're strippin
