@@ -63,4 +63,4 @@ class Bridgebot(commands.Bot):
         await self.process_commands(message)
 
 if __name__ == '__main__':
-    Bridgebot.init(None, 'NzIxNzczNDA3Njc0NTY0NzQ5.XuZZ3g.uDoZ08NhNG4juziAjK_bYAQz_eE')
+    Bridgebot.init(None, 'LOL IMAGINE POSTING YOUR TOKEN')
