@@ -525,7 +525,10 @@ class Area:
             if 'area_webhook_url' in self.server.config and client.area.area_manager.id == 0 and client.area.id == 0:
                 # you'll hate me for this
                 msg = args[4].replace('}', '').replace('{', '').replace('`', '').replace('|', '').replace('~', '').replace('º', '').replace('№', '').replace('√', '').replace('\\s', '').replace('\\f', '')
-
+                # String is empty if we're strippin
+                if not msg.strip():
+                    # Discord blankpost
+                    msg = '_ _'
                 self.server.webhooks.send_webhook(
                     username=webname, avatar_url=None, message=msg, url=self.server.config['area_webhook_url'])
                     # embed=True, title=f'Hub [{client.area.area_manager.id}] {client.area.area_manager.name} Area [{client.area.id}] {client.area.name}',
