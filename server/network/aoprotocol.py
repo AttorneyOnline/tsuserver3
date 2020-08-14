@@ -570,6 +570,8 @@ class AOProtocol(asyncio.Protocol):
             max_char = 256
 
         if len(text) > max_char:
+            self.client.send_ooc(
+                "Your message is too long!")
             return
 
         if pos != '' and self.client.pos != pos:
