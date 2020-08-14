@@ -430,6 +430,8 @@ def ooc_cmd_hide(client, arg):
     if arg == '':
         raise ArgumentError('Use /hide <evi_name/id> to hide in evidence, or /unhide to stop hiding.')
     try:
+        if arg.isnumeric():
+            arg = str(int(arg)-1)
         client.hide(True, arg)
         client.area.broadcast_area_list(client)
     except ValueError:

@@ -69,3 +69,11 @@ def censor(text, censor_list=[], replace='*', whole_words=True):
     for word in censor_list:
         text = re.sub(regex % word, len(word)*replace, text, flags=re.IGNORECASE)
     return text
+
+def remove_URL(sample):
+    """Remove URLs from a sample string"""
+    return re.sub(r"http\S+", "", sample)
+
+def contains_URL(sample):
+    """Determine if string contains a URL in sample string."""
+    return re.match(r"http\S+", sample) != None

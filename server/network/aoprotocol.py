@@ -34,7 +34,7 @@ from time import gmtime, strftime
 from server import database
 from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
 from server.fantacrypt import fanta_decrypt
-from server.constants import dezalgo, censor
+from server.constants import dezalgo, censor, contains_URL
 from .. import commands
 
 
@@ -570,6 +570,8 @@ class AOProtocol(asyncio.Protocol):
             max_char = 256
 
         if len(text) > max_char:
+            self.client.send_ooc(
+                "Your message is too long!")
             return
 
         if pos != '' and self.client.pos != pos:
@@ -607,6 +609,11 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_ooc(
                     "Invalid targets!")
                 return
+        if contains_URL(text.replace('}', '').replace('{', '').replace('`', '').replace('|', '').replace('~', '').replace('º', '').replace('№', '').replace('√', '').replace('\\s', '').replace('\\f', '')):
+            self.client.send_ooc(
+                "You shouldn't send links in IC!"
+            )
+            return
 
         msg = dezalgo(text, self.server.zalgo_tolerance)[:256]
         if self.client.shaken:
@@ -708,7 +715,7 @@ class AOProtocol(asyncio.Protocol):
             # Reveal ourselves from the evidence we were hiding in if it exists
             if self.client.hidden_in != None:
                 self.client.hide(False)
-                self.client.area.broadcast_area_list(client)
+                self.client.area.broadcast_area_list(self.client)
 
         # Additive only works on same-char messages
         if self.client.area.last_ic_message == None or cid != self.client.area.last_ic_message[8]:

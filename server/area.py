@@ -519,6 +519,26 @@ class Area:
 
             self.last_ic_message = args
             database.log_ic(client, self, name, args[4])
+            if 'area_webhook_url' in self.server.config and targets == self.clients and client.area.area_manager.id == 0 and client.area.id == 0:
+                webname = name
+                if name != client.char_name:
+                    webname = f'{name} ({client.char_name})'
+                # you'll hate me for this
+                msg = args[4].replace('}', '').replace('{', '').replace('`', '').replace('|', '').replace('~', '').replace('º', '').replace('№', '').replace('√', '').replace('\\s', '').replace('\\f', '')
+                # escape chars
+                msg = msg.replace('@', '@\u200b') # The only way to escape a Discord ping is a zero width space...
+                msg = msg.replace('<num>', '\\#')
+                msg = msg.replace('<and>', '&')
+                msg = msg.replace('*', '\\*')
+                msg = msg.replace('_', '\\_')
+                # String is empty if we're strippin
+                if not msg.strip():
+                    # Discord blankpost
+                    msg = '_ _'
+                self.server.webhooks.send_webhook(
+                    username=webname, avatar_url=None, message=msg, url=self.server.config['area_webhook_url'])
+                    # embed=True, title=f'Hub [{client.area.area_manager.id}] {client.area.area_manager.name} Area [{client.area.id}] {client.area.name}',
+                    # description=None)
 
             if self.recording:
                 # See if the testimony is supposed to end here.
