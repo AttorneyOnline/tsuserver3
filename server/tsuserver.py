@@ -22,6 +22,7 @@ import os
 import importlib
 
 import asyncio
+import threading
 import websockets
 
 import geoip2.database
@@ -107,11 +108,6 @@ class TsuServer3:
 
         self.webhooks = Webhooks(self)
         self.bridgebot = None
-        try:
-            if self.config['bridgebot_enabled']:
-                self.bridgebot = Bridgebot.init(self, self.config['bridgebot_token'])
-        except:
-            print('Discord Bridgebot failed to initialize! Did you configure it properly?')
 
     def start(self):
         """Start the server."""
@@ -140,6 +136,12 @@ class TsuServer3:
 
         if self.config['use_backgrounds_yaml']:
             self.use_backgrounds_yaml = True
+
+        if self.config['bridgebot_enabled']:
+            loop2 = asyncio.new_event_loop()
+            loop2.create_task(Bridgebot.init(self, self.config['bridgebot_token'], self.config['bridgebot_channel']))
+            thread = threading.Thread(target=Bridgebot.loop_it_forever, args=(loop2,))
+            thread.start()
 
         asyncio.ensure_future(self.schedule_unbans())
 
@@ -466,13 +468,13 @@ class TsuServer3:
 
     def send_discord_chat(self, name, message, hub_id=0, area_id=0):
         area = self.hub_manager.get_hub_by_id(hub_id).get_area_by_id(area_id)
-        showname = 'Discord'
         cid = self.get_char_id_by_name(self.config['bridgebot_character'])
         message = remove_URL(message)
-        message = message.replace('}', '').replace('{', '').replace('`', '').replace('|', '').replace('~', '').replace('º', '').replace('№', '').replace('√', '').replace('\\s', '').replace('\\f', '')
-        message = "}}}" + f'{name}: {message}'
-        
-        area.send_ic(None, '1', 0, self.config['bridgebot_character'], self.config['bridgebot_emote'], message, 'jur', "", 0, cid, 0, 0, [0], 0, 0, 0, showname, -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
+        message = message.replace('}', '\\}').replace('{', '\\{').replace('`', '\\`').replace('|', '\\|').replace('~', '\\~').replace('º', '\\º').replace('№', '\\№').replace('√', '\\√').replace('\\s', '').replace('\\f', '')
+        message = "}}}[√Dis√] {" + message
+        if len(name) > 14:
+            name = name[:14].rstrip() + '.'
+        area.send_ic(None, '1', 0, self.config['bridgebot_character'], self.config['bridgebot_emote'], message, 'jur', "", 0, cid, 0, 0, [0], 0, 0, 0, name, -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
 
     def refresh(self):
         """

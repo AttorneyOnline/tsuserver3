@@ -721,7 +721,7 @@ class AOProtocol(asyncio.Protocol):
             if 'bridgebot_enabled' in self.server.config and self.server.config['bridgebot_enabled'] and \
                   self.client.area.area_manager.id == self.server.bridgebot.hub_id and self.client.area.id == self.server.bridgebot.area_id:
                 webname = self.client.char_name
-                if showname != self.server.char_list[cid]:
+                if showname != '' and showname != self.server.char_list[cid]:
                     webname = f'{showname} ({webname})'
                 # you'll hate me for this
                 text = msg.replace('}', '').replace('{', '').replace('`', '').replace('|', '').replace('~', '').replace('º', '').replace('№', '').replace('√', '').replace('\\s', '').replace('\\f', '')

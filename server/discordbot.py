@@ -8,21 +8,26 @@ class Bridgebot(commands.Bot):
     """
     The AO2 Discord bridge self.
     """
-    def __init__(self, server):
+    def __init__(self, server, target_chanel):
         super().__init__(command_prefix='$')
         self.server = server
         self.pending_messages = []
         self.hub_id = 0
         self.area_id = 0
+        self.target_channel = target_chanel
+
+    @staticmethod
+    def loop_it_forever(loop):
+        loop.run_forever()
 
     @classmethod
-    def init(bot, server, token=None):
+    async def init(self, server, token=None, target_channel='general'):
         '''Starts the actual bot'''
-        new = bot(server)
+        new = self(server, target_channel)
+        server.bridgebot = new
         print('Trying to start the Discord Bridge bot...')
         try:
-            new.run(token)
-            return new
+            await new.start(token)
         except Exception as e:
             print(e)
             raise
@@ -30,18 +35,17 @@ class Bridgebot(commands.Bot):
     def queue_message(self, name, message, charname):
         self.pending_messages.append([name, message, None])
 
-    async def on_ready(self, ):
+    async def on_ready(self):
         print('Discord Bridge Successfully logged in.')
         print('Username -> ' + self.user.name)
         print('ID -> ' + str(self.user.id))
         self.guild = self.guilds[0]
-        self.channel = discord.utils.get(self.guild.text_channels, name='ao2-listener')
+        self.channel = discord.utils.get(self.guild.text_channels, name=self.target_channel)
         self.loop.create_task(self.main_thread())
-        await self.channel.send('Hi I exist now')
 
     async def on_message(self, message):
-        # don't process our own messages
-        if message.author == self:
+        # Screw these loser bots
+        if message.author.bot or message.webhook_id != None:
             return
         
         if message.channel != self.channel:
@@ -57,22 +61,22 @@ class Bridgebot(commands.Bot):
         try:
             webhooks = await self.channel.webhooks()
             for hook in webhooks:
-                if hook.user == self.user:
+                if hook.user == self.user or hook.name == 'AO2_Bridgebot':
                     webhook = hook
                     break
             if webhook == None:
                 webhook = await self.channel.create_webhook(name='AO2_Bridgebot')
             await webhook.send(message, username=name, avatar_url=avatar)
         except Forbidden:
-            await self.channel.send('Insufficient permissions.')
+            print(f'[DiscordBridge] Insufficient permissions - couldnt send char message {name}: {message}')
         except HTTPException:
-            await self.channel.send('HTTP failure.')
+            print(f'[DiscordBridge] HTTP Failure - couldnt send char message {name}: {message}')
 
     async def main_thread(self):
         await self.wait_until_ready()
 
         while 1:
             if len(self.pending_messages) > 0:
-                self.send_char_message(*self.pending_messages.pop())
+                await self.send_char_message(*self.pending_messages.pop())
 
-            await asyncio.sleep(1) # Wait for one second
+            await asyncio.sleep(0.25) # Quarter of a second loop
