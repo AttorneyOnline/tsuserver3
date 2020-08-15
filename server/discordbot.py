@@ -52,6 +52,9 @@ class Bridgebot(commands.Bot):
             return
 
         if not message.content.startswith('$'):
+            if len(message.clean_content) > 256:
+                await self.channel.send('Your message was too long - it was not received by the client. (The limit is 256 characters)')
+                return
             self.server.send_discord_chat(message.author.name, escape_markdown(message.clean_content), self.hub_id, self.area_id)
 
         # await self.process_commands(message)

@@ -34,7 +34,7 @@ def check_deps():
         sys.exit(1)
 
     try:
-        import oyaml
+        import discord
     except ModuleNotFoundError:
         print('Installing dependencies for you...')
         try:

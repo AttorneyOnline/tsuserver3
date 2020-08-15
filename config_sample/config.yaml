@@ -80,6 +80,14 @@ max_chars: 256
 # If true, restrict background selection to the backgrounds.yaml
 use_backgrounds_yaml: true
 
+# Set up a Discord Bridge bot that keeps track of user messages on both ends (AO2 and Discord).
+# Tutorial pending.
+bridgebot_enabled: true
+bridgebot_token: string1234
+bridgebot_channel: ao2-lobby
+bridgebot_character: Ponco
+bridgebot_emote: normal
+
 # Whether or not Discord webhooks are enabled, and if they are, the webhook URL to use.
 # If webhooks_enabled is set to false, no webhooks will function regardless of whether they are enabled or not.
 webhooks_enabled: false
