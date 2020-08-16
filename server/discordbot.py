@@ -33,7 +33,9 @@ class Bridgebot(commands.Bot):
             raise
     
     def queue_message(self, name, message, charname):
-        self.pending_messages.append([name, message, None])
+        base = self.server.config["bridgebot_base_url"]
+        avatar_url = f"{base}characters/{charname}/char_icon.png"
+        self.pending_messages.append([name, message, avatar_url])
 
     async def on_ready(self):
         print('Discord Bridge Successfully logged in.')

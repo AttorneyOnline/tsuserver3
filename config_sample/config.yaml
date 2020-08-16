@@ -87,6 +87,8 @@ bridgebot_token: string1234
 bridgebot_channel: ao2-lobby
 bridgebot_character: Ponco
 bridgebot_emote: normal
+# The base folder URL to seek for the bridgebot to obtain stuff like character avatar graphics etc.
+bridgebot_base_url: http://www.example.com/base/
 
 # Whether or not Discord webhooks are enabled, and if they are, the webhook URL to use.
 # If webhooks_enabled is set to false, no webhooks will function regardless of whether they are enabled or not.
