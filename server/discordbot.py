@@ -1,3 +1,4 @@
+from urllib import parse
 import asyncio
 import discord
 from discord.ext import commands
@@ -19,6 +20,7 @@ class Bridgebot(commands.Bot):
     @staticmethod
     def loop_it_forever(loop):
         loop.run_forever()
+        loop.close()
 
     @classmethod
     async def init(self, server, token=None, target_channel='general'):
@@ -34,7 +36,7 @@ class Bridgebot(commands.Bot):
     
     def queue_message(self, name, message, charname):
         base = self.server.config["bridgebot_base_url"]
-        avatar_url = f"{base}characters/{charname}/char_icon.png"
+        avatar_url = base + parse.quote("characters/" + charname + "/char_icon.png")
         self.pending_messages.append([name, message, avatar_url])
 
     async def on_ready(self):
