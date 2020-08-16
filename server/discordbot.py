@@ -35,8 +35,12 @@ class Bridgebot(commands.Bot):
             raise
     
     def queue_message(self, name, message, charname):
-        base = self.server.config["bridgebot_base_url"]
-        avatar_url = base + parse.quote("characters/" + charname + "/char_icon.png")
+        base = None
+        avatar_url = None
+        if "bridgebot_base_url" in self.server.config:
+            base = self.server.config["bridgebot_base_url"]
+        if base != None:
+            avatar_url = base + parse.quote("characters/" + charname + "/char_icon.png")
         self.pending_messages.append([name, message, avatar_url])
 
     async def on_ready(self):
