@@ -718,7 +718,7 @@ class AOProtocol(asyncio.Protocol):
                 self.client.area.broadcast_area_list(self.client)
 
             # Discord Bridgebot
-            if 'bridgebot_enabled' in self.server.config and self.server.config['bridgebot']['enabled'] and \
+            if 'bridgebot' in self.server.config and self.server.config['bridgebot']['enabled'] and \
                   self.client.area.area_manager.id == self.server.bridgebot.hub_id and self.client.area.id == self.server.bridgebot.area_id:
                 webname = self.client.char_name
                 if showname != '' and showname != self.server.char_list[cid]:

@@ -22,14 +22,11 @@ class Bridgebot(commands.Bot):
         loop.run_forever()
         loop.close()
 
-    @classmethod
-    async def init(self, server, token=None, target_channel='general', hub_id=0, area_id=0):
+    async def init(self, token):
         '''Starts the actual bot'''
-        new = self(server, target_channel, hub_id, area_id)
-        server.bridgebot = new
         print('Trying to start the Discord Bridge bot...')
         try:
-            await new.start(token)
+            await self.start(token)
         except Exception as e:
             print(e)
             raise
@@ -37,8 +34,8 @@ class Bridgebot(commands.Bot):
     def queue_message(self, name, message, charname):
         base = None
         avatar_url = None
-        if "bridgebot_base_url" in self.server.config:
-            base = self.server.config["bridgebot_base_url"]
+        if "base_url" in self.server.config["bridgebot"]:
+            base = self.server.config["bridgebot"]["base_url"]
         if base != None:
             avatar_url = base + parse.quote("characters/" + charname + "/char_icon.png")
         self.pending_messages.append([name, message, avatar_url])
@@ -49,7 +46,13 @@ class Bridgebot(commands.Bot):
         print('ID -> ' + str(self.user.id))
         self.guild = self.guilds[0]
         self.channel = discord.utils.get(self.guild.text_channels, name=self.target_channel)
-        self.loop.create_task(self.main_thread())
+        await self.wait_until_ready()
+
+        while True:
+            if len(self.pending_messages) > 0:
+                await self.send_char_message(*self.pending_messages.pop())
+
+            await asyncio.sleep(max(0.1, self.server.config["bridgebot"]["tickspeed"]))
 
     async def on_message(self, message):
         # Screw these loser bots
@@ -78,16 +81,8 @@ class Bridgebot(commands.Bot):
             if webhook == None:
                 webhook = await self.channel.create_webhook(name='AO2_Bridgebot')
             await webhook.send(message, username=name, avatar_url=avatar)
+            print(f'[DiscordBridge] Sending message from "{name}" to "{self.channel.name}"')
         except Forbidden:
-            print(f'[DiscordBridge] Insufficient permissions - couldnt send char message {name}: {message}')
+            print(f'[DiscordBridge] Insufficient permissions - couldnt send char message "{name}: {message}" with avatar "{avatar}" to "{self.channel.name}"')
         except HTTPException:
-            print(f'[DiscordBridge] HTTP Failure - couldnt send char message {name}: {message}')
-
-    async def main_thread(self):
-        await self.wait_until_ready()
-
-        while 1:
-            if len(self.pending_messages) > 0:
-                await self.send_char_message(*self.pending_messages.pop())
-
-            await asyncio.sleep(0.25) # Quarter of a second loop
+            print(f'[DiscordBridge] HTTP Failure - couldnt send char message "{name}: {message}" with avatar "{avatar}" to "{self.channel.name}"')

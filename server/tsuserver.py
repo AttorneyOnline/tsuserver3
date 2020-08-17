@@ -22,7 +22,6 @@ import os
 import importlib
 
 import asyncio
-import threading
 import websockets
 
 import geoip2.database
@@ -138,10 +137,8 @@ class TsuServer3:
             self.use_backgrounds_yaml = True
 
         if 'bridgebot' in self.config and self.config['bridgebot']['enabled']:
-            loop2 = asyncio.new_event_loop()
-            loop2.create_task(Bridgebot.init(self, self.config['bridgebot']['token'], self.config['bridgebot']['channel'], self.config['bridgebot']['hub_id'], self.config['bridgebot']['area_id']))
-            thread = threading.Thread(target=Bridgebot.loop_it_forever, args=(loop2,))
-            thread.start()
+            self.bridgebot = Bridgebot(self, self.config['bridgebot']['channel'], self.config['bridgebot']['hub_id'], self.config['bridgebot']['area_id'])
+            asyncio.ensure_future(self.bridgebot.init(self.config['bridgebot']['token']), loop=loop)
 
         asyncio.ensure_future(self.schedule_unbans())
 

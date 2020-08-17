@@ -92,6 +92,7 @@ bridgebot:
   hub_id: 0 # numeric Hub ID where Bridgebot will reside
   area_id: 0 # numeric Area ID where Bridgebot will talk
   prefix: "}}}[√Dis√] {" # prefix to use before in-character message, usually to identify this message as Bridgebot one
+  tickspeed: 0.25 # how often does the Discord Bridge send the IC message piles to Discord in seconds. Cannot be lower than 0.1 (one tenth of a second)
 
 # Whether or not Discord webhooks are enabled, and if they are, the webhook URL to use.
 # If webhooks_enabled is set to false, no webhooks will function regardless of whether they are enabled or not.
