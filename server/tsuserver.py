@@ -464,6 +464,7 @@ class TsuServer3:
         cid = self.get_char_id_by_name(self.config['bridgebot']['character'])
         message = remove_URL(message)
         message = message.replace('}', '\\}').replace('{', '\\{').replace('`', '\\`').replace('|', '\\|').replace('~', '\\~').replace('º', '\\º').replace('№', '\\№').replace('√', '\\√').replace('\\s', '').replace('\\f', '')
+        message = message.replace('#', '<num>').replace('&', '<and>').replace('%', '<percent>')
         message = self.config['bridgebot']['prefix'] + message
         if len(name) > 14:
             name = name[:14].rstrip() + '.'

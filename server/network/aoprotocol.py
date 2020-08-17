@@ -729,6 +729,7 @@ class AOProtocol(asyncio.Protocol):
                 text = text.replace('@', '@\u200b') # The only way to escape a Discord ping is a zero width space...
                 text = text.replace('<num>', '\\#')
                 text = text.replace('<and>', '&')
+                text = text.replace('<percent>', '%')
                 text = text.replace('*', '\\*')
                 text = text.replace('_', '\\_')
                 # String is empty if we're strippin
