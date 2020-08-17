@@ -7,6 +7,10 @@ storage/db.sqlite*
 storage/GeoLite*
 logs/**/*.log
 logs/*
+# Symbiotic link lo
+characters
+# Folder
+characters/
 
 ### Python related
 # Virtual environments
