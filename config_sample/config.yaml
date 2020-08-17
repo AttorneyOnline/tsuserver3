@@ -80,6 +80,20 @@ max_chars: 256
 # If true, restrict background selection to the backgrounds.yaml
 use_backgrounds_yaml: true
 
+# Set up a Discord Bridge bot that keeps track of user messages on both ends (AO2 and Discord).
+bridgebot:
+  enabled: true # Whether or not this bot is enabled
+  token: string1234 # Discord Token for the bot
+  channel: ao2-lobby # channel to set up a bridge with
+  character: Ponco # character folder for Bridgebot to use
+  emote: normal # idle emote for Bridgebot to use
+  pos: jur # position Bridgebot will use when talking
+  base_url: http://www.example.com/base/ # base folder URL to seek for bridgebot to obtain stuff like character avatar graphics etc.
+  hub_id: 0 # numeric Hub ID where Bridgebot will reside
+  area_id: 0 # numeric Area ID where Bridgebot will talk
+  prefix: "}}}[√Dis√] {" # prefix to use before in-character message, usually to identify this message as Bridgebot one
+  tickspeed: 0.25 # how often does the Discord Bridge send the IC message piles to Discord in seconds. Cannot be lower than 0.1 (one tenth of a second)
+
 # Whether or not Discord webhooks are enabled, and if they are, the webhook URL to use.
 # If webhooks_enabled is set to false, no webhooks will function regardless of whether they are enabled or not.
 webhooks_enabled: false
