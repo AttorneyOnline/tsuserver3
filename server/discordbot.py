@@ -9,12 +9,12 @@ class Bridgebot(commands.Bot):
     """
     The AO2 Discord bridge self.
     """
-    def __init__(self, server, target_chanel):
+    def __init__(self, server, target_chanel, hub_id, area_id):
         super().__init__(command_prefix='$')
         self.server = server
         self.pending_messages = []
-        self.hub_id = 0
-        self.area_id = 0
+        self.hub_id = hub_id
+        self.area_id = area_id
         self.target_channel = target_chanel
 
     @staticmethod
@@ -23,9 +23,9 @@ class Bridgebot(commands.Bot):
         loop.close()
 
     @classmethod
-    async def init(self, server, token=None, target_channel='general'):
+    async def init(self, server, token=None, target_channel='general', hub_id=0, area_id=0):
         '''Starts the actual bot'''
-        new = self(server, target_channel)
+        new = self(server, target_channel, hub_id, area_id)
         server.bridgebot = new
         print('Trying to start the Discord Bridge bot...')
         try:

@@ -137,9 +137,9 @@ class TsuServer3:
         if self.config['use_backgrounds_yaml']:
             self.use_backgrounds_yaml = True
 
-        if self.config['bridgebot_enabled']:
+        if 'bridgebot' in self.config and self.config['bridgebot']['enabled']:
             loop2 = asyncio.new_event_loop()
-            loop2.create_task(Bridgebot.init(self, self.config['bridgebot_token'], self.config['bridgebot_channel']))
+            loop2.create_task(Bridgebot.init(self, self.config['bridgebot']['token'], self.config['bridgebot']['channel'], self.config['bridgebot']['hub_id'], self.config['bridgebot']['area_id']))
             thread = threading.Thread(target=Bridgebot.loop_it_forever, args=(loop2,))
             thread.start()
 
@@ -468,13 +468,13 @@ class TsuServer3:
 
     def send_discord_chat(self, name, message, hub_id=0, area_id=0):
         area = self.hub_manager.get_hub_by_id(hub_id).get_area_by_id(area_id)
-        cid = self.get_char_id_by_name(self.config['bridgebot_character'])
+        cid = self.get_char_id_by_name(self.config['bridgebot']['character'])
         message = remove_URL(message)
         message = message.replace('}', '\\}').replace('{', '\\{').replace('`', '\\`').replace('|', '\\|').replace('~', '\\~').replace('º', '\\º').replace('№', '\\№').replace('√', '\\√').replace('\\s', '').replace('\\f', '')
-        message = "}}}[√Dis√] {" + message
+        message = self.config['bridgebot']['prefix'] + message
         if len(name) > 14:
             name = name[:14].rstrip() + '.'
-        area.send_ic(None, '1', 0, self.config['bridgebot_character'], self.config['bridgebot_emote'], message, 'jur', "", 0, cid, 0, 0, [0], 0, 0, 0, name, -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
+        area.send_ic(None, '1', 0, self.config['bridgebot']['character'], self.config['bridgebot']['emote'], message, self.config['bridgebot']['pos'], "", 0, cid, 0, 0, [0], 0, 0, 0, name, -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
 
     def refresh(self):
         """
