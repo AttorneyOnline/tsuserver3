@@ -19,22 +19,24 @@ class Emotes:
         self.read_ini()
 
     def read_ini(self):
-        char_ini = ConfigParser(comment_prefixes=('#', ';', '//', '\\\\'),
-                                strict=False)
+        char_ini = ConfigParser(comment_prefixes=('-', '#', ';', '//', '\\\\'),
+                                strict=False, empty_lines_in_values=False)
         try:
             char_path = path.join(char_dir, self.name, 'char.ini')
-            with open(char_path) as f:
+            with open(char_path, encoding='utf-8-sig') as f:
                 char_ini.read_file(f)
         except FileNotFoundError:
             logger.warn(f'Character file {char_path} not found')
             return
 
+        # cuz people making char.ini's don't care for no case in sections
+        char_ini = dict((k.lower(), v) for k, v in char_ini.items())
         try:
-            for emote_id in range(1, int(char_ini['Emotions']['number']) + 1):
+            for emote_id in range(1, int(char_ini['emotions']['number']) + 1):
                 emote_id = str(emote_id)
-                _name, preanim, anim, _mod = char_ini['Emotions'][str(emote_id)].split('#')[:4]
-                if emote_id in char_ini['SoundN']:
-                    sfx = char_ini['SoundN'][str(emote_id)]
+                _name, preanim, anim, _mod = char_ini['emotions'][str(emote_id)].split('#')[:4]
+                if emote_id in char_ini['soundn']:
+                    sfx = char_ini['soundn'][str(emote_id)]
                     if len(sfx) == 1:
                         # Often, a one-character SFX is a placeholder for no sfx,
                         # so allow it
