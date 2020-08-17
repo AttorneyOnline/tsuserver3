@@ -485,8 +485,8 @@ class Area:
             except IndexError:
                 client.send_ooc(f'Something went wrong, couldn\'t amend Statement {idx+1}!')
             return
-        adding = self.recording and client != None
-        if client and args[4].lstrip().startswith('++') and len(self.testimony) > 0:
+        adding = args[4].strip() != '' and self.recording and client != None
+        if client and args[4].startswith('++') and len(self.testimony) > 0:
             if len(self.testimony) >= 30:
                 client.send_ooc('Maximum testimony statement amount reached! (30)')
                 return
@@ -525,9 +525,9 @@ class Area:
             delay = 200 + self.parse_msg_delay(args[4])
             self.next_message_time = round(time.time() * 1000.0 + delay)
 
-            self.last_ic_message = args
             if client:
-                database.log_ic(client, self, name, args[4])
+                if args[4].strip() != '' or self.last_ic_message == None or self.last_ic_message[4].strip() != '':
+                    database.log_ic(client, self, name, args[4])
                 if self.recording:
                     # See if the testimony is supposed to end here.
                     scrunched = ''.join(e for e in args[4] if e.isalnum())
@@ -535,6 +535,7 @@ class Area:
                         self.recording = False
                         self.broadcast_ooc(f'[{client.id}] {client.showname} has ended the testimony.')
                         return
+            self.last_ic_message = args
 
         if adding:
             if len(self.testimony) >= 30:

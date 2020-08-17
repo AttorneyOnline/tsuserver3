@@ -373,7 +373,7 @@ class AOProtocol(asyncio.Protocol):
         pair_order = 0
         if self.validate_net_cmd(args, self.ArgType.STR, # msg_type
                                  self.ArgType.STR_OR_EMPTY, self.ArgType.STR,   # pre, folder
-                                 self.ArgType.STR, self.ArgType.STR,            # anim, text
+                                 self.ArgType.STR, self.ArgType.STR_OR_EMPTY,   # anim, text
                                  self.ArgType.STR, self.ArgType.STR,            # pos, sfx
                                  self.ArgType.INT, self.ArgType.INT,            # anim_type, cid
                                  self.ArgType.INT, self.ArgType.INT_OR_STR,     # sfx_delay, button
@@ -384,7 +384,7 @@ class AOProtocol(asyncio.Protocol):
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color = args
         elif self.validate_net_cmd(
                 args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,              # msg_type, pre
-                self.ArgType.STR, self.ArgType.STR, self.ArgType.STR,           # folder, anim, text
+                self.ArgType.STR, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,  # folder, anim, text
                 self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,           # pos, sfx, anim_type
                 self.ArgType.INT, self.ArgType.INT, self.ArgType.INT_OR_STR,    # cid, sfx_delay, button
                 self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,           # evidence, flip, ding
@@ -395,7 +395,7 @@ class AOProtocol(asyncio.Protocol):
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre = args
         elif self.validate_net_cmd(
                 args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,              # msg_type, pre
-                self.ArgType.STR, self.ArgType.STR, self.ArgType.STR,           # folder, anim, text
+                self.ArgType.STR, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,  # folder, anim, text
                 self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,           # pos, sfx, anim_type
                 self.ArgType.INT, self.ArgType.INT, self.ArgType.INT_OR_STR,    # cid, sfx_delay, button
                 self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,           # evidence, flip, ding
@@ -434,17 +434,12 @@ class AOProtocol(asyncio.Protocol):
                 "You may not iniswap while you are charcursed!")
             return
         if not self.client.area.blankposting_allowed:
-            if text == ' ':
+            if text.strip() == '':
                 self.client.send_ooc(
                     "Blankposting is forbidden in this area!")
                 return
-            if text.isspace():
-                self.client.send_ooc(
-                    "Blankposting is forbidden in this area, and putting more spaces in does not make it not blankposting."
-                )
-                return
             if len(re.sub(r'[{}\\`|(~~)]', '', text).replace(
-                    ' ', '')) < 3 and text != '<' and text != '>':
+                    ' ', '')) < 3 and not text.startswith('<') and not text.startswith('>'):
                 self.client.send_ooc(
                     "While that is not a blankpost, it is still pretty spammy. Try forming sentences."
                 )
@@ -572,6 +567,12 @@ class AOProtocol(asyncio.Protocol):
         if len(text) > max_char:
             self.client.send_ooc(
                 "Your message is too long!")
+            return
+
+        # Really simple spam protection that functions on the clientside pre-2.8.5, and really should've been serverside from the start
+        if text.strip() != '' and self.client.area.last_ic_message != None and cid == self.client.area.last_ic_message[8] and text == self.client.area.last_ic_message[4]:
+            self.client.send_ooc(
+                "Your message is a repeat of last one, don't spam!")
             return
 
         if pos != '' and self.client.pos != pos:
