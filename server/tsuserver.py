@@ -44,9 +44,9 @@ from server.network.webhooks import Webhooks
 import server.logger
 
 class TsuServer3:
-    """The main class for tsuserver3 server software."""
+    """The main class for KFO-Server derivative of tsuserver3 server software."""
     def __init__(self):
-        self.software = 'tsuserver3'
+        self.software = 'KFO-Server'
         self.release = 3
         self.major_version = 3
         self.minor_version = 0
@@ -66,7 +66,7 @@ class TsuServer3:
         self.ipRange_bans = []
         self.geoIpReader = None
         self.useGeoIp = False
-        self.supported_features = ['yellowtext', 'customobjections',
+        self.supported_features = ['yellowtext', 'customobjections', #'prezoom', # Uncomment once 2.8.5 releases
                                    'flipping', 'fastloading', 'noencryption',
                                    'deskmod', 'evidence', 'modcall_reason',
                                    'cccc_ic_support', 'casing_alerts',
