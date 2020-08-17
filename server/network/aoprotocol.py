@@ -324,7 +324,7 @@ class AOProtocol(asyncio.Protocol):
         self.client.send_hub_info()
         # TODO: move this code to the area itself so it can handle whatever it needs to later
         if self.client.area.music_autoplay:
-            self.client.send_command('MC', self.client.area.current_music, -1, '', self.client.area.current_music_looping, 0, self.client.area.current_music_effects)
+            self.client.send_command('MC', self.client.area.music, -1, '', self.client.area.music_looping, 0, self.client.area.music_effects)
 
     def net_cmd_cc(self, args):
         """Character selection.

@@ -80,11 +80,11 @@ class Area:
         self.music_looper = None
         self.next_message_time = 0
         self.judgelog = []
-        self.current_music = ''
-        self.current_music_player = ''
-        self.current_music_player_ipid = -1
-        self.current_music_looping = 0
-        self.current_music_effects = 0
+        self.music = ''
+        self.music_player = ''
+        self.music_player_ipid = -1
+        self.music_looping = 0
+        self.music_effects = 0
         self.evi_list = EvidenceList()
         self.testimony = []
         self.testimony_title = ''
@@ -226,7 +226,9 @@ class Area:
         if 'music_autoplay' in area:
             self.music_autoplay = area['music_autoplay']
             if self.music_autoplay and 'music' in area:
-                self.current_music = area['music']
+                self.music = area['music']
+                self.music_effects = area['music_effects']
+                self.music_looping = area['music_looping']
         if 'max_players' in area:
             self.max_players = area['max_players']
         if 'desc' in area:
@@ -308,7 +310,9 @@ class Area:
             area['replace_music'] = self.replace_music
         area['client_music'] = self.client_music
         if self.music_autoplay:
-            area['music'] = self.current_music
+            area['music'] = self.music
+            area['music_effects'] = self.music_effects
+            area['music_looping'] = self.music_looping
         area['ambience'] = self.ambience
         area['can_dj'] = self.can_dj
         area['hidden'] = self.hidden
@@ -327,7 +331,7 @@ class Area:
         if client.char_id != -1:
             database.log_room('area.join', client, self)
             if self.music_autoplay:
-                client.send_command('MC', self.current_music, -1, '', self.current_music_looping, 0, self.current_music_effects)
+                client.send_command('MC', self.music, -1, '', self.music_looping, 0, self.music_effects)
 
             # Play the ambience
             self.send_command('MC', self.ambience, -1, "", 1, 1, int(MusicEffect.FADE_OUT | MusicEffect.FADE_IN | MusicEffect.SYNC_POS))
@@ -736,17 +740,17 @@ class Area:
         # we should check that.
         # We also do a check if we were the last to play a song, just in case.
         if not self.jukebox:
-            if self.current_music_player == 'The Jukebox' and self.current_music_player_ipid == 'has no IPID':
-                self.current_music = ''
+            if self.music_player == 'The Jukebox' and self.music_player_ipid == 'has no IPID':
+                self.music = ''
             return
 
         vote_picked = self.get_jukebox_picked()
 
         if vote_picked is None:
-            self.current_music = ''
+            self.music = ''
             return
 
-        if vote_picked.client.char_id != self.jukebox_prev_char_id or vote_picked.name != self.current_music or len(
+        if vote_picked.client.char_id != self.jukebox_prev_char_id or vote_picked.name != self.music or len(
                 self.jukebox_votes) > 1:
             self.jukebox_prev_char_id = vote_picked.client.char_id
             if vote_picked.showname == '':
@@ -759,9 +763,9 @@ class Area:
         else:
             self.send_command('MC', vote_picked.name, -1)
 
-        self.current_music_player = 'The Jukebox'
-        self.current_music_player_ipid = 'has no IPID'
-        self.current_music = vote_picked.name
+        self.music_player = 'The Jukebox'
+        self.music_player_ipid = 'has no IPID'
+        self.music = vote_picked.name
 
         for current_vote in self.jukebox_votes:
             # Choosing the same song will get your votes down to 0, too.
@@ -792,8 +796,8 @@ class Area:
         # If it's anything other than 0, it's looping. (Legacy music.yaml support)
         if loop != 0:
             loop = 1
-        self.current_music_looping = loop
-        self.current_music_effects = effects
+        self.music_looping = loop
+        self.music_effects = effects
         self.send_command('MC', name, cid, showname, loop, 0, effects)
 
     def can_send_message(self, client):
@@ -889,11 +893,11 @@ class Area:
         :param autoplay: if track will play itself as soon as user joins area
         """
         if showname != '':
-            self.current_music_player = f'{showname} ({client.char_name})'
+            self.music_player = f'{showname} ({client.char_name})'
         else:
-            self.current_music_player = client.char_name
-        self.current_music_player_ipid = client.ipid
-        self.current_music = name
+            self.music_player = client.char_name
+        self.music_player_ipid = client.ipid
+        self.music = name
         if autoplay == None:
             autoplay = self.music_autoplay
         self.music_autoplay = autoplay

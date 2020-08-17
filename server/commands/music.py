@@ -30,17 +30,17 @@ def ooc_cmd_currentmusic(client, arg):
     """
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
-    if client.area.current_music == '':
+    if client.area.music == '':
         raise ClientError('There is no music currently playing.')
     if client.is_mod:
         client.send_ooc(
             'The current music is \'{}\' and was played by {} ({}).'.format(
-                client.area.current_music, client.area.current_music_player,
-                client.area.current_music_player_ipid))
+                client.area.music, client.area.music_player,
+                client.area.music_player_ipid))
     else:
         client.send_ooc(
             'The current music is \'{}\' and was played by {}.'.format(
-                client.area.current_music, client.area.current_music_player))
+                client.area.music, client.area.music_player))
 
 
 def ooc_cmd_getmusic(client, arg):
@@ -50,10 +50,10 @@ def ooc_cmd_getmusic(client, arg):
     """
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
-    if client.area.current_music == '':
+    if client.area.music == '':
         raise ClientError('There is no music currently playing.')
-    client.send_command('MC', client.area.current_music, -1, '', client.area.current_music_looping, 0, client.area.current_music_effects)
-    client.send_ooc(f'Playing track \'{client.area.current_music}\'.')
+    client.send_command('MC', client.area.music, -1, '', client.area.music_looping, 0, client.area.music_effects)
+    client.send_ooc(f'Playing track \'{client.area.music}\'.')
 
 @mod_only(area_owners=True)
 def ooc_cmd_jukebox_toggle(client, arg):
