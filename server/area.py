@@ -75,6 +75,7 @@ class Area:
         self.can_wtce = True
         self.music_autoplay = False
         self.can_change_status = True
+        self.use_backgrounds_yaml = False
         # /prefs end
 
         self.music_looper = None
@@ -255,6 +256,8 @@ class Area:
             self.can_wtce = area['can_wtce']
         if 'can_change_status' in area:
             self.can_change_status = area['can_change_status']
+        if 'use_backgrounds_yaml' in area:
+            self.use_backgrounds_yaml = area['use_backgrounds_yaml']
 
         if 'evidence' in area and len(area['evidence']) > 0:
             self.evi_list.evidences.clear()
@@ -319,6 +322,7 @@ class Area:
         area['can_whisper'] = self.can_whisper
         area['can_wtce'] = self.can_wtce
         area['can_change_status'] = self.can_change_status
+        area['use_backgrounds_yaml'] = self.use_backgrounds_yaml
         if len(self.evi_list.evidences) > 0:
             area['evidence'] = [e.to_dict() for e in self.evi_list.evidences]
         if len(self.links) > 0:
@@ -820,7 +824,7 @@ class Area:
         :param bg: background name
         :raises: AreaError if `bg` is not in background list
         """
-        if self.server.use_backgrounds_yaml and bg.lower() not in (name.lower()
+        if self.use_backgrounds_yaml and bg.lower() not in (name.lower()
                                 for name in self.server.backgrounds):
             raise AreaError('Invalid background name.')
         self.background = bg

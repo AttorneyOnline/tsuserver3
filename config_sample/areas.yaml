@@ -1,40 +1,81 @@
-- area: Basement
-  background: gs4
-  bglock: true
-  evidence_mod: FFA
-- area: Courtroom 1
-  background: gs4
-  bglock: false
-  evidence_mod: CM
-  locking_allowed: true
-  iniswap_allowed: false
-- area: Courtroom 2
-  background: gs4
-  bglock: false
-  evidence_mod: Mods
-  locking_allowed: true
-  iniswap_allowed: false
-- area: Courtroom 3
-  background: gs4
-  bglock: false
-  evidence_mod: HiddenCM
-  locking_allowed: false
-  iniswap_allowed: false
+- hub: Main
+  info: ''
+  music_ref: legacy
+  single_cm: true
+  areas:
+  - area: Basement
+    background: gs4
+    bglock: true
+    evidence_mod: FFA
+    use_backgrounds_yaml: true
+  - area: Courtroom 1
+    background: gs4
+    bglock: false
+    evidence_mod: CM
+    locking_allowed: true
+    iniswap_allowed: false
+    use_backgrounds_yaml: true
+  - area: Courtroom 2
+    background: gs4
+    bglock: false
+    evidence_mod: Mods
+    locking_allowed: true
+    iniswap_allowed: false
+    use_backgrounds_yaml: true
+  - area: Courtroom 3
+    background: gs4
+    bglock: false
+    evidence_mod: HiddenCM
+    locking_allowed: false
+    iniswap_allowed: false
+    use_backgrounds_yaml: false
 
 # Default options
-## background: 'default'
-## bg_lock: False
-## evidence_mod: 'FFA'
-## locking_allowed: False
-## iniswap_allowed: True
-## showname_changes_allowed: True
-## shouts_allowed: True
-## jukebox: False
-## abbreviation: ''
-## non_int_pres_only: False
-## is_locked: None
-## blankposting_allowed: True
-## hp_def: 10
-## hp_pro: 10
-## doc: 'No document.'
-## status: 'IDLE'
+# - hub: Main
+#   abbreviation: M
+#   move_delay: 0
+#   arup_enabled: true
+#   hide_clients: false
+#   info: ''
+#   can_gm: false
+#   music_ref: ''
+#   client_music: true
+#   max_areas: 50
+#   single_cm: false
+#   censor_ic: true
+#   censor_ooc: true
+#   areas:
+#   - area: Basement
+#     background: default
+#     pos_lock: none
+#     bg_lock: false
+#     evidence_mod: FFA
+#     can_cm: false
+#     locking_allowed: false
+#     iniswap_allowed: true
+#     showname_changes_allowed: true
+#     shouts_allowed: true
+#     jukebox: false
+#     abbreviation: B
+#     non_int_pres_only: false
+#     is_locked: FREE
+#     blankposting_allowed: true
+#     hp_def: 10
+#     hp_pro: 10
+#     doc: no document.
+#     status: IDLE
+#     move_delay: 0
+#     hide_clients: false
+#     max_players: -1
+#     desc: ''
+#     music_ref: ''
+#     client_music: true
+#     replace_music: false
+#     ambience: ''
+#     can_dj: true
+#     hidden: false
+#     can_whisper: true
+#     can_wtce: true
+#     music_autoplay: false
+#     can_change_status: true
+#     use_backgrounds_yaml: false

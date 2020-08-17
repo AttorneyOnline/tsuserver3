@@ -62,7 +62,6 @@ class TsuServer3:
         self.music_list = []
         self.music_list_ao2 = None
         self.music_pages_ao1 = None
-        self.use_backgrounds_yaml = False
         self.backgrounds = None
         self.zalgo_tolerance = None
         self.ipRange_bans = []
@@ -132,9 +131,6 @@ class TsuServer3:
 
         if self.config['zalgo_tolerance']:
             self.zalgo_tolerance = self.config['zalgo_tolerance']
-
-        if self.config['use_backgrounds_yaml']:
-            self.use_backgrounds_yaml = True
 
         if 'bridgebot' in self.config and self.config['bridgebot']['enabled']:
             self.bridgebot = Bridgebot(self, self.config['bridgebot']['channel'], self.config['bridgebot']['hub_id'], self.config['bridgebot']['area_id'])

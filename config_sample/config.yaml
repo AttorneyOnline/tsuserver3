@@ -77,9 +77,6 @@ multiclient_limit: 16
 # Maximum number of characters can a message contain
 max_chars: 256
 
-# If true, restrict background selection to the backgrounds.yaml
-use_backgrounds_yaml: true
-
 # Set up a Discord Bridge bot that keeps track of user messages on both ends (AO2 and Discord).
 bridgebot:
   enabled: true # Whether or not this bot is enabled
