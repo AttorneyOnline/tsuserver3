@@ -19,7 +19,7 @@ class Emotes:
         self.read_ini()
 
     def read_ini(self):
-        char_ini = ConfigParser(comment_prefixes=('-', '#', ';', '//', '\\\\'),
+        char_ini = ConfigParser(comment_prefixes=('=', '-', '#', ';', '//', '\\\\'), allow_no_value=True,
                                 strict=False, empty_lines_in_values=False)
         try:
             char_path = path.join(char_dir, self.name, 'char.ini')
@@ -33,20 +33,24 @@ class Emotes:
         char_ini = dict((k.lower(), v) for k, v in char_ini.items())
         try:
             for emote_id in range(1, int(char_ini['emotions']['number']) + 1):
-                emote_id = str(emote_id)
-                _name, preanim, anim, _mod = char_ini['emotions'][str(emote_id)].split('#')[:4]
-                if emote_id in char_ini['soundn']:
-                    sfx = char_ini['soundn'][str(emote_id)]
-                    if len(sfx) == 1:
-                        # Often, a one-character SFX is a placeholder for no sfx,
-                        # so allow it
+                try:
+                    emote_id = str(emote_id)
+                    _name, preanim, anim, _mod = char_ini['emotions'][str(emote_id)].split('#')[:4]
+                    if emote_id in char_ini['soundn']:
+                        sfx = char_ini['soundn'][str(emote_id)]
+                        if sfx != None and len(sfx) == 1:
+                            # Often, a one-character SFX is a placeholder for no sfx,
+                            # so allow it
+                            sfx = None
+                    else:
                         sfx = None
-                else:
-                    sfx = None
-                self.emotes.add((preanim, anim, sfx))
+                    self.emotes.add((preanim, anim, sfx))
 
-                # No SFX should always be allowed
-                self.emotes.add((preanim, anim, None))
+                    # No SFX should always be allowed
+                    self.emotes.add((preanim, anim, None))
+                except KeyError as e:
+                    logger.warn(f'Broken key {e.args[0]} in character file {char_path}. '
+                                'This indicates a malformed character INI file.')
         except KeyError as e:
             logger.warn(f'Unknown key {e.args[0]} in character file {char_path}. '
                         'This indicates a malformed character INI file.')
