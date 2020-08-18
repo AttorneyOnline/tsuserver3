@@ -740,13 +740,13 @@ class Area:
             self.jukebox_prev_char_id = vote_picked.client.char_id
             if vote_picked.showname == '':
                 self.send_command('MC', vote_picked.name,
-                                    vote_picked.client.char_id)
+                                    vote_picked.client.char_id, '', 1, 0, int(MusicEffect.FADE_OUT))
             else:
                 self.send_command('MC', vote_picked.name,
                                     vote_picked.client.char_id,
-                                    vote_picked.showname)
+                                    vote_picked.showname, 1, 0, int(MusicEffect.FADE_OUT))
         else:
-            self.send_command('MC', vote_picked.name, -1)
+            self.send_command('MC', vote_picked.name, -1, '', 1, 0, int(MusicEffect.FADE_OUT))
 
         self.music_player = 'The Jukebox'
         self.music_player_ipid = 'has no IPID'
@@ -759,6 +759,10 @@ class Area:
                 current_vote.chance = 0
             else:
                 current_vote.chance += 1
+
+        length = vote_picked.length
+        if length == -1: # Length not defined
+            length = 120 # Play each song for at least 2 minutes
 
         if self.music_looper:
             self.music_looper.cancel()
