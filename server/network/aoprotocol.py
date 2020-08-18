@@ -814,7 +814,7 @@ class AOProtocol(asyncio.Protocol):
             else:
                 self.client.fake_name = args[0]
 
-        if args[1].lstrip().startswith('/'):
+        if args[1].lstrip() != args[1] and args[1].lstrip().startswith('/'):
             self.client.send_ooc(
                 'Your message was not sent for safety reasons: you left space before that slash.')
             return
