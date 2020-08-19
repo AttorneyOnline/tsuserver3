@@ -375,28 +375,28 @@ class AOProtocol(asyncio.Protocol):
                                  self.ArgType.STR_OR_EMPTY, self.ArgType.STR,   # pre, folder
                                  self.ArgType.STR, self.ArgType.STR_OR_EMPTY,   # anim, text
                                  self.ArgType.STR, self.ArgType.STR,            # pos, sfx
-                                 self.ArgType.INT, self.ArgType.INT,            # anim_type, cid
+                                 self.ArgType.INT, self.ArgType.INT,            # emote_mod, cid
                                  self.ArgType.INT, self.ArgType.INT_OR_STR,     # sfx_delay, button
                                  self.ArgType.INT, self.ArgType.INT,            # evidence, flip
                                  self.ArgType.INT, self.ArgType.INT,            # ding, color
             ):
             # Pre-2.6 validation monstrosity.
-            msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color = args
+            msg_type, pre, folder, anim, text, pos, sfx, emote_mod, cid, sfx_delay, button, evidence, flip, ding, color = args
         elif self.validate_net_cmd(
                 args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,              # msg_type, pre
                 self.ArgType.STR, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,  # folder, anim, text
-                self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,           # pos, sfx, anim_type
+                self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,           # pos, sfx, emote_mod
                 self.ArgType.INT, self.ArgType.INT, self.ArgType.INT_OR_STR,    # cid, sfx_delay, button
                 self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,           # evidence, flip, ding
                 self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.INT,  # color, showname, charid_pair
                 self.ArgType.INT, self.ArgType.INT,                             # offset_pair, nonint_pre
             ):
             # 2.6 validation monstrosity.
-            msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre = args
+            msg_type, pre, folder, anim, text, pos, sfx, emote_mod, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre = args
         elif self.validate_net_cmd(
                 args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,              # msg_type, pre
                 self.ArgType.STR, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,  # folder, anim, text
-                self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,           # pos, sfx, anim_type
+                self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,           # pos, sfx, emote_mod
                 self.ArgType.INT, self.ArgType.INT, self.ArgType.INT_OR_STR,    # cid, sfx_delay, button
                 self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,           # evidence, flip, ding
                 self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,  # color, showname, charid_pair
@@ -405,7 +405,7 @@ class AOProtocol(asyncio.Protocol):
                 self.ArgType.STR, self.ArgType.INT, self.ArgType.STR,           # frames_sfx, additive, effect
             ):
             # 2.8 validation monstrosity. (rip 2.7)
-            msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive, effect = args
+            msg_type, pre, folder, anim, text, pos, sfx, emote_mod, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive, effect = args
             pair_args = charid_pair.split("^")
             charid_pair = int(pair_args[0])
             if (len(pair_args) > 1):
@@ -520,9 +520,9 @@ class AOProtocol(asyncio.Protocol):
             msg_type = '1'
         # Invalid emote modifier causes the client to freeze up. Outdated clients send 4, replace it with 6.
         # Fixes https://github.com/AttorneyOnline/tsuserver3/issues/112
-        if anim_type == 4:
-            anim_type = 6
-        if anim_type not in (0, 1, 2, 5, 6):
+        if emote_mod == 4:
+            emote_mod = 6
+        if emote_mod not in (0, 1, 2, 5, 6):
             return
         if cid != self.client.char_id:
             return
@@ -544,18 +544,18 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_ooc("Nice try! You may not spoof [M] tag in your showname.")
             return
         if (nonint_pre == 1 and button in range(1, 4)) or self.client.area.non_int_pres_only:
-            if anim_type == 1 or anim_type == 2:
-                anim_type = 0
+            if emote_mod == 1 or emote_mod == 2:
+                emote_mod = 0
                 nonint_pre = 1
-            elif anim_type == 6:
-                anim_type = 5
+            elif emote_mod == 6:
+                emote_mod = 5
                 nonint_pre = 1
         if not self.client.area.shouts_allowed:
-            # Old clients communicate the objecting in anim_type.
-            if anim_type == 2:
-                anim_type = 1
-            elif anim_type == 6:
-                anim_type = 5
+            # Old clients communicate the objecting in emote_mod.
+            if emote_mod == 2:
+                emote_mod = 1
+            elif emote_mod == 6:
+                emote_mod = 5
             # New clients do it in a specific objection message area.
             button = 0
             # Turn off the ding.
@@ -653,7 +653,7 @@ class AOProtocol(asyncio.Protocol):
 
         self.client.charid_pair = charid_pair
         self.client.offset_pair = offset_pair
-        if anim_type not in (5, 6):
+        if emote_mod not in (5, 6):
             self.client.last_sprite = anim
         self.client.flip = flip
         self.client.claimed_folder = folder
@@ -695,7 +695,7 @@ class AOProtocol(asyncio.Protocol):
                     if a.last_ic_message == None or cid != a.last_ic_message[8]:
                         add = 0
                     a.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx,
-                        anim_type, cid, sfx_delay, button, self.client.evi_list[evidence],
+                        emote_mod, cid, sfx_delay, button, self.client.evi_list[evidence],
                         flip, ding, color, showname, charid_pair, other_folder,
                         other_emote, offset_pair, other_offset, other_flip, nonint_pre,
                         sfx_looping, screenshake, frames_shake, frames_realization,
@@ -705,7 +705,7 @@ class AOProtocol(asyncio.Protocol):
                     if msg == '':
                         msg = ' '
                     self.client.send_command('MS', msg_type, pre, folder, anim, '}}}[' + a_list + '] {{{' + msg, pos, sfx,
-                        anim_type, cid, sfx_delay, button, self.client.evi_list[evidence],
+                        emote_mod, cid, sfx_delay, button, self.client.evi_list[evidence],
                         flip, ding, color, showname, charid_pair, other_folder,
                         other_emote, offset_pair, other_offset, other_flip, nonint_pre,
                         sfx_looping, screenshake, frames_shake, frames_realization,
@@ -749,7 +749,7 @@ class AOProtocol(asyncio.Protocol):
         if self.client.area.last_ic_message == None or cid != self.client.area.last_ic_message[8]:
             additive = 0
         self.client.area.send_ic(self.client, msg_type, pre, folder, anim, msg,
-                                pos, sfx, anim_type, cid, sfx_delay,
+                                pos, sfx, emote_mod, cid, sfx_delay,
                                 button, self.client.evi_list[evidence],
                                 flip, ding, color, showname, charid_pair,
                                 other_folder, other_emote, offset_pair,
@@ -761,7 +761,7 @@ class AOProtocol(asyncio.Protocol):
         self.client.area.send_owner_command(
             'MS', msg_type, pre, folder, anim,
             '}}}[' + str(self.client.area.id) + '] {{{' + msg, pos, sfx,
-            anim_type, cid, sfx_delay, button, self.client.evi_list[evidence],
+            emote_mod, cid, sfx_delay, button, self.client.evi_list[evidence],
             flip, ding, color, showname, charid_pair, other_folder,
             other_emote, offset_pair, other_offset, other_flip, nonint_pre,
             sfx_looping, screenshake, frames_shake, frames_realization,

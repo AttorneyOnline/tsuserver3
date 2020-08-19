@@ -548,7 +548,7 @@ class Area:
             lst[4] = "}}}" + lst[4].replace('{', '').replace('}', '')
             # Non-int pre automatically enabled
             lst[18] = 1
-            # Set anim_type to conform to anim_type
+            # Set emote_mod to conform to nonint_pre
             if lst[7] == 1 or lst[7] == 2:
                 lst[7] = 0
             elif lst[7] == 6:
