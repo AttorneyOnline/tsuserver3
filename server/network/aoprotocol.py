@@ -518,7 +518,11 @@ class AOProtocol(asyncio.Protocol):
         # from appearing behind desk for jud unless they were specifically made for it.
         if msg_type == 'chat':
             msg_type = '1'
-        if anim_type not in (0, 1, 2, 4, 5, 6):
+        # Invalid emote modifier causes the client to freeze up. Outdated clients send 4, replace it with 6.
+        # Fixes https://github.com/AttorneyOnline/tsuserver3/issues/112
+        if anim_type == 4:
+            anim_type = 6
+        if anim_type not in (0, 1, 2, 5, 6):
             return
         if cid != self.client.char_id:
             return
