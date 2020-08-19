@@ -761,13 +761,13 @@ class Area:
                 current_vote.chance += 1
 
         length = vote_picked.length
-        if length == -1: # Length not defined
+        if length <= 0: # Length not defined
             length = 120.0 # Play each song for at least 2 minutes
 
         if self.music_looper:
             self.music_looper.cancel()
         self.music_looper = asyncio.get_event_loop().call_later(
-            length, lambda: self.start_jukebox())
+            max(5, length), lambda: self.start_jukebox())
 
     def set_ambience(self, name):
         self.ambience = name
