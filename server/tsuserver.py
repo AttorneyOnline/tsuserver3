@@ -67,7 +67,7 @@ class TsuServer3:
         self.ipRange_bans = []
         self.geoIpReader = None
         self.useGeoIp = False
-        self.supported_features = ['yellowtext', 'customobjections', #'prezoom', # Uncomment once 2.8.5 releases
+        self.supported_features = ['yellowtext', 'customobjections', 'prezoom',
                                    'flipping', 'fastloading', 'noencryption',
                                    'deskmod', 'evidence', 'modcall_reason',
                                    'cccc_ic_support', 'casing_alerts',
