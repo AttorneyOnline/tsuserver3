@@ -62,9 +62,13 @@ class AOProtocol(asyncio.Protocol):
         U+1DC0 - U+1DFF - COMBINING DIACRITICAL MARKS SUPPLEMENT
         U+20D0 - U+20FF - COMBINING DIACRITICAL MARKS FOR SYMBOLS
         U+FE20 - U+FE2F - COMBINING HALF MARKS
+        U+115F          - HANGUL CHOSEONG FILLER
+        U+1160          - HANGUL JUNGSEONG FILLER
+        U+3164          - HANGUL FILLER
         """
 
-        filtered = re.sub('([\u0300-\u036f\u1ab0-\u1aff\u1dc0-\u1dff\u20d0-\u20ff\ufe20-\ufe2f]' +
+        filtered = re.sub('([\u0300-\u036f\u1ab0-\u1aff\u1dc0-\u1dff\u20d0-\u20ff\ufe20-\ufe2f' +
+                          '\u115f\u1160\u3164]' +
                           '{' + re.escape(str(self.server.zalgo_tolerance)) + ',})',
                           '', input)
         return filtered
