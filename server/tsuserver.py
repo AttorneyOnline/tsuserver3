@@ -372,13 +372,13 @@ class TsuServer3:
             if 'category' not in item: #skip settings n stuff
                 continue
             if item['category'] == music:
-                return item['category'], -1
+                return item['category'], 0
             for song in item['songs']:
                 if song['name'] == music:
                     try:
                         return song['name'], song['length']
                     except KeyError:
-                        return song['name'], -1
+                        return song['name'], 0
         raise ServerError('Music not found.')
 
     def send_all_cmd_pred(self, cmd, *args, pred=lambda x: True):

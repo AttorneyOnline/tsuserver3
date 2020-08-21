@@ -683,7 +683,7 @@ class Area:
             self.jukebox_votes.append(
                 self.JukeboxVote(client, music_name, length, showname))
             client.send_ooc('Your song was added to the jukebox.')
-            if len(self.jukebox_votes) == 1:
+            if len(self.jukebox_votes) == 1 or (self.music_looper == None or self.music_looper.cancelled()):
                 self.start_jukebox()
 
     def remove_jukebox_vote(self, client, silent):
@@ -746,7 +746,7 @@ class Area:
                                     vote_picked.client.char_id,
                                     vote_picked.showname, 1, 0, int(MusicEffect.FADE_OUT))
         else:
-            self.send_command('MC', vote_picked.name, -1, '', 1, 0, int(MusicEffect.FADE_OUT))
+            return
 
         self.music_player = 'The Jukebox'
         self.music_player_ipid = 'has no IPID'
