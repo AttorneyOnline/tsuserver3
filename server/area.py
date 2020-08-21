@@ -701,6 +701,8 @@ class Area:
         if not silent:
             client.send_ooc(
                 'You removed your song from the jukebox.')
+        if len(self.jukebox_votes) <= 1 or (self.music_looper == None or self.music_looper.cancelled()):
+            self.start_jukebox()
 
     def get_jukebox_picked(self):
         """Randomly choose a track from the jukebox."""
@@ -721,6 +723,9 @@ class Area:
 
     def start_jukebox(self):
         """Initialize jukebox mode if needed and play the next track."""
+        if self.music_looper:
+            self.music_looper.cancel()
+
         # There is a probability that the jukebox feature has been turned off since then,
         # we should check that.
         # We also do a check if we were the last to play a song, just in case.
@@ -764,8 +769,6 @@ class Area:
         if length <= 0: # Length not defined
             length = 120.0 # Play each song for at least 2 minutes
 
-        if self.music_looper:
-            self.music_looper.cancel()
         self.music_looper = asyncio.get_event_loop().call_later(
             max(5, length), lambda: self.start_jukebox())
 

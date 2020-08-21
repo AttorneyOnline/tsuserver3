@@ -290,11 +290,6 @@ class ClientManager:
             if args[1] != self.char_id:
                 return
 
-            if self.change_music_cd():
-                self.send_ooc(
-                    f'You changed song too many times. Please try again after {int(self.change_music_cd())} seconds.'
-                )
-                return
             try:
                 name, length = self.server.get_song_data(self.construct_music_list(), args[0])
                 target_areas = [self.area]
@@ -348,6 +343,11 @@ class ClientManager:
                                                         length, showname)
                         database.log_room('jukebox.vote', self, area, message=name)
                     else:
+                        if self.change_music_cd():
+                            self.send_ooc(
+                                f'You changed song too many times. Please try again after {int(self.change_music_cd())} seconds.'
+                            )
+                            return
                         area.play_music(name, self.char_id,
                                                     length, showname, effects)
                         area.add_music_playing(self, name, showname)
