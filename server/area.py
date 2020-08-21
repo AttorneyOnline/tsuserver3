@@ -526,7 +526,7 @@ class Area:
             self.next_message_time = round(time.time() * 1000.0 + delay)
 
             if client:
-                if args[4].strip() != '' or self.last_ic_message == None or self.last_ic_message[4].strip() != '':
+                if args[4].strip() != '' or self.last_ic_message == None or args[8] != self.last_ic_message[8] or self.last_ic_message[4].strip() != '':
                     database.log_ic(client, self, name, args[4])
                 if self.recording:
                     # See if the testimony is supposed to end here.
