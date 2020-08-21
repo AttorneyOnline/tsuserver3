@@ -88,6 +88,8 @@ class AreaManager:
 
             self.owners = []
             self.afkers = []
+            self.last_ic_message = None
+
         class Locked(Enum):
             """Lock state of an area."""
             FREE = 1,

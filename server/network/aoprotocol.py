@@ -530,16 +530,20 @@ class AOProtocol(asyncio.Protocol):
         if len(text) > max_char:
             return
 
-        # Really simple spam protection that functions on the clientside pre-2.8.5, and really should've been serverside from the start
-        if text.strip() != '' and self.client.area.last_ic_message != None and cid == self.client.area.last_ic_message[8] and text == self.client.area.last_ic_message[4]:
-            self.client.send_ooc(
-                "Your message is a repeat of last one, don't spam!")
-            return
+        # Transform text
         msg = self.dezalgo(text)[:256]
         if self.client.shaken:
             msg = self.client.shake_message(msg)
         if self.client.disemvowel:
             msg = self.client.disemvowel_message(msg)
+
+        # Really simple spam protection that functions on the clientside pre-2.8.5, and really should've been serverside from the start
+        if msg.strip() != '' and self.client.area.last_ic_message is not None and cid == self.client.area.last_ic_message[8] and msg.rstrip() == self.client.area.last_ic_message[4].rstrip():
+            self.client.send_ooc(
+                "Your message is a repeat of the last one. Don't spam!")
+            return
+
+        # Reveal evidence to everyone if hidden
         if evidence:
             if self.client.area.evi_list.evidences[
                     self.client.evi_list[evidence] - 1].pos != 'all':
@@ -580,32 +584,26 @@ class AOProtocol(asyncio.Protocol):
 
         if self.client in self.client.area.afkers:
             self.client.server.client_manager.toggle_afk(self.client)
-        self.client.area.send_command('MS', msg_type, pre, folder, anim, msg,
-                                      pos, sfx, anim_type, cid, sfx_delay,
-                                      button, self.client.evi_list[evidence],
-                                      flip, ding, color, showname, charid_pair,
-                                      other_folder, other_emote, offset_pair,
-                                      other_offset, other_flip, nonint_pre,
-                                      sfx_looping, screenshake, frames_shake,
-                                      frames_realization, frames_sfx,
-                                      additive, effect)
 
-        self.client.area.send_owner_command(
-            'MS', msg_type, pre, folder, anim,
-            '[' + self.client.area.abbreviation + ']' + msg, pos, sfx,
-            anim_type, cid, sfx_delay, button, self.client.evi_list[evidence],
-            flip, ding, color, showname, charid_pair, other_folder,
-            other_emote, offset_pair, other_offset, other_flip, nonint_pre,
-            sfx_looping, screenshake, frames_shake, frames_realization,
-            frames_sfx, additive, effect)
+        send_args = (msg_type, pre, folder, anim, msg,
+                    pos, sfx, anim_type, cid, sfx_delay,
+                    button, self.client.evi_list[evidence],
+                    flip, ding, color, showname, charid_pair,
+                    other_folder, other_emote, offset_pair,
+                    other_offset, other_flip, nonint_pre,
+                    sfx_looping, screenshake, frames_shake,
+                    frames_realization, frames_sfx,
+                    additive, effect)
 
-        self.server.area_manager.send_remote_command(
-            target_area, 'MS', msg_type, pre, folder, anim, msg, pos, sfx,
-            anim_type, cid, sfx_delay, button, self.client.evi_list[evidence],
-            flip, ding, color, showname, charid_pair, other_folder,
-            other_emote, offset_pair, other_offset, other_flip, nonint_pre,
-            sfx_looping, screenshake, frames_shake, frames_realization,
-            frames_sfx, additive, effect)
+        self.client.area.last_ic_message = send_args
+        self.client.area.send_command('MS', *send_args)
+        self.server.area_manager.send_remote_command(target_area, 'MS', *send_args)
+
+        self.client.area.send_owner_command('MS',
+            *send_args[:5],
+            '[' + self.client.area.abbreviation + ']' + msg,
+            *send_args[5:]
+        )
 
         self.client.area.set_next_msg_delay(len(msg))
         database.log_ic(self.client, self.client.area, showname, msg)
