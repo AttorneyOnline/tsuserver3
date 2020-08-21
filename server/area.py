@@ -679,6 +679,11 @@ class Area:
         if length == 0:
             self.remove_jukebox_vote(client, False)
         else:
+            if client.change_music_cd():
+                client.send_ooc(
+                    f'You changed song too many times. Please try again after {int(client.change_music_cd())} seconds.'
+                )
+                return
             self.remove_jukebox_vote(client, True)
             self.jukebox_votes.append(
                 self.JukeboxVote(client, music_name, length, showname))
@@ -738,6 +743,7 @@ class Area:
 
         if vote_picked is None:
             self.music = ''
+            self.send_command('MC', self.music, -1, '', 1, 0, int(MusicEffect.FADE_OUT))
             return
 
         if vote_picked.client.char_id != self.jukebox_prev_char_id or vote_picked.name != self.music or len(
