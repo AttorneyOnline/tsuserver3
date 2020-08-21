@@ -41,7 +41,7 @@ from server.network.aoprotocol import AOProtocol
 from server.network.aoprotocol_ws import new_websocket_client
 from server.network.masterserverclient import MasterServerClient
 from server.network.webhooks import Webhooks
-from server.constants import remove_URL
+from server.constants import remove_URL, dezalgo
 import server.logger
 
 class TsuServer3:
@@ -474,6 +474,7 @@ class TsuServer3:
     def send_discord_chat(self, name, message, hub_id=0, area_id=0):
         area = self.hub_manager.get_hub_by_id(hub_id).get_area_by_id(area_id)
         cid = self.get_char_id_by_name(self.config['bridgebot']['character'])
+        message = dezalgo(message)
         message = remove_URL(message)
         message = message.replace('}', '\\}').replace('{', '\\{').replace('`', '\\`').replace('|', '\\|').replace('~', '\\~').replace('º', '\\º').replace('№', '\\№').replace('√', '\\√').replace('\\s', '').replace('\\f', '')
         message = message.replace('#', '<num>').replace('&', '<and>').replace('%', '<percent>').replace('$', '<dollar>')
