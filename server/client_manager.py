@@ -511,6 +511,9 @@ class ClientManager:
             # Make sure a single person can't hoard all the hubs
             if self.area.area_manager != area.area_manager and self in self.area.area_manager.owners:
                 self.area.area_manager.remove_owner(self)
+                # Don't allow multi-hub CMing either
+                for area in self.area.area_manager.areas:
+                    area.remove_owner(self)
             self.area.remove_client(self)
             self.area = area
             if len(area.pos_lock) > 0 and not (target_pos in area.pos_lock):
