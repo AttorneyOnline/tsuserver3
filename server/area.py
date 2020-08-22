@@ -374,8 +374,9 @@ class Area:
                 self.start_jukebox()
         if len(self.clients) == 0:
             self.change_status('IDLE')
-        if client.char_id != -1:
-            database.log_room('area.leave', client, self)
+        database.log_room('area.leave', client, self)
+        if not client.hidden:
+            self.area_manager.send_arup_players()
 
         # Update everyone's available characters list
         # Commented out due to potentially causing clientside lag...

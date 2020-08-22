@@ -212,8 +212,6 @@ class TsuServer3:
         """
         area = client.area
         area.remove_client(client)
-        if not client.hidden:
-            area.area_manager.send_arup_players()
         self.client_manager.remove_client(client)
 
     @property
