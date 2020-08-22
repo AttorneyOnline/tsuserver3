@@ -280,6 +280,16 @@ class Area:
                     evidence = value['evidence']
                 self.link(key, locked, hidden, target_pos, can_peek, evidence)
 
+        # Update the clients in that area
+        self.change_background(self.background)
+        self.change_hp(1, self.hp_def)
+        self.change_hp(2, self.hp_pro)
+        if self.ambience:
+            self.set_ambience(self.ambience)
+        if self.music_autoplay:
+            for client in self.clients:
+                client.send_command('MC', self.music, -1, '', self.music_looping, 0, self.music_effects)
+
     def save(self):
         area = OrderedDict()
         area['area'] = self.name
@@ -332,13 +342,13 @@ class Area:
     def new_client(self, client):
         """Add a client to the area."""
         self.clients.add(client)
-        if client.char_id != -1:
-            database.log_room('area.join', client, self)
-            if self.music_autoplay:
-                client.send_command('MC', self.music, -1, '', self.music_looping, 0, self.music_effects)
+        database.log_room('area.join', client, self)
 
-            # Play the ambience
-            self.send_command('MC', self.ambience, -1, "", 1, 1, int(MusicEffect.FADE_OUT | MusicEffect.FADE_IN | MusicEffect.SYNC_POS))
+        if self.music_autoplay:
+            client.send_command('MC', self.music, -1, '', self.music_looping, 0, self.music_effects)
+
+        # Play the ambience
+        self.send_command('MC', self.ambience, -1, "", 1, 1, int(MusicEffect.FADE_OUT | MusicEffect.FADE_IN | MusicEffect.SYNC_POS))
 
     def remove_client(self, client):
         """Remove a disconnected client from the area."""
