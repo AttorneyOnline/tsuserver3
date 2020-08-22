@@ -370,8 +370,6 @@ class Area:
             self.server.client_manager.toggle_afk(client)
         if self.jukebox:
             self.remove_jukebox_vote(client, True)
-            if len(self.jukebox_votes) <= 1 or (not self.music_looper or self.music_looper.cancelled()):
-                self.start_jukebox()
         if len(self.clients) == 0:
             self.change_status('IDLE')
         database.log_room('area.leave', client, self)
