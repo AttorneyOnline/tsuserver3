@@ -1147,7 +1147,7 @@ class ClientManager:
         if client in client.area.area_manager.owners:
             client.area.area_manager.owners.remove(client)
         for a in client.area.area_manager.areas:
-            if client in a.owners:
+            if client in a._owners:
                 a._owners.remove(client)
                 if client.area.area_manager.single_cm and len(a._owners) == 0:
                     if a.is_locked != a.Locked.FREE:
