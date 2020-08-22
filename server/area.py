@@ -370,6 +370,8 @@ class Area:
             self.server.client_manager.toggle_afk(client)
         if self.jukebox:
             self.remove_jukebox_vote(client, True)
+            if len(self.jukebox_votes) <= 1 or (not self.music_looper or self.music_looper.cancelled()):
+                self.start_jukebox()
         if len(self.clients) == 0:
             self.change_status('IDLE')
         if client.char_id != -1:
@@ -688,6 +690,8 @@ class Area:
             return
         if length == 0:
             self.remove_jukebox_vote(client, False)
+            if len(self.jukebox_votes) <= 1 or (not self.music_looper or self.music_looper.cancelled()):
+                self.start_jukebox()
         else:
             if client.change_music_cd():
                 client.send_ooc(
@@ -698,7 +702,7 @@ class Area:
             self.jukebox_votes.append(
                 self.JukeboxVote(client, music_name, length, showname))
             client.send_ooc('Your song was added to the jukebox.')
-            if len(self.jukebox_votes) == 1 or (self.music_looper == None or self.music_looper.cancelled()):
+            if len(self.jukebox_votes) == 1 or (not self.music_looper or self.music_looper.cancelled()):
                 self.start_jukebox()
 
     def remove_jukebox_vote(self, client, silent):
@@ -716,8 +720,6 @@ class Area:
         if not silent:
             client.send_ooc(
                 'You removed your song from the jukebox.')
-        if len(self.jukebox_votes) <= 1 or (self.music_looper == None or self.music_looper.cancelled()):
-            self.start_jukebox()
 
     def get_jukebox_picked(self):
         """Randomly choose a track from the jukebox."""
@@ -756,18 +758,14 @@ class Area:
             self.send_command('MC', self.music, -1, '', 1, 0, int(MusicEffect.FADE_OUT))
             return
 
-        if vote_picked.client.char_id != self.jukebox_prev_char_id or vote_picked.name != self.music or len(
-                self.jukebox_votes) > 1:
-            self.jukebox_prev_char_id = vote_picked.client.char_id
-            if vote_picked.showname == '':
-                self.send_command('MC', vote_picked.name,
-                                    vote_picked.client.char_id, '', 1, 0, int(MusicEffect.FADE_OUT))
-            else:
-                self.send_command('MC', vote_picked.name,
-                                    vote_picked.client.char_id,
-                                    vote_picked.showname, 1, 0, int(MusicEffect.FADE_OUT))
+        self.jukebox_prev_char_id = vote_picked.client.char_id
+        if vote_picked.showname == '':
+            self.send_command('MC', vote_picked.name,
+                                vote_picked.client.char_id, '', 1, 0, int(MusicEffect.FADE_OUT))
         else:
-            return
+            self.send_command('MC', vote_picked.name,
+                                vote_picked.client.char_id,
+                                vote_picked.showname, 1, 0, int(MusicEffect.FADE_OUT))
 
         self.music_player = 'The Jukebox'
         self.music_player_ipid = 'has no IPID'

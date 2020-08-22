@@ -1144,8 +1144,6 @@ class ClientManager:
         Remove a disconnected client from the client list.
         :param client: disconnected client
         """
-        if client.area.jukebox:
-            client.area.remove_jukebox_vote(client, True)
         if client in client.area.area_manager.owners:
             client.area.area_manager.owners.remove(client)
         for a in client.area.area_manager.areas:
