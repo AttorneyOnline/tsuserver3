@@ -756,6 +756,9 @@ class Area:
             self.music = ''
             self.send_command('MC', self.music, -1, '', 1, 0, int(MusicEffect.FADE_OUT))
             return
+        
+        if vote_picked.name == self.music:
+            return
 
         self.jukebox_prev_char_id = vote_picked.client.char_id
         if vote_picked.showname == '':
