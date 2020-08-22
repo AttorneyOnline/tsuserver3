@@ -692,8 +692,12 @@ class AOProtocol(asyncio.Protocol):
             try:
                 for a in target_area:
                     add = additive
-                    if a.last_ic_message == None or cid != a.last_ic_message[8]:
-                        add = 0
+                    # Additive only works on same-char messages
+                    if additive and \
+                        (a.last_ic_message == None or cid != a.last_ic_message[8] or \
+                        (a.last_ic_message[4].strip() == '' and a.last_ic_message[28] != 1) \
+                        ):
+                        additive = 0
                     a.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx,
                         emote_mod, cid, sfx_delay, button, self.client.evi_list[evidence],
                         flip, ding, color, showname, charid_pair, other_folder,
@@ -746,7 +750,10 @@ class AOProtocol(asyncio.Protocol):
                     self.server.bridgebot.queue_message(webname, text, self.client.char_name)
 
         # Additive only works on same-char messages
-        if self.client.area.last_ic_message == None or cid != self.client.area.last_ic_message[8]:
+        if additive and \
+             (self.client.area.last_ic_message == None or cid != self.client.area.last_ic_message[8] or \
+              (self.client.area.last_ic_message[4].strip() == '' and self.client.area.last_ic_message[28] != 1) \
+             ):
             additive = 0
         self.client.area.send_ic(self.client, msg_type, pre, folder, anim, msg,
                                 pos, sfx, emote_mod, cid, sfx_delay,
