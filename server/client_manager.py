@@ -1146,12 +1146,13 @@ class ClientManager:
         """
         if client in client.area.area_manager.owners:
             client.area.area_manager.owners.remove(client)
-        for a in client.area.area_manager.areas:
-            if client in a._owners:
-                a._owners.remove(client)
-                if client.area.area_manager.single_cm and len(a._owners) == 0:
-                    if a.is_locked != a.Locked.FREE:
-                        a.unlock()
+        for hub in self.server.hub_manager.hubs:
+            for a in hub.areas:
+                if client in a._owners:
+                    a._owners.remove(client)
+                    if client.area.area_manager.single_cm and len(a._owners) == 0:
+                        if a.is_locked != a.Locked.FREE:
+                            a.unlock()
         heappush(self.cur_id, client.id)
         temp_ipid = client.ipid
         for c in self.server.client_manager.clients:
