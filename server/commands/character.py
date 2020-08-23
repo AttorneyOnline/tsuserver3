@@ -667,7 +667,7 @@ def ooc_cmd_kms(client, arg):
     """
     if arg != '':
         raise ArgumentError('This command takes no arguments!')
-    for target in client.server.client_manager.get_multiclients(client.ipid):
+    for target in client.server.client_manager.get_multiclients(client.ipid, client.hdid):
         if target != client:
             target.disconnect()
     client.send_ooc('Kicked other instances of client.')
