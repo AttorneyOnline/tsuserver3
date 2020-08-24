@@ -550,7 +550,7 @@ class ClientManager:
                 self.send_ooc(f'Description: {desc}')
 
         def can_access_area(self, area):
-            return len(self.area.links) <= 0 or (str(area.id) in self.area.links and \
+            return self.area == area or len(self.area.links) <= 0 or (str(area.id) in self.area.links and \
                 not self.area.links[str(area.id)]["locked"] and \
                     (len(self.area.links[str(area.id)]["evidence"]) <= 0 or \
                         self.hidden_in in self.area.links[str(area.id)]["evidence"]))

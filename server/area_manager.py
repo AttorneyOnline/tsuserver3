@@ -50,7 +50,7 @@ class AreaManager:
         self.can_gm = False
         self.music_ref = ''
         self.client_music = True
-        self.max_areas = 50
+        self.max_areas = -1
         self.single_cm = False
         self.censor_ic = True
         self.censor_ooc = True
@@ -274,7 +274,7 @@ class AreaManager:
     def create_area(self):
         """Create a new area instance and return it."""
         idx = len(self.areas)
-        if idx >= self.max_areas:
+        if self.max_areas != -1 and idx >= self.max_areas:
             raise AreaError(f'Area limit reached! ({self.max_areas})')
         area = Area(self, f'Area {idx}')
         self.areas.append(area)
@@ -367,10 +367,12 @@ class AreaManager:
         """Get the default area."""
         return self.areas[0]
 
-    def get_area_by_name(self, name):
+    def get_area_by_name(self, name, case_sensitive=False):
         """Get an area by name."""
         for area in self.areas:
-            if area.name.lower() == name.lower():
+            a_name = area.name.lower() if case_sensitive else area.name
+            name = name.lower() if case_sensitive else name
+            if a_name == name:
                 return area
         raise AreaError('Area not found.')
 
