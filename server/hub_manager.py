@@ -38,6 +38,27 @@ class HubManager:
             if len(self.hubs) <= 0:
                 self.hubs.append(AreaManager(self, f'Hub 0'))
             self.hubs[0].load_areas(hubs)
+
+            is_dr_hub = False
+            # tsuserverDR conversion hell
+            for i, area in enumerate(hubs):
+                # oh God why did they do it this way
+                if 'reachable_areas' in area:
+                    reachable_areas = area['reachable_areas'].split(',')
+                    # I hate this
+                    for a_name in reachable_areas:
+                        a_name = a_name.strip()
+                        target_area = self.hubs[0].get_area_by_name(a_name, case_sensitive=True)
+                        self.hubs[0].areas[i].link(target_area.id)
+                        print(f'[tsuDR conversion] Linking area {self.hubs[0].areas[i].name} to {target_area.name}')
+                        is_dr_hub = True
+                if 'default_description' in area:
+                    self.hubs[0].areas[i].desc = area['default_description']
+                if 'song_switch_allowed' in area:
+                    self.hubs[0].areas[i].can_dj = area['song_switch_allowed']
+            if is_dr_hub:
+                self.hubs[0].arup_enabled = False
+                print(f'[tsuDR conversion] Setting hub 0 ARUP to False due to TsuserverDR yaml supplied. Please use /save_hub as a mod to adapt the areas.yaml to KFO style.')
             return
 
         i = 0
