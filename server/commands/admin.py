@@ -109,10 +109,10 @@ def ooc_cmd_kick(client, arg):
         reason = ' '.join(args[1:])
         for c in targets:
             database.log_misc('kick', client, target=c, data={'reason': reason})
-            client.server.webhooks.kick(ipid=c.ipid, reason=reason, client=client, char=c.char_name)
             client.send_ooc(f'{c.showname} was kicked.')
             c.send_command('KK', reason)
             c.disconnect()
+        client.server.webhooks.kick(c.ipid, reason, client, c.char_name)
     else:
         client.send_ooc(
             f'No targets with the IPID {ipid} were found.')
@@ -191,7 +191,7 @@ def kickban(client, arg, ban_hdid):
                 database.log_misc('ban', client, target=c, data={'reason': reason})
             client.send_ooc(f'{len(targets)} clients were kicked.')
         client.send_ooc(f'{ipid} was banned. Ban ID: {ban_id}')
-    client.server.webhooks.ban(char=char, ipid=ipid, ban_id=ban_id, reason=reason, hdid=hdid)
+    client.server.webhooks.ban(ipid, ban_id, reason, client, hdid, char, unban_date)
 
 
 @mod_only()
@@ -208,7 +208,7 @@ def ooc_cmd_unban(client, arg):
     for ban_id in args:
         if database.unban(ban_id):
             client.send_ooc(f'Removed ban ID {ban_id}.')
-            client.server.webhooks.unban(client=client, ban_id=ban_id)
+            client.server.webhooks.unban(ban_id, client)
         else:
             client.send_ooc(f'{ban_id} is not on the ban list.')
         database.log_misc('unban', client, data={'id': ban_id})

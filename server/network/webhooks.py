@@ -81,7 +81,7 @@ class Webhooks:
 		
 		self.send_webhook(username=username, avatar_url=avatar_url, message=message)
 		
-	def ban(self, ipid, ban_id, reason='', client=None, hdid=None, char=None):
+	def ban(self, ipid, ban_id, reason='', client=None, hdid=None, char=None, unban_date=None):
 		is_enabled = self.server.config['ban_webhook']['enabled']
 		username = self.server.config['ban_webhook']['username']
 		avatar_url = self.server.config['ban_webhook']['avatar_url']
@@ -91,8 +91,9 @@ class Webhooks:
 		message = f'{char} ({ipid})' if char != None else ipid
 		message += f' (hdid: {hdid}) was hardware-banned' if hdid != None else ' was banned'
 		message += f' by {client.name} ({client.ipid})' if client != None else ' from the server'
-		message += f' with reason: {reason}' if reason.strip() != '' else ' (no reason provided).'
-		message += f' (Ban ID: {ban_id})'
+		message += f' with reason: {reason}' if reason.strip() != '' else ''
+		message += f' (Ban ID: {ban_id}).'
+		message += f' It will expire {unban_date}' if unban_date != None else ''
 		
 		self.send_webhook(username=username, avatar_url=avatar_url, message=message)
 
