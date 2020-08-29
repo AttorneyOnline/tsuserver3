@@ -66,7 +66,7 @@ class Webhooks:
 		
 		self.send_webhook(username=username, avatar_url=avatar_url, message=message, embed=True, title="Modcall", description=description)
 
-	def kick(self, char, ipid, reason):
+	def kick(self, ipid, reason='', client=None, char=None):
 		is_enabled = self.server.config['kick_webhook']['enabled']
 		username = self.server.config['kick_webhook']['username']
 		avatar_url = self.server.config['kick_webhook']['avatar_url']
@@ -74,47 +74,29 @@ class Webhooks:
 		if not is_enabled:
 			return
 		
-		message = f"{char} ({ipid}) was kicked from the server with reason: {reason}"
+		message = f'{char} ({ipid})' if char != None else ipid
+		message += ' was kicked'
+		message += f' by {client.name} ({client.ipid})' if client != None else ' from the server'
+		message += f' with reason: {reason}' if reason.strip() != '' else ' (no reason provided).'
 		
 		self.send_webhook(username=username, avatar_url=avatar_url, message=message)
 		
-	def ban(self, char, ipid, ban_id, reason, hdid=None):
+	def ban(self, ipid, ban_id, reason='', client=None, hdid=None, char=None):
 		is_enabled = self.server.config['ban_webhook']['enabled']
 		username = self.server.config['ban_webhook']['username']
 		avatar_url = self.server.config['ban_webhook']['avatar_url']
 		
 		if not is_enabled:
 			return
-		
-		message = f"{char} ({ipid}) {f'(hdid: {hdid}) was hardware-banned' if hdid != None else 'was banned'} from the server with reason: {reason} (Ban ID: {ban_id})"
-		
-		self.send_webhook(username=username, avatar_url=avatar_url, message=message)
-
-	def warn(self, char, ipid, warn_id, reason):
-		is_enabled = self.server.config['warn_webhook']['enabled']
-		username = self.server.config['warn_webhook']['username']
-		avatar_url = self.server.config['warn_webhook']['avatar_url']
-		
-		if not is_enabled:
-			return
-		
-		message = f"{char} ({ipid}) was warned with reason: {reason} (Warn ID: {warn_id})"
+		message = f'{char} ({ipid})' if char != None else ipid
+		message += f' (hdid: {hdid}) was hardware-banned' if hdid != None else ' was banned'
+		message += f' by {client.name} ({client.ipid})' if client != None else ' from the server'
+		message += f' with reason: {reason}' if reason.strip() != '' else ' (no reason provided).'
+		message += f' (Ban ID: {ban_id})'
 		
 		self.send_webhook(username=username, avatar_url=avatar_url, message=message)
 
-	def unwarn(self, client, warn_id):
-		is_enabled = self.server.config['unwarn_webhook']['enabled']
-		username = self.server.config['unwarn_webhook']['username']
-		avatar_url = self.server.config['unwarn_webhook']['avatar_url']
-		
-		if not is_enabled:
-			return
-		
-		message = f"Warn entry with ID {warn_id} was revoked by IPID {client.ipid}."
-		
-		self.send_webhook(username=username, avatar_url=avatar_url, message=message)
-
-	def unban(self, client, ban_id):
+	def unban(self, ban_id, client=None):
 		is_enabled = self.server.config['unban_webhook']['enabled']
 		username = self.server.config['unban_webhook']['username']
 		avatar_url = self.server.config['unban_webhook']['avatar_url']
@@ -122,6 +104,7 @@ class Webhooks:
 		if not is_enabled:
 			return
 		
-		message = f"Ban ID {ban_id} was revoked by IPID {client.ipid}."
+		message = f'Ban ID {ban_id} was revoked'
+		message += f' by {client.name} ({client.ipid}).' if client != None else ' by the server.'
 		
 		self.send_webhook(username=username, avatar_url=avatar_url, message=message)

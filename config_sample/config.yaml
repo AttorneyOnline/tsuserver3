@@ -118,13 +118,3 @@ unban_webhook:
   enabled: true
   username: Unban
   avatar_url:
-
-warn_webhook:
-  enabled: true
-  username: Warn
-  avatar_url:
-
-unwarn_webhook:
-  enabled: true
-  username: Unwarn
-  avatar_url:
