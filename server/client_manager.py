@@ -18,6 +18,7 @@
 import re
 import string
 import time
+import hashlib
 from heapq import heappop, heappush
 
 from server import database
@@ -595,6 +596,12 @@ class ClientManager:
             raise ClientError
 
         peername = transport.get_extra_info('peername')[0]
+		
+		# hash IP into previous system's IPID system to maintain old banlist
+		if 'server_number' in self.config:
+			x = peername + str(self.config['server_number'])
+			hash_object = hashlib.sha256(x.encode('utf-8'))
+			peername = hash_object.hexdigest()[:12]
         
         c = self.Client(
             self.server, transport, user_id,
