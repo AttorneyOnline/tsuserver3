@@ -1,4 +1,5 @@
 # Commands
+<brackets> mean "required arguments", [] mean "optional arguments". Actual commands do not need these brackets.
 
 ## Admin
 * **motd**
