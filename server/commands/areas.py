@@ -304,8 +304,6 @@ def ooc_cmd_pos_lock(client, arg):
         pos = pos.lower()
         if pos == 'none':
             continue
-        if len(pos) < 3:
-            raise ClientError('Position names may not be shorter than 3 symbols!')
         client.area.pos_lock.append(pos)
 
     pos = ' '.join(str(l) for l in client.area.pos_lock)

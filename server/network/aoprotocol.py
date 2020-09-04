@@ -620,7 +620,7 @@ class AOProtocol(asyncio.Protocol):
             )
             return
 
-        msg = dezalgo(text, self.server.zalgo_tolerance)[:256]
+        msg = dezalgo(text, self.server.zalgo_tolerance)
         if self.client.shaken:
             msg = self.client.shake_message(msg)
         if self.client.disemvowel:
