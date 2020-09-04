@@ -221,7 +221,7 @@ class ClientManager:
             (Default value = False)
             """
             # If it's -1, we want to be the spectator character.
-            if char_id != -1:
+            if char_id != -1 and not self.is_mod and self not in self.area.owners:
                 if not self.server.is_valid_char_id(char_id):
                     raise ClientError('Invalid character ID.')
                 if len(self.charcurse) > 0:
