@@ -893,6 +893,7 @@ class AOProtocol(asyncio.Protocol):
                         'autopass': 'sneak',
                         'evi_swap': 'evidence_swap',
                         'kickself': 'kms',
+                        'area_spectate': 'area_mute',
                     }
                     if cmd in lookup_dict:
                         lookup = f'Did you mean {lookup_dict[cmd]}?'

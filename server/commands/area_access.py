@@ -3,7 +3,7 @@ from . import mod_only
 
 __all__ = [
     'ooc_cmd_area_lock',
-    'ooc_cmd_area_spectate',
+    'ooc_cmd_area_mute',
     'ooc_cmd_area_unlock',
     'ooc_cmd_lock',
     'ooc_cmd_unlock',
@@ -66,10 +66,10 @@ def ooc_cmd_area_lock(client, arg):
         raise
 
 @mod_only(area_owners=True)
-def ooc_cmd_area_spectate(client, arg):
+def ooc_cmd_area_mute(client, arg):
     """
     Allow users to join the current area, but only as spectators.
-    Usage: /area_spectate
+    Usage: /area_mute
     """
     args = arg.split()
     if len(args) == 0:

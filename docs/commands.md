@@ -45,7 +45,7 @@
 ## Area Access
 * **area_lock**
     - Prevent users from joining the current area.
-* **area_spectate**
+* **area_mute**
     - Allow users to join the current area, but only as spectators.
 * **area_unlock**
     - Allow anyone to freely join the current area.
