@@ -564,7 +564,7 @@ class AOProtocol(asyncio.Protocol):
             return
         max_char = 0
         try:
-            max_char = int(self.server.config['max_chars'])
+            max_char = int(self.server.config['max_chars_ic'])
         except:
             max_char = 256
 

@@ -64,7 +64,7 @@ class Bridgebot(commands.Bot):
 
         if not message.content.startswith('$'):
             try:
-                max_char = int(self.server.config['max_chars'])
+                max_char = int(self.server.config['max_chars_ic'])
             except:
                 max_char = 256
             if len(message.clean_content) > max_char:

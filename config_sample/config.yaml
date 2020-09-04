@@ -74,8 +74,10 @@ zalgo_tolerance: 3
 # How many simultaneous connections an IP address can make to the server. (Default: 16)
 multiclient_limit: 16
 
-# Maximum number of characters can a message contain
+# Maximum number of characters an OOC message can contain
 max_chars: 256
+# Maximum number of characters an IC message can contain
+max_chars_ic: 256
 
 # Set up a Discord Bridge bot that keeps track of user messages on both ends (AO2 and Discord).
 bridgebot:
