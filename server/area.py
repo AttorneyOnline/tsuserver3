@@ -848,9 +848,11 @@ class Area:
         :param bg: background name
         :raises: AreaError if `bg` is not in background list
         """
-        if self.use_backgrounds_yaml and bg.lower() not in (name.lower()
-                                for name in self.server.backgrounds):
-            raise AreaError('Invalid background name.')
+        if self.use_backgrounds_yaml:
+            if len(self.server.backgrounds) <= 0:
+                raise AreaError('backgrounds.yaml failed to initialize! Please set "use_backgrounds_yaml" to "false" in the config/config.yaml, or create a new "backgrounds.yaml" list in the "config/" folder.')
+            if bg.lower() not in (name.lower() for name in self.server.backgrounds):
+                raise AreaError(f'Invalid background name {bg}.')
         self.background = bg
         for client in self.clients:
             #Update all clients to the pos lock

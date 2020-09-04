@@ -85,12 +85,12 @@ class TsuServer3:
         try:
             self.load_config()
             self.load_censors()
-            self.hub_manager = HubManager(self)
             self.load_iniswaps()
             self.load_characters()
             self.load_music()
             self.load_backgrounds()
             self.load_ipranges()
+            self.hub_manager = HubManager(self)
         except yaml.YAMLError as exc:
             print('There was a syntax error parsing a configuration file:')
             print(exc)
