@@ -62,9 +62,13 @@ class AOProtocol(asyncio.Protocol):
         U+1DC0 - U+1DFF - COMBINING DIACRITICAL MARKS SUPPLEMENT
         U+20D0 - U+20FF - COMBINING DIACRITICAL MARKS FOR SYMBOLS
         U+FE20 - U+FE2F - COMBINING HALF MARKS
+        U+115F          - HANGUL CHOSEONG FILLER
+        U+1160          - HANGUL JUNGSEONG FILLER
+        U+3164          - HANGUL FILLER
         """
 
-        filtered = re.sub('([\u0300-\u036f\u1ab0-\u1aff\u1dc0-\u1dff\u20d0-\u20ff\ufe20-\ufe2f]' +
+        filtered = re.sub('([\u0300-\u036f\u1ab0-\u1aff\u1dc0-\u1dff\u20d0-\u20ff\ufe20-\ufe2f' +
+                          '\u115f\u1160\u3164]' +
                           '{' + re.escape(str(self.server.zalgo_tolerance)) + ',})',
                           '', input)
         return filtered
@@ -383,7 +387,7 @@ class AOProtocol(asyncio.Protocol):
         pair_order = 0
         if self.validate_net_cmd(args, self.ArgType.STR, # msg_type
                                  self.ArgType.STR_OR_EMPTY, self.ArgType.STR,   # pre, folder
-                                 self.ArgType.STR, self.ArgType.STR,            # anim, text
+                                 self.ArgType.STR, self.ArgType.STR_OR_EMPTY,   # anim, text
                                  self.ArgType.STR, self.ArgType.STR,            # pos, sfx
                                  self.ArgType.INT, self.ArgType.INT,            # anim_type, cid
                                  self.ArgType.INT, self.ArgType.INT_OR_STR,     # sfx_delay, button
@@ -394,7 +398,7 @@ class AOProtocol(asyncio.Protocol):
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color = args
         elif self.validate_net_cmd(
                 args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,              # msg_type, pre
-                self.ArgType.STR, self.ArgType.STR, self.ArgType.STR,           # folder, anim, text
+                self.ArgType.STR, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,  # folder, anim, text
                 self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,           # pos, sfx, anim_type
                 self.ArgType.INT, self.ArgType.INT, self.ArgType.INT_OR_STR,    # cid, sfx_delay, button
                 self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,           # evidence, flip, ding
@@ -405,7 +409,7 @@ class AOProtocol(asyncio.Protocol):
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre = args
         elif self.validate_net_cmd(
                 args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,              # msg_type, pre
-                self.ArgType.STR, self.ArgType.STR, self.ArgType.STR,           # folder, anim, text
+                self.ArgType.STR, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,  # folder, anim, text
                 self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,           # pos, sfx, anim_type
                 self.ArgType.INT, self.ArgType.INT, self.ArgType.INT_OR_STR,    # cid, sfx_delay, button
                 self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,           # evidence, flip, ding
@@ -437,17 +441,12 @@ class AOProtocol(asyncio.Protocol):
                 "You may not iniswap while you are charcursed!")
             return
         if not self.client.area.blankposting_allowed:
-            if text == ' ':
+            if text.strip() == '':
                 self.client.send_ooc(
                     "Blankposting is forbidden in this area!")
                 return
-            if text.isspace():
-                self.client.send_ooc(
-                    "Blankposting is forbidden in this area, and putting more spaces in does not make it not blankposting."
-                )
-                return
             if len(re.sub(r'[{}\\`|(~~)]', '', text).replace(
-                    ' ', '')) < 3 and text != '<' and text != '>':
+                    ' ', '')) < 3 and not text.startswith('<') and not text.startswith('>'):
                 self.client.send_ooc(
                     "While that is not a blankpost, it is still pretty spammy. Try forming sentences."
                 )
@@ -478,7 +477,9 @@ class AOProtocol(asyncio.Protocol):
             text = ' '.join(part[1:])
         if msg_type not in ('chat', '0', '1'):
             return
-        if anim_type not in (0, 1, 2, 4, 5, 6):
+        if anim_type == 4:
+            anim_type = 6
+        if anim_type not in (0, 1, 2, 5, 6):
             return
         if cid != self.client.char_id:
             return
@@ -528,12 +529,21 @@ class AOProtocol(asyncio.Protocol):
 
         if len(text) > max_char:
             return
-            
+
+        # Transform text
         msg = self.dezalgo(text)[:256]
         if self.client.shaken:
             msg = self.client.shake_message(msg)
         if self.client.disemvowel:
             msg = self.client.disemvowel_message(msg)
+
+        # Really simple spam protection that functions on the clientside pre-2.8.5, and really should've been serverside from the start
+        if msg.strip() != '' and self.client.area.last_ic_message is not None and cid == self.client.area.last_ic_message[8] and msg.rstrip() == self.client.area.last_ic_message[4].rstrip():
+            self.client.send_ooc(
+                "Your message is a repeat of the last one. Don't spam!")
+            return
+
+        # Reveal evidence to everyone if hidden
         if evidence:
             if self.client.area.evi_list.evidences[
                     self.client.evi_list[evidence] - 1].pos != 'all':
@@ -574,32 +584,26 @@ class AOProtocol(asyncio.Protocol):
 
         if self.client in self.client.area.afkers:
             self.client.server.client_manager.toggle_afk(self.client)
-        self.client.area.send_command('MS', msg_type, pre, folder, anim, msg,
-                                      pos, sfx, anim_type, cid, sfx_delay,
-                                      button, self.client.evi_list[evidence],
-                                      flip, ding, color, showname, charid_pair,
-                                      other_folder, other_emote, offset_pair,
-                                      other_offset, other_flip, nonint_pre,
-                                      sfx_looping, screenshake, frames_shake,
-                                      frames_realization, frames_sfx,
-                                      additive, effect)
 
-        self.client.area.send_owner_command(
-            'MS', msg_type, pre, folder, anim,
-            '[' + self.client.area.abbreviation + ']' + msg, pos, sfx,
-            anim_type, cid, sfx_delay, button, self.client.evi_list[evidence],
-            flip, ding, color, showname, charid_pair, other_folder,
-            other_emote, offset_pair, other_offset, other_flip, nonint_pre,
-            sfx_looping, screenshake, frames_shake, frames_realization,
-            frames_sfx, additive, effect)
+        send_args = (msg_type, pre, folder, anim, msg,
+                    pos, sfx, anim_type, cid, sfx_delay,
+                    button, self.client.evi_list[evidence],
+                    flip, ding, color, showname, charid_pair,
+                    other_folder, other_emote, offset_pair,
+                    other_offset, other_flip, nonint_pre,
+                    sfx_looping, screenshake, frames_shake,
+                    frames_realization, frames_sfx,
+                    additive, effect)
 
-        self.server.area_manager.send_remote_command(
-            target_area, 'MS', msg_type, pre, folder, anim, msg, pos, sfx,
-            anim_type, cid, sfx_delay, button, self.client.evi_list[evidence],
-            flip, ding, color, showname, charid_pair, other_folder,
-            other_emote, offset_pair, other_offset, other_flip, nonint_pre,
-            sfx_looping, screenshake, frames_shake, frames_realization,
-            frames_sfx, additive, effect)
+        self.client.area.last_ic_message = send_args
+        self.client.area.send_command('MS', *send_args)
+        self.server.area_manager.send_remote_command(target_area, 'MS', *send_args)
+
+        self.client.area.send_owner_command('MS',
+            *send_args[:5],
+            '[' + self.client.area.abbreviation + ']' + msg,
+            *send_args[5:]
+        )
 
         self.client.area.set_next_msg_delay(len(msg))
         database.log_ic(self.client, self.client.area, showname, msg)

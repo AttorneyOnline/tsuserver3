@@ -18,6 +18,7 @@
 import re
 import string
 import time
+import hashlib
 from heapq import heappop, heappush
 
 from server import database
@@ -540,7 +541,7 @@ class ClientManager:
             self.pos = pos
             self.send_ooc(f'Position set to {pos}.')
             self.send_command('SP', self.pos) #Send a "Set Position" packet
-            self.area.update_evidence_list(self) #Receive evidence
+            self.send_command('LE', *self.area.get_evidence_list(self))
 
         def set_mod_call_delay(self):
             """Begin the mod call cooldown."""
@@ -595,6 +596,12 @@ class ClientManager:
             raise ClientError
 
         peername = transport.get_extra_info('peername')[0]
+		
+        # hash IP into previous system's IPID system to maintain old banlist
+        if 'server_number' in self.server.config:
+            x = peername + str(self.server.config['server_number'])
+            hash_object = hashlib.sha256(x.encode('utf-8'))
+            peername = hash_object.hexdigest()[:12]
         
         c = self.Client(
             self.server, transport, user_id,
