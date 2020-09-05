@@ -124,11 +124,8 @@ def ooc_cmd_load_hub(client, arg):
         if arg != '':
             path = 'storage/hubs'
             arg = f'{path}/{arg}.yaml'
-            try:
-                with open(arg, 'r', encoding='utf-8') as stream:
-                    hub = yaml.safe_load(stream)
-            except:
-                raise AreaError(f'File path {arg} is invalid!')
+            with open(arg, 'r', encoding='utf-8') as stream:
+                hub = yaml.safe_load(stream)
             client.area.area_manager.load(hub, ignore=['can_gm', 'max_areas'])
             client.send_ooc(f'Loading as {arg}...')
             client.area.area_manager.send_arup_status()
@@ -148,9 +145,10 @@ def ooc_cmd_load_hub(client, arg):
             client.server.client_manager.refresh_music(clients)
             client.send_ooc('Success, sending ARUP and refreshing music...')
 
-    except AreaError:
-        raise
-
+    except Exception as ex:
+        msg = f'There is a problem: {ex}'
+        msg += '\nThis is most likely caused by editing the yaml directly. Contact the server owner to resolve this issue.'
+        client.send_ooc(msg)
 
 @mod_only()
 def ooc_cmd_list_hubs(client, arg):
