@@ -72,6 +72,7 @@ class AreaManager:
             self.shouts_allowed = shouts_allowed
             self.abbreviation = abbreviation
             self.cards = dict()
+            self.shadow_status = {}
             """
             #debug
             self.evidence_list.append(Evidence("WOW", "desc", "1.png"))

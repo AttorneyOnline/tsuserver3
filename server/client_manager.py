@@ -196,6 +196,7 @@ class ClientManager:
             old_char = self.char_name
             self.char_id = char_id
             self.pos = ''
+            self.area.shadow_status[self.char_id] = [self.ipid, self.hdid]
             self.send_command('PV', self.id, 'CID', self.char_id)
             self.area.send_command('CharsCheck',
                                    *self.get_available_char_list())
@@ -334,6 +335,7 @@ class ClientManager:
             self.area.send_command('CharsCheck',
                                    *self.get_available_char_list())
             self.area.send_command('CharsCheck', *self.get_available_char_list())
+            self.area.shadow_status[self.char_id] = [self.ipid, self.hdid]
             self.send_command('HP', 1, self.area.hp_def)
             self.send_command('HP', 2, self.area.hp_pro)
             self.send_command('BN', self.area.background, self.pos)
