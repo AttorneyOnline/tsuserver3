@@ -532,6 +532,8 @@ class AOProtocol(asyncio.Protocol):
 
         # Transform text
         msg = self.dezalgo(text)[:256]
+        if self.client.gimp:
+            msg = self.client.gimp_message(msg)
         if self.client.shaken:
             msg = self.client.shake_message(msg)
         if self.client.disemvowel:
