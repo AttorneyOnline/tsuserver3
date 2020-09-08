@@ -19,6 +19,8 @@ __all__ = [
     'ooc_cmd_area_unlock',
     'ooc_cmd_update',
     'ooc_cmd_setupdate',
+    'ooc_cmd_thread',
+    'ooc_cmd_setthread',
     'ooc_cmd_invite',
     'ooc_cmd_uninvite',
     'ooc_cmd_area_kick',
@@ -231,9 +233,24 @@ def ooc_cmd_update(client, arg):
 @mod_only()
 def ooc_cmd_setupdate(client, arg):
     client.server.misc_data['update'] = arg
-    client.server.save_data()
+    client.server.save_miscdata()
     client.send_ooc('Update set!')
     database.log_room('set update', client, client.area, message=arg)
+
+
+def ooc_cmd_thread(client, arg):
+    try:
+        client.send_ooc('Current Thread: {}'.format(client.server.misc_data['thread']))
+    except:
+        raise ClientError('Thread not set!')
+
+
+@mod_only()
+def ooc_cmd_setthread(client, arg):
+    client.server.misc_data['thread'] = arg
+    client.server.save_miscdata()
+    client.send_ooc('Thread set!')
+    database.log_room('set thread', client, client.area, message=arg)
 
 
 @mod_only(area_owners=True)
