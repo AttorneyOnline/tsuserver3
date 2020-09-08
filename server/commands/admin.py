@@ -322,7 +322,7 @@ def ooc_cmd_online(client, _):
 
 def ooc_cmd_mods(client, arg):
     """
-    Show a list of moderators online.
+    Show the number of moderators online and in the area.
     Usage: /mods
     """
     #client.send_area_info(-1, True)
@@ -434,6 +434,10 @@ def ooc_cmd_baninfo(client, arg):
 
 @mod_only()
 def ooc_cmd_lastchar(client, arg):
+    """
+    Prints the IPID and HDID of the last user on a character in the current area.
+    Usage: /lastchar <character folder>
+    """
     if len(arg) == 0:
         raise ArgumentError('You must specify a character name.')
 
