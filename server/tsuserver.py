@@ -81,6 +81,8 @@ class TsuServer3:
             self.load_backgrounds()
             self.load_ipranges()
             self.load_gimps()
+            self.load_miscdata()
+            self.save_miscdata()
         except yaml.YAMLError as exc:
             print('There was a syntax error parsing a configuration file:')
             print(exc)
@@ -250,6 +252,14 @@ class TsuServer3:
     def load_gimps(self):
         with open('config/gimp.yaml', 'r', encoding='utf-8') as gmp:
             self.gimp_list = yaml.safe_load(gmp)
+
+    def load_miscdata(self):
+        with open('config/data.yaml', 'r', encoding='utf-8') as data:
+            self.misc_data = yaml.safe_load(data)
+
+    def save_miscdata(self):
+        with open('config/data.yaml', 'w') as data:
+            json.dump(self.misc_data, data)
 
     def load_backgrounds(self):
         """Load the backgrounds list from a YAML file."""

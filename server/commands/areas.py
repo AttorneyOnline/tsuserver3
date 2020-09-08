@@ -17,6 +17,8 @@ __all__ = [
     'ooc_cmd_area_lock',
     'ooc_cmd_area_spectate',
     'ooc_cmd_area_unlock',
+    'ooc_cmd_update',
+    'ooc_cmd_setupdate',
     'ooc_cmd_invite',
     'ooc_cmd_uninvite',
     'ooc_cmd_area_kick',
@@ -217,6 +219,21 @@ def ooc_cmd_area_unlock(client, arg):
         raise ClientError('Only CM can unlock area.')
     client.area.unlock()
     client.send_ooc('Area is unlocked.')
+
+
+def ooc_cmd_update(client, arg):
+    try:
+        client.send_ooc('Latest Update: {}'.format(client.server.misc_data['update']))
+    except:
+        raise ClientError('Update not set!')
+
+
+@mod_only()
+def ooc_cmd_setupdate(client, arg):
+    client.server.misc_data['update'] = arg
+    client.server.save_data()
+    client.send_ooc('Update set!')
+    database.log_room('set update', client, client.area, message=arg)
 
 
 @mod_only(area_owners=True)
