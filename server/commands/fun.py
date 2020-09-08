@@ -10,7 +10,8 @@ __all__ = [
     'ooc_cmd_shake',
     'ooc_cmd_unshake',
     'ooc_cmd_gimp',
-    'ooc_cmd_ungimp'
+    'ooc_cmd_ungimp',
+    'ooc_cmd_washhands'
 ]
 
 
@@ -145,3 +146,12 @@ def ooc_cmd_ungimp(client, arg):
         client.send_ooc(f'Ungimped {len(targets)} existing client(s).')
     else:
         client.send_ooc('No targets found.')
+
+
+def ooc_cmd_washhands(client, arg):
+    """
+    Stay safe!
+    Usage: /washhands
+    """
+    client.send_ooc('You washed your hands!')
+
