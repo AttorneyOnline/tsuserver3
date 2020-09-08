@@ -224,6 +224,10 @@ def ooc_cmd_area_unlock(client, arg):
 
 
 def ooc_cmd_update(client, arg):
+    """
+    See the link to the latest update.
+    Usage: /update
+    """
     try:
         client.send_ooc('Latest Update: {}'.format(client.server.misc_data['update']))
     except:
@@ -232,6 +236,10 @@ def ooc_cmd_update(client, arg):
 
 @mod_only()
 def ooc_cmd_setupdate(client, arg):
+    """
+    Set the link to the latest update.
+    Usage: /setupdate <link>
+    """
     client.server.misc_data['update'] = arg
     client.server.save_miscdata()
     client.send_ooc('Update set!')
@@ -239,6 +247,10 @@ def ooc_cmd_setupdate(client, arg):
 
 
 def ooc_cmd_thread(client, arg):
+    """
+    See the link to the latest thread.
+    Usage: /thread
+    """
     try:
         client.send_ooc('Current Thread: {}'.format(client.server.misc_data['thread']))
     except:
@@ -247,6 +259,10 @@ def ooc_cmd_thread(client, arg):
 
 @mod_only()
 def ooc_cmd_setthread(client, arg):
+    """
+    Set the link to the latest thread.
+    Usage: /thread <link>
+    """
     client.server.misc_data['thread'] = arg
     client.server.save_miscdata()
     client.send_ooc('Thread set!')
