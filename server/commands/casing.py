@@ -18,6 +18,7 @@ __all__ = [
     'ooc_cmd_blockwtce',
     'ooc_cmd_unblockwtce',
     'ooc_cmd_judgelog',
+    'ooc_cmd_evidlog',
     'ooc_cmd_afk'
 ]
 
@@ -305,6 +306,27 @@ def ooc_cmd_judgelog(client, arg):
         raise ServerError(
             'There have been no judge actions in this area since start of session.'
         )
-        
+
+
+@mod_only()
+def ooc_cmd_evidlog(client, arg):
+    """
+    List the last 10 uses of the evidence panel in the current area.
+    Usage: /evidlog
+    """
+    if len(arg) != 0:
+        raise ArgumentError('This command does not take any arguments.')
+    elog = client.area.evidlog
+    if len(elog) > 0:
+        elog_msg = '== Evidence Log =='
+        for x in elog:
+            elog_msg += f'\r\n{x}'
+        client.send_ooc(elog_msg)
+    else:
+        raise ServerError(
+    'There have been no evidence changes in this area since start of session.'
+    )
+
+
 def ooc_cmd_afk(client, arg):
     client.server.client_manager.toggle_afk(client)
