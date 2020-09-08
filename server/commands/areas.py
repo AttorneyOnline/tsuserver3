@@ -261,7 +261,7 @@ def ooc_cmd_thread(client, arg):
 def ooc_cmd_setthread(client, arg):
     """
     Set the link to the latest thread.
-    Usage: /thread <link>
+    Usage: /setthread <link>
     """
     client.server.misc_data['thread'] = arg
     client.server.save_miscdata()
