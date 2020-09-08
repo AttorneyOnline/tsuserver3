@@ -118,7 +118,7 @@ def ooc_cmd_gimp(client, arg):
         raise ArgumentError('You must specify a target. Use /gimp <id>.')
     if targets:
         for c in targets:
-            database.log_room('gimp', client, client.area, target=c)
+            database.log_misc('gimp', client, target=c, data=client.area.abbreviation)
             c.gimp = True
         client.send_ooc(f'Gimped {len(targets)} existing client(s).')
     else:
@@ -140,7 +140,7 @@ def ooc_cmd_ungimp(client, arg):
         raise ArgumentError('You must specify a target. Use /ungimp <id>.')
     if targets:
         for c in targets:
-            database.log_room('ungimp', client, client.area, target=c)
+            database.log_misc('ungimp', client, target=c, data=client.area.abbreviation)
             c.gimp = False
         client.send_ooc(f'Ungimped {len(targets)} existing client(s).')
     else:
