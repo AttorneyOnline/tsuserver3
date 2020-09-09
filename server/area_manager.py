@@ -476,6 +476,12 @@ class AreaManager:
                 item['locking_allowed'] = False
             if 'iniswap_allowed' not in item:
                 item['iniswap_allowed'] = True
+            if 'background' not in item:
+                item['background'] = 'gs4'
+            if 'bglock' not in item:
+                item['bglock'] = False
+            if 'custom_bg_allowed' not in item:
+                item['custom_bg_allowed'] = True
             if 'showname_changes_allowed' not in item:
                 item['showname_changes_allowed'] = True
             if 'shouts_allowed' not in item:
@@ -489,7 +495,7 @@ class AreaManager:
                     item['area'])
             self.areas.append(
                 self.Area(self.cur_id, self.server, item['area'],
-                          item['background'], item['bglock'],
+                          item['background'], item['bglock'], item['custom_bg'],
                           item['evidence_mod'], item['locking_allowed'],
                           item['iniswap_allowed'],
                           item['showname_changes_allowed'],
