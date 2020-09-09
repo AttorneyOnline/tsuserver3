@@ -25,6 +25,9 @@
 ## evidence_mod: FFA
 ## locking_allowed: false
 ## iniswap_allowed: true
+## background: gs4
+## bglock: false
+## custom_bg_allowed: true
 ## showname_changes_allowed: true
 ## shouts_allowed: true
 ## jukebox: false
