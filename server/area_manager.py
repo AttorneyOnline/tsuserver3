@@ -368,7 +368,7 @@ class AreaManager:
             :param bg: background name
             :raises: AreaError if `bg` is not in background list
             """
-            if self.custom_bg == False and bg.lower() not in (name.lower()
+            if self.custom_bg == False or bg.lower() not in (name.lower()
                                   for name in self.server.backgrounds):
                 raise AreaError('Invalid background name.')
             self.background = bg
