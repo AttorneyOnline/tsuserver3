@@ -37,6 +37,7 @@ class AreaManager:
                      name,
                      background='gs4',
                      bg_lock=False,
+                     custom_bg=True,
                      evidence_mod='FFA',
                      locking_allowed=False,
                      iniswap_allowed=True,
@@ -52,6 +53,7 @@ class AreaManager:
             self.name = name
             self.background = background
             self.bg_lock = bg_lock
+            self.custom_bg = custom_bg
             self.server = server
             self.music_looper = None
             self.next_message_time = 0
@@ -366,7 +368,7 @@ class AreaManager:
             :param bg: background name
             :raises: AreaError if `bg` is not in background list
             """
-            if bg.lower() not in (name.lower()
+            if self.custom_bg == False and bg.lower() not in (name.lower()
                                   for name in self.server.backgrounds):
                 raise AreaError('Invalid background name.')
             self.background = bg
