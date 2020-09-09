@@ -495,7 +495,7 @@ class AreaManager:
                     item['area'])
             self.areas.append(
                 self.Area(self.cur_id, self.server, item['area'],
-                          item['background'], item['bglock'], item['custom_bg'],
+                          item['background'], item['bglock'], item['custom_bg_allowed'],
                           item['evidence_mod'], item['locking_allowed'],
                           item['iniswap_allowed'],
                           item['showname_changes_allowed'],
