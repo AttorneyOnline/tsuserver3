@@ -58,6 +58,7 @@ class TsuServer3:
         self.bglock = False
         self.backgrounds = None
         self.zalgo_tolerance = None
+        self.mod_color = None
         self.ipRange_bans = []
         self.geoIpReader = None
         self.useGeoIp = False
@@ -122,6 +123,9 @@ class TsuServer3:
 
         if self.config['zalgo_tolerance']:
             self.zalgo_tolerance = self.config['zalgo_tolerance']
+
+        if self.config['mod_color']:
+            self.mod_color = self.config['mod_color']
 
         asyncio.ensure_future(self.schedule_unbans())
 
@@ -228,6 +232,9 @@ class TsuServer3:
 
         if 'zalgo_tolerance' not in self.config:
             self.config['zalgo_tolerance'] = 3
+
+        if 'mod_color' not in self.config:
+            self.config['mod_color'] = 0
 
         if isinstance(self.config['modpass'], str):
             self.config['modpass'] = {'default': {'password': self.config['modpass']}}
