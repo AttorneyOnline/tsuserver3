@@ -5,6 +5,7 @@ import oyaml as yaml #ordered yaml
 from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, ArgumentError, AreaError
+from server.constants import dezalgo
 
 from . import mod_only
 
@@ -188,8 +189,7 @@ def ooc_cmd_rename_hub(client, arg):
     Usage: /rename_hub <name>
     """
     if arg != '':
-        arg = arg.strip()[:64]
-        client.area.area_manager.name = ''.join(e for e in arg if (e.isalnum() or e == ' '))
+        client.area.area_manager.name = dezalgo(arg)[:64]
         client.send_ooc(f'Renamed hub [{client.area.area_manager.id}] to {client.area.area_manager.name}.')
     else:
         raise ArgumentError('Invalid number of arguments. Use /rename_hub <name>.')
@@ -246,8 +246,7 @@ def ooc_cmd_area_rename(client, arg):
     Usage: /area_rename <name>
     """
     if arg != '':
-        arg = arg.strip()[:64]
-        client.area.name = ''.join(e for e in arg if (e.isalnum() or e == ' '))
+        client.area.name = dezalgo(arg)[:64]
         # Renaming doesn't change the actual area objects in that list so we have to tell it manually
         client.area.area_manager.broadcast_area_list(refresh=True)
         client.send_ooc(f'Renamed area [{client.area.id}] to {client.area.name}.')
