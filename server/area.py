@@ -348,7 +348,7 @@ class Area:
             client.send_command('MC', self.music, -1, '', self.music_looping, 0, self.music_effects)
 
         # Play the ambience
-        self.send_command('MC', self.ambience, -1, "", 1, 1, int(MusicEffect.FADE_OUT | MusicEffect.FADE_IN | MusicEffect.SYNC_POS))
+        client.send_command('MC', self.ambience, -1, "", 1, 1, int(MusicEffect.FADE_OUT | MusicEffect.FADE_IN | MusicEffect.SYNC_POS))
 
     def remove_client(self, client):
         """Remove a disconnected client from the area."""

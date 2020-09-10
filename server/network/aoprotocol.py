@@ -903,7 +903,7 @@ class AOProtocol(asyncio.Protocol):
             except (ClientError, AreaError, ArgumentError, ServerError) as ex:
                 self.client.send_ooc(ex)
             except Exception as ex:
-                self.client.send_ooc('An internal error occurred. Please check the server log.')
+                self.client.send_ooc(f'An internal error occurred: {ex}. Please inform the staff of the server about the issue.')
                 logger.exception('Exception while running a command')
             return
 

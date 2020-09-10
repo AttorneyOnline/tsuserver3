@@ -595,6 +595,10 @@ def ooc_cmd_broadcast(client, arg):
         a_list = ', '.join([str(a.id) for a in client.broadcast_list])
         client.send_ooc(f'Your broadcast list is {a_list}')
         return
+    if arg.lower() == 'all':
+        args = []
+        for area in client.area.area_manager.areas:
+            args.append(area.id)
     try:
         broadcast_list = []
         for aid in args:

@@ -49,6 +49,7 @@ class AreaManager:
         self.info = ''
         self.can_gm = False
         self.music_ref = ''
+        self.replace_music = False
         self.client_music = True
         self.max_areas = -1
         self.single_cm = False
@@ -61,7 +62,6 @@ class AreaManager:
         self.o_abbreviation = self.abbreviation
 
         self.music_list = []
-        self.replace_music = False
 
         # Save character information for character select screen ID's in the hub data
         # ex. {"1": {"keys": [1, 2, 3, 5], "fatigue": 100.0, "hunger": 34.0}, "2": {"keys": [4, 6, 8]}}
@@ -125,6 +125,7 @@ class AreaManager:
             'info',
             'can_gm',
             'music_ref',
+            'replace_music',
             'client_music',
             'max_areas',
             'single_cm',
@@ -171,6 +172,7 @@ class AreaManager:
             'info',
             'can_gm',
             'music_ref',
+            'replace_music',
             'client_music',
             'max_areas',
             'single_cm',
@@ -190,6 +192,7 @@ class AreaManager:
     def clear_music(self):
         self.music_list.clear()
         self.music_ref = ''
+        self.replace_music = False
 
     def load_music(self, path):
         try:
@@ -198,7 +201,7 @@ class AreaManager:
 
             prepath = ''
             for item in music_list:
-                # deprecated, use 'replace_music' area pref instead
+                # deprecated, use 'replace_music' hub pref instead
                 # if 'replace' in item:
                 #    self.replace_music = item['replace'] == True
                 if 'use_unique_folder' in item and item['use_unique_folder'] == True:
