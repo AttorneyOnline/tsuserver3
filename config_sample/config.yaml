@@ -32,6 +32,12 @@ local: false
 # revoked.
 modpass: mod
 
+# Moderator color.
+# You can reserve one of the color IDs to only be used by moderators.
+# Do note that themes and chatboxes can redefine the specific colors
+# 0 turns this feature off, 2 sets it to "the classic red"
+mod_color: 0
+
 # Sent to joining players.
 motd: Welcome to my server!
 
