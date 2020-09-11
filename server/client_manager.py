@@ -605,7 +605,7 @@ class ClientManager:
                 area.broadcast_ooc(f'Someone tried to enter from [{self.area.id}] {self.area.name} but this area is locked!')
                 raise ClientError('That area is locked!')
 
-            if not allowed and and area != area.area_manager.default_area():
+            if not allowed and area != area.area_manager.default_area():
                 if area.max_players > 0:
                     players = len([x for x in area.clients if (not x in area.owners and not x.is_mod and not x.hidden)])
                     if players >= area.max_players:
