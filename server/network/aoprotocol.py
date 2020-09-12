@@ -740,8 +740,8 @@ class AOProtocol(asyncio.Protocol):
                 )
                 return
             try:
-                if args[0] == "":
-                    name, length = "", 0
+                if args[0] == "~stop.mp3":
+                    name, length = args[0], 0
                 else:
                     name, length = self.server.get_song_data(
                         self.server.music_list, args[0])
