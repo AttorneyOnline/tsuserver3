@@ -197,8 +197,9 @@ needing a certain list of positions to be filled up.
     - Set the place your character resides in the area.
 * **forcepos** \<pos> \<target>
     - Set the place another character resides in the area.
-* **charselect** [id]
+* **charselect** [id] [char]
     - Enter the character select screen, or force another user to select another character.
+    - Optional [char] forces them into that specific character folder/ID.
 * **randomchar**
     - Select a random character.
 * **charcurse** \<id> [charids...]

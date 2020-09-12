@@ -53,8 +53,10 @@ def ooc_cmd_switch(client, arg):
         # loser wants to spectate
         if arg == '-1' or arg.lower() == 'spectator':
             cid = -1
+        elif not char.isnumeric():
+            cid = client.server.get_char_id_by_name(char)
         else:
-            cid = client.server.get_char_id_by_name(arg)
+            cid = int(char)
     except ServerError:
         raise
     try:
@@ -129,21 +131,39 @@ def ooc_cmd_charselect(client, arg):
     """
     Enter the character select screen, or force another user to select
     another character.
-    Usage: /charselect [id]
+    Optional [char] forces them into a specific character.
+    Usage: /charselect [id] [char]
     """
     if not arg:
         client.char_select()
     else:
-        force_charselect(client, arg)
+        args = arg.split()
+        try:
+            target = client.server.client_manager.get_targets(client, TargetType.ID,
+                int(args[0]), False)[0]
+            force_charselect(target, ' '.join(args[1:]))
+        except Exception as ex:
+            raise ArgumentError(f'Error encountered: {ex}. Use /charselect <target\'s id> [character]')
 
 
-@mod_only()
-def force_charselect(client, arg):
-    try:
-        client.server.client_manager.get_targets(client, TargetType.ID,
-            int(arg), False)[0].char_select()
-    except:
-        raise ArgumentError('Wrong arguments. Use /charselect <target\'s id>')
+@mod_only(area_owners=True)
+def force_charselect(client, char=''):
+    if char != '':
+        try:
+            if char == '-1' or char.lower() == 'spectator':
+                cid = -1
+            elif not char.isnumeric():
+                cid = client.server.get_char_id_by_name(char)
+            else:
+                cid = int(char)
+        except ServerError:
+            raise
+        try:
+            client.change_character(cid, client.is_mod)
+        except ClientError:
+            raise
+    else:
+        client.char_select()
 
 
 def ooc_cmd_randomchar(client, arg):
