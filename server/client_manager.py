@@ -563,63 +563,68 @@ class ClientManager:
                     (len(self.area.links[str(area.id)]["evidence"]) <= 0 or \
                         self.hidden_in in self.area.links[str(area.id)]["evidence"]))
 
+        def try_access_area(self, area):
+            if self.area.locked and not self in self.area.owners and not self.id in self.area.invite_list:
+                raise ClientError('Current area is locked!')
+
+            if len(self.area.links) > 0:
+                if not str(area.id) in self.area.links:
+                    raise ClientError('That area is inaccessible!')
+
+                if str(area.id) in self.area.links:
+                    link = self.area.links[str(area.id)]
+                    # Link requires us to be inside a piece of evidence
+                    if len(link["evidence"]) > 0:
+                        if not (self.hidden_in in link["evidence"]):
+                            raise ClientError('That area is inaccessible!')
+                    # Our path is locked :(
+                    if link["locked"]:
+                        raise ClientError('That path is locked!')
+
+            if area.locked and not self.id in area.invite_list:
+                raise ClientError('That area is locked!')
+
+            if area.max_players > 0:
+                players = len([x for x in area.clients if (not x in area.owners and not x.is_mod and not x.hidden)])
+                if players >= area.max_players:
+                    raise ClientError('That area is full!')
+            elif area.max_players == 0:
+                raise ClientError('That area cannot be accessed by normal means!')
+
         def change_area(self, area):
             """
-            Switch the client to another area, unless the area is locked.
+            Switch the client to another area if it's accessible.
             :param area: area to switch to
             """
             if self.area == area:
                 raise ClientError('User already in specified area.')
-            allowed = self.is_mod or self in area.owners or self in self.area.owners or self.char_id == -1
-            if not allowed and area != area.area_manager.default_area() and self.area.is_locked == area.Locked.LOCKED and not self.id in self.area.invite_list:
-                if not self.sneaking and not self.hidden:
-                    self.area.broadcast_ooc(f'[{self.id}] {self.showname} tried to leave this area but it is locked!')
-                raise ClientError('Your current area is locked! You may not leave.')
+            allowed = self.is_mod or self in area.owners or self.char_id == -1 or area == area.area_manager.default_area()
+            if not allowed:
+                try:
+                    self.try_access_area(area)
+                except ClientError as ex:
+                    message = str(ex).lower()
+                    if not self.sneaking and not self.hidden and not 'inaccessible' in message:
+                        self.area.broadcast_ooc(f'[{self.id}] {self.showname} tried to enter [{area.id}] {area.name} but {message}!')
+                    # People from within the area have no distinction between peeking and moving inside
+                    area.broadcast_ooc(f'Someone tried to enter from [{self.area.id}] {self.area.name} but {message}!')
+                    raise
             target_pos = ''
             if len(self.area.links) > 0:
-                if not allowed and not str(area.id) in self.area.links and area != area.area_manager.default_area():
-                    raise ClientError('That area is inaccessible!')
-
                 if str(area.id) in self.area.links:
                     # Get that link reference
                     link = self.area.links[str(area.id)]
 
-                    # Link requires us to be inside a piece of evidence
-                    if len(link["evidence"]) > 0:
-                        if not (self.hidden_in in link["evidence"]) and not allowed:
-                            raise ClientError('That area is inaccessible!')
-                    else:
-                        if self.hidden_in != None:
-                            # You gotta unhide first lol
-                            self.hide(False)
-                            self.area.broadcast_area_list(self)
-                            raise ClientError('You had to leave your hiding spot - area transfer failed.')
-
-                    # Our path is locked :(
-                    if not allowed and link["locked"] and area != area.area_manager.default_area():
-                        if not self.sneaking and not self.hidden:
-                            self.area.broadcast_ooc(f'[{self.id}] {self.showname} tried to leave to [{area.id}] {area.name} but the path is locked!')
-                            area.broadcast_ooc(f'Someone tried to enter from [{self.area.id}] {self.area.name} but the path is locked!')
-                        raise ClientError('That path is locked - cannot access area!')
+                    if self.hidden_in in link["evidence"]:
+                        self.hide(False, hidden=True)
 
                     target_pos = link["target_pos"]
 
-            if not allowed and area.is_locked == area.Locked.LOCKED and not self.id in area.invite_list and area != area.area_manager.default_area():
-                if not self.sneaking and not self.hidden:
-                    self.area.broadcast_ooc(f'[{self.id}] {self.showname} tried to leave to [{area.id}] {area.name} but that area is locked!')
-                area.broadcast_ooc(f'Someone tried to enter from [{self.area.id}] {self.area.name} but this area is locked!')
-                raise ClientError('That area is locked!')
-
-            if not allowed and area != area.area_manager.default_area():
-                if area.max_players > 0:
-                    players = len([x for x in area.clients if (not x in area.owners and not x.is_mod and not x.hidden)])
-                    if players >= area.max_players:
-                        if not self.sneaking and not self.hidden:
-                            self.area.broadcast_ooc(f'[{self.id}] {self.showname} tried to leave to [{area.id}] {area.name} but that area is full!')
-                            area.broadcast_ooc(f'Someone tried to enter from [{self.area.id}] {self.area.name} but this area is full ({players}/{area.max_players})!')
-                        raise ClientError('That area is full!')
-                elif area.max_players == 0:
-                    raise ClientError('That area cannot be accessed by normal means!')
+            if self.hidden_in != None:
+                # You gotta unhide first lol
+                self.hide(False)
+                self.area.broadcast_area_list(self)
+                raise ClientError('You had to leave your hiding spot - area transfer failed.')
 
             delay = self.area.time_until_move(self)
             if not allowed and delay > 0:
@@ -628,11 +633,11 @@ class ClientManager:
 
             if area.cannot_ic_interact(self):
                 self.send_ooc(
-                    'This area is spectatable, but not free - you cannot talk in-character unless invited.'
+                    'This area is muted - you cannot talk in-character unless invited.'
                 )
 
             # Mods and area owners can be any character regardless of availability
-            if not allowed and not area.is_char_available(self.char_id):
+            if not (self.is_mod or self in area.owners) and not area.is_char_available(self.char_id):
                 self.check_char_taken(area)
 
             old_area = self.area
@@ -713,14 +718,6 @@ class ClientManager:
             msg = '=== Areas ==='
             area_list = self.get_area_list(full, full)
             for _, area in enumerate(area_list):
-                owner = ''
-                if len(area._owners) > 0:
-                    owner = f'[CMs: {area.get_owners()}]'
-                lock = {
-                    area.Locked.FREE: '',
-                    area.Locked.SPECTATABLE: '[S]',
-                    area.Locked.LOCKED: '[L]'
-                }
                 users = ''
                 if not area.hide_clients and not area.area_manager.hide_clients:
                     clients = area.clients
@@ -731,7 +728,12 @@ class ClientManager:
                 status = ''
                 if self.area.area_manager.arup_enabled:
                     status = f'[{area.status}]'
-                msg += f'\r\n[{area.id}] {area.name} {users}{status}{owner}{lock[area.is_locked]}'
+                owner = ''
+                if len(area._owners) > 0:
+                    owner = f'[CMs: {area.get_owners()}]'
+                locked = '[L]' if area.locked else ''
+                muted = '[M]' if muted else ''
+                msg += f'\r\n[{area.id}] {area.name} {users}{status}{owner}{locked}{muted}'
                 if self.area == area:
                     msg += ' [*]'
             self.send_ooc(msg)
@@ -750,11 +752,6 @@ class ClientManager:
             except AreaError:
                 raise
 
-            lock = {
-                area.Locked.FREE: '',
-                area.Locked.SPECTATABLE: '[S]',
-                area.Locked.LOCKED: '[L]'
-            }
             if afk_check:
                 player_list = area.afkers
             else:
@@ -766,8 +763,9 @@ class ClientManager:
             status = ''
             if self.area.area_manager.arup_enabled:
                 status = f' [{area.status}]'
-
-            info += f'=== [{area.id}] {area.name} (users: {len(player_list)}) {status}{lock[area.is_locked]}==='
+            locked = '[L]' if area.locked else ''
+            muted = '[M]' if area.muted else ''
+            info += f'=== [{area.id}] {area.name} (users: {len(player_list)}) {status}{locked}{muted}==='
 
             sorted_clients = []
             for client in player_list:
@@ -1162,8 +1160,10 @@ class ClientManager:
                 if client in a._owners:
                     a._owners.remove(client)
                     if client.area.area_manager.single_cm and len(a._owners) == 0:
-                        if a.is_locked != a.Locked.FREE:
+                        if a.locked:
                             a.unlock()
+                        if a.muted:
+                            a.unmute()
         heappush(self.cur_id, client.id)
         temp_ipid = client.ipid
         for c in self.server.client_manager.clients:

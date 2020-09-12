@@ -489,5 +489,10 @@ class AreaManager:
             clients = self.clients
         for client in clients:
             for area in client.local_area_list:
-                lock_list.append(area.is_locked.name)
+                state = 'FREE'
+                if area.locked:
+                    state = 'LOCKED'
+                elif area.muted:
+                    state = 'SPECTATABLE'
+                lock_list.append(state)
             self.server.send_arup(client, lock_list)

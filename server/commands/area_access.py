@@ -53,7 +53,7 @@ def ooc_cmd_area_lock(client, arg):
                 if not client.can_access_area(area):
                     client.send_ooc(f'You have the keys to {area.name} but it is not accessible from your area.')
                     continue
-            if area.is_locked == client.area.Locked.LOCKED:
+            if area.locked:
                 client.send_ooc(f'Area {area.name} is already locked.')
                 continue
             area.lock()
@@ -68,7 +68,7 @@ def ooc_cmd_area_lock(client, arg):
 @mod_only(area_owners=True)
 def ooc_cmd_area_mute(client, arg):
     """
-    Allow users to join the current area, but only as spectators.
+    Makes this area impossible to speak for normal users unlesss /invite is used.
     Usage: /area_mute
     """
     args = arg.split()
@@ -84,13 +84,13 @@ def ooc_cmd_area_mute(client, arg):
                 target_id = int(aid)
             area = client.area.area_manager.get_area_by_id(target_id)
 
-            if area.is_locked == client.area.Locked.SPECTATABLE:
-                client.send_ooc(f'Area {area.name} is already spectatable.')
+            if area.muted:
+                client.send_ooc(f'Area {area.name} is already muted.')
                 continue
-            area.spectator()
+            area.mute()
             area_list.append(area.id)
         if len(area_list) > 0:
-            client.send_ooc(f'Made areas {area_list} spectatable.')
+            client.send_ooc(f'Made areas {area_list} muted.')
     except ValueError:
         raise ArgumentError('Target must be an abbreviation or number.')
     except (ClientError, AreaError):
@@ -126,7 +126,7 @@ def ooc_cmd_area_unlock(client, arg):
                 if not client.can_access_area(area):
                     client.send_ooc(f'You have the keys to {area.name} but it is not accessible from your area.')
                     continue
-            if area.is_locked == client.area.Locked.FREE:
+            if not area.locked:
                 client.send_ooc(f'Area {area.name} is already unlocked.')
                 continue
             area.unlock()

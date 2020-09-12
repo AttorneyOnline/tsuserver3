@@ -55,7 +55,8 @@ class Area:
         self.jukebox = False
         self.abbreviation = self.abbreviate()
         self.non_int_pres_only = False
-        self.is_locked = self.Locked.FREE
+        self.locked = False
+        self.muted = False
         self.blankposting_allowed = True
         self.hp_def = 10
         self.hp_pro = 10
@@ -113,12 +114,6 @@ class Area:
         # Dictionary of dictionaries with further info, examine def link for more info
         self.links = {}
 
-    class Locked(Enum):
-        """Lock state of an area."""
-        FREE = 1,
-        SPECTATABLE = 2,
-        LOCKED = 3
-
     @property
     def name(self):
         """Area's name string. Abbreviation is also updated according to this."""
@@ -173,10 +168,13 @@ class Area:
             for link in [s for s in str(area['accessible']).split(' ')]:
                 self.link(link)
 
-        if 'locked' in area:
-            self.is_locked = self.Locked.FREE
-            if area['locked'] == True:
-                self.is_locked = self.Locked.LOCKED
+        if 'is_locked' in area:
+            self.locked = False
+            self.muted = False
+            if area['is_locked'] == 'SPECTATABLE':
+                self.muted = True
+            elif area['is_locked'] == 'LOCKED':
+                self.locked = True
 
         if 'bg_lock' in area:
             self.bg_lock = area['bg_lock']
@@ -210,8 +208,10 @@ class Area:
             self.abbreviation = self.abbreviate()
         if 'non_int_pres_only' in area:
             self.non_int_pres_only = area['non_int_pres_only']
-        if 'is_locked' in area:
-            self.is_locked = self.Locked[area['is_locked']]
+        if 'locked' in area:
+            self.locked = area['locked']
+        if 'muted' in area:
+            self.muted = area['muted']
         if 'blankposting_allowed' in area:
             self.blankposting_allowed = area['blankposting_allowed']
         if 'hp_def' in area:
@@ -313,7 +313,8 @@ class Area:
         area['jukebox'] = self.jukebox
         area['abbreviation'] = self.abbreviation
         area['non_int_pres_only'] = self.non_int_pres_only
-        area['is_locked'] = self.is_locked.name
+        area['locked'] = self.locked
+        area['muted'] = self.muted
         area['blankposting_allowed'] = self.blankposting_allowed
         area['hp_def'] = self.hp_def
         area['hp_pro'] = self.hp_pro
@@ -370,8 +371,10 @@ class Area:
         if self.locking_allowed:
             # Since anyone can lock/unlock, unlock if we were the last client in this area and it was locked.
             if len(self.clients) - 1 <= 0:
-                if self.is_locked != self.Locked.FREE:
+                if self.locked:
                     self.unlock()
+                if self.muted:
+                    self.unmute()
         self.clients.remove(client)
         if client in self.afkers:
             self.afkers.remove(client)
@@ -391,19 +394,23 @@ class Area:
 
     def unlock(self):
         """Mark the area as unlocked."""
-        self.is_locked = self.Locked.FREE
-        self.invite_list.clear()
-        self.area_manager.send_arup_lock()
-
-    def spectator(self):
-        """Mark the area as spectator-only."""
-        self.is_locked = self.Locked.SPECTATABLE
-        self.invite_list.clear()
+        self.locked = False
         self.area_manager.send_arup_lock()
 
     def lock(self):
         """Mark the area as locked."""
-        self.is_locked = self.Locked.LOCKED
+        self.locked = True
+        self.area_manager.send_arup_lock()
+
+    def mute(self):
+        """Mute the area."""
+        self.muted = True
+        self.invite_list.clear()
+        self.area_manager.send_arup_lock()
+
+    def unmute(self):
+        """Unmute the area."""
+        self.muted = False
         self.invite_list.clear()
         self.area_manager.send_arup_lock()
     
@@ -823,16 +830,16 @@ class Area:
         """
         if self.cannot_ic_interact(client):
             client.send_ooc(
-                'This is a spectatable area - ask the CM to be included in the invite list.')
+                'This is a muted area - ask the CM to be included in the invite list.')
             return False
         return (time.time() * 1000.0 - self.next_message_time) > 0
 
     def cannot_ic_interact(self, client):
         """
-        Check if this area is spectatable to a client.
+        Check if this area is muted to a client.
         :param client: sender
         """
-        return self.is_locked == self.Locked.SPECTATABLE and not client.is_mod and not client in self.owners and not client.id in self.invite_list
+        return self.muted and not client.is_mod and not client in self.owners and not client.id in self.invite_list
 
     def change_hp(self, side, val):
         """
@@ -974,8 +981,10 @@ class Area:
             client.send_ooc('Your broadcast list has been cleared.')
 
         if self.area_manager.single_cm and len(self._owners) == 0:
-            if self.is_locked != self.Locked.FREE:
+            if self.locked:
                 self.unlock()
+            if self.muted:
+                self.unmute()
 
         # Make sure the client's available areas are updated
         self.broadcast_area_list(client)
