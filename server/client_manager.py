@@ -605,9 +605,9 @@ class ClientManager:
                 except ClientError as ex:
                     message = str(ex).lower()
                     if not self.sneaking and not self.hidden and not 'inaccessible' in message:
-                        self.area.broadcast_ooc(f'[{self.id}] {self.showname} tried to enter [{area.id}] {area.name} but {message}!')
+                        self.area.broadcast_ooc(f'[{self.id}] {self.showname} tried to enter [{area.id}] {area.name} but {message}')
                     # People from within the area have no distinction between peeking and moving inside
-                    area.broadcast_ooc(f'Someone tried to enter from [{self.area.id}] {self.area.name} but {message}!')
+                    area.broadcast_ooc(f'Someone tried to enter from [{self.area.id}] {self.area.name} but {message}')
                     raise
             target_pos = ''
             if len(self.area.links) > 0:
@@ -733,7 +733,10 @@ class ClientManager:
                     owner = f'[CMs: {area.get_owners()}]'
                 locked = '[L]' if area.locked else ''
                 muted = '[M]' if area.muted else ''
-                msg += f'\r\n[{area.id}] {area.name} {users}{status}{owner}{locked}{muted}'
+                msg += '\r\n'
+                if not self.can_access_area(area):
+                    msg += '-x- '
+                msg += f'[{area.id}] {area.name} {users}{status}{owner}{locked}{muted}'
                 if self.area == area:
                     msg += ' [*]'
             self.send_ooc(msg)

@@ -393,9 +393,10 @@ def ooc_cmd_peek(client, arg):
             client.try_access_area(area)
         except ClientError as ex:
             if not client.sneaking and not client.hidden:
-                client.area.broadcast_ooc(f'[{client.id}] {client.showname} tried to peek into [{area.id}] {area.name} but {str(ex).lower()}!')
+                client.area.broadcast_ooc(f'[{client.id}] {client.showname} tried to peek into [{area.id}] {area.name} but {str(ex).lower()}')
                 # People from within the area have no distinction between peeking and moving inside
-                area.broadcast_ooc(f'Someone tried to enter from [{client.area.id}] {client.area.name} but {str(ex).lower()}!')
+                area.broadcast_ooc(f'Someone tried to enter from [{client.area.id}] {client.area.name} but {str(ex).lower()}')
+            raise
         else:
             sorted_clients = []
             for c in area.clients:
