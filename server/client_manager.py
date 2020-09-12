@@ -732,7 +732,7 @@ class ClientManager:
                 if len(area._owners) > 0:
                     owner = f'[CMs: {area.get_owners()}]'
                 locked = '[L]' if area.locked else ''
-                muted = '[M]' if muted else ''
+                muted = '[M]' if area.muted else ''
                 msg += f'\r\n[{area.id}] {area.name} {users}{status}{owner}{locked}{muted}'
                 if self.area == area:
                     msg += ' [*]'
