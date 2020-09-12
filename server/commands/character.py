@@ -53,10 +53,10 @@ def ooc_cmd_switch(client, arg):
         # loser wants to spectate
         if arg == '-1' or arg.lower() == 'spectator':
             cid = -1
-        elif not char.isnumeric():
-            cid = client.server.get_char_id_by_name(char)
+        elif not arg.isnumeric():
+            cid = client.server.get_char_id_by_name(arg)
         else:
-            cid = int(char)
+            cid = int(arg)
     except ServerError:
         raise
     try:
@@ -159,7 +159,7 @@ def force_charselect(client, char=''):
         except ServerError:
             raise
         try:
-            client.change_character(cid, client.is_mod)
+            client.change_character(cid, True)
         except ClientError:
             raise
     else:
