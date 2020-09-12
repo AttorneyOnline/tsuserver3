@@ -15,7 +15,8 @@ __all__ = [
     'ooc_cmd_charcurse',
     'ooc_cmd_uncharcurse',
     'ooc_cmd_charids',
-    'ooc_cmd_reload'
+    'ooc_cmd_reload',
+    'ooc_cmd_kms'
 ]
 
 
@@ -242,3 +243,19 @@ def ooc_cmd_reload(client, arg):
     except ClientError:
         raise
     client.send_ooc('Character reloaded.')
+
+
+def ooc_cmd_kms(client, arg):
+    """
+    Kick other or unresponsive instances of client.
+    Usage: /kms
+    """
+    ooc_cmd_ghostchar(client, arg)
+    
+
+def ooc_cmd_ghostchar(client, arg):
+    targets = client.server.client_manager.get_targets(client, TargetType.IPID, client.ipid, False)
+    for target in targets:
+        if target != client:
+            target.disconnect()
+    client.send_ooc('Kicked other instances of client.')

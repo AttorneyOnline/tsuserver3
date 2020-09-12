@@ -26,7 +26,8 @@ __all__ = [
     'ooc_cmd_ooc_mute',
     'ooc_cmd_ooc_unmute',
     'ooc_cmd_bans',
-    'ooc_cmd_baninfo'
+    'ooc_cmd_baninfo',
+    'ooc_cmd_lastchar'
 ]
 
 
@@ -321,10 +322,13 @@ def ooc_cmd_online(client, _):
 
 def ooc_cmd_mods(client, arg):
     """
-    Show a list of moderators online.
+    Show the number of moderators online and in the area.
     Usage: /mods
     """
-    client.send_area_info(-1, True)
+    #client.send_area_info(-1, True)
+    client.send_ooc(
+        "There are {} mods online. {} is in the area.".format(client.server.area_manager.mods_online(),
+                                                              len(client.area.get_mods())))
 
 
 def ooc_cmd_unmod(client, arg):
@@ -427,3 +431,25 @@ def ooc_cmd_baninfo(client, arg):
         else:
             msg += 'Unban date: N/A'
         client.send_ooc(msg)
+
+@mod_only()
+def ooc_cmd_lastchar(client, arg):
+    """
+    Prints the IPID and HDID of the last user on a character in the current area.
+    Usage: /lastchar <character folder>
+    """
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a character name.')
+
+    try:
+        cid = client.server.get_char_id_by_name(arg)
+    except ServerError:
+        raise
+    try:
+        ex = client.area.shadow_status[cid]
+    except KeyError:
+        client.send_ooc("Character hasn't been occupied in area since server start.")
+        return
+    client.send_ooc('Last person on {}: IPID: {}, HDID: {}.'.format(arg, ex[0], ex[1]))
+
+
