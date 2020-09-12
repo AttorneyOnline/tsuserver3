@@ -320,6 +320,16 @@ class AreaManager:
         # Swap 'em good
         self.areas[b], self.areas[a] = self.areas[a], self.areas[b]
 
+        # Update area links
+        a, b = str(a), str(b)
+        for a in self.areas:
+            for link in a.links:
+                # Swap 'em good
+                if link == a:
+                    a.links[b] = a.links.pop(a)
+                elif link == b:
+                    a.links[a] = a.links.pop(b)
+
     def add_owner(self, client):
         """
         Add a GM to the Hub.
