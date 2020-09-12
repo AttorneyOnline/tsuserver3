@@ -238,6 +238,10 @@ class AreaManager:
             raise AreaError(f'File path {path} is invalid!')
 
         try:
+            for char in data.copy():
+                # Convert the old numeric way to store character data into character folder based one
+                if isinstance(char, int) and self.server.is_valid_char_id(char):
+                    data[self.server.char_list[char]] = data.pop(char)
             self.character_data = data
         except:
             raise AreaError(f'Something went wrong while loading the character data!')
@@ -254,31 +258,35 @@ class AreaManager:
         except:
             raise AreaError(f'File path {path} is invalid!')
 
-    def get_character_data(self, c_id, key, default_value = None):
+    def get_character_data(self, char, key, default_value = None):
         """
         Obtain the character data from the Hub data.
-        :param c_id: The Character Folder ID
+        :param char: The Character Folder or ID
         :param key: The key to search the value for
         :param default_value: What value should be returned if the look-up failed
 
         """
-        if c_id not in self.character_data:
+        if isinstance(char, int) and self.server.is_valid_char_id(char):
+            char = self.server.char_list[char]
+        if char not in self.character_data:
             return default_value
-        if key not in self.character_data[c_id]:
+        if key not in self.character_data[char]:
             return default_value
-        return self.character_data[c_id][key]
+        return self.character_data[char][key]
 
-    def set_character_data(self, c_id, key, value):
+    def set_character_data(self, char, key, value):
         """
         Obtain the character data from the Hub data.
-        :param c_id: The Character Folder ID
+        :param char: The Character Folder or ID
         :param key: The key to save over
         :param value: The value to save
 
         """
-        if c_id not in self.character_data:
-            self.character_data[c_id] = {}
-        self.character_data[c_id][key] = value
+        if isinstance(char, int) and self.server.is_valid_char_id(char):
+            char = self.server.char_list[char]
+        if char not in self.character_data:
+            self.character_data[char] = {}
+        self.character_data[char][key] = value
 
     def create_area(self):
         """Create a new area instance and return it."""
