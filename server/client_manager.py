@@ -235,6 +235,11 @@ class ClientManager:
                                 client.char_select()
                     else:
                         raise ClientError('Character not available.')
+            # We're trying to spectate out of our own accord and either hub or area does not allow spectating.
+            if char_id == -1 and not (self.area.area_manager.can_spectate and self.area.can_spectate) and not force:
+                if not self.area.area_manager.can_spectate:
+                    raise ClientError('Cannot spectate in this hub!')
+                raise ClientError('Cannot spectate in this area!')
             old_char = self.char_name
             arup = (self.char_id == -1 or char_id == -1) and self.char_id != char_id
             self.char_id = char_id

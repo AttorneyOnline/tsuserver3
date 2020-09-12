@@ -55,6 +55,8 @@ class AreaManager:
         self.single_cm = False
         self.censor_ic = True
         self.censor_ooc = True
+        self.can_spectate = True
+        self.can_getareas = True
         # /prefs
 
         # optimization memes
@@ -131,6 +133,8 @@ class AreaManager:
             'single_cm',
             'censor_ic',
             'censor_ooc',
+            'can_spectate',
+            'can_getareas',
         ]
         for entry in list(set(load_list) - set(ignore)):
             if entry in hub:
@@ -178,6 +182,8 @@ class AreaManager:
             'single_cm',
             'censor_ic',
             'censor_ooc',
+            'can_spectate',
+            'can_getareas',
         ]
         for entry in list(set(save_list) - set(ignore)):
             hub[entry] = getattr(self, entry)

@@ -76,6 +76,8 @@ class Area:
         self.music_autoplay = False
         self.can_change_status = True
         self.use_backgrounds_yaml = False
+        self.can_spectate = True
+        self.can_getarea = True
         # /prefs end
 
         self.music_looper = None
@@ -258,6 +260,10 @@ class Area:
             self.can_change_status = area['can_change_status']
         if 'use_backgrounds_yaml' in area:
             self.use_backgrounds_yaml = area['use_backgrounds_yaml']
+        if 'can_spectate' in area:
+            self.can_spectate = area['can_spectate']
+        if 'can_getarea' in area:
+            self.can_getarea = area['can_getarea']
 
         if 'evidence' in area and len(area['evidence']) > 0:
             self.evi_list.evidences.clear()
@@ -333,6 +339,8 @@ class Area:
         area['can_wtce'] = self.can_wtce
         area['can_change_status'] = self.can_change_status
         area['use_backgrounds_yaml'] = self.use_backgrounds_yaml
+        area['can_spectate'] = self.can_spectate
+        area['can_getarea'] = self.can_getarea
         if len(self.evi_list.evidences) > 0:
             area['evidence'] = [e.to_dict() for e in self.evi_list.evidences]
         if len(self.links) > 0:
