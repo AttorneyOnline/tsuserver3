@@ -120,7 +120,8 @@ class EvidenceList:
             )
             return
         if client in client.area.owners or client.is_mod:
-            pos = 'pos'
+            #renamed from ambiguous "pos" because it doesn't tell you who can see the evidence
+            pos = 'hidden'
             self.evidences.append(self.Evidence(
                 name, description, image, pos))
         else:
