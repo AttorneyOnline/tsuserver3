@@ -3,8 +3,9 @@ from . import mod_only
 
 __all__ = [
     'ooc_cmd_area_lock',
-    'ooc_cmd_area_mute',
     'ooc_cmd_area_unlock',
+    'ooc_cmd_area_mute',
+    'ooc_cmd_area_unmute',
     'ooc_cmd_lock',
     'ooc_cmd_unlock',
     'ooc_cmd_link',
@@ -65,6 +66,7 @@ def ooc_cmd_area_lock(client, arg):
     except (ClientError, AreaError):
         raise
 
+
 @mod_only(area_owners=True)
 def ooc_cmd_area_mute(client, arg):
     """
@@ -91,6 +93,38 @@ def ooc_cmd_area_mute(client, arg):
             area_list.append(area.id)
         if len(area_list) > 0:
             client.send_ooc(f'Made areas {area_list} muted.')
+    except ValueError:
+        raise ArgumentError('Target must be an abbreviation or number.')
+    except (ClientError, AreaError):
+        raise
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_area_unmute(client, arg):
+    """
+    Undo the effects of /area_mute.
+    Usage: /area_unmute
+    """
+    args = arg.split()
+    if len(args) == 0:
+        args = [client.area.id]
+
+    try:
+        area_list = []
+        for aid in args:
+            try:
+                target_id = client.area.area_manager.get_area_by_abbreviation(aid).id
+            except:
+                target_id = int(aid)
+            area = client.area.area_manager.get_area_by_id(target_id)
+
+            if not area.muted:
+                client.send_ooc(f'Area {area.name} is already unmuted.')
+                continue
+            area.unmute()
+            area_list.append(area.id)
+        if len(area_list) > 0:
+            client.send_ooc(f'Made areas {area_list} unmuted.')
     except ValueError:
         raise ArgumentError('Target must be an abbreviation or number.')
     except (ClientError, AreaError):

@@ -609,6 +609,12 @@ class ClientManager:
                     # People from within the area have no distinction between peeking and moving inside
                     area.broadcast_ooc(f'Someone tried to enter from [{self.area.id}] {self.area.name} but {message}')
                     raise
+
+            if self.char_id == -1 and not (self.area.area_manager.can_spectate and area.area.can_spectate):
+                if not self.area.area_manager.can_spectate:
+                    raise ClientError("Can't spectate in this hub!")
+                raise ClientError("Can't spectate that area!")
+
             target_pos = ''
             if len(self.area.links) > 0:
                 if str(area.id) in self.area.links:

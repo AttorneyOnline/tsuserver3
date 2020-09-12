@@ -45,10 +45,12 @@
 ## Area Access
 * **area_lock**
     - Prevent users from joining the current area.
-* **area_mute**
-    - Allow users to join the current area, but only as spectators.
 * **area_unlock**
     - Allow anyone to freely join the current area.
+* **area_mute**
+    - Makes this area impossible to speak for normal users unlesss /invite is used.
+* **area_unmute**
+    - Undo the effects of /area_mute.
 * **lock** \<area(s)> or \<!link(s)>
     - Context-sensitive function to lock area(s) and/or area link(s).
     - Multiple targets may be passed.
