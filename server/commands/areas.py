@@ -8,6 +8,7 @@ from . import mod_only
 
 __all__ = [
     'ooc_cmd_bg',
+    'ooc_cmd_bgs',
     'ooc_cmd_status',
     'ooc_cmd_area',
     'ooc_cmd_area_visible',
@@ -48,6 +49,17 @@ def ooc_cmd_bg(client, arg):
     client.area.broadcast_ooc(
         f'{client.showname} changed the background to {arg}.')
     database.log_room('bg', client, client.area, message=arg)
+
+
+def ooc_cmd_bgs(client, arg):
+    """
+    Display the server's available backgrounds.
+    Usage: /bgs
+    """
+    msg = 'Available backgrounds:'
+    for bg in client.server.backgrounds:
+        msg += f'- {bg}'
+    client.area.broadcast_ooc(msg)
 
 
 def ooc_cmd_status(client, arg):

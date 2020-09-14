@@ -100,6 +100,8 @@
 ## Areas
 * **bg** \<background>
     - Set the background of an area.
+* **bgs**
+    - Display the server's available backgrounds.
 * **status** \<idle|rp|casing|looking-for-players|lfp|recess|gaming>
     - Show or modify the current status of an area.
 * **area** [id]
