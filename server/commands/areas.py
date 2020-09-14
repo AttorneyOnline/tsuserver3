@@ -57,8 +57,7 @@ def ooc_cmd_bgs(client, arg):
     Usage: /bgs
     """
     msg = 'Available backgrounds:'
-    for bg in client.server.backgrounds:
-        msg += f'- {bg}'
+    msg += '\n' + '; '.join(client.server.backgrounds)
     client.area.broadcast_ooc(msg)
 
 
