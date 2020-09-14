@@ -317,6 +317,15 @@ class AreaManager:
         clients = area.clients.copy()
         for client in clients:
             client.set_area(target_area)
+
+        # Update area links
+        for ar in self.areas:
+            for link in ar.links:
+                # Shift it down as one area was removed
+                if link > area.id:
+                    ar.links[link-1] = ar.links.pop(link)
+                elif link == area.id:
+                    ar.links.remove(link)
         self.areas.remove(area)
 
     def swap_area(self, area1, area2):
@@ -336,13 +345,13 @@ class AreaManager:
 
         # Update area links
         a, b = str(a), str(b)
-        for a in self.areas:
-            for link in a.links:
+        for ar in self.areas:
+            for link in ar.links:
                 # Swap 'em good
                 if link == a:
-                    a.links[b] = a.links.pop(a)
+                    ar.links[b] = ar.links.pop(a)
                 elif link == b:
-                    a.links[a] = a.links.pop(b)
+                    ar.links[a] = ar.links.pop(b)
 
     def add_owner(self, client):
         """
