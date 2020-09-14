@@ -74,7 +74,7 @@ class Webhooks:
 		if not is_enabled:
 			return
 		
-		message = f'{char} ({ipid})' if char != None else ipid
+		message = f'{char} ({ipid})' if char != None else str(ipid)
 		message += ' was kicked'
 		message += f' by {client.name} ({client.ipid})' if client != None else ' from the server'
 		message += f' with reason: {reason}' if reason.strip() != '' else ' (no reason provided).'
@@ -88,7 +88,7 @@ class Webhooks:
 		
 		if not is_enabled:
 			return
-		message = f'{char} ({ipid})' if char != None else ipid
+		message = f'{char} ({ipid})' if char != None else str(ipid)
 		message += f' (hdid: {hdid}) was hardware-banned' if hdid != None else ' was banned'
 		message += f' by {client.name} ({client.ipid})' if client != None else ' from the server'
 		message += f' with reason: {reason}' if reason.strip() != '' else ''

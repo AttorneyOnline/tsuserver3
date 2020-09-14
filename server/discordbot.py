@@ -17,11 +17,6 @@ class Bridgebot(commands.Bot):
         self.area_id = area_id
         self.target_channel = target_chanel
 
-    @staticmethod
-    def loop_it_forever(loop):
-        loop.run_forever()
-        loop.close()
-
     async def init(self, token):
         '''Starts the actual bot'''
         print('Trying to start the Discord Bridge bot...')
