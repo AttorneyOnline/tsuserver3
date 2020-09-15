@@ -322,9 +322,9 @@ class AreaManager:
         for ar in self.areas:
             for link in ar.links:
                 # Shift it down as one area was removed
-                if link > area.id:
-                    ar.links[link-1] = ar.links.pop(link)
-                elif link == area.id:
+                if int(link) > area.id:
+                    ar.links[str(int(link)-1)] = ar.links.pop(link)
+                elif link == str(area.id):
                     ar.links.remove(link)
         self.areas.remove(area)
 
