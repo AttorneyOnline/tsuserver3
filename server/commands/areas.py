@@ -137,7 +137,7 @@ def ooc_cmd_getareas(client, arg):
     if not client.is_mod or client in client.area.area_manager.owners:
         if client.blinded:
             raise ClientError('You are blinded!')
-        if not client.area.can_getareas:
+        if not client.area.area_manager.can_getareas:
             raise ClientError('You cannot use /getareas in this hub!')
     client.send_area_info(-1, False)
 
