@@ -1026,7 +1026,7 @@ class AOProtocol(asyncio.Protocol):
             if self.client.area.last_ic_message != None and sign == 'WT':
                 # remove centering chars and strip space chars as well as any coloring
                 msg = self.client.area.last_ic_message[4].replace('~', '').replace('|', '').replace('`', '').strip()
-                if (msg.startswith('-') and msg.endswith('-')) or (msg.startswith('-') and msg.endswith('-')):
+                if (msg.startswith('-') and msg.endswith('-')) or (msg.startswith('=') and msg.endswith('=')):
                     msg = msg.replace('-', '')
                     msg = msg.replace('=', '')
                     msg = msg.strip()
