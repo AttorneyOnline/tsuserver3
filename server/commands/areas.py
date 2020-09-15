@@ -58,7 +58,7 @@ def ooc_cmd_bgs(client, arg):
     """
     msg = 'Available backgrounds:'
     msg += '\n' + '; '.join(client.server.backgrounds)
-    client.area.broadcast_ooc(msg)
+    client.send_ooc(msg)
 
 
 def ooc_cmd_status(client, arg):

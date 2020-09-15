@@ -320,12 +320,12 @@ class AreaManager:
 
         # Update area links
         for ar in self.areas:
-            for link in ar.links:
+            for link in ar.links.copy():
                 # Shift it down as one area was removed
                 if int(link) > area.id:
                     ar.links[str(int(link)-1)] = ar.links.pop(link)
                 elif link == str(area.id):
-                    ar.links.remove(link)
+                    del ar.links[link]
         self.areas.remove(area)
 
     def swap_area(self, area1, area2):
@@ -346,7 +346,7 @@ class AreaManager:
         # Update area links
         a, b = str(a), str(b)
         for ar in self.areas:
-            for link in ar.links:
+            for link in ar.links.copy():
                 # Swap 'em good
                 if link == a:
                     ar.links[b] = ar.links.pop(a)

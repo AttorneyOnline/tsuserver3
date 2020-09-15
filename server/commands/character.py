@@ -360,7 +360,7 @@ def ooc_cmd_player_move_delay(client, arg):
             move_delay = int(args[0])
             if len(args) > 1:
                 c = client.server.client_manager.get_targets(client, TargetType.ID,
-                                                            int(arg), False)[0]
+                                                            int(args[0]), False)[0]
                 move_delay = int(args[1])
             move_delay = min(1800, max(-1800, move_delay)) # Move delay is limited between -1800 and 1800
             c.move_delay = move_delay
