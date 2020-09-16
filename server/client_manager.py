@@ -644,7 +644,7 @@ class ClientManager:
                 )
 
             # Mods and area owners can be any character regardless of availability
-            if not (self.is_mod or self in area.owners) and not area.is_char_available(self.char_id):
+            if not (self.is_mod or self in area.owners or self.char_id == -1) and not area.is_char_available(self.char_id):
                 self.check_char_taken(area)
 
             old_area = self.area

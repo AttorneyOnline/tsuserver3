@@ -451,7 +451,7 @@ def ooc_cmd_follow(client, arg):
             client.send_ooc(
                 f'You are currently following [{c.id}] {c.showname}.')
         except:
-            raise ArgumentError('You must specify a target. Use /follow <id>.')
+            raise ArgumentError('Not following anybody. Use /follow <id>.')
         return
     try:
         targets = client.server.client_manager.get_targets(
@@ -467,10 +467,10 @@ def ooc_cmd_follow(client, arg):
         if client.following == c.id:
             raise ClientError(
                 f'Already following [{c.id}] {c.showname}!')
+        client.change_area(c.area)
         client.following = c.id
         client.send_ooc(
             f'You are now following [{c.id}] {c.showname}.')
-        client.change_area(c.area)
     else:
         client.send_ooc('No targets found.')
 
