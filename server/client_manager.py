@@ -221,20 +221,21 @@ class ClientManager:
             (Default value = False)
             """
             # If it's -1, we want to be the spectator character.
-            if char_id != -1 and not self.is_mod and self not in self.area.owners:
+            if char_id != -1:
                 if not self.server.is_valid_char_id(char_id):
                     raise ClientError('Invalid character ID.')
-                if len(self.charcurse) > 0:
-                    if not char_id in self.charcurse:
-                        raise ClientError('Character not available.')
-                    force = True
-                if not self.area.is_char_available(char_id):
-                    if force:
-                        for client in self.area.clients:
-                            if client.char_id == char_id:
-                                client.char_select()
-                    else:
-                        raise ClientError('Character not available.')
+                if not self.is_mod and self not in self.area.owners:
+                    if len(self.charcurse) > 0:
+                        if not char_id in self.charcurse:
+                            raise ClientError('Character not available.')
+                        force = True
+                    if not self.area.is_char_available(char_id):
+                        if force:
+                            for client in self.area.clients:
+                                if client.char_id == char_id:
+                                    client.char_select()
+                        else:
+                            raise ClientError('Character not available.')
             # We're trying to spectate out of our own accord and either hub or area does not allow spectating.
             if char_id == -1 and not (self.area.area_manager.can_spectate and self.area.can_spectate) and not force:
                 if not self.area.area_manager.can_spectate:
@@ -955,6 +956,9 @@ class ClientManager:
             """Get the showname of this client, or the char name if none."""
             if self._showname == '':
                 return self.char_name
+            # No clue why this would ever hapepn but here we go
+            if self.char_id > len(self.server.char_list):
+                return 'Unknown'
             return self._showname
 
         @showname.setter
