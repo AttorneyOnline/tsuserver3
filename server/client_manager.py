@@ -741,11 +741,11 @@ class ClientManager:
                 locked = '[L]' if area.locked else ''
                 muted = '[M]' if area.muted else ''
                 msg += '\r\n'
+                if self.area == area:
+                    msg += '* '
                 if not self.can_access_area(area):
                     msg += '-x- '
                 msg += f'[{area.id}] {area.name} {users}{status}{owner}{locked}{muted}'
-                if self.area == area:
-                    msg += ' [*]'
             self.send_ooc(msg)
 
         def get_area_info(self, area_id, mods, afk_check):
