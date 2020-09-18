@@ -81,9 +81,12 @@ class Area:
         self.can_getarea = True
         # /prefs end
 
-        # optimization memes
+        # original states for resetting the area after all CMs leave in a single area CM hub
         self.o_name = self._name
         self.o_abbreviation = self.abbreviation
+        self.o_doc = self.doc
+        self.o_desc = self.desc
+        self.o_background = self.background
 
         self.music_looper = None
         self.next_message_time = 0
@@ -160,8 +163,6 @@ class Area:
         self._name = area['area']
         self.o_name = self._name
         self.o_abbreviation = self.abbreviation
-        if 'background' in area:
-            self.background = area['background']
         _pos_lock = ''
         # Legacy KFO support.
         # We gotta fix the sins of our forefathers
@@ -182,6 +183,9 @@ class Area:
             elif area['is_locked'] == 'LOCKED':
                 self.locked = True
 
+        if 'background' in area:
+            self.background = area['background']
+            self.o_background = self.background
         if 'bg_lock' in area:
             self.bg_lock = area['bg_lock']
         if 'pos_lock' in area:
@@ -226,6 +230,7 @@ class Area:
             self.hp_pro = area['hp_pro']
         if 'doc' in area:
             self.doc = area['doc']
+            self.o_doc = self.doc
         if 'status' in area:
             self.status = area['status']
         if 'move_delay' in area:
@@ -242,6 +247,7 @@ class Area:
             self.max_players = area['max_players']
         if 'desc' in area:
             self.desc = area['desc']
+            self.o_desc = self.desc
         if 'music_ref' in area:
             self.clear_music()
             self.music_ref = area['music_ref']
@@ -379,8 +385,6 @@ class Area:
             if len(self.clients) - 1 <= 0:
                 if self.locked:
                     self.unlock()
-                if self.muted:
-                    self.unmute()
         self.clients.remove(client)
         if client in self.afkers:
             self.afkers.remove(client)
@@ -991,8 +995,11 @@ class Area:
                 self.unlock()
             if self.muted:
                 self.unmute()
-            if self.name != self.o_name:
-                self.name = self.o_name
+            self.name = self.o_name
+            self.doc = self.o_doc
+            self.desc = self.o_desc
+            self.change_background(self.o_background)
+            self.pos_lock.clear()
 
         # Make sure the client's available areas are updated
         self.broadcast_area_list(client)

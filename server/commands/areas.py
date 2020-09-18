@@ -28,6 +28,7 @@ __all__ = [
 ]
 
 
+@mod_only(area_owners=True)
 def ooc_cmd_bg(client, arg):
     """
     Set the background of an area.
