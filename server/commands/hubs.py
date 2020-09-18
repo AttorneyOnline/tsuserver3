@@ -28,6 +28,8 @@ __all__ = [
     'ooc_cmd_hub_move_delay',
     'ooc_cmd_arup_enable',
     'ooc_cmd_arup_disable',
+    'ooc_cmd_toggle_getareas',
+    'ooc_cmd_toggle_spectate',
     'ooc_cmd_hide_clients',
     'ooc_cmd_unhide_clients',
     # General
@@ -412,6 +414,29 @@ def ooc_cmd_arup_disable(client, arg):
     client.area.area_manager.send_command('FL', *preflist)
     client.area.area_manager.broadcast_area_list(refresh=True)
     client.area.area_manager.broadcast_ooc('ARUP system has been disabled for this hub.')
+
+
+@mod_only(hub_owners=True)
+def ooc_cmd_toggle_getareas(client, arg):
+    """
+    Toggle the permissions of /getareas for normal players in this hub.
+    Usage: /toggle_getareas
+    """
+    client.area.area_manager.can_getareas = not client.area.area_manager.can_getareas
+    toggle = 'enabled' if client.area.area_manager.can_getareas else 'disabled'
+    client.area.area_manager.broadcast_ooc(f'Use of /getareas has been {toggle} for this hub.')
+
+
+@mod_only(hub_owners=True)
+def ooc_cmd_toggle_spectate(client, arg):
+    """
+    Disable the ARea UPdate system for this hub.
+    Usage: /toggle_spectate
+    """
+    client.area.area_manager.can_spectate = not client.area.area_manager.can_spectate
+    toggle = 'enabled' if client.area.area_manager.can_spectate else 'disabled'
+    client.area.area_manager.broadcast_ooc(f'Spectating has been {toggle} for this hub.')
+
 
 
 @mod_only(hub_owners=True)

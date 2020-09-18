@@ -122,7 +122,7 @@ def ooc_cmd_getarea(client, arg):
     Show information about the current area.
     Usage: /getarea
     """
-    if not client.is_mod or client in client.area.owners:
+    if not client.is_mod and not (client in client.area.owners):
         if client.blinded:
             raise ClientError('You are blinded!')
         if not client.area.can_getarea:
@@ -135,7 +135,7 @@ def ooc_cmd_getareas(client, arg):
     Show information about all areas.
     Usage: /getareas
     """
-    if not client.is_mod or client in client.area.area_manager.owners:
+    if not client.is_mod and not (client in client.area.area_manager.owners):
         if client.blinded:
             raise ClientError('You are blinded!')
         if not client.area.area_manager.can_getareas:
