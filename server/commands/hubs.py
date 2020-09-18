@@ -239,7 +239,7 @@ def ooc_cmd_area_remove(client, arg):
         raise ArgumentError('Invalid number of arguments. Use /area_remove <aid>.')
 
 
-@mod_only(hub_owners=True)
+@mod_only(area_owners=True)
 def ooc_cmd_area_rename(client, arg):
     """
     Rename area you are currently in to <name>.

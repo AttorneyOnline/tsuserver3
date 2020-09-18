@@ -81,6 +81,10 @@ class Area:
         self.can_getarea = True
         # /prefs end
 
+        # optimization memes
+        self.o_name = self._name
+        self.o_abbreviation = self.abbreviation
+
         self.music_looper = None
         self.next_message_time = 0
         self.judgelog = []
@@ -154,6 +158,8 @@ class Area:
 
     def load(self, area):
         self._name = area['area']
+        self.o_name = self._name
+        self.o_abbreviation = self.abbreviation
         if 'background' in area:
             self.background = area['background']
         _pos_lock = ''
@@ -985,6 +991,8 @@ class Area:
                 self.unlock()
             if self.muted:
                 self.unmute()
+            if self.name != self.o_name:
+                self.name = self.o_name
 
         # Make sure the client's available areas are updated
         self.broadcast_area_list(client)

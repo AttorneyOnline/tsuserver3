@@ -372,8 +372,8 @@ def ooc_cmd_testimony(client, arg):
         txt = statement[4].replace('{', '').replace('}', '')
         here = '  '
         if i == client.area.testimony_index:
-            here = '->'
-        msg += f'\n{here}[{i+1}] {name}: {txt}'
+            here = ' >'
+        msg += f'\n{here}{i+1}) {name}: {txt}'
     client.send_ooc(msg)
 
 
