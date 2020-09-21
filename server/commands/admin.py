@@ -27,7 +27,8 @@ __all__ = [
     'ooc_cmd_ooc_unmute',
     'ooc_cmd_bans',
     'ooc_cmd_baninfo',
-    'ooc_cmd_lastchar'
+    'ooc_cmd_lastchar',
+    'ooc_cmd_warn'
 ]
 
 
@@ -488,4 +489,46 @@ def ooc_cmd_lastchar(client, arg):
         return
     client.send_ooc('Last person on {}: IPID: {}, HDID: {}.'.format(arg, ex[0], ex[1]))
 
+@mod_only()
+def ooc_cmd_warn(client, arg):
+    """
+    Warn a player.
+    Usage: /warn <ipid> [reason]
+    Special cases:
+     - "*" warns everyone in the current area.
+    """
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a target. Use /warn <ipid> [reason]')
+    elif arg[0] == '*':
+        targets = [c for c in client.area.clients if c != client]
+    else:
+        targets = None
 
+    args = list(arg.split(' '))
+    if targets is None:
+        raw_ipid = args[0]
+        try:
+            ipid = int(raw_ipid)
+        except:
+            raise ClientError(f'{raw_ipid} does not look like a valid IPID.')
+        targets = client.server.client_manager.get_targets(client, TargetType.IPID,
+                                                        ipid, False)
+
+    if targets:
+        reason = ' '.join(args[1:])
+        if reason == '':
+            reason = 'N/A'
+        for c in targets:
+            database.log_misc('warn', client, target=c, data={'reason': reason})
+            client.send_ooc("{} was warned.".format(
+                c.char_name))
+            #BOING and OOC warning
+            c.send_command('ZZ', '===== [ ! ] =====\nYou have been warned for:\n' 
+                + reason + '\n===== [ ! ] =====')     
+    else:
+        try:
+            client.send_ooc(
+                f'No targets with the IPID {ipid} were found.')
+        except:
+            client.send_ooc(
+                'No targets to warn!')
