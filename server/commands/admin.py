@@ -80,17 +80,17 @@ def ooc_cmd_help(client, arg):
 def ooc_cmd_kick(client, arg):
     """
     Kick a player.
-    Usage: /kick <ipid|*|**> [reason]
+    Usage: /kick <ipid|*|@> [reason]
     Special cases:
      - "*" kicks everyone in the current area.
-     - "**" kicks everyone in the server.
+     - "@" kicks everyone in the server.
     """
     if len(arg) == 0:
         raise ArgumentError(
             'You must specify a target. Use /kick <ipid> [reason]')
     elif arg[0] == '*':
         targets = [c for c in client.area.clients if c != client]
-    elif arg[0] == '**':
+    elif arg[0] == '@':
         targets = [c for c in client.server.client_manager.clients if c != client]
     else:
         targets = None
@@ -116,8 +116,12 @@ def ooc_cmd_kick(client, arg):
             c.send_command('KK', reason)
             c.disconnect()
     else:
-        client.send_ooc(
-            f'No targets with the IPID {ipid} were found.')
+        try:
+            client.send_ooc(
+                f'No targets with the IPID {ipid} were found.')
+        except:
+            client.send_ooc(
+                'No targets to kick!')
 
 
 def ooc_cmd_ban(client, arg):
@@ -215,31 +219,49 @@ def ooc_cmd_mute(client, arg):
     """
     Prevent a user from speaking in-character.
     Usage: /mute <ipid>
+    Special cases:
+     - "*" mutes everyone in the current area.
     """
     if len(arg) == 0:
         raise ArgumentError('You must specify a target. Use /mute <ipid>.')
-    args = list(arg.split(' '))
-    client.send_ooc(f'Attempting to mute {len(args)} IPIDs.')
-    for raw_ipid in args:
-        if raw_ipid.isdigit():
-            ipid = int(raw_ipid)
-            clients = client.server.client_manager.get_targets(
-                client, TargetType.IPID, ipid, False)
-            if (clients):
-                msg = 'Muted the IPID ' + str(ipid) + '\'s following clients:'
-                for c in clients:
-                    c.is_muted = True
-                    database.log_misc('mute', client, target=c)
-                    msg += ' ' + c.char_name + ' [' + str(c.id) + '],'
-                msg = msg[:-1]
-                msg += '.'
-                client.send_ooc(msg)
+    elif arg[0] == '*':
+        clients = client.area.clients
+    else:
+        clients = None
+
+    args = list(arg.split(' '))    
+    if clients is None:
+        client.send_ooc(f'Attempting to mute {len(args)} IPIDs.')
+        for raw_ipid in args:
+            if raw_ipid.isdigit():
+                ipid = int(raw_ipid)
+                clients = client.server.client_manager.get_targets(
+                    client, TargetType.IPID, ipid, False)
+                if (clients):
+                    msg = 'Muted the IPID ' + str(ipid) + '\'s following clients:'
+                    for c in clients:
+                        c.is_muted = True
+                        database.log_misc('mute', client, target=c)
+                        msg += ' ' + c.char_name + ' [' + str(c.id) + '],'
+                    msg = msg[:-1]
+                    msg += '.'
+                    client.send_ooc(msg)
+                else:
+                    client.send_ooc(
+                        "No targets found. Use /mute <ipid> <ipid> ... for mute.")
             else:
                 client.send_ooc(
-                    "No targets found. Use /mute <ipid> <ipid> ... for mute.")
-        else:
-            client.send_ooc(
-                f'{raw_ipid} does not look like a valid IPID.')
+                    f'{raw_ipid} does not look like a valid IPID.')
+    elif clients:
+        client.send_ooc('Attempting to mute the area.')
+        for c in clients:
+            if c.is_mod:
+                client.send_ooc('You were not muted as you are a mod.')
+                return
+            else:
+                c.is_muted = True
+            database.log_misc('mute', client, target=c)
+        client.send_ooc(f'Muted {len(args)} IPIDs.')
 
 
 @mod_only()
@@ -247,32 +269,46 @@ def ooc_cmd_unmute(client, arg):
     """
     Unmute a user.
     Usage: /unmute <ipid>
+    Special cases:
+     - "*" unmutes everyone in the current area.
     """
     if len(arg) == 0:
         raise ArgumentError('You must specify a target.')
+    elif arg[0] == '*':
+        clients = client.area.clients
+    else:
+        clients = None
+
     args = list(arg.split(' '))
-    client.send_ooc(f'Attempting to unmute {len(args)} IPIDs.')
-    for raw_ipid in args:
-        if raw_ipid.isdigit():
-            ipid = int(raw_ipid)
-            clients = client.server.client_manager.get_targets(
-                client, TargetType.IPID, ipid, False)
-            if (clients):
-                msg = f'Unmuted the IPID ${str(ipid)}\'s following clients:'
-                for c in clients:
-                    c.is_muted = False
-                    database.log_misc('unmute', client, target=c)
-                    msg += ' ' + c.char_name + ' [' + str(c.id) + '],'
-                msg = msg[:-1]
-                msg += '.'
-                client.send_ooc(msg)
+    if clients is None:
+        client.send_ooc(f'Attempting to unmute {len(args)} IPIDs.')
+        for raw_ipid in args:
+            if raw_ipid.isdigit():
+                ipid = int(raw_ipid)
+                clients = client.server.client_manager.get_targets(
+                    client, TargetType.IPID, ipid, False)
+                if (clients):
+                    msg = f'Unmuted the IPID ${str(ipid)}\'s following clients:'
+                    for c in clients:
+                        c.is_muted = False
+                        database.log_misc('unmute', client, target=c)
+                        msg += ' ' + c.char_name + ' [' + str(c.id) + '],'
+                    msg = msg[:-1]
+                    msg += '.'
+                    client.send_ooc(msg)
+                else:
+                    client.send_ooc(
+                        "No targets found. Use /unmute <ipid> <ipid> ... for unmute."
+                    )
             else:
                 client.send_ooc(
-                    "No targets found. Use /unmute <ipid> <ipid> ... for unmute."
-                )
-        else:
-            client.send_ooc(
-                f'{raw_ipid} does not look like a valid IPID.')
+                    f'{raw_ipid} does not look like a valid IPID.')
+    elif clients:
+        client.send_ooc('Attempting to unmute the area.')
+        for c in clients:
+            c.is_muted = False
+            database.log_misc('unmute', client, target=c)
+        client.send_ooc(f'Unmuted {len(args)} IPIDs.')
 
 
 def ooc_cmd_login(client, arg):
