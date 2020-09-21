@@ -152,10 +152,21 @@ def ooc_cmd_area(client, arg):
 
 def ooc_cmd_getarea(client, arg):
     """
-    Show information about the current area.
-    Usage: /getarea
+    Show information about the current or another area.
+    Usage: /getarea [area id]
     """
-    client.send_area_info(client.area.id, False)
+    if len(arg) == 0:
+        client.send_area_info(client.area.id, False)
+        return
+
+    try:
+        client.server.area_manager.get_area_by_id(int(arg[0]))
+        area = int(arg[0])
+        client.send_area_info(area, False)
+    except ValueError:
+        raise ArgumentError('Area ID must be a number.')
+    except (AreaError, ClientError):
+        raise
 
 
 def ooc_cmd_getareas(client, arg):
