@@ -492,7 +492,7 @@ def ooc_cmd_lastchar(client, arg):
 @mod_only()
 def ooc_cmd_warn(client, arg):
     """
-    Warn a player.
+    Warn a player via OOC and a popup.
     Usage: /warn <ipid> [reason]
     Special cases:
      - "*" warns everyone in the current area.
@@ -522,9 +522,11 @@ def ooc_cmd_warn(client, arg):
             database.log_misc('warn', client, target=c, data={'reason': reason})
             client.send_ooc("{} was warned.".format(
                 c.char_name))
-            #BOING and OOC warning
-            c.send_command('ZZ', '===== [ ! ] =====\nYou have been warned for:\n' 
-                + reason + '\n===== [ ! ] =====')     
+            #Behold this absolute fucking mess
+            #BWOINK and OOC warning, mod call jury-rig
+            c.send_command('ZZ', '===== [ ! ] =====\nYou have been warned for:\n' + reason + '\n===== [ ! ] =====')
+            #Pop up, banned message jury-rig
+            c.send_command('BD', 'Just kidding. You are being warned for:\n' + reason)
     else:
         try:
             client.send_ooc(
@@ -532,3 +534,5 @@ def ooc_cmd_warn(client, arg):
         except:
             client.send_ooc(
                 'No targets to warn!')
+
+
