@@ -710,7 +710,7 @@ def ooc_cmd_chardesc(client, arg):
         database.log_room('chardesc.request', client, client.area)
     elif arg.isnumeric():
         try:
-            target = client.server.client_manager.get_targets(client, TargetType.ID, int(arg[0]), True)[0].char_id
+            target = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), True)[0].char_id
             desc = client.area.area_manager.get_character_data(target, 'desc', '')
             target = client.server.char_list[target]
             client.send_ooc(f'{target} Description: {desc}')

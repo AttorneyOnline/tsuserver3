@@ -492,7 +492,8 @@ def ooc_cmd_follow(client, arg):
         if client.following == c.id:
             raise ClientError(
                 f'Already following [{c.id}] {c.showname}!')
-        client.change_area(c.area)
+        if client.area != c.area:
+            client.change_area(c.area)
         client.following = c.id
         client.send_ooc(
             f'You are now following [{c.id}] {c.showname}.')
