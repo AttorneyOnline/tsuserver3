@@ -570,27 +570,27 @@ class ClientManager:
 
             if len(self.area.links) > 0:
                 if not str(area.id) in self.area.links:
-                    raise ClientError('That area is inaccessible!')
+                    raise ClientError('Area is inaccessible!')
 
                 if str(area.id) in self.area.links:
                     link = self.area.links[str(area.id)]
                     # Link requires us to be inside a piece of evidence
                     if len(link["evidence"]) > 0:
                         if not (self.hidden_in in link["evidence"]):
-                            raise ClientError('That area is inaccessible!')
+                            raise ClientError('Area is inaccessible!')
                     # Our path is locked :(
                     if link["locked"]:
-                        raise ClientError('That path is locked!')
+                        raise ClientError('Path is locked!')
 
             if area.locked and not self.id in area.invite_list:
-                raise ClientError('That area is locked!')
+                raise ClientError('Area is locked!')
 
             if area.max_players > 0:
                 players = len([x for x in area.clients if (not x in area.owners and not x.is_mod and not x.hidden)])
                 if players >= area.max_players:
-                    raise ClientError('That area is full!')
+                    raise ClientError('Area is full!')
             elif area.max_players == 0:
-                raise ClientError('That area cannot be accessed by normal means!')
+                raise ClientError('Area cannot be accessed by normal means!')
 
         def change_area(self, area):
             """

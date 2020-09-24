@@ -255,7 +255,7 @@ def ooc_cmd_area_kick(client, arg):
         try:
             for c in targets:
                 # We're a puny CM, we can't do this.
-                if not client.is_mod and not client in client.area.area_manager.owners and not c in client.area:
+                if not client.is_mod and not client in client.area.area_manager.owners and not c in client.area.clients:
                     raise ArgumentError("You can't kick someone from another area as a CM!")
                 if len(args) == 1:
                     area = client.area.area_manager.default_area()
@@ -267,6 +267,8 @@ def ooc_cmd_area_kick(client, arg):
                         output = args[1]
                     except AreaError:
                         raise
+                    if not client.is_mod and not client in client.area.area_manager.owners and not client in area.owners:
+                        raise ArgumentError("You can't kick someone to an area you don't own as a CM!")
                 target_pos = ''
                 if len(args) >= 3:
                     target_pos = args[2]

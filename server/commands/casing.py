@@ -39,8 +39,7 @@ def ooc_cmd_doc(client, arg):
         database.log_room('doc.request', client, client.area)
     else:
         client.area.change_doc(arg)
-        client.area.broadcast_ooc('{} changed the doc link.'.format(
-            client.showname))
+        client.area.broadcast_ooc(f'{client.showname} changed the doc link to: {client.area.doc}')
         database.log_room('doc.change', client, client.area, message=arg)
 
 
