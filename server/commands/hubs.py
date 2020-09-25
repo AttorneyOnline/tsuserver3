@@ -303,6 +303,7 @@ def ooc_cmd_area_pref(client, arg):
         'can_wtce',
         'can_spectate',
         'can_getarea',
+        'bg_lock',
     ]
 
     if len(arg) == 0:
