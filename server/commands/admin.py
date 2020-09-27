@@ -226,7 +226,7 @@ def ooc_cmd_mute(client, arg):
     if len(arg) == 0:
         raise ArgumentError('You must specify a target. Use /mute <ipid>.')
     elif arg[0] == '*':
-        clients = client.area.clients
+        clients = [c for c in client.area.clients if c.is_mod == False]
     else:
         clients = None
 
@@ -256,13 +256,10 @@ def ooc_cmd_mute(client, arg):
     elif clients:
         client.send_ooc('Attempting to mute the area.')
         for c in clients:
-            if c.is_mod:
-                client.send_ooc('You were not muted as you are a mod.')
-                return
-            else:
-                c.is_muted = True
+            c.is_muted = True
             database.log_misc('mute', client, target=c)
         client.send_ooc(f'Muted {len(args)} IPIDs.')
+        client.area.broadcast_ooc('Area has been muted.')
 
 
 @mod_only()
@@ -310,6 +307,7 @@ def ooc_cmd_unmute(client, arg):
             c.is_muted = False
             database.log_misc('unmute', client, target=c)
         client.send_ooc(f'Unmuted {len(args)} IPIDs.')
+        client.area.broadcast_ooc('Area has been unmuted.')
 
 
 def ooc_cmd_login(client, arg):
@@ -492,7 +490,7 @@ def ooc_cmd_lastchar(client, arg):
 @mod_only()
 def ooc_cmd_warn(client, arg):
     """
-    Warn a player via OOC and a popup.
+    Warn a player via an OOC message and popup.
     Usage: /warn <ipid> [reason]
     Special cases:
      - "*" warns everyone in the current area.
