@@ -408,10 +408,10 @@ class Database:
              #cheap work arounds ahoy     
             z = self.buffer_counter + 1
             for x in range(z,501):
-                if not self.message_buffer[x] == None:
+                if not self.message_buffer[x] == None and area in self.message_buffer[x]:
                     f.write(str(self.message_buffer[x] + '\n'))
             for x in range(0,z):
-                if not self.message_buffer[x] == None:
+                if not self.message_buffer[x] == None and area in self.message_buffer[x]:
                     f.write(str(self.message_buffer[x] + '\n'))
             
                     
