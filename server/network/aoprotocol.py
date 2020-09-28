@@ -693,8 +693,6 @@ class AOProtocol(asyncio.Protocol):
                         database.log_buffer(f'[{time}]'+f'[{cmd}][OOC]' + f'[{self.client.area.abbreviation}] {self.client.char_name}' +
                           f'/{self.client.name} ({self.client.ipid}): {args[1]}')
                 if cmd == 'help' and arg != '':
-                if cmd == 'help' and arg != '':
-                    self.client.send_ooc(commands.help(f'ooc_cmd_{arg}'))
                     self.client.send_ooc(commands.help(f'ooc_cmd_{arg}'))
                 if not hasattr(commands, called_function):
                     self.client.send_ooc('Invalid command.')
