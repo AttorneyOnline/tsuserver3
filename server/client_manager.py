@@ -625,7 +625,7 @@ class ClientManager:
         for c in self.server.client_manager.clients:
             if c.ipid == temp_ipid:
                 c.clientscon -= 1
-            if client in client.area.afkers:
+        if client in client.area.afkers:
             client.area.afkers.remove(client)
         self.clients.remove(client)
 
