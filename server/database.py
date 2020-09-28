@@ -393,10 +393,7 @@ class Database:
                     ORDER BY ban_date ASC
                     '''), (count,)).fetchall()]
     def log_buffer(self,message):
-        if self.buffer_counter == 500:
-            self.buffer_counter = 0
-        else:
-            self.buffer_counter = self.buffer_counter + 1
+        self.buffer_counter = (self.buffer_counter + 1) % 500
         self.message_buffer[self.buffer_counter] = message
     
     def dump_log(self,area,reason,client):
@@ -415,7 +412,6 @@ class Database:
                     f.write(str(self.message_buffer[x] + '\n'))
             
                     
-        return
     def _subtype_atom(self, event_type, event_subtype):
         if event_type not in ('room', 'misc'):
             raise AssertionError()
