@@ -691,11 +691,11 @@ class ClientManager:
         return clients
 
     def toggle_afk(self, client):
-    if client in client.area.afkers:
-      client.area.broadcast_ooc('{} is no longer AFK.'.format(client.char_name))
-      client.send_ooc('You are no longer AFK. Welcome back!')  # Making the server a bit friendly wouldn't hurt, right?
-      client.area.afkers.remove(client)
-    else:
-      client.area.broadcast_ooc('{} is now AFK.'.format(client.char_name))
-      client.send_ooc('You are now AFK. Have a good day!')
-      client.area.afkers.append(client)
+            if client in client.area.afkers:
+                client.area.broadcast_ooc('{} is no longer AFK.'.format(client.char_name))
+                client.send_ooc('You are no longer AFK. Welcome back!')  # Making the server a bit friendly wouldn't hurt, right?
+                client.area.afkers.remove(client)
+            else:
+                client.area.broadcast_ooc('{} is now AFK.'.format(client.char_name))
+                client.send_ooc('You are now AFK. Have a good day!')
+                client.area.afkers.append(client)
