@@ -340,10 +340,11 @@ def ooc_cmd_area_kick(client, arg):
     """
     Remove a user from the current area and move them to another area.
     Usage: /area_kick <id> [area id]
+    If no area id is entered, user will be kicked to area 0.
     """
     if not arg:
         raise ClientError(
-            'You must specify a target. Use /area_kick <id> [area id #]')
+            'You must specify a target. Use /area_kick <id> [area id]')
     arg = arg.split(' ')
     if arg[0] == 'afk':
         trgtype = TargetType.AFK
