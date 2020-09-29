@@ -339,13 +339,11 @@ def ooc_cmd_uninvite(client, arg):
 def ooc_cmd_area_kick(client, arg):
     """
     Remove a user from the current area and move them to another area.
-    Usage: /area_kick <id> [destination]
+    Usage: /area_kick <id> [area id]
     """
-    if client.area.is_locked == client.area.Locked.FREE:
-        raise ClientError('Area isn\'t locked.')
     if not arg:
         raise ClientError(
-            'You must specify a target. Use /area_kick <id> [destination #]')
+            'You must specify a target. Use /area_kick <id> [area id #]')
     arg = arg.split(' ')
     if arg[0] == 'afk':
         trgtype = TargetType.AFK
