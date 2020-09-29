@@ -27,8 +27,7 @@ __all__ = [
     'ooc_cmd_ooc_unmute',
     'ooc_cmd_bans',
     'ooc_cmd_baninfo',
-    'ooc_cmd_lastchar',
-    'ooc_cmd_warn'
+    'ooc_cmd_lastchar'
 ]
 
 
