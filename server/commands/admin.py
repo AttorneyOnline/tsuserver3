@@ -384,20 +384,30 @@ def ooc_cmd_ooc_mute(client, arg):
     """
     Prevent a user from talking out-of-character.
     Usage: /ooc_mute <ooc-name>
+    Special cases:
+     - "*" ooc mutes everyone in the current area.
     """
+    alert = None
     if len(arg) == 0:
         raise ArgumentError(
             'You must specify a target. Use /ooc_mute <OOC-name>.')
-    targets = client.server.client_manager.get_targets(client,
+    elif arg[0] == '*':
+        targets = [c for c in client.area.clients if c.is_mod == False]
+        alert = "Area has been OOC muted."
+    else:
+        targets = client.server.client_manager.get_targets(client,
                                                        TargetType.OOC_NAME,
                                                        arg, False)
     if not targets:
-        raise ArgumentError('Targets not found. Use /ooc_mute <OOC-name>.')
+        raise ArgumentError('Targets not found. Use /ooc_mute <OOC-name>.')   
     for target in targets:
         target.is_ooc_muted = True
         database.log_room('ooc_mute', client, client.area, target=target)
     client.send_ooc('Muted {} existing client(s).'.format(
         len(targets)))
+    if alert:
+        client.area.broadcast_ooc(alert)
+
 
 
 @mod_only()
@@ -405,11 +415,19 @@ def ooc_cmd_ooc_unmute(client, arg):
     """
     Allow an OOC-muted user to talk out-of-character.
     Usage: /ooc_unmute <ooc-name>
+    Special cases:
+     - "*" ooc unmutes everyone in the current area.
     """
+    alert = None
     if len(arg) == 0:
         raise ArgumentError(
             'You must specify a target. Use /ooc_unmute <OOC-name>.')
-    targets = client.server.client_manager.get_ooc_muted_clients()
+    elif arg[0] == '*':
+        targets = client.area.clients
+        alert = "Area has been OOC unmuted."
+    else:
+        targets = client.server.client_manager.get_ooc_muted_clients()
+
     if not targets:
         raise ArgumentError('Targets not found. Use /ooc_unmute <OOC-name>.')
     for target in targets:
@@ -417,6 +435,8 @@ def ooc_cmd_ooc_unmute(client, arg):
         database.log_room('ooc_unmute', client, client.area, target=target)
     client.send_ooc('Unmuted {} existing client(s).'.format(
         len(targets)))
+    if alert:
+        client.area.broadcast_ooc(alert)
 
 @mod_only()
 def ooc_cmd_bans(client, _arg):
