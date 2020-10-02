@@ -363,7 +363,7 @@ class Area:
     def new_client(self, client):
         """Add a client to the area."""
         self.clients.add(client)
-        database.log_room('area.join', client, self)
+        database.log_area('area.join', client, self)
 
         if self.music_autoplay:
             client.send_command('MC', self.music, -1, '', self.music_looping, 0, self.music_effects)
@@ -393,7 +393,7 @@ class Area:
             self.remove_jukebox_vote(client, True)
         if len(self.clients) == 0:
             self.change_status('IDLE')
-        database.log_room('area.leave', client, self)
+        database.log_area('area.leave', client, self)
         if not client.hidden:
             self.area_manager.send_arup_players()
 
@@ -563,7 +563,7 @@ class Area:
 
             if client:
                 if args[4].strip() != '' or self.last_ic_message == None or args[8] != self.last_ic_message[8] or self.last_ic_message[4].strip() != '':
-                    database.log_ic(client, self, name, args[4])
+                    database.log_area('chat.ic', client, client.area, message=args[4])
                 if self.recording:
                     # See if the testimony is supposed to end here.
                     scrunched = ''.join(e for e in args[4] if e.isalnum())

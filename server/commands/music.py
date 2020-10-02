@@ -68,7 +68,7 @@ def ooc_cmd_jukebox_toggle(client, arg):
     client.area.jukebox_votes = []
     client.area.broadcast_ooc('{} [{}] has set the jukebox to {}.'.format(
         client.showname, client.id, client.area.jukebox))
-    database.log_room('jukebox_toggle', client, client.area,
+    database.log_area('jukebox_toggle', client, client.area,
         message=client.area.jukebox)
 
 
@@ -94,7 +94,7 @@ def ooc_cmd_jukebox_skip(client, arg):
         client.area.broadcast_ooc(
             '{} [{}] has forced a skip to the next jukebox song.'.format(
                 client.showname, client.id))
-    database.log_room('jukebox_skip', client, client.area)
+    database.log_area('jukebox_skip', client, client.area)
 
 
 def ooc_cmd_jukebox(client, arg):
@@ -160,7 +160,7 @@ def ooc_cmd_play(client, arg):
         raise ArgumentError('You must specify a song.')
     client.area.play_music(arg, client.char_id, 0) #don't loop it
     client.area.add_music_playing(client, arg)
-    database.log_room('play', client, client.area, message=arg)
+    database.log_area('play', client, client.area, message=arg)
 
 
 @mod_only()
@@ -182,7 +182,7 @@ def ooc_cmd_blockdj(client, arg):
         target.is_dj = False
         target.send_ooc(
             'A moderator muted you from changing the music.')
-        database.log_room('blockdj', client, client.area, target=target)
+        database.log_area('blockdj', client, client.area, target=target)
         target.area.remove_jukebox_vote(target, True)
     client.send_ooc('blockdj\'d {}.'.format(
         targets[0].char_name))
@@ -207,7 +207,7 @@ def ooc_cmd_unblockdj(client, arg):
         target.is_dj = True
         target.send_ooc(
             'A moderator unmuted you from changing the music.')
-        database.log_room('unblockdj', client, client.area, target=target)
+        database.log_area('unblockdj', client, client.area, target=target)
     client.send_ooc('Unblockdj\'d {}.'.format(
         targets[0].char_name))
 

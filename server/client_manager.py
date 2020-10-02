@@ -252,7 +252,7 @@ class ClientManager:
             if arup:
                 self.area.area_manager.send_arup_players()
             new_char = self.char_name
-            database.log_room('char.change', self, self.area,
+            database.log_area('char.change', self, self.area,
                 message={'from': old_char, 'to': new_char})
 
         def change_music_cd(self):
@@ -347,7 +347,7 @@ class ClientManager:
                     if area.jukebox and not self.is_mod and not self in area.owners:
                         area.add_jukebox_vote(self, name,
                                                         length, showname)
-                        database.log_room('jukebox.vote', self, area, message=name)
+                        database.log_area('jukebox.vote', self, area, message=name)
                     else:
                         if self.change_music_cd():
                             self.send_ooc(
@@ -358,7 +358,7 @@ class ClientManager:
                                                     length, showname, effects)
                         area.add_music_playing(self, name, showname)
                 # We only make one log entry to not CBT the log list. TODO: Broadcast logs
-                database.log_room('music', self, self.area, message=name)
+                database.log_area('music', self, self.area, message=name)
             except ServerError:
                 if self.music_ref != '':
                     self.send_ooc(f'Error: song {args[0]} was not accepted! View acceptable music by resetting your client\'s using /musiclist.')

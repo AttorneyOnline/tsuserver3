@@ -36,11 +36,11 @@ def ooc_cmd_doc(client, arg):
     """
     if len(arg) == 0:
         client.send_ooc(f'Document: {client.area.doc}')
-        database.log_room('doc.request', client, client.area)
+        database.log_area('doc.request', client, client.area)
     else:
         client.area.change_doc(arg)
         client.area.broadcast_ooc(f'{client.showname} changed the doc link to: {client.area.doc}')
-        database.log_room('doc.change', client, client.area, message=arg)
+        database.log_area('doc.change', client, client.area, message=arg)
 
 
 def ooc_cmd_cleardoc(client, arg):
@@ -53,7 +53,7 @@ def ooc_cmd_cleardoc(client, arg):
     client.area.change_doc()
     client.area.broadcast_ooc('{} cleared the doc link.'.format(
         client.showname))
-    database.log_room('doc.clear', client, client.area)
+    database.log_area('doc.clear', client, client.area)
 
 
 @mod_only(hub_owners=True)
@@ -76,7 +76,7 @@ def ooc_cmd_evidence_mod(client, arg):
         client.area.broadcast_evidence_list()
         client.send_ooc(
             f'current evidence mod: {client.area.evidence_mod}')
-        database.log_room('evidence_mod', client, client.area, message=arg)
+        database.log_area('evidence_mod', client, client.area, message=arg)
     else:
         raise ArgumentError(
             'Wrong Argument. Use /evidence_mod <MOD>. Possible values: FFA, CM, Mods, HiddenCM'
@@ -114,7 +114,7 @@ def ooc_cmd_cm(client, arg):
                 'You cannot \'nominate\' people to be CMs when you are not one.'
             )
         client.area.add_owner(client)
-        database.log_room('cm.add', client, client.area, target=client, message='self-added')
+        database.log_area('cm.add', client, client.area, target=client, message='self-added')
     elif client in client.area.owners:
         if len(arg) > 0:
             arg = arg.split(' ')
@@ -132,7 +132,7 @@ def ooc_cmd_cm(client, arg):
                         f'{c.showname} [{c.id}] is already a CM here.')
                 else:
                     client.area.add_owner(c)
-                    database.log_room('cm.add', client, client.area, target=c)
+                    database.log_area('cm.add', client, client.area, target=c)
             except (ValueError, IndexError):
                 client.send_ooc(
                     f'{id} does not look like a valid ID.')
@@ -159,7 +159,7 @@ def ooc_cmd_uncm(client, arg):
                 client, TargetType.ID, _id, False)[0]
             if c in client.area.owners:
                 client.area.remove_owner(c)
-                database.log_room('cm.remove', client, client.area, target=c)
+                database.log_area('cm.remove', client, client.area, target=c)
             else:
                 client.send_ooc(
                     'You cannot remove someone from CMing when they aren\'t a CM.'
@@ -231,7 +231,7 @@ def ooc_cmd_anncase(client, arg):
 
             log_data = {k: v for k, v in
                 zip(('message', 'def', 'pro', 'jud', 'jur', 'steno'), args)}
-            database.log_room('case', client, client.area, message=log_data)
+            database.log_area('case', client, client.area, message=log_data)
     else:
         raise ClientError(
             'You cannot announce a case in an area where you are not a CM!')
@@ -257,7 +257,7 @@ def ooc_cmd_blockwtce(client, arg):
         target.can_wtce = False
         target.send_ooc(
             'A moderator blocked you from using judge signs.')
-        database.log_room('blockwtce', client, client.area, target=target)
+        database.log_area('blockwtce', client, client.area, target=target)
     client.send_ooc('blockwtce\'d {}.'.format(
         targets[0].char_name))
 
@@ -282,7 +282,7 @@ def ooc_cmd_unblockwtce(client, arg):
         target.can_wtce = True
         target.send_ooc(
             'A moderator unblocked you from using judge signs.')
-        database.log_room('unblockwtce', client, client.area, target=target)
+        database.log_area('unblockwtce', client, client.area, target=target)
     client.send_ooc('unblockwtce\'d {}.'.format(
         targets[0].char_name))
 

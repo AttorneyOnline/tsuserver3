@@ -48,7 +48,7 @@ def ooc_cmd_bg(client, arg):
         raise
     client.area.broadcast_ooc(
         f'{client.showname} changed the background to {arg}.')
-    database.log_room('bg', client, client.area, message=arg)
+    database.log_area('bg', client, client.area, message=arg)
 
 
 def ooc_cmd_bgs(client, arg):
@@ -79,7 +79,7 @@ def ooc_cmd_status(client, arg):
             client.area.change_status(arg)
             client.area.broadcast_ooc('{} changed status to {}.'.format(
                 client.showname, client.area.status))
-            database.log_room('status', client, client.area, message=arg)
+            database.log_area('status', client, client.area, message=arg)
         except AreaError:
             raise
 
@@ -182,7 +182,7 @@ def ooc_cmd_invite(client, arg):
             client.send_ooc(f'{c.showname} is invited to your area.')
             c.send_ooc(
                 f'You were invited and given access to {client.area.name}.')
-            database.log_room('invite', client, client.area, target=c)
+            database.log_area('invite', client, client.area, target=c)
     except:
         raise ClientError('You must specify a target. Use /invite <id>')
 
@@ -214,7 +214,7 @@ def ooc_cmd_uninvite(client, arg):
                         c.showname))
                 c.send_ooc(
                     "You were removed from the area whitelist.")
-                database.log_room('uninvite', client, client.area, target=c)
+                database.log_area('uninvite', client, client.area, target=c)
                 client.area.invite_list.discard(c.id)
         except AreaError:
             raise
@@ -276,7 +276,7 @@ def ooc_cmd_area_kick(client, arg):
                 c.set_area(area, target_pos)
                 c.send_ooc(
                     f"You were kicked from the area to area {output}.")
-                database.log_room('area_kick', client, client.area, target=c, message=output)
+                database.log_area('area_kick', client, client.area, target=c, message=output)
                 client.area.invite_list.discard(c.id)
         except ValueError:
             raise ArgumentError('Area ID must be a number.')
@@ -468,14 +468,14 @@ def ooc_cmd_desc(client, arg):
         raise ClientError('You are blinded!')
     if len(arg) == 0:
         client.send_ooc(f'Description: {client.area.desc}')
-        database.log_room('desc.request', client, client.area)
+        database.log_area('desc.request', client, client.area)
     else:
         client.area.desc = arg
         desc = arg[:128]
         if len(arg) > len(desc):
             desc += "... Use /desc to read the rest."
         client.area.broadcast_ooc(f'{client.showname} changed the area description to: {desc}.')
-        database.log_room('desc.change', client, client.area, message=arg)
+        database.log_area('desc.change', client, client.area, message=arg)
 
 
 @mod_only(area_owners=True)

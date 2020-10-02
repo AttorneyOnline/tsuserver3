@@ -138,7 +138,7 @@ def ooc_cmd_roll(client, arg):
     roll, num_dice, chosen_max, modifiers, Sum = rtd(arg)
 
     client.area.broadcast_ooc(f'{client.showname} rolled {roll} out of {chosen_max}.\nThe total sum is {Sum}.')
-    database.log_room('roll', client, client.area, message=f'{roll} out of {chosen_max}')
+    database.log_area('roll', client, client.area, message=f'{roll} out of {chosen_max}')
 
 
 def ooc_cmd_rollp(client, arg):
@@ -157,7 +157,7 @@ def ooc_cmd_rollp(client, arg):
     for c in client.area.owners:
         c.send_ooc(f'[{client.area.id}]{client.showname} secretly rolled {roll} out of {chosen_max}.')
 
-    database.log_room('rollp', client, client.area, message=f'{roll} out of {chosen_max}')
+    database.log_area('rollp', client, client.area, message=f'{roll} out of {chosen_max}')
 
 
 def ooc_cmd_notecard(client, arg):
@@ -170,7 +170,7 @@ def ooc_cmd_notecard(client, arg):
     client.area.cards[client.char_name] = arg
     client.area.broadcast_ooc('{} wrote a note card.'.format(
         client.showname))
-    database.log_room('notecard', client, client.area)
+    database.log_area('notecard', client, client.area)
 
 
 def ooc_cmd_notecard_clear(client, arg):
@@ -182,7 +182,7 @@ def ooc_cmd_notecard_clear(client, arg):
         del client.area.cards[client.char_name]
         client.area.broadcast_ooc('{} erased their note card.'.format(
             client.showname))
-        database.log_room('notecard_clear', client, client.area)
+        database.log_area('notecard_clear', client, client.area)
     except KeyError:
         raise ClientError('You do not have a note card.')
 
@@ -200,7 +200,7 @@ def ooc_cmd_notecard_reveal(client, arg):
         msg += f'\n{card_owner}: {card_msg}'
     client.area.cards.clear()
     client.area.broadcast_ooc(msg)
-    database.log_room('notecard_reveal', client, client.area)
+    database.log_area('notecard_reveal', client, client.area)
 
 
 @mod_only(area_owners=True)
@@ -216,7 +216,7 @@ def ooc_cmd_notecard_check(client, arg):
     for card_owner, card_msg in client.area.cards.items():
         msg += f'\n{card_owner}: {card_msg}'
     client.send_ooc(msg)
-    database.log_room('notecard_check', client, client.area)
+    database.log_area('notecard_check', client, client.area)
 
 
 @mod_only()
@@ -227,7 +227,7 @@ def ooc_cmd_rolla_reload(client, arg):
     """
     rolla_reload(client.area)
     client.send_ooc('Reloaded ability dice configuration.')
-    database.log_room('rolla_reload', client, client.area)
+    database.log_area('rolla_reload', client, client.area)
 
 
 def rolla_reload(area):
@@ -282,7 +282,7 @@ def ooc_cmd_rolla(client, arg):
     roll, max_roll, ability = rolla(ability_dice)
     client.area.broadcast_ooc('{} rolled a {} (out of {}): {}.'.format(
         client.showname, roll, max_roll, ability))
-    database.log_room('rolla', client, client.area,
+    database.log_area('rolla', client, client.area,
                         message=f'{roll} out of {max_roll}: {ability}')
 
 
@@ -297,7 +297,7 @@ def ooc_cmd_coinflip(client, arg):
     flip = random.choice(coin)
     client.area.broadcast_ooc('{} flipped a coin and got {}.'.format(
         client.showname, flip))
-    database.log_room('coinflip', client, client.area, message=flip)
+    database.log_area('coinflip', client, client.area, message=flip)
 
 
 def ooc_cmd_8ball(client, arg):

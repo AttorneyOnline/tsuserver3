@@ -322,10 +322,11 @@ def ooc_cmd_area_pref(client, arg):
         raise ArgumentError("Usage: /area_pref | /area_pref <pref> | /area_pref <pref> <on|off>")
 
     try:
-        attri = getattr(client.area, args[0].lower())
+        cmd = args[0].lower()
+        attri = getattr(client.area, cmd)
         if not (type(attri) is bool):
             raise ArgumentError("Preference is not a boolean.")
-        if not client.is_mod and not client in client.area.area_manager.owners and not (args[0] in cm_allowed):
+        if not client.is_mod and not client in client.area.area_manager.owners and not (cmd in cm_allowed):
             raise ClientError("You need to be a GM to modify this preference.")
         tog = not attri
         if len(args) > 1:
@@ -335,9 +336,9 @@ def ooc_cmd_area_pref(client, arg):
                 tog = False
             else:
                 raise ArgumentError("Invalid argument: {}".format(arg))
-        client.send_ooc(f'Setting preference {args[0]} to {tog}...')
-        setattr(client.area, args[0], tog)
-        database.log_room(args[0], client, client.area, message=f'Setting preference to {tog}')
+        client.send_ooc(f'Setting preference {cmd} to {tog}...')
+        setattr(client.area, cmd, tog)
+        database.log_area('area.pref', client, client.area, message=f'Setting preference {cmd} to {tog}')
     except ValueError:
         raise ArgumentError('Invalid input.')
     except (AreaError, ClientError):
@@ -525,14 +526,14 @@ def ooc_cmd_info(client, arg):
     """
     if len(arg) == 0:
         client.send_hub_info()
-        database.log_room('info.request', client, client.area)
+        database.log_area('info.request', client, client.area)
     else:
         if not client.is_mod and not client in client.area.area_manager.owners:
             raise ClientError('You must be a GM of the Hub to do that.')
         client.area.area_manager.info = arg
         client.area.area_manager.broadcast_ooc('{} changed the Hub info.'.format(
             client.showname))
-        database.log_room('info.change', client, client.area, message=arg)
+        database.log_area('info.change', client, client.area, message=arg)
 
 
 def ooc_cmd_gm(client, arg):
@@ -551,7 +552,7 @@ def ooc_cmd_gm(client, arg):
             if c in c.area.area_manager.owners:
                 raise ClientError('One of your clients is already a GM in another hub!')
         client.area.area_manager.add_owner(client)
-        database.log_room('gm.add', client, client.area, target=client, message='self-added')
+        database.log_area('gm.add', client, client.area, target=client, message='self-added')
     elif client in client.area.area_manager.owners:
         if len(arg) > 0:
             arg = arg.split(' ')
@@ -572,7 +573,7 @@ def ooc_cmd_gm(client, arg):
                         if mc in mc.area.area_manager.owners and mc.area.area_manager != c.area.area_manager:
                             raise ClientError(f'One of {c.showname} [{c.id}]\'s clients is already a GM in another hub!')
                     client.area.area_manager.add_owner(c)
-                    database.log_room('gm.add', client, client.area, target=c)
+                    database.log_area('gm.add', client, client.area, target=c)
             except (ValueError, IndexError):
                 client.send_ooc(
                     f'{id} does not look like a valid ID.')
@@ -600,7 +601,7 @@ def ooc_cmd_ungm(client, arg):
                 client, TargetType.ID, _id, False)[0]
             if c in client.area.area_manager.owners:
                 client.area.area_manager.remove_owner(c)
-                database.log_room('gm.remove', client, client.area, target=c)
+                database.log_area('gm.remove', client, client.area, target=c)
             else:
                 client.send_ooc(
                     'You cannot remove someone from GMing when they aren\'t a GM.'

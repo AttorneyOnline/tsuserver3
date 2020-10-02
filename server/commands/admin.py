@@ -366,7 +366,7 @@ def ooc_cmd_ooc_mute(client, arg):
         raise ArgumentError('Targets not found. Use /ooc_mute <OOC-name>.')
     for target in targets:
         target.is_ooc_muted = True
-        database.log_room('ooc_mute', client, client.area, target=target)
+        database.log_area('ooc_mute', client, client.area, target=target)
     client.send_ooc('Muted {} existing client(s).'.format(
         len(targets)))
 
@@ -385,7 +385,7 @@ def ooc_cmd_ooc_unmute(client, arg):
         raise ArgumentError('Targets not found. Use /ooc_unmute <OOC-name>.')
     for target in targets:
         target.is_ooc_muted = False
-        database.log_room('ooc_unmute', client, client.area, target=target)
+        database.log_area('ooc_unmute', client, client.area, target=target)
     client.send_ooc('Unmuted {} existing client(s).'.format(
         len(targets)))
 

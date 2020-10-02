@@ -118,7 +118,7 @@ def ooc_cmd_forcepos(client, arg):
             t.change_position(pos)
             t.area.broadcast_evidence_list()
             t.send_ooc(f'Forced into /pos {pos}.')
-            database.log_room('forcepos', client, client.area, target=t, message=pos)
+            database.log_area('forcepos', client, client.area, target=t, message=pos)
         except ClientError:
             raise
 
@@ -226,7 +226,7 @@ def ooc_cmd_charcurse(client, arg):
             part_msg += '.'
             log_msg = log_msg[:-1]
             c.char_select()
-            database.log_room('charcurse', client, client.area, target=c, message=log_msg)
+            database.log_area('charcurse', client, client.area, target=c, message=log_msg)
             client.send_ooc('Charcursed' + part_msg)
     else:
         client.send_ooc('No targets found.')
@@ -251,7 +251,7 @@ def ooc_cmd_uncharcurse(client, arg):
         for c in targets:
             if len(c.charcurse) > 0:
                 c.charcurse = []
-                database.log_room('uncharcurse', client, client.area, target=c)
+                database.log_area('uncharcurse', client, client.area, target=c)
                 client.send_ooc(f'Uncharcursed [{c.id}].')
                 c.char_select()
             else:
@@ -707,14 +707,14 @@ def ooc_cmd_chardesc(client, arg):
         raise ClientError('You are blinded!')
     if len(arg) == 0:
         client.send_ooc(f'{client.char_name} Description: {client.desc}')
-        database.log_room('chardesc.request', client, client.area)
+        database.log_area('chardesc.request', client, client.area)
     elif arg.isnumeric():
         try:
             target = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), True)[0].char_id
             desc = client.area.area_manager.get_character_data(target, 'desc', '')
             target = client.server.char_list[target]
             client.send_ooc(f'{target} Description: {desc}')
-            database.log_room('chardesc.request', client, client.area, message=target)
+            database.log_area('chardesc.request', client, client.area, message=target)
         except:
             raise ArgumentError('Target not found.')
     else:
@@ -723,7 +723,7 @@ def ooc_cmd_chardesc(client, arg):
         if len(arg) > len(desc):
             desc += "... Use /chardesc to read the rest."
         client.area.broadcast_ooc(f'{client.showname} changed their character description to: {desc}.')
-        database.log_room('chardesc.change', client, client.area, message=arg)
+        database.log_area('chardesc.change', client, client.area, message=arg)
 
 
 @mod_only(hub_owners=True)
@@ -754,7 +754,7 @@ def ooc_cmd_chardesc_set(client, arg):
         client.area.area_manager.set_character_data(target, 'desc', desc)
         target = client.server.char_list[target]
         client.send_ooc(f'{target} Description: {desc}')
-        database.log_room('chardesc.set', client, client.area, message=f'{target}: {desc}')
+        database.log_area('chardesc.set', client, client.area, message=f'{target}: {desc}')
     except:
         raise ArgumentError('Target not found.')
 
@@ -781,6 +781,6 @@ def ooc_cmd_chardesc_get(client, arg):
         desc = client.area.area_manager.get_character_data(target, 'desc', '')
         target = client.server.char_list[target]
         client.send_ooc(f'{target} Description: {desc}')
-        database.log_room('chardesc.get', client, client.area, message=f'{target}: {desc}')
+        database.log_area('chardesc.get', client, client.area, message=f'{target}: {desc}')
     except:
         raise ArgumentError('Target not found.')

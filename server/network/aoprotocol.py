@@ -935,7 +935,7 @@ class AOProtocol(asyncio.Protocol):
             'CT',
             f'[{self.client.area.id}]{name}',
             args[1])
-        database.log_room('ooc', self.client, self.client.area, message=args[1])
+        database.log_area('chat.ooc', self.client, self.client.area, message=args[1])
 
     def net_cmd_mc(self, args):
         """Play music.
@@ -1020,7 +1020,7 @@ class AOProtocol(asyncio.Protocol):
         elif len(args) == 2:
             self.client.area.send_command('RT', args[0], args[1])
         self.client.area.add_to_judgelog(self.client, f'used {sign}')
-        database.log_room('wtce', self.client, self.client.area, message=sign)
+        database.log_area('wtce', self.client, self.client.area, message=sign)
 
         if self.client in self.client.area.owners:
             if self.client.area.last_ic_message != None and sign == 'WT':
@@ -1117,7 +1117,7 @@ class AOProtocol(asyncio.Protocol):
 
             log_data = {k: v for k, v in
                 zip(('message', 'def', 'pro', 'jud', 'jur', 'steno'), args)}
-            database.log_room('case', self.client, self.client.area, message=log_data)
+            database.log_area('case', self.client, self.client.area, message=log_data)
         else:
             self.client.send_ooc('You cannot announce a case in an area where you are not a CM!')
 
@@ -1143,7 +1143,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.area.change_hp(args[0], args[1])
             self.client.area.add_to_judgelog(self.client,
                                              'changed the penalties')
-            database.log_room('hp', self.client, self.client.area)
+            database.log_area('hp', self.client, self.client.area)
         except AreaError:
             return
 
@@ -1164,7 +1164,7 @@ class AOProtocol(asyncio.Protocol):
         # evi = Evidence(args[0], args[1], args[2], self.client.pos)
         self.client.area.evi_list.add_evidence(self.client, args[0], args[1],
                                                args[2], 'all')
-        database.log_room('evidence.add', self.client, self.client.area)
+        database.log_area('evidence.add', self.client, self.client.area)
         self.client.area.broadcast_evidence_list()
 
     def net_cmd_de(self, args):
@@ -1179,7 +1179,7 @@ class AOProtocol(asyncio.Protocol):
             return
         self.client.area.evi_list.del_evidence(
             self.client, self.client.evi_list[int(args[0])])
-        database.log_room('evidence.del', self.client, self.client.area)
+        database.log_area('evidence.del', self.client, self.client.area)
         self.client.area.broadcast_evidence_list()
 
     def net_cmd_ee(self, args):
@@ -1199,7 +1199,7 @@ class AOProtocol(asyncio.Protocol):
 
         self.client.area.evi_list.edit_evidence(
             self.client, self.client.evi_list[int(args[0])], evi)
-        database.log_room('evidence.edit', self.client, self.client.area)
+        database.log_area('evidence.edit', self.client, self.client.area)
         self.client.area.broadcast_evidence_list()
 
     def net_cmd_zz(self, args):
@@ -1232,7 +1232,7 @@ class AOProtocol(asyncio.Protocol):
                     self.client.ip, self.client.area.area_manager.name, self.client.area.abbreviation, self.client.area.name),
                 pred=lambda c: c.is_mod)
             self.client.set_mod_call_delay()
-            database.log_room('modcall', self.client, self.client.area)
+            database.log_area('modcall', self.client, self.client.area)
             self.server.webhooks.modcall(char=self.client.char_name, ipid=self.client.ip, area=self.client.area)
         else:
             self.server.send_all_cmd_pred(
@@ -1243,7 +1243,7 @@ class AOProtocol(asyncio.Protocol):
                     args[0][:100]),
                 pred=lambda c: c.is_mod)
             self.client.set_mod_call_delay()
-            database.log_room('modcall', self.client, self.client.area, message=args[0])
+            database.log_area('modcall', self.client, self.client.area, message=args[0])
             self.server.webhooks.modcall(char=self.client.char_name, ipid=self.client.ip, area=self.client.area, reason=args[0][:100])
 
     def net_cmd_opKICK(self, args):

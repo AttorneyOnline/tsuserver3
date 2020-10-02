@@ -119,7 +119,7 @@ class Database:
             logger.debug('Migration to v1 complete')
 
     def migrate(self):
-        for version in [2, 3]:
+        for version in [2, 3, 4]:
             self.migrate_to_version(version)
 
     def migrate_to_version(self, version):
@@ -200,7 +200,7 @@ class Database:
         """
         with self.db as conn:
             row = conn.execute(dedent('''
-                SELECT ooc_name FROM room_events
+                SELECT ooc_name FROM area_events
                 WHERE ipid = ? AND ooc_name IS NOT NULL AND ooc_name != ''
                 ORDER BY event_time DESC LIMIT 1
                 '''), (ipid,)).fetchone()
@@ -258,8 +258,8 @@ class Database:
             # information. Then it finds the last known OOC name of the
             # player who issued that ban, purely as a convenience
             # for later use. Use `EXPLAIN QUERY PLAN` for a breakdown.
-            #   LEFT OUTER JOIN room_events ON
-            #      room_events.ipid = banned_by AND
+            #   LEFT OUTER JOIN area_events ON
+            #      area_events.ipid = banned_by AND
             #      ooc_name IS NOT NULL
             #   ORDER BY event_time DESC LIMIT 1
             ban = conn.execute(dedent('''
@@ -318,18 +318,7 @@ class Database:
 
             asyncio.get_event_loop().call_later(time_to_unban, auto_unban)
 
-    def log_ic(self, client, area, showname, message):
-        """Log an IC message."""
-        event_logger.info(f'[{area.id}] {showname}/{client.char_name}' +
-                          f'/{client.name} ({client.ipid}): {message}')
-        with self.db as conn:
-            conn.execute(dedent('''
-                INSERT INTO ic_events(ipid, room_name, char_name, ic_name,
-                    message) VALUES (?, ?, ?, ?, ?)
-                '''), (client.ipid, area.id, client.char_name,
-                    showname, message))
-
-    def log_room(self, event_subtype, client, area, message=None, target=None):
+    def log_area(self, event_subtype, client, area, message=None, target=None):
         """
         Log an area or OOC event. The event subtype is translated to an enum
         value, creating one if necessary.
@@ -338,18 +327,22 @@ class Database:
                                      client.name) if client is not None else (
                                          None, None, None)
         target_ipid = target.ipid if target is not None else None
-        subtype_id = self._subtype_atom('room', event_subtype)
+        subtype_id = self._subtype_atom('area', event_subtype)
         if isinstance(message, dict):
             message = json.dumps(message)
+        
+        showname = client.showname
+        if showname != client.char_name:
+            showname = f'{showname}/{client.char_name}'
 
-        event_logger.info(f'[{area.id}] {client.char_name}' +
+        event_logger.info(f'[H{area.area_manager.id} A{area.id} \'{area.name}\'] {showname}' +
                     f'/{client.name} ({client.ipid}): event {event_subtype} ({message})')
         with self.db as conn:
             conn.execute(dedent('''
-                INSERT INTO room_events(ipid, room_name, char_name, ooc_name,
+                INSERT INTO area_events(ipid, hub_id, hub_name, area_id, area_name, ic_name, char_name, ooc_name,
                     event_subtype, message, target_ipid)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-                '''), (ipid, area.id, char_name, ooc_name,
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                '''), (ipid, area.area_manager.id, area.area_manager.name, area.id, area.name, client._showname, char_name, ooc_name,
                     subtype_id, message, target_ipid))
 
     def log_connect(self, client, failed=False):
@@ -392,7 +385,7 @@ class Database:
                     '''), (count,)).fetchall()]
 
     def _subtype_atom(self, event_type, event_subtype):
-        if event_type not in ('room', 'misc'):
+        if event_type not in ('area', 'misc'):
             raise AssertionError()
 
         with self.db as conn:
