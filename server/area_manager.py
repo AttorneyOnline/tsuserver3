@@ -393,8 +393,8 @@ class AreaManager:
         :return: message
         """
         msg = ''
-        for i in self.owners:
-            msg += f'[{str(i.id)}] {i.showname}, '
+        for gm in self.owners:
+            msg += f'[{str(gm.id)}] {gm.name}, '
         if len(msg) > 2:
             msg = msg[:-2]
         return msg
