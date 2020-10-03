@@ -16,7 +16,7 @@ __all__ = [
     'ooc_cmd_rolla_set',
     'ooc_cmd_rolla',
     'ooc_cmd_coinflip',
-    'ooc_cmd_8ball'
+    'ooc_cmd_8ball',
 ]
 
 
@@ -313,4 +313,3 @@ def ooc_cmd_8ball(client, arg):
     ability_dice = client.area.ability_dice['8ball']
     client.area.broadcast_ooc('{} asked a question: "{}" and the answer is: "{}".'.format(
         client.showname, arg, rolla(ability_dice)[2]))
-        

@@ -79,7 +79,26 @@ class Area:
         self.use_backgrounds_yaml = False
         self.can_spectate = True
         self.can_getarea = True
+        self.can_cross_swords = False
+        self.can_scrum_debate = False
+        self.can_panic_talk_action = False
         # /prefs end
+
+        # DR minigames settings
+        # in seconds, 300s = 5m
+        self.cross_swords_timer = 300
+        # in seconds, 300s = 5m. How much time is added on top of cross swords.
+        self.scrum_debate_added_time = 300
+        # in seconds, 300s = 5m
+        self.panic_talk_action_timer = 300
+        self.minigame_schedule = None
+        # Who's debating who
+        self.red_team = []
+        self.blue_team = []
+
+        self.old_muted = False
+        self.old_invite_list = set()
+        # /end
 
         # original states for resetting the area after all CMs leave in a single area CM hub
         self.o_name = self._name
@@ -1047,6 +1066,37 @@ class Area:
         if test > 0:
             return test
         return 0
+
+    def end_minigame(self):
+        if self.minigame_schedule:
+            self.minigame_schedule.cancel()
+
+        self.muted = self.old_muted
+        self.invite_list = self.old_invite_list
+
+        self.send_ic(None, '1', 0, "", "", "~~Minigame END!", "", "", 0, -1, 0, 0, [0], 0, 0, 0, "System", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
+
+    def start_cross_swords(self, client, target):
+        if self.minigame_schedule:
+            timeleft = self.minigame_schedule.when() - asyncio.get_event_loop().time()
+            print(f'Time left: {timeleft}')
+            self.minigame_schedule.cancel()
+            minigame = 'Scrum Debate'
+            timer = timeleft + self.scrum_debate_added_time
+        else:
+            minigame = 'Cross Swords'
+            timer = self.cross_swords_timer
+            self.old_invite_list = self.invite_list
+            self.old_muted = self.muted
+            self.muted = True
+            self.invite_list.clear()
+            self.invite_list.add(client.id)
+            self.invite_list.add(target.id)
+
+        self.minigame_schedule = asyncio.get_event_loop().call_later(
+            max(5, timer), lambda: self.end_minigame())
+        self.broadcast_ooc(f'{minigame}! [{client.id}] {client.showname} VS [{target.id}] {target.showname}.\n/cs <id> to join the debate against target ID.')
+        self.send_ic(None, '1', 0, "", "", f'~~}}}}|{minigame}!|\n[{client.id}] ~{client.showname}~ VS [{target.id}] √{target.showname}√\\n{int(timer)} seconds left.', "", "", 0, -1, 0, 0, [0], 0, 0, 0, "System", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
 
     class JukeboxVote:
         """Represents a single vote cast for the jukebox."""

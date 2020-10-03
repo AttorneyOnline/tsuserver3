@@ -25,6 +25,8 @@ __all__ = [
     'ooc_cmd_max_players',
     'ooc_cmd_desc',
     'ooc_cmd_edit_ambience',
+    'ooc_cmd_cs',
+    'ooc_cmd_pta',
 ]
 
 
@@ -500,3 +502,29 @@ def ooc_cmd_edit_ambience(client, arg):
     if client.edit_ambience:
         stat = 'now'
     client.send_ooc(f'Playing a song will {stat} edit the area\'s ambience.')
+
+
+def ooc_cmd_cs(client, arg):
+    """
+    Start a one-on-one "Cross Swords" debate with targeted player!
+    Expires in 5 minutes. If there's an ongoing cross-swords already,
+    it will turn into a Scrum Debate (team vs team debate)
+    with you joining the side *against* the <id>.
+    Usage: /cs <id>
+    """
+    try:
+        target = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), True)[0]
+    except:
+        raise ArgumentError('Target not found.')
+    else:
+        client.area.start_cross_swords(client, target)
+        database.log_area('minigame.cs', client, client.area, target=target)
+
+def ooc_cmd_pta(client, arg):
+    """
+    Start a one-on-one "Panic Talk Action" debate with targeted player!
+    Unlike /cs, a Panic Talk Action (PTA) cannot evolve into a Scrum Debate.
+    Expires in 5 minutes.
+    Usage: /pta <id>
+    """
+    pass
