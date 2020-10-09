@@ -60,6 +60,7 @@ class AreaManager:
             self.doc = 'No document.'
             self.status = 'IDLE'
             self.judgelog = []
+            self.evidlog = []
             self.current_music = ''
             self.current_music_player = ''
             self.current_music_player_ipid = -1
@@ -405,6 +406,17 @@ class AreaManager:
             if len(self.judgelog) >= 10:
                 self.judgelog = self.judgelog[1:]
             self.judgelog.append(
+                f'{client.char_name} ({client.ip}) {msg}.')
+
+        def add_to_evidlog(self, client, msg):
+            """
+            Append evidence changes or deletion to the evidence log (max 10 items).
+            :param client: event origin
+            :param msg: event message
+            """
+            if len(self.evidlog) >= 10:
+                self.evidlog = self.evidlog[1:]
+            self.evidlog.append(
                 f'{client.char_name} ({client.ip}) {msg}.')
 
         def add_music_playing(self, client, name, showname=''):

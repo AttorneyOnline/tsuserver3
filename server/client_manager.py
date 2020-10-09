@@ -158,11 +158,14 @@ class ClientManager:
             printset = set(string.ascii_letters + string.digits + "~ -_.',")
             name_ws = name.replace(' ', '')
             if not name_ws or name_ws.isdigit():
+                self.send_ooc('Your OOC name must have at least one letter!')
                 return False
             if not set(name_ws).issubset(printset): #illegal chars in ooc name
+                self.send_ooc('Your OOC name cannot contain special characters!')
                 return False
             for client in self.server.client_manager.clients:
                 if client.name == name:
+                    self.send_ooc('That OOC name is already taken!')
                     return False
             return True
 

@@ -152,10 +152,21 @@ def ooc_cmd_area(client, arg):
 
 def ooc_cmd_getarea(client, arg):
     """
-    Show information about the current area.
-    Usage: /getarea
+    Show information about the current or another area.
+    Usage: /getarea [area id]
     """
-    client.send_area_info(client.area.id, False)
+    if len(arg) == 0:
+        client.send_area_info(client.area.id, False)
+        return
+
+    try:
+        client.server.area_manager.get_area_by_id(int(arg[0]))
+        area = int(arg[0])
+        client.send_area_info(area, False)
+    except ValueError:
+        raise ArgumentError('Area ID must be a number.')
+    except (AreaError, ClientError):
+        raise
 
 
 def ooc_cmd_getareas(client, arg):
@@ -328,13 +339,12 @@ def ooc_cmd_uninvite(client, arg):
 def ooc_cmd_area_kick(client, arg):
     """
     Remove a user from the current area and move them to another area.
-    Usage: /area_kick <id> [destination]
+    Usage: /area_kick <id> [area id]
+    If no area id is entered, user will be kicked to area 0.
     """
-    if client.area.is_locked == client.area.Locked.FREE:
-        raise ClientError('Area isn\'t locked.')
     if not arg:
         raise ClientError(
-            'You must specify a target. Use /area_kick <id> [destination #]')
+            'You must specify a target. Use /area_kick <id> [area id]')
     arg = arg.split(' ')
     if arg[0] == 'afk':
         trgtype = TargetType.AFK
