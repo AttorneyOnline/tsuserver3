@@ -396,6 +396,10 @@ def ooc_cmd_link_lock(client, arg):
                 if not f'{client.area.id}-{target_id}' in client.keys:
                     client.send_ooc(f'You don\'t have the keys to the link {client.area.id}-{target_id}.')
                     continue
+                target_area = client.area.area_manager.get_area_by_id(target_id)
+                if f'{target_id}-{client.area.id}' in client.keys and str(client.area.id) in target_area.links: # Treat it as a single door/path if we have the keys both ways
+                    target_area.links[str(client.area.id)]["locked"] = True
+                    client.send_ooc(f'Locked {client.area.id}-{target_id} both ways.')
             client.area.links[str(target_id)]["locked"] = True
             links.append(target_id)
         if len(links) > 0:
@@ -426,6 +430,10 @@ def ooc_cmd_link_unlock(client, arg):
                 if not f'{client.area.id}-{target_id}' in client.keys:
                     client.send_ooc(f'You don\'t have the keys to the link {client.area.id}-{target_id}.')
                     continue
+                target_area = client.area.area_manager.get_area_by_id(target_id)
+                if f'{target_id}-{client.area.id}' in client.keys and str(client.area.id) in target_area.links: # Treat it as a single door/path if we have the keys both ways
+                    target_area.links[str(client.area.id)]["locked"] = False
+                    client.send_ooc(f'Unlocked {client.area.id}-{target_id} both ways.')
             client.area.links[str(target_id)]["locked"] = False
             links.append(target_id)
         if len(links) > 0:
