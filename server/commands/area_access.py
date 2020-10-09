@@ -300,6 +300,12 @@ def ooc_cmd_links(client, arg):
             if not client.is_mod and not client in client.area.owners:
                 continue
             hidden = ' [H]'
+        
+        if len(value["evidence"]) > 0 and not (client.hidden_in in value["evidence"]):
+            # Can't see hidden links
+            if not client.is_mod and not client in client.area.owners:
+                continue
+            hidden = f' [evi:{value["evidence"]}]'
 
         try:
             area_name = f' - "{client.area.area_manager.get_area_by_id(int(key)).name}"'
@@ -313,9 +319,9 @@ def ooc_cmd_links(client, arg):
         target_pos = value["target_pos"]
         if target_pos != '':
             target_pos = f', pos: {target_pos}'
-        links += f'{key}{area_name}{locked}{hidden}{target_pos}\n'
+        links += f'\n{key}{area_name}{locked}{hidden}{target_pos}'
 
-    client.send_ooc(f'Current area links are: \n{links}')
+    client.send_ooc(f'Current area links are: {links}')
 
 
 @mod_only(area_owners=True)
