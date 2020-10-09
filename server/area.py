@@ -84,21 +84,26 @@ class Area:
         self.can_panic_talk_action = False
         # /prefs end
 
-        # DR minigames settings
+        # DR minigames
         # in seconds, 300s = 5m
         self.cross_swords_timer = 300
         # in seconds, 300s = 5m. How much time is added on top of cross swords.
         self.scrum_debate_added_time = 300
         # in seconds, 300s = 5m
         self.panic_talk_action_timer = 300
-        self.minigame_schedule = None
+        # Cooldown in seconds, 300s = 5m
+        self.minigame_cooldown = 300
         # Who's debating who
-        self.red_team = []
-        self.blue_team = []
+        self.red_team = set()
+        self.blue_team = set()
+        # Minigame name
+        self.minigame = ''
+        # Minigame schedule
+        self.minigame_schedule = None
+        # /end
 
         self.old_muted = False
         self.old_invite_list = set()
-        # /end
 
         # original states for resetting the area after all CMs leave in a single area CM hub
         self.o_name = self._name
@@ -1067,36 +1072,91 @@ class Area:
             return test
         return 0
 
+    @property
+    def minigame_time_left(self):
+        """Time left on the currently running minigame."""
+        if not self.minigame_schedule or self.minigame_schedule.cancelled():
+            return 0
+        return self.minigame_schedule.when() - asyncio.get_event_loop().time()
+
     def end_minigame(self):
         if self.minigame_schedule:
             self.minigame_schedule.cancel()
 
         self.muted = self.old_muted
         self.invite_list = self.old_invite_list
+        self.red_team.clear()
+        self.blue_team.clear()
 
-        self.send_ic(None, '1', 0, "", "", "~~Minigame END!", "", "", 0, -1, 0, 0, [0], 0, 0, 0, "System", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
+        self.send_ic(None, '1', 0, "", "../misc/blank", f"~~{self.minigame} END!", "", "", 0, -1, 0, 0, [0], 0, 0, 0, "System", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
+        self.minigame = ''
 
-    def start_cross_swords(self, client, target):
-        if self.minigame_schedule:
+    def start_cross_swords(self, client, target, pta=False):
+        if not self.minigame_schedule or self.minigame_schedule.cancelled():
+            if (client.char_id in self.red_team and target.char_id in self.blue_team) or (client.char_id in self.blue_team and target.char_id in self.red_team):
+                raise AreaError("Target is already on the opposing team!")
+    
+        if self.minigame == 'Cross Swords':
+            if target.char_id in self.red_team:
+                self.red_team.discard(client.char_id)
+                self.blue_team.add(client.char_id)
+                self.invite_list.add(client.id)
+                team = 'red'
+            elif target.char_id in self.blue_team:
+                self.blue_team.discard(client.char_id)
+                self.red_team.add(client.char_id)
+                self.invite_list.add(client.id)
+                team = 'blue'
+            else:
+                raise AreaError('Target is not part of the minigame!')
+
+            if len(self.blue_team) <= 0:
+                self.broadcast_ooc(f'Blue team conceded!')
+                self.end_minigame()
+                return
+            elif len(self.red_team) <= 0:
+                self.broadcast_ooc(f'Red team conceded!')
+                self.end_minigame()
+                return
+
+            self.broadcast_ooc(f'[{client.id}] {client.showname} has joined the debate against the {team} team!')
+            database.log_area('minigame.sd', client, client.area, target=target, message=f'{self.minigame} against the {team} team!')
+            if self.minigame == 'Scrum Debate':
+                return
+
             timeleft = self.minigame_schedule.when() - asyncio.get_event_loop().time()
-            print(f'Time left: {timeleft}')
             self.minigame_schedule.cancel()
-            minigame = 'Scrum Debate'
+            self.minigame = 'Scrum Debate'
             timer = timeleft + self.scrum_debate_added_time
-        else:
-            minigame = 'Cross Swords'
-            timer = self.cross_swords_timer
+        elif self.minigame == '':
+            if client == target:
+                raise AreaError('You cannot initiate a minigame against yourself!')
+            if pta:
+                self.minigame = 'Panic Talk Action'
+                timer = self.panic_talk_action_timer
+            else:
+                self.minigame = 'Cross Swords'
+                timer = self.cross_swords_timer
             self.old_invite_list = self.invite_list
             self.old_muted = self.muted
+
             self.muted = True
             self.invite_list.clear()
             self.invite_list.add(client.id)
             self.invite_list.add(target.id)
 
+            self.red_team.clear()
+            self.blue_team.clear()
+            self.red_team.add(client.char_id)
+            self.blue_team.add(target.char_id)
+            database.log_area('minigame.cs', client, client.area, target=target, message=f'{self.minigame} {client.showname} VS {target.showname}')
+        else:
+            raise AreaError(f'{self.minigame} is happening! You cannot interrupt it.')
+
         self.minigame_schedule = asyncio.get_event_loop().call_later(
             max(5, timer), lambda: self.end_minigame())
-        self.broadcast_ooc(f'{minigame}! [{client.id}] {client.showname} VS [{target.id}] {target.showname}.\n/cs <id> to join the debate against target ID.')
-        self.send_ic(None, '1', 0, "", "", f'~~}}}}|{minigame}!|\n[{client.id}] ~{client.showname}~ VS [{target.id}] √{target.showname}√\\n{int(timer)} seconds left.', "", "", 0, -1, 0, 0, [0], 0, 0, 0, "System", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
+        self.broadcast_ooc(f'{self.minigame}! [{client.id}] {client.showname} VS [{target.id}] {target.showname}.\n/cs <id> to join the debate against target ID.')
+        self.send_ic(None, '1', 0, "", "../misc/blank", f"~~}}}}|{self.minigame}!|\n[{client.id}] ~{client.showname}~ VS [{target.id}] √{target.showname}√\\n{int(timer)} seconds left.", "", "", 0, -1, 0, 0, [0], 0, 0, 0, "System", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
 
     class JukeboxVote:
         """Represents a single vote cast for the jukebox."""

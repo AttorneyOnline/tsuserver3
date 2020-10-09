@@ -512,13 +512,42 @@ def ooc_cmd_cs(client, arg):
     with you joining the side *against* the <id>.
     Usage: /cs <id>
     """
+    if arg == '':
+        if client.area.minigame_schedule:
+            msg = f"It's {client.area.minigame}!"
+            msg += '\nRed Team:'
+            red = []
+            for cid in client.area.red_team:
+                name = client.server.char_list[cid]
+                for c in client.area.clients:
+                    if c.char_id == cid:
+                        name = c.showname
+                red.append(name)
+            msg += '\n'.join(red)
+
+            msg += '\nBlue Team:'
+            blue = []
+            for cid in client.area.red_team:
+                name = client.server.char_list[cid]
+                for c in client.area.clients:
+                    if c.char_id == cid:
+                        name = c.showname
+                blue.append(name)
+            msg += '\n'.join(blue)
+            msg += f'{int(client.area.minigame_time_left)} seconds left.'
+            client.send_ooc(msg)
+        else:
+            client.send_ooc('There is no minigame running right now.')
+        return
     try:
         target = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), True)[0]
     except:
         raise ArgumentError('Target not found.')
     else:
-        client.area.start_cross_swords(client, target)
-        database.log_area('minigame.cs', client, client.area, target=target)
+        try:
+            client.area.start_cross_swords(client, target)
+        except AreaError as ex:
+            raise ex
 
 def ooc_cmd_pta(client, arg):
     """
@@ -526,5 +555,47 @@ def ooc_cmd_pta(client, arg):
     Unlike /cs, a Panic Talk Action (PTA) cannot evolve into a Scrum Debate.
     Expires in 5 minutes.
     Usage: /pta <id>
+    """
+    if arg == '':
+        if client.area.minigame_schedule:
+            msg = f"It's {client.area.minigame}!"
+            msg += '\nRed Team:'
+            red = []
+            for cid in client.area.red_team:
+                name = client.server.char_list[cid]
+                for c in client.area.clients:
+                    if c.char_id == cid:
+                        name = c.showname
+                red.append(name)
+            msg += '\n'.join(red)
+
+            msg += '\nBlue Team:'
+            blue = []
+            for cid in client.area.red_team:
+                name = client.server.char_list[cid]
+                for c in client.area.clients:
+                    if c.char_id == cid:
+                        name = c.showname
+                blue.append(name)
+            msg += '\n'.join(blue)
+            msg += f'{int(client.area.minigame_time_left)} seconds left.'
+            client.send_ooc(msg)
+        else:
+            client.send_ooc('There is no minigame running right now.')
+        return
+    try:
+        target = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), True)[0]
+    except:
+        raise ArgumentError('Target not found.')
+    else:
+        try:
+            client.area.start_cross_swords(client, target, pta=True)
+        except AreaError as ex:
+            raise ex
+
+def ooc_cmd_concede(client, arg):
+    """
+    Concede a trial minigame and withdraw from either team you're part of.
+    Usage: /concede
     """
     pass

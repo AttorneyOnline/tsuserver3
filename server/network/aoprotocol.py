@@ -748,6 +748,11 @@ class AOProtocol(asyncio.Protocol):
                         # Discord blankpost
                         text = '_ _'
                     self.server.bridgebot.queue_message(webname, text, self.client.char_name)
+            # Minigames
+            if self.client.char_id in self.client.area.red_team:
+                color = 2
+            elif self.client.char_id in self.client.area.blue_team:
+                color = 7
 
         # Additive only works on same-char messages
         if additive and \
