@@ -585,6 +585,38 @@ class Area:
             delay = 200 + self.parse_msg_delay(args[4])
             self.next_message_time = round(time.time() * 1000.0 + delay)
 
+            # Objection used
+            if int(args[10]) == 2:
+                msg = args[4].lower()
+                target = None
+                is_pta = False
+                if self.last_ic_message != None:
+                    # Get char_name from character ID
+                    target = self.server.char_list[int(self.last_ic_message[8])]
+                # contains word "pta" in message
+                if ' pta' in f' {msg} ':
+                    # formatting for `PTA @Jack` or `@Jack PTA`
+                    is_pta = True
+                
+                # message contains an "at" sign aka we're referring to someone specific
+                if '@' in msg:
+                    # formatting for `PTA@Jack`
+                    if msg.startswith('pta'):
+                        is_pta = True
+                    target = msg[msg.find('@')+1:]
+
+                try:
+                    for t in self.clients:
+                        # I apologize for this monstrosity.
+                        if t.showname.lower().startswith(target) or t.showname.lower().startswith(
+                                target.split()[0]) or (t.name != '' and (t.name.lower().startswith(target) or t.name.lower().startswith(
+                                    target.split()[0]))):
+                            self.start_debate(client, t, is_pta)
+                            break
+                except Exception as ex:
+                    client.send_ooc(ex)
+                    return
+
             if client:
                 if args[4].strip() != '' or self.last_ic_message == None or args[8] != self.last_ic_message[8] or self.last_ic_message[4].strip() != '':
                     database.log_area('chat.ic', client, client.area, message=args[4])
@@ -1091,39 +1123,39 @@ class Area:
         self.send_ic(None, '1', 0, "", "../misc/blank", f"~~{self.minigame} END!", "", "", 0, -1, 0, 0, [0], 0, 0, 0, "System", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
         self.minigame = ''
 
-    def start_cross_swords(self, client, target, pta=False):
-        if not self.minigame_schedule or self.minigame_schedule.cancelled():
-            if (client.char_id in self.red_team and target.char_id in self.blue_team) or (client.char_id in self.blue_team and target.char_id in self.red_team):
-                raise AreaError("Target is already on the opposing team!")
-    
-        if self.minigame == 'Cross Swords':
+    def start_debate(self, client, target, pta=False):
+        if (client.char_id in self.red_team and target.char_id in self.blue_team) or (client.char_id in self.blue_team and target.char_id in self.red_team):
+            raise AreaError("Target is already on the opposing team!")
+
+        if self.minigame == 'Scrum Debate':
             if target.char_id in self.red_team:
                 self.red_team.discard(client.char_id)
                 self.blue_team.add(client.char_id)
                 self.invite_list.add(client.id)
-                team = 'red'
+                team = 'blue'
             elif target.char_id in self.blue_team:
                 self.blue_team.discard(client.char_id)
                 self.red_team.add(client.char_id)
                 self.invite_list.add(client.id)
-                team = 'blue'
+                team = 'red'
             else:
                 raise AreaError('Target is not part of the minigame!')
 
             if len(self.blue_team) <= 0:
-                self.broadcast_ooc(f'Blue team conceded!')
+                self.broadcast_ooc('Blue team conceded!')
                 self.end_minigame()
                 return
             elif len(self.red_team) <= 0:
-                self.broadcast_ooc(f'Red team conceded!')
+                self.broadcast_ooc('Red team conceded!')
                 self.end_minigame()
                 return
-
-            self.broadcast_ooc(f'[{client.id}] {client.showname} has joined the debate against the {team} team!')
-            database.log_area('minigame.sd', client, client.area, target=target, message=f'{self.minigame} against the {team} team!')
-            if self.minigame == 'Scrum Debate':
+            self.broadcast_ooc(f'[{client.id}] {client.showname} is now part of the {team} team!')
+            database.log_area('minigame.sd', client, client.area, target=target, message=f'{self.minigame} is now part of the {team} team!')
+        elif self.minigame == 'Cross Swords':
+            if target == client:
+                self.broadcast_ooc(f'[{client.id}] {client.showname} conceded!')
+                self.end_minigame()
                 return
-
             timeleft = self.minigame_schedule.when() - asyncio.get_event_loop().time()
             self.minigame_schedule.cancel()
             self.minigame = 'Scrum Debate'
@@ -1131,12 +1163,6 @@ class Area:
         elif self.minigame == '':
             if client == target:
                 raise AreaError('You cannot initiate a minigame against yourself!')
-            if pta:
-                self.minigame = 'Panic Talk Action'
-                timer = self.panic_talk_action_timer
-            else:
-                self.minigame = 'Cross Swords'
-                timer = self.cross_swords_timer
             self.old_invite_list = self.invite_list
             self.old_muted = self.muted
 
@@ -1149,14 +1175,25 @@ class Area:
             self.blue_team.clear()
             self.red_team.add(client.char_id)
             self.blue_team.add(target.char_id)
-            database.log_area('minigame.cs', client, client.area, target=target, message=f'{self.minigame} {client.showname} VS {target.showname}')
+            if pta:
+                self.minigame = 'Panic Talk Action'
+                timer = self.panic_talk_action_timer
+                database.log_area('minigame.pta', client, client.area, target=target, message=f'{self.minigame} {client.showname} VS {target.showname}')
+            else:
+                self.minigame = 'Cross Swords'
+                timer = self.cross_swords_timer
+                database.log_area('minigame.cs', client, client.area, target=target, message=f'{self.minigame} {client.showname} VS {target.showname}')
         else:
+            if target == client:
+                self.broadcast_ooc(f'[{client.id}] {client.showname} conceded!')
+                self.end_minigame()
+                return
             raise AreaError(f'{self.minigame} is happening! You cannot interrupt it.')
 
         self.minigame_schedule = asyncio.get_event_loop().call_later(
             max(5, timer), lambda: self.end_minigame())
-        self.broadcast_ooc(f'{self.minigame}! [{client.id}] {client.showname} VS [{target.id}] {target.showname}.\n/cs <id> to join the debate against target ID.')
-        self.send_ic(None, '1', 0, "", "../misc/blank", f"~~}}}}|{self.minigame}!|\n[{client.id}] ~{client.showname}~ VS [{target.id}] √{target.showname}√\\n{int(timer)} seconds left.", "", "", 0, -1, 0, 0, [0], 0, 0, 0, "System", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
+        self.broadcast_ooc(f'{self.minigame}! [{client.id}] {client.showname}(RED) VS [{target.id}] {target.showname}(BLUE). You have {int(timer)} seconds.\n/cs <id> to join the debate against target ID.')
+        # self.send_ic(None, '1', 0, "", "../misc/blank", f"~~}}}}|{self.minigame}!|\n[{client.id}] ~{client.showname}~ VS [{target.id}] √{target.showname}√\\n{int(timer)} seconds left.", "", "", 0, -1, 0, 0, [0], 0, 0, 0, "System", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
 
     class JukeboxVote:
         """Represents a single vote cast for the jukebox."""

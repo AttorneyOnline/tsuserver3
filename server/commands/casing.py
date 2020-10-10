@@ -497,7 +497,7 @@ def ooc_cmd_cs(client, arg):
     Usage: /cs <id>
     """
     if arg == '':
-        if client.area.minigame_schedule:
+        if client.area.minigame_schedule and not client.area.minigame_schedule.cancelled():
             msg = f"It's {client.area.minigame}!"
             msg += '\nRed Team:'
             red = []
@@ -529,7 +529,7 @@ def ooc_cmd_cs(client, arg):
         raise ArgumentError('Target not found.')
     else:
         try:
-            client.area.start_cross_swords(client, target)
+            client.area.start_debate(client, target)
         except AreaError as ex:
             raise ex
 
@@ -542,7 +542,7 @@ def ooc_cmd_pta(client, arg):
     Usage: /pta <id>
     """
     if arg == '':
-        if client.area.minigame_schedule:
+        if client.area.minigame_schedule and not client.area.minigame_schedule.cancelled():
             msg = f"It's {client.area.minigame}!"
             msg += '\nRed Team:'
             red = []
@@ -574,7 +574,7 @@ def ooc_cmd_pta(client, arg):
         raise ArgumentError('Target not found.')
     else:
         try:
-            client.area.start_cross_swords(client, target, pta=True)
+            client.area.start_debate(client, target, pta=True)
         except AreaError as ex:
             raise ex
 
@@ -584,4 +584,8 @@ def ooc_cmd_concede(client, arg):
     Concede a trial minigame and withdraw from either team you're part of.
     Usage: /concede
     """
-    pass
+    if client.area.minigame != '':
+        try:
+            client.area.start_debate(client, client) # starting a debate against yourself is a concede
+        except AreaError as ex:
+            raise ex
