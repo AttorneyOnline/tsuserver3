@@ -1187,6 +1187,8 @@ class ClientManager:
                             a.unlock()
                         if a.muted:
                             a.unmute()
+                # This discards the client's ID from any of the area invite lists
+                # as that ID will no longer refer to this specific player.
                 if client.id in a.invite_list:
                     a.invite_list.discard(client.id)
         heappush(self.cur_id, client.id)
