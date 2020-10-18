@@ -611,10 +611,10 @@ class ClientManager:
                     area.broadcast_ooc(f'Someone tried to enter from [{self.area.id}] {self.area.name} but {message}')
                     raise
 
-            if self.char_id == -1 and not (area.area_manager.can_spectate and area.can_spectate) and not allowed:
+            if self.char_id == -1 and not (area.area_manager.can_spectate and area.can_spectate) and not self.is_mod and not self in area.owners:
                 if not area.area_manager.can_spectate:
-                    raise ClientError("Can't spectate in this hub!")
-                raise ClientError("Can't spectate that area!")
+                    raise ClientError("Cannot spectate in this hub!")
+                raise ClientError("Cannot spectate that area!")
 
             target_pos = ''
             if len(self.area.links) > 0:

@@ -44,6 +44,9 @@ def ooc_cmd_bg(client, arg):
         raise AreaError("This area's background is locked!")
     if client.area.cannot_ic_interact(client):
         raise AreaError("You are not on the area's invite list!")
+    if not client.is_mod and not (client in client.area.owners) and client.char_id == -1:
+        raise ClientError("You may not do that while spectating!")
+    if client.char_id == -1 and 
     try:
         client.area.change_background(arg)
     except AreaError:
@@ -77,6 +80,8 @@ def ooc_cmd_status(client, arg):
             raise AreaError("This area's status cannot be changed by anyone who's not a CM or mod!")
         if client.area.cannot_ic_interact(client):
             raise AreaError("You are not on the area's invite list!")
+        if not client.is_mod and not (client in client.area.owners) and client.char_id == -1:
+            raise ClientError("You may not do that while spectating!")
         try:
             client.area.change_status(arg)
             client.area.broadcast_ooc('{} changed status to {}.'.format(
