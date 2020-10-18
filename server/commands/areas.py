@@ -46,7 +46,6 @@ def ooc_cmd_bg(client, arg):
         raise AreaError("You are not on the area's invite list!")
     if not client.is_mod and not (client in client.area.owners) and client.char_id == -1:
         raise ClientError("You may not do that while spectating!")
-    if client.char_id == -1 and 
     try:
         client.area.change_background(arg)
     except AreaError:
@@ -171,7 +170,12 @@ def ooc_cmd_invite(client, arg):
     Usage: /invite <id>
     """
     if not arg:
-        raise ClientError('You must specify a target. Use /invite <id>')
+        msg = 'Current invite list:'
+        msg += '\n'.join([f'[{c.id}] {c.showname}' for c in client.server.client_manager.clients if c.id in client.area.invite_list])
+        msg += '\nUse /invite <id> to invite someone.'
+        client.send_ooc(msg)
+        return
+
     args = arg.split(' ')
 
     try:
