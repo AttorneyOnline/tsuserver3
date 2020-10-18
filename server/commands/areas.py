@@ -170,7 +170,7 @@ def ooc_cmd_invite(client, arg):
     Usage: /invite <id>
     """
     if not arg:
-        msg = 'Current invite list:'
+        msg = 'Current invite list:\n'
         msg += '\n'.join([f'[{c.id}] {c.showname}' for c in client.server.client_manager.clients if c.id in client.area.invite_list])
         msg += '\nUse /invite <id> to invite someone.'
         client.send_ooc(msg)
