@@ -703,12 +703,15 @@ def ooc_cmd_chardesc(client, arg):
     To set someone else's char desc as an admin/GM, or look at their desc, use /chardesc_set or /chardesc_get.
     Usage: /chardesc [desc/id]
     """
-    if client.blinded:
-        raise ClientError('You are blinded!')
     if len(arg) == 0:
         client.send_ooc(f'{client.char_name} Description: {client.desc}')
         database.log_area('chardesc.request', client, client.area)
-    elif arg.isnumeric():
+        return
+
+    if client.blinded:
+        raise ClientError('You are blinded!')
+
+    if arg.isnumeric():
         try:
             target = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), True)[0].char_id
             desc = client.area.area_manager.get_character_data(target, 'desc', '')
@@ -719,10 +722,11 @@ def ooc_cmd_chardesc(client, arg):
             raise ArgumentError('Target not found.')
     else:
         client.desc = arg
-        desc = arg[:128]
-        if len(arg) > len(desc):
-            desc += "... Use /chardesc to read the rest."
-        client.area.broadcast_ooc(f'{client.showname} changed their character description to: {desc}.')
+        if not client.hidden and not client.sneaking:
+            desc = arg[:128]
+            if len(arg) > len(desc):
+                desc += "... Use /chardesc to read the rest."
+            client.area.broadcast_ooc(f'{client.showname} changed their character description to: {desc}.')
         database.log_area('chardesc.change', client, client.area, message=arg)
 
 

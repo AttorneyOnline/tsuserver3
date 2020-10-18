@@ -42,6 +42,8 @@ def ooc_cmd_bg(client, arg):
         return
     if not client in client.area.owners and not client.is_mod and client.area.bg_lock:
         raise AreaError("This area's background is locked!")
+    if client.area.cannot_ic_interact(client):
+        raise AreaError("You are not on the area's invite list!")
     try:
         client.area.change_background(arg)
     except AreaError:
@@ -67,14 +69,14 @@ def ooc_cmd_status(client, arg):
     Usage: /status <idle|rp|casing|looking-for-players|lfp|recess|gaming>
     """
     if not client.area.area_manager.arup_enabled:
-        client.send_ooc('This hub does not use the /status system.')
-        return
+        raise AreaError('This hub does not use the /status system.')
     if len(arg) == 0:
         client.send_ooc(f'Current status: {client.area.status}')
     else:
         if not client.area.can_change_status and not client.is_mod and not client in client.area.owners:
-            client.send_ooc("This area's status cannot be changed by anyone who's not a CM or mod!")
-            return
+            raise AreaError("This area's status cannot be changed by anyone who's not a CM or mod!")
+        if client.area.cannot_ic_interact(client):
+            raise AreaError("You are not on the area's invite list!")
         try:
             client.area.change_status(arg)
             client.area.broadcast_ooc('{} changed status to {}.'.format(
@@ -340,7 +342,7 @@ def ooc_cmd_knock(client, arg):
     """
     args = arg.split()
     if len(args) == 0:
-        raise ArgumentError('You need to input an accessible area name or ID to peek into it!')
+        raise ArgumentError('You need to input an accessible area name or ID to knock!')
     if client.blinded:
         raise ClientError('You are blinded!')
     try:
@@ -438,6 +440,7 @@ def ooc_cmd_peek(client, arg):
         raise
 
 
+@mod_only(area_owners=True)
 def ooc_cmd_max_players(client, arg):
     """
     Set a max amount of players for current area between -1 and 99.
@@ -470,6 +473,10 @@ def ooc_cmd_desc(client, arg):
         client.send_ooc(f'Description: {client.area.desc}')
         database.log_area('desc.request', client, client.area)
     else:
+        if client.area.cannot_ic_interact(client):
+            raise ClientError("You are not on the area's invite list!")
+        if not client.is_mod and not (client in client.area.owners) and client.char_id == -1:
+            raise ClientError("You may not do that while spectating!")
         client.area.desc = arg
         desc = arg[:128]
         if len(arg) > len(desc):

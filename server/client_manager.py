@@ -237,7 +237,7 @@ class ClientManager:
                         else:
                             raise ClientError('Character not available.')
             # We're trying to spectate out of our own accord and either hub or area does not allow spectating.
-            if char_id == -1 and not (self.area.area_manager.can_spectate and self.area.can_spectate) and not force:
+            if char_id == -1 and not (self.area.area_manager.can_spectate and self.area.can_spectate) and not self.is_mod and not (self in self.area.owners) and not force:
                 if not self.area.area_manager.can_spectate:
                     raise ClientError('Cannot spectate in this hub!')
                 raise ClientError('Cannot spectate in this area!')
@@ -611,8 +611,8 @@ class ClientManager:
                     area.broadcast_ooc(f'Someone tried to enter from [{self.area.id}] {self.area.name} but {message}')
                     raise
 
-            if self.char_id == -1 and not (self.area.area_manager.can_spectate and area.can_spectate):
-                if not self.area.area_manager.can_spectate:
+            if self.char_id == -1 and not (area.area_manager.can_spectate and area.can_spectate) and not allowed:
+                if not area.area_manager.can_spectate:
                     raise ClientError("Can't spectate in this hub!")
                 raise ClientError("Can't spectate that area!")
 

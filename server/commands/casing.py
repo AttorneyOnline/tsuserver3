@@ -38,6 +38,10 @@ def ooc_cmd_doc(client, arg):
         client.send_ooc(f'Document: {client.area.doc}')
         database.log_area('doc.request', client, client.area)
     else:
+        if client.area.cannot_ic_interact(client):
+            raise ClientError("You are not on the area's invite list!")
+        if not client.is_mod and not (client in client.area.owners) and client.char_id == -1:
+            raise ClientError("You may not do that while spectating!")
         client.area.change_doc(arg)
         client.area.broadcast_ooc(f'{client.showname} changed the doc link to: {client.area.doc}')
         database.log_area('doc.change', client, client.area, message=arg)
@@ -50,6 +54,10 @@ def ooc_cmd_cleardoc(client, arg):
     """
     if len(arg) != 0:
         raise ArgumentError('This command has no arguments.')
+    if client.area.cannot_ic_interact(client):
+        raise ClientError("You are not on the area's invite list!")
+    if not client.is_mod and not (client in client.area.owners) and client.char_id == -1:
+        raise ClientError("You may not do that while spectating!")
     client.area.change_doc()
     client.area.broadcast_ooc('{} cleared the doc link.'.format(
         client.showname))
@@ -83,6 +91,7 @@ def ooc_cmd_evidence_mod(client, arg):
         )
 
 
+@mod_only(area_owners=True)
 def ooc_cmd_evidence_swap(client, arg):
     """
     Swap the positions of two evidence items on the evidence list.
