@@ -783,8 +783,12 @@ class ClientManager:
                     sorted_clients.append(client)
             if not sorted_clients:
                 return ''
+            # Sort the client list alphabetically based on the showname/charfolder name
             sorted_clients = sorted(sorted_clients,
-                                    key=lambda x: x.char_name or '')
+                                    key=lambda x: x.showname)
+            # Afterwards, sort the client list based on their unique role or status
+            sorted_clients = sorted(sorted_clients,
+                                    key=lambda x: 1 if (x in area.afkers) else 2 if x.hidden else 3 if x.char_id == -1 else 4 if (x in area._owners) else 5 if (x in area.area_manager.owners) else 6 if x.is_mod else 0)
             for c in sorted_clients:
                 info += '\r\n'
                 if c.is_mod:
@@ -800,13 +804,17 @@ class ClientManager:
                     if c.hidden_in != None:
                         name = f':{c.area.evi_list.evidences[c.hidden_in].name}'
                     info += f'[HID{name}]'
-                info += f' [{c.id}] {c.showname}'
+                info += f'[{c.id}] '
                 if c.showname != c.char_name:
-                    info += f' ({c.char_name})'
+                    info += f'"{c.showname}" ({c.char_name})'
+                else:
+                    info += f'{c.showname}'
                 if c.pos != '':
                     info += f' <{c.pos}>'
                 if self.is_mod:
-                    info += f' ({c.ipid}): {c.name}'
+                    info += f' ({c.ipid})'
+                if c.name != '' and (self.is_mod or self in area.owners):
+                    info += f': {c.name}'
             return info
 
         def send_area_info(self, area_id, mods, afk_check=False):
