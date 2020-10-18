@@ -203,7 +203,8 @@ class ClientManager:
             if not set(name_ws).issubset(printset): #illegal chars in ooc name
                 return False
             for client in self.server.client_manager.clients:
-                if client.name == name:
+                # Unless they're our multiclient, we may only have a unique name
+                if self.ipid != client.ipid and client.name == name:
                     return False
             return True
 
