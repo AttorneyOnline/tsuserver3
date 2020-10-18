@@ -1178,7 +1178,7 @@ class ClientManager:
                             a.unlock()
                         if a.muted:
                             a.unmute()
-                if client.id in a.invite_list
+                if client.id in a.invite_list:
                     a.invite_list.discard(client.id)
         heappush(self.cur_id, client.id)
         temp_ipid = client.ipid
