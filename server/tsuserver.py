@@ -471,6 +471,7 @@ class TsuServer3:
          - Backgrounds
          - Commands
          - Banlists
+         - Misc Data
         """
         with open('config/config.yaml', 'r') as cfg:
             cfg_yaml = yaml.safe_load(cfg)
@@ -501,6 +502,7 @@ class TsuServer3:
         self.load_music()
         self.load_backgrounds()
         self.load_ipranges()
+        self.load_miscdata()
 
         import server.commands
         importlib.reload(server.commands)
