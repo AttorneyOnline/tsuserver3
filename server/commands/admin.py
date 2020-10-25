@@ -56,7 +56,7 @@ def ooc_cmd_help(client, arg):
         If you don't understand a specific core feature, check the official
         repository for more information:
 
-        https://github.com/AttorneyOnlineVidya/tsuserver3-AOV
+        https://github.com/AttorneyOnlineVidya/tsuserver3-AOV 
 
         Available Categories:
         ''')

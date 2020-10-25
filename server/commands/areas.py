@@ -17,10 +17,8 @@ __all__ = [
     'ooc_cmd_area_lock',
     'ooc_cmd_area_spectate',
     'ooc_cmd_area_unlock',
+    'ooc_cmd_link',
     'ooc_cmd_update',
-    'ooc_cmd_setupdate',
-    'ooc_cmd_thread',
-    'ooc_cmd_setthread',
     'ooc_cmd_invite',
     'ooc_cmd_uninvite',
     'ooc_cmd_area_kick',
@@ -233,7 +231,46 @@ def ooc_cmd_area_unlock(client, arg):
     client.area.unlock()
     client.send_ooc('Area is unlocked.')
 
+def ooc_cmd_link(client, arg):
+    """
+    Show a requested HTML link, a list of links or set a link.
+    Usage: /link [choice]
+    Mod usage: /link [choice]: <link>
+    """
+    links_list = client.server.misc_data
+    
+    if len(arg) == 0:
+        msg = 'Links available (use /link <option>):\n'
+        msg += "\n".join(links_list)
+        client.send_ooc(msg)
+    # bit sloppy but shrug
+    elif ':' in arg:
+        if client.is_mod:
+            args = arg.split(': ')
+            args[0] = args[0].lower()
+            if args[0] in links_list:
+                try:
+                    client.server.misc_data[args[0]] = args[1]
+                    client.server.save_miscdata()
+                    client.send_ooc(f'{args[0]} set!')
+                    database.log_room(f'set {args[0]}', client, client.area, message=args[1])
+                except:
+                    raise ArgumentError('Input error, link not set.\nUse /link <choice>: [link]')
+            else:
+                raise ArgumentError('Link not found. Use /link to see possible choices.')
+        else:
+            raise ClientError('You must be authorized to do that.')
+    else:
+        arg = arg.lower()
+        if arg in links_list:
+            try:
+                client.send_ooc('Latest {}: {}'.format(arg, client.server.misc_data[arg]))
+            except:
+                raise ClientError('Link has not been set!')
+        else:
+            raise ArgumentError('Link not found. Use /link to see possible choices.')
 
+# Quick access to update
 def ooc_cmd_update(client, arg):
     """
     See the link to the latest update.
@@ -243,42 +280,6 @@ def ooc_cmd_update(client, arg):
         client.send_ooc('Latest Update: {}'.format(client.server.misc_data['update']))
     except:
         raise ClientError('Update not set!')
-
-
-@mod_only()
-def ooc_cmd_setupdate(client, arg):
-    """
-    Set the link to the latest update.
-    Usage: /setupdate <link>
-    """
-    client.server.misc_data['update'] = arg
-    client.server.save_miscdata()
-    client.send_ooc('Update set!')
-    database.log_room('set update', client, client.area, message=arg)
-
-
-def ooc_cmd_thread(client, arg):
-    """
-    See the link to the latest thread.
-    Usage: /thread
-    """
-    try:
-        client.send_ooc('Current Thread: {}'.format(client.server.misc_data['thread']))
-    except:
-        raise ClientError('Thread not set!')
-
-
-@mod_only()
-def ooc_cmd_setthread(client, arg):
-    """
-    Set the link to the latest thread.
-    Usage: /setthread <link>
-    """
-    client.server.misc_data['thread'] = arg
-    client.server.save_miscdata()
-    client.send_ooc('Thread set!')
-    database.log_room('set thread', client, client.area, message=arg)
-
 
 @mod_only(area_owners=True)
 def ooc_cmd_invite(client, arg):
