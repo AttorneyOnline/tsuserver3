@@ -18,6 +18,7 @@ __all__ = [
     'ooc_cmd_area_spectate',
     'ooc_cmd_area_unlock',
     'ooc_cmd_link',
+    'ooc_cmd_removelink',
     'ooc_cmd_update',
     'ooc_cmd_invite',
     'ooc_cmd_uninvite',
@@ -233,7 +234,7 @@ def ooc_cmd_area_unlock(client, arg):
 
 def ooc_cmd_link(client, arg):
     """
-    Show a requested HTML link, a list of links or set a link.
+    Show a requested HTML link, a list of links or add/set a link.
     Usage: /link [choice]
     Mod usage: /link [choice]: <link>
     """
@@ -257,18 +258,51 @@ def ooc_cmd_link(client, arg):
                 except:
                     raise ArgumentError('Input error, link not set.\nUse /link <choice>: [link]')
             else:
-                raise ArgumentError('Link not found. Use /link to see possible choices.')
+                try:
+                    client.server.misc_data[args[0]] = args[1]
+                    client.server.save_miscdata()
+                    client.send_ooc(f'Link "{args[0]}" created and set!')
+                    database.log_room(f'created "{args[0]}" link', client, client.area, message=args[1])
+                except:
+                    raise ArgumentError('Input error, link not set.\nUse /link <choice>: [link]')
         else:
             raise ClientError('You must be authorized to do that.')
     else:
         arg = arg.lower()
+        choice = arg.capitalize()
         if arg in links_list:
             try:
-                client.send_ooc('Latest {}: {}'.format(arg, client.server.misc_data[arg]))
+                if arg == 'update':
+                    client.send_ooc('Latest {}: {}'.format(choice, client.server.misc_data[arg]))
+                else:
+                    client.send_ooc('{}: {}'.format(choice, client.server.misc_data[arg]))
             except:
                 raise ClientError('Link has not been set!')
         else:
             raise ArgumentError('Link not found. Use /link to see possible choices.')
+
+@mod_only()
+def ooc_cmd_removelink(client, arg):
+    """
+    Remove a specific HTML link from data.
+    Usage: /removelink <choice>
+    """
+    links_list = client.server.misc_data
+
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a link to delete.')
+
+    arg = arg.lower()
+    if arg in links_list:
+        try:
+            del links_list[arg]
+            client.server.save_miscdata()
+            client.send_ooc(f'Deleted link "{arg}".')
+            database.log_room('deleted link', client, client.area, message=arg)
+        except:
+            raise ClientError('Error, link has not been deleted.')
+    else:
+        raise ArgumentError('Link not found. Use /link to see possible choices.')
 
 # Quick access to update
 def ooc_cmd_update(client, arg):

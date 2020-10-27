@@ -451,6 +451,15 @@ class AOProtocol(asyncio.Protocol):
                     "While that is not a blankpost, it is still pretty spammy. Try forming sentences."
                 )
                 return
+        if re.search(r'\|-.', frames_sfx):
+            self.client.send_ooc("Your char.ini FrameSFX has issues!")
+            return
+        if re.search(r'\|-.', frames_realization):
+            self.client.send_ooc("Your char.ini FrameRealize has issues!")
+            return
+        if re.search(r'\|-.', frames_shake):
+            self.client.send_ooc("Your char.ini FrameShake has issues!")
+            return
         if text.startswith('/a '):
             part = text.split(' ')
             try:
