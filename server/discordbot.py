@@ -85,3 +85,7 @@ class Bridgebot(commands.Bot):
             print(f'[DiscordBridge] Insufficient permissions - couldnt send char message "{name}: {message}" with avatar "{avatar}" to "{self.channel.name}"')
         except HTTPException:
             print(f'[DiscordBridge] HTTP Failure - couldnt send char message "{name}: {message}" with avatar "{avatar}" to "{self.channel.name}"')
+        except Exception as ex:
+            # This is a workaround to a problem - [Errno 104] Connection reset by peer occurs due to too many calls for this func.
+            # Simple solution is to increase the tickspeed config so it waits longer between messages sent.
+            print(f'[DiscordBridge] Exception - {ex}')
