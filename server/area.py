@@ -982,12 +982,12 @@ class Area:
         self.broadcast_ooc(
             f'{client.showname} [{client.id}] is CM in this area now.')
 
-    def remove_owner(self, client):
+    def remove_owner(self, client, dc=False):
         """
         Remove a CM from the area.
         """
         self._owners.remove(client)
-        if len(client.broadcast_list) > 0:
+        if not dc and len(client.broadcast_list) > 0:
             client.broadcast_list.clear()
             client.send_ooc('Your broadcast list has been cleared.')
 
@@ -1004,10 +1004,11 @@ class Area:
             self.change_background(self.o_background)
             self.pos_lock.clear()
 
-        # Make sure the client's available areas are updated
-        self.broadcast_area_list(client)
-        self.area_manager.send_arup_cms()
-        self.broadcast_evidence_list()
+        if not dc:
+            # Make sure the client's available areas are updated
+            self.broadcast_area_list(client)
+            self.area_manager.send_arup_cms()
+            self.broadcast_evidence_list()
 
         self.broadcast_ooc(
             f'{client.showname} [{client.id}] is no longer CM in this area.')

@@ -1187,14 +1187,7 @@ class ClientManager:
         for hub in self.server.hub_manager.hubs:
             for a in hub.areas:
                 if client in a._owners:
-                    a._owners.remove(client)
-                    if client.area.area_manager.single_cm and len(a._owners) == 0:
-                        if a.locked:
-                            a.unlock()
-                        if a.password != '':
-                            a.password = ''
-                        if a.muted:
-                            a.unmute()
+                    a.remove_owner(client, dc=True)
                 # This discards the client's ID from any of the area invite lists
                 # as that ID will no longer refer to this specific player.
                 if client.id in a.invite_list:
