@@ -742,7 +742,7 @@ class ClientManager:
                     status = f'[{area.status}]'
                 owner = ''
                 if len(area._owners) > 0:
-                    owner = f'[CMs: {area.get_owners()}]'
+                    owner = f'[CM(s): {area.get_owners()}]'
                 locked = '🔒' if area.locked else ''
                 passworded = '🔑' if area.password != '' else ''
                 muted = '🔇' if area.muted else ''

@@ -958,7 +958,7 @@ class Area:
 
     def get_owners(self):
         """
-        Get a string of area's owners (GMs and CMs).
+        Get a string of area's owners (CMs).
         :return: message
         """
         msg = ''

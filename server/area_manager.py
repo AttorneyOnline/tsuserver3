@@ -364,7 +364,7 @@ class AreaManager:
         client.area.broadcast_evidence_list()
 
         self.broadcast_ooc(
-            f'{client.showname} [{client.id}] is GM in this hub now.')
+            f'[{client.id}] {client.showname} ({client.name}) is GM in this hub now.')
 
     def remove_owner(self, client):
         """
@@ -385,19 +385,17 @@ class AreaManager:
         client.area.broadcast_evidence_list()
 
         self.broadcast_ooc(
-            f'{client.showname} [{client.id}] is no longer GM in this hub.')
+            f'[{client.id}] {client.showname} ({client.name}) is no longer GM in this hub.')
 
     def get_gms(self):
         """
         Get a list of GMs.
         :return: message
         """
-        msg = ''
+        gms = set()
         for gm in self.owners:
-            msg += f'[{str(gm.id)}] {gm.name}, '
-        if len(msg) > 2:
-            msg = msg[:-2]
-        return msg
+            gms.add(gm.name)
+        return ', '.join(gms)
 
     def default_area(self):
         """Get the default area."""
