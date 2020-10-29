@@ -301,13 +301,13 @@ def ooc_cmd_links(client, arg):
             # Can't see hidden links
             if not client.is_mod and not client in client.area.owners:
                 continue
-            hidden = ' [H]'
+            hidden = '📦'
         
         if len(value["evidence"]) > 0 and not (client.hidden_in in value["evidence"]):
             # Can't see hidden links
             if not client.is_mod and not client in client.area.owners:
                 continue
-            hidden = f' [evi:{value["evidence"]}]'
+            hidden = f'📦:{value["evidence"]}'
 
         try:
             area_name = f' - "{client.area.area_manager.get_area_by_id(int(key)).name}"'

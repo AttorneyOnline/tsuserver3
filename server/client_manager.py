@@ -805,12 +805,12 @@ class ClientManager:
                 elif c in area._owners:
                     info += '[CM]'
                 if c in area.afkers:
-                    info += '[AFK]'
+                    info += '💤'
                 if c.hidden:
                     name = ''
                     if c.hidden_in != None:
                         name = f':{c.area.evi_list.evidences[c.hidden_in].name}'
-                    info += f'[HID{name}]'
+                    info += f'📦{name}'
                 info += f'[{c.id}] '
                 if c.showname != c.char_name:
                     info += f'"{c.showname}" ({c.char_name})'
