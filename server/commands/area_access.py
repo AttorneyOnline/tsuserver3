@@ -316,7 +316,9 @@ def ooc_cmd_links(client, arg):
 
         locked = ''
         if value["locked"] == True:
-            locked = ' [L]'
+            locked = '🔒'
+        if value["password"] != '':
+            locked = '🔑'
 
         target_pos = value["target_pos"]
         if target_pos != '':

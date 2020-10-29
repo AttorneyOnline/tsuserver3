@@ -743,9 +743,9 @@ class ClientManager:
                 owner = ''
                 if len(area._owners) > 0:
                     owner = f'[CMs: {area.get_owners()}]'
-                locked = '[L]' if area.locked else ''
-                passworded = '[PW]' if area.password != '' else ''
-                muted = '[M]' if area.muted else ''
+                locked = '🔒' if area.locked else ''
+                passworded = '🔑' if area.password != '' else ''
+                muted = '🔇' if area.muted else ''
                 msg += '\r\n'
                 if self.area == area:
                     msg += '* '
@@ -779,9 +779,9 @@ class ClientManager:
             status = ''
             if self.area.area_manager.arup_enabled:
                 status = f' [{area.status}]'
-            locked = '[L]' if area.locked else ''
-            passworded = '[PW]' if area.password != '' else ''
-            muted = '[M]' if area.muted else ''
+            locked = '🔒' if area.locked else ''
+            passworded = '🔑' if area.password != '' else ''
+            muted = '🔇' if area.muted else ''
             info += f'=== [{area.id}] {area.name} (users: {len(player_list)}) {status}{locked}{passworded}{muted}==='
 
             sorted_clients = []
