@@ -22,6 +22,8 @@ __all__ = [
     'ooc_cmd_link_unpeekable',
     'ooc_cmd_link_evidence',
     'ooc_cmd_unlink_evidence',
+    'ooc_cmd_pw',
+    'ooc_cmd_setpw',
 ]
 
 
@@ -319,7 +321,7 @@ def ooc_cmd_links(client, arg):
         target_pos = value["target_pos"]
         if target_pos != '':
             target_pos = f', pos: {target_pos}'
-        links += f'\n{key}{area_name}{locked}{hidden}{target_pos}'
+        links += f'\n!{key}{area_name}{locked}{hidden}{target_pos}'
 
     client.send_ooc(f'Current area links are: {links}')
 
@@ -642,5 +644,84 @@ def ooc_cmd_unlink_evidence(client, arg):
             client.send_ooc(f'Area {client.area.name} link {args[0]} associated evidences cleared.')
     except (ValueError, KeyError):
         raise ArgumentError('Area ID must be a number.')
+    except (AreaError, ClientError):
+        raise
+
+
+def ooc_cmd_pw(client, arg):
+    """
+    Enter a passworded area. Password is case-sensitive and must match the set password exactly, otherwise it will fail.
+    You will move into the target area as soon as the correct password is provided.
+    Leave password empty if you own the area and want to check its current password.
+    Usage:  /pw <id> [password]
+    """
+    link = None
+    password = ''
+    if arg == '':
+        if not client.is_mod and not (client in client.area.owners):
+            raise ArgumentError("You are not allowed to see this area's password. Use /pw <id> [password]")
+        aid = client.area.id
+    else:
+        args = arg.split()
+        aid = args[0]
+        if aid in client.area.links:
+            link = client.area.links[aid]
+        if len(args) > 1:
+            password = args[1]
+
+    try:
+        area = client.area.area_manager.get_area_by_id(int(aid))
+        if password == '':
+            if client.is_mod or client in client.area.owners:
+                if link != None:
+                    client.send_ooc(f'Link {client.area.id}-{area.id} password is: {link.password}')
+                else:
+                    client.send_ooc(f'Area [{area.id}] {area.name} password is: {area.password}')
+            else:
+                raise ClientError("You must provide a password. Use /pw <id> [password]")
+        else:
+            client.change_area(area, password=password)
+    except ValueError:
+        raise ArgumentError('Area ID must be a number.')
+    except (AreaError, ClientError):
+        raise
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_setpw(client, arg):
+    """
+    Context-sensitive function to set a password area(s) and/or area link(s).
+    Pass area id, or link id from current area using !, e.g. 5 vs !5.
+    Leave [password] blank to clear the password.
+    Usage:  /setpw <id> [password]  
+    """
+    args = arg.split()
+    if len(args) == 0:
+        raise ArgumentError('Invalid number of arguments. Use /setpw <id> [password]')
+
+    try:
+        password = ''
+        link = None
+        area = client.area
+        password = args[0]
+        if len(args) > 1:
+            if args[0].startswith('!'):
+                num = args[0][1:]
+                if num in client.area.links:
+                    link = client.area.links[num]
+                    area = client.area.area_manager.get_area_by_id(int(num))
+                else:
+                    raise ArgumentError('Targeted link does not exist in current area.')
+            else:
+                area = client.area.area_manager.get_area_by_id(int(args[0]))
+            password = args[1]
+        if link != None:
+            link["password"] = password
+            client.send_ooc(f'Link {client.area.id}-{area.id} password set to: {password}')
+        else:
+            area.password = password
+            client.send_ooc(f'Area [{area.id}] {area.name} password set to: {password}')
+    except ValueError:
+        raise ArgumentError('Area ID must be a number, or a link ID must start with ! e.g. 5 vs !5.')
     except (AreaError, ClientError):
         raise

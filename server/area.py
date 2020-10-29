@@ -103,12 +103,7 @@ class Area:
         self.recording = False
         self.last_ic_message = None
         self.cards = dict()
-        """
-        #debug
-        self.evidence_list.append(Evidence("WOW", "desc", "1.png"))
-        self.evidence_list.append(Evidence("wewz", "desc2", "2.png"))
-        self.evidence_list.append(Evidence("weeeeeew", "desc3", "3.png"))
-        """
+        self.password = ''
 
         self.jukebox_votes = []
         self.jukebox_prev_char_id = -1
@@ -276,6 +271,8 @@ class Area:
             self.can_spectate = area['can_spectate']
         if 'can_getarea' in area:
             self.can_getarea = area['can_getarea']
+        if 'password' in area:
+            self.password = area['password']
 
         if 'evidence' in area and len(area['evidence']) > 0:
             self.evi_list.evidences.clear()
@@ -285,7 +282,7 @@ class Area:
         if 'links' in area and len(area['links']) > 0:
             self.links.clear()
             for key, value in area['links'].items():
-                locked, hidden, target_pos, can_peek, evidence = False, False, '', True, []
+                locked, hidden, target_pos, can_peek, evidence, password = False, False, '', True, [], ''
                 if 'locked' in value:
                     locked = value['locked']
                 if 'hidden' in value:
@@ -296,7 +293,9 @@ class Area:
                     can_peek = value['can_peek']
                 if 'evidence' in value:
                     evidence = value['evidence']
-                self.link(key, locked, hidden, target_pos, can_peek, evidence)
+                if 'password' in value:
+                    password = value['password']
+                self.link(key, locked, hidden, target_pos, can_peek, evidence, password)
 
         # Update the clients in that area
         self.change_background(self.background)
@@ -354,6 +353,7 @@ class Area:
         area['use_backgrounds_yaml'] = self.use_backgrounds_yaml
         area['can_spectate'] = self.can_spectate
         area['can_getarea'] = self.can_getarea
+        area['password'] = self.password
         if len(self.evi_list.evidences) > 0:
             area['evidence'] = [e.to_dict() for e in self.evi_list.evidences]
         if len(self.links) > 0:
@@ -424,7 +424,7 @@ class Area:
         self.invite_list.clear()
         self.area_manager.send_arup_lock()
     
-    def link(self, target, locked=False, hidden=False, target_pos='', can_peek=True, evidence=[]):
+    def link(self, target, locked=False, hidden=False, target_pos='', can_peek=True, evidence=[], password=''):
         """
         Sets up a one-way connection between this area and targeted area.
         Returns the link dictionary.
@@ -442,6 +442,7 @@ class Area:
             "target_pos": target_pos,
             "can_peek": can_peek,
             "evidence": evidence,
+            "password": password,
         }
         self.links[str(target)] = link
         return link
@@ -993,6 +994,8 @@ class Area:
         if self.area_manager.single_cm and len(self._owners) == 0:
             if self.locked:
                 self.unlock()
+            if self.password != '':
+                self.password = ''
             if self.muted:
                 self.unmute()
             self.name = self.o_name

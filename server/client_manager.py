@@ -593,7 +593,7 @@ class ClientManager:
             elif area.max_players == 0:
                 raise ClientError('Area cannot be accessed by normal means!')
 
-        def change_area(self, area):
+        def change_area(self, area, password=''):
             """
             Switch the client to another area if it's accessible.
             :param area: area to switch to
@@ -611,6 +611,10 @@ class ClientManager:
                     # People from within the area have no distinction between peeking and moving inside
                     area.broadcast_ooc(f'Someone tried to enter from [{self.area.id}] {self.area.name} but {message}')
                     raise
+                else:
+                    # If you get the area's password wrong but the link password is correct, you will pass through.ClientError
+                    if password != area.password and not (len(self.area.links) > 0 and str(area.id) in self.area.links and password == self.area.links[str(area.id)]["password"]):
+                        raise ClientError('Incorrect password! Use /pw <id> [password]')
 
             if self.char_id == -1 and not (area.area_manager.can_spectate and area.can_spectate) and not self.is_mod and not self in area.owners:
                 if not area.area_manager.can_spectate:
@@ -740,13 +744,14 @@ class ClientManager:
                 if len(area._owners) > 0:
                     owner = f'[CMs: {area.get_owners()}]'
                 locked = '[L]' if area.locked else ''
+                passworded = '[PW]' if area.password != '' else ''
                 muted = '[M]' if area.muted else ''
                 msg += '\r\n'
                 if self.area == area:
                     msg += '* '
                 if not self.can_access_area(area):
                     msg += '-x- '
-                msg += f'[{area.id}] {area.name} {users}{status}{owner}{locked}{muted}'
+                msg += f'[{area.id}] {area.name} {users}{status}{owner}{locked}{passworded}{muted}'
             self.send_ooc(msg)
 
         def get_area_info(self, area_id, mods, afk_check):
@@ -775,8 +780,9 @@ class ClientManager:
             if self.area.area_manager.arup_enabled:
                 status = f' [{area.status}]'
             locked = '[L]' if area.locked else ''
+            passworded = '[PW]' if area.password != '' else ''
             muted = '[M]' if area.muted else ''
-            info += f'=== [{area.id}] {area.name} (users: {len(player_list)}) {status}{locked}{muted}==='
+            info += f'=== [{area.id}] {area.name} (users: {len(player_list)}) {status}{locked}{passworded}{muted}==='
 
             sorted_clients = []
             for client in player_list:
@@ -1185,6 +1191,8 @@ class ClientManager:
                     if client.area.area_manager.single_cm and len(a._owners) == 0:
                         if a.locked:
                             a.unlock()
+                        if a.password != '':
+                            a.password = ''
                         if a.muted:
                             a.unmute()
                 # This discards the client's ID from any of the area invite lists
