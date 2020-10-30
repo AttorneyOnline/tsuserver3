@@ -717,6 +717,8 @@ def ooc_cmd_setpw(client, arg):
             else:
                 area = client.area.area_manager.get_area_by_id(int(args[0]))
             password = args[1]
+        if not (client in area.owners):
+            raise ClientError('You do not own that area!')
         if link != None:
             link["password"] = password
             client.send_ooc(f'Link {client.area.id}-{area.id} password set to: {password}')
