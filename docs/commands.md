@@ -97,6 +97,14 @@
 * **unlink_evidence**
     - Unlink evidence from links.
     - Pass evidence ID's which you can see by mousing over evidence.
+* **pw** \<id> [password]
+    - Enter a passworded area. Password is case-sensitive and must match the set password exactly, otherwise it will fail.
+    - You will move into the target area as soon as the correct password is provided.
+    - Leave password empty if you own the area and want to check its current password.
+* **setpw** \<id> [password]
+    - Context-sensitive function to set a password area(s) and/or area link(s).
+    - Pass area id, or link id from current area using !, e.g. 5 vs !5.
+    - Leave [password] blank to clear the password.
 ## Areas
 * **bg** \<background>
     - Set the background of an area.
