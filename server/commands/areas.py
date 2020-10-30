@@ -95,14 +95,13 @@ def ooc_cmd_area(client, arg):
     List areas, or go to another area.
     Usage: /area [id] or /area [name]
     """
-    args = arg.split()
-    if len(args) == 0:
+    if arg == '':
         client.send_area_list(full=client.is_mod or client in client.area.owners)
         return
 
     try:
         for area in client.area.area_manager.areas:
-            if (args[0].isdigit() and area.id == int(args[0])) or area.name.lower() == arg.lower() or area.abbreviation == arg:
+            if area.name.lower() == arg.lower() or area.abbreviation == arg or (arg.isdigit() and area.id == int(arg)):
                 client.change_area(area)
                 return
         raise AreaError('Targeted area not found!')
@@ -349,15 +348,14 @@ def ooc_cmd_knock(client, arg):
     Knock on the target area ID to call on their attention to your area.
     Usage:  /knock <id>
     """
-    args = arg.split()
-    if len(args) == 0:
+    if arg == '':
         raise ArgumentError('You need to input an accessible area name or ID to knock!')
     if client.blinded:
         raise ClientError('You are blinded!')
     try:
         area = None
         for _area in client.area.area_manager.areas:
-            if (args[0].isdigit() and _area.id == int(args[0])) or _area.name.lower() == arg.lower() or _area.abbreviation == args[0]:
+            if _area.name.lower() == arg.lower() or _area.abbreviation == arg or (arg.isdigit() and _area.id == int(arg)):
                 area = _area
                 break
         if area == None:
@@ -396,15 +394,14 @@ def ooc_cmd_peek(client, arg):
     Peek into an area to see if there's people in it.
     Usage:  /peek <id>
     """
-    args = arg.split()
-    if len(args) == 0:
+    if arg == '':
         raise ArgumentError('You need to input an accessible area name or ID to peek into it!')
     if client.blinded:
         raise ClientError('You are blinded!')
     try:
         area = None
         for _area in client.area.area_manager.areas:
-            if (args[0].isdigit() and _area.id == int(args[0])) or _area.name.lower() == arg.lower() or _area.abbreviation == args[0]:
+            if _area.name.lower() == arg.lower() or _area.abbreviation == arg or (arg.isdigit() and _area.id == int(arg)):
                 area = _area
                 break
         if area == None:

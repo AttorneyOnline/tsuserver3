@@ -48,14 +48,13 @@ def ooc_cmd_hub(client, arg):
     List hubs, or go to another hub.
     Usage: /hub [id/name]
     """
-    args = arg.split()
-    if len(args) == 0:
+    if arg == '':
         client.send_hub_list()
         return
 
     try:
         for hub in client.server.hub_manager.hubs:
-            if (args[0].isdigit() and hub.id == int(args[0])) or hub.name.lower() == arg.lower() or hub.abbreviation == args[0]:
+            if hub.name.lower() == arg.lower() or hub.abbreviation == arg or (arg.isdigit() and hub.id == int(arg)):
                 if hub == client.area.area_manager:
                     raise AreaError('User already in specified hub.')
                 preflist = client.server.supported_features.copy()
