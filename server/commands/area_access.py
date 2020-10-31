@@ -600,26 +600,31 @@ def ooc_cmd_link_evidence(client, arg):
     """
     args = arg.split()
     if len(args) <= 0:
-        raise ArgumentError('Invalid number of arguments. Use /link_evidence <aid>')
+        raise ArgumentError('Invalid number of arguments. Use /link_evidence <id> [evi_id(s)]')
+    link = None
+    evidences = []
     try:
         link = client.area.links[args[0]]
         if len(args) > 1:
-            evidences = []
             for evi_id in args[1:]:
                 evi_id = int(evi_id)-1
-                evidences.append(client.area.evi_list.evidences[evi_id].name)
-                link["evidence"].append(evi_id)
-            evidences = ', '.join(f'\'{l}\'' for l in evidences)
-            client.send_ooc(f'Area {client.area.name} link {args[0]} can now only be accessed from {evidences}.')
-        else:
-            evidences = ', '.join([f'\'{client.area.evi_list.evidences[evi].name}\'' for evi in link["evidence"]])
-            client.send_ooc(f'Area {client.area.name} link {args[0]} associated evidences: {evidences}.')
+                client.area.evi_list.evidences[evi_id] # Test if we can access target evidence
+                evidences.append(evi_id)
     except IndexError:
         raise ArgumentError('Evidence not found.')
     except (ValueError, KeyError):
         raise ArgumentError('Area ID must be a number.')
     except (AreaError, ClientError):
         raise
+    else:
+        if len(evidences) > 0:
+            link["evidence"] = evidences
+
+        if len(link["evidence"]) > 0:
+            client.send_ooc(f'Area {client.area.name} link {args[0]} associated evidence IDs: {link["evidence"]}.')
+        else:
+            client.send_ooc(f'Area {client.area.name} link {args[0]} has no associated evidence.')
+
 
 
 @mod_only(area_owners=True)
@@ -631,23 +636,27 @@ def ooc_cmd_unlink_evidence(client, arg):
     """
     args = arg.split()
     if len(args) <= 0:
-        raise ArgumentError('Invalid number of arguments. Use /unlink_evidence <aid>')
+        raise ArgumentError('Invalid number of arguments. Use /unlink_evidence <aid> [evi_id(s)]')
+    link = None
+    evidences = []
     try:
         link = client.area.links[args[0]]
         if len(args) > 1:
-            evidences = []
-            for evi_id in args:
+            for evi_id in args[1:]:
                 evi_id = int(evi_id)-1
-                link["evidence"].remove(evi_id)
-            evidences = ', '.join(str(l) for l in link["evidence"])
-            client.send_ooc(f'Area {client.area.name} link {args[0]} is now unlinked from evidence IDs {evidences}.')
-        else:
-            link["evidence"].clear()
-            client.send_ooc(f'Area {client.area.name} link {args[0]} associated evidences cleared.')
+                evidences.append(evi_id)
     except (ValueError, KeyError):
         raise ArgumentError('Area ID must be a number.')
     except (AreaError, ClientError):
         raise
+    else:
+        if len(evidences) > 0:
+            link["evidence"] = link["evidence"] - evidences
+            evi_list = ', '.join(str(l+1) for l in evidences)
+            client.send_ooc(f'Area {client.area.name} link {args[0]} is now unlinked from evidence IDs: {evi_list}.')
+        else:
+            link["evidence"] = []
+            client.send_ooc(f'Area {client.area.name} link {args[0]} associated evidences cleared.')
 
 
 def ooc_cmd_pw(client, arg):
