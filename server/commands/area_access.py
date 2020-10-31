@@ -307,7 +307,8 @@ def ooc_cmd_links(client, arg):
             # Can't see hidden links
             if not client.is_mod and not client in client.area.owners:
                 continue
-            hidden = f'📦:{value["evidence"]}'
+            evi_list = ', '.join(str(l+1) for l in value["evidence"])
+            hidden = f'📦:{evi_list}'
 
         try:
             area_name = f' - "{client.area.area_manager.get_area_by_id(int(key)).name}"'
@@ -621,7 +622,8 @@ def ooc_cmd_link_evidence(client, arg):
             link["evidence"] = evidences
 
         if len(link["evidence"]) > 0:
-            client.send_ooc(f'Area {client.area.name} link {args[0]} associated evidence IDs: {link["evidence"]}.')
+            evi_list = ', '.join(str(l+1) for l in link["evidence"])
+            client.send_ooc(f'Area {client.area.name} link {args[0]} associated evidence IDs: {evi_list}.')
         else:
             client.send_ooc(f'Area {client.area.name} link {args[0]} has no associated evidence.')
 
