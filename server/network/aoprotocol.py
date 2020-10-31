@@ -636,6 +636,7 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_ooc(f'You discover {c.showname} in the {evi.name}!')
 
             if evi.pos != 'all':
+                evi.desc = f'(Discovered in pos:{evi.pos})\n{evi.desc}'
                 evi.pos = 'all'
                 self.client.area.broadcast_evidence_list()
         # Update the showname ref for the client
