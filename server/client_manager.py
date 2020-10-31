@@ -606,15 +606,16 @@ class ClientManager:
                     self.try_access_area(area)
                 except ClientError as ex:
                     message = str(ex).lower()
-                    if not self.sneaking and not self.hidden and not 'inaccessible' in message:
-                        self.area.broadcast_ooc(f'[{self.id}] {self.showname} tried to enter [{area.id}] {area.name} but {message}')
-                    # People from within the area have no distinction between peeking and moving inside
-                    area.broadcast_ooc(f'Someone tried to enter from [{self.area.id}] {self.area.name} but {message}')
+                    if not 'inaccessible' in message:
+                        if not self.sneaking and not self.hidden:
+                            self.area.broadcast_ooc(f'[{self.id}] {self.showname} tried to enter [{area.id}] {area.name} but {message}')
+                        # People from within the area have no distinction between peeking and moving inside
+                        area.broadcast_ooc(f'Someone tried to enter from [{self.area.id}] {self.area.name} but {message}')
                     raise
-                else:
-                    # If you get the area's password wrong but the link password is correct, you will pass through.ClientError
-                    if password != area.password and not (len(self.area.links) > 0 and str(area.id) in self.area.links and password == self.area.links[str(area.id)]["password"]):
-                        raise ClientError('Incorrect password! Use /pw <id> [password]')
+
+                if (area.password != '' and password != area.password) or (
+                    len(self.area.links) > 0 and str(area.id) in self.area.links and self.area.links[str(area.id)]["password"] != '' and password != self.area.links[str(area.id)]["password"]):
+                    raise ClientError('Incorrect password! Use /pw <id> [password]')
 
             if self.char_id == -1 and not (area.area_manager.can_spectate and area.can_spectate) and not self.is_mod and not self in area.owners:
                 if not area.area_manager.can_spectate:

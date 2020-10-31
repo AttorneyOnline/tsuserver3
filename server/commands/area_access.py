@@ -295,7 +295,7 @@ def ooc_cmd_links(client, arg):
     Usage:  /links
     """
     links = ''
-    for key, value in client.area.links.items():
+    for key, value in sorted(client.area.links.items(), key=lambda x: int(x[0])):
         hidden = ''
         if value["hidden"] == True:
             # Can't see hidden links
@@ -686,8 +686,8 @@ def ooc_cmd_pw(client, arg):
         area = client.area.area_manager.get_area_by_id(int(aid))
         if password == '':
             if client.is_mod or client in client.area.owners:
-                if link != None:
-                    client.send_ooc(f'Link {client.area.id}-{area.id} password is: {link.password}')
+                if link != None and link["password"] != '':
+                    client.send_ooc(f'Link {client.area.id}-{area.id} password is: {link["password"]}')
                 else:
                     client.send_ooc(f'Area [{area.id}] {area.name} password is: {area.password}')
             else:
@@ -716,17 +716,16 @@ def ooc_cmd_setpw(client, arg):
         password = ''
         link = None
         area = client.area
-        password = args[0]
-        if len(args) > 1:
-            if args[0].startswith('!'):
-                num = args[0][1:]
-                if num in client.area.links:
-                    link = client.area.links[num]
-                    area = client.area.area_manager.get_area_by_id(int(num))
-                else:
-                    raise ArgumentError('Targeted link does not exist in current area.')
+        if args[0].startswith('!'):
+            num = args[0][1:]
+            if num in client.area.links:
+                link = client.area.links[num]
+                area = client.area.area_manager.get_area_by_id(int(num))
             else:
-                area = client.area.area_manager.get_area_by_id(int(args[0]))
+                raise ArgumentError('Targeted link does not exist in current area.')
+        else:
+            area = client.area.area_manager.get_area_by_id(int(args[0]))
+        if len(args) > 1:
             password = args[1]
         if not client.is_mod and not (client in area.owners):
             raise ClientError('You do not own that area!')
