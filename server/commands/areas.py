@@ -250,6 +250,7 @@ def ooc_cmd_link(client, arg):
         if client.is_mod:
             args = arg.split(': ')
             args[0] = args[0].lower()
+            args[0] = args[0].strip(' ')
             if args[0] in links_list:
                 try:
                     client.server.misc_data[args[0]] = args[1]
@@ -260,13 +261,16 @@ def ooc_cmd_link(client, arg):
                     raise ArgumentError('Input error, link not set.\nUse /link <choice>: [link]')
             else:
                 if len(links_list) < max:
-                    try:
-                        client.server.misc_data[args[0]] = args[1]
-                        client.server.save_miscdata()
-                        client.send_ooc(f'Link "{args[0]}" created and set!')
-                        database.log_room(f'created "{args[0]}" link', client, client.area, message=args[1])
-                    except:
-                        raise ArgumentError('Input error, link not set.\nUse /link <choice>: [link]')
+                    if args[0].isspace() or args[0] == "":
+                        raise ArgumentError('You must enter a link name.')
+                    else:
+                        try:
+                            client.server.misc_data[args[0]] = args[1]
+                            client.server.save_miscdata()
+                            client.send_ooc(f'Link "{args[0]}" created and set!')
+                            database.log_room(f'created "{args[0]}" link', client, client.area, message=args[1])
+                        except:
+                            raise ArgumentError('Input error, link not set.\nUse /link <choice>: [link]')
                 else:
                     raise ClientError('Link list is full!')
         else:
