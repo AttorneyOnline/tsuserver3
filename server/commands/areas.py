@@ -284,6 +284,7 @@ def ooc_cmd_link(client, arg):
                     client.send_ooc('Latest {}: {}'.format(choice, client.server.misc_data[arg]))
                 else:
                     client.send_ooc('{}: {}'.format(choice, client.server.misc_data[arg]))
+                    database.log_room(f'requested link', client, client.area, message=arg)
             except:
                 raise ClientError('Link has not been set!')
         else:
