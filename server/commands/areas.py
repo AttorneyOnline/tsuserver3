@@ -256,7 +256,7 @@ def ooc_cmd_link(client, arg):
                     client.server.misc_data[args[0]] = args[1]
                     client.server.save_miscdata()
                     client.send_ooc(f'{args[0]} set!')
-                    database.log_room(f'set {args[0]}', client, client.area, message=args[1])
+                    database.log_room(f'link.set "{args[0]}"', client, client.area, message=args[1])
                 except:
                     raise ArgumentError('Input error, link not set.\nUse /link <choice>: [link]')
             else:
@@ -268,7 +268,7 @@ def ooc_cmd_link(client, arg):
                             client.server.misc_data[args[0]] = args[1]
                             client.server.save_miscdata()
                             client.send_ooc(f'Link "{args[0]}" created and set!')
-                            database.log_room(f'created "{args[0]}" link', client, client.area, message=args[1])
+                            database.log_room(f'link.create "{args[0]}"', client, client.area, message=args[1])
                         except:
                             raise ArgumentError('Input error, link not set.\nUse /link <choice>: [link]')
                 else:
@@ -284,7 +284,7 @@ def ooc_cmd_link(client, arg):
                     client.send_ooc('Latest {}: {}'.format(choice, client.server.misc_data[arg]))
                 else:
                     client.send_ooc('{}: {}'.format(choice, client.server.misc_data[arg]))
-                    database.log_room(f'requested link', client, client.area, message=arg)
+                    database.log_room('link.request', client, client.area, message=arg)
             except:
                 raise ClientError('Link has not been set!')
         else:
@@ -307,7 +307,7 @@ def ooc_cmd_removelink(client, arg):
             del links_list[arg]
             client.server.save_miscdata()
             client.send_ooc(f'Deleted link "{arg}".')
-            database.log_room('deleted link', client, client.area, message=arg)
+            database.log_room('link.delete', client, client.area, message=arg)
         except:
             raise ClientError('Error, link has not been deleted.')
     else:
