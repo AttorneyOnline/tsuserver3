@@ -259,7 +259,7 @@ class TsuServer3:
 
     def save_miscdata(self):
         with open('config/data.yaml', 'w') as data:
-            json.dump(self.misc_data, data)
+            json.dump(self.misc_data, data, indent=4)
 
     def load_backgrounds(self):
         """Load the backgrounds list from a YAML file."""
@@ -471,6 +471,7 @@ class TsuServer3:
          - Backgrounds
          - Commands
          - Banlists
+         - Misc Data
         """
         with open('config/config.yaml', 'r') as cfg:
             cfg_yaml = yaml.safe_load(cfg)
@@ -501,6 +502,7 @@ class TsuServer3:
         self.load_music()
         self.load_backgrounds()
         self.load_ipranges()
+        self.load_miscdata()
 
         import server.commands
         importlib.reload(server.commands)
