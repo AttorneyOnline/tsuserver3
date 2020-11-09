@@ -24,7 +24,7 @@ INSERT INTO area_events (event_time, ipid, target_ipid, area_name, char_name, oo
   SELECT event_time, ipid, target_ipid, room_name, char_name, ooc_name, event_subtype, message
   FROM room_events;
 
-DROP TABLE room_events
+DROP TABLE room_events;
 
 -- Rename anything that has "room_" in it to "area_" for consistency
 ALTER TABLE room_event_types RENAME TO area_event_types;
