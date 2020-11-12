@@ -616,6 +616,8 @@ def ooc_cmd_ungm(client, arg):
 def ooc_cmd_broadcast(client, arg):
     """
     Start broadcasting your IC, Music and Judge buttons to specified area ID's.
+    To include all areas, use /broadcast all.
+    /clear_broadcast to stop broadcasting.
     Usage: /broadcast <id(s)>
     """
     args = arg.split()

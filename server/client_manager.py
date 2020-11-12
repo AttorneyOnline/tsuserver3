@@ -744,6 +744,7 @@ class ClientManager:
                 owner = ''
                 if len(area._owners) > 0:
                     owner = f'[CM(s): {area.get_owners()}]'
+                hidden = 📦 if area.hidden else ''
                 locked = '🔒' if area.locked else ''
                 passworded = '🔑' if area.password != '' else ''
                 muted = '🔇' if area.muted else ''
@@ -752,7 +753,7 @@ class ClientManager:
                     msg += '* '
                 if not self.can_access_area(area):
                     msg += '-x- '
-                msg += f'[{area.id}] {area.name} {users}{status}{owner}{locked}{passworded}{muted}'
+                msg += f'[{area.id}] {area.name} {users}{status}{owner}{hidden}{locked}{passworded}{muted}'
             self.send_ooc(msg)
 
         def get_area_info(self, area_id, mods, afk_check):
@@ -780,10 +781,11 @@ class ClientManager:
             status = ''
             if self.area.area_manager.arup_enabled:
                 status = f' [{area.status}]'
+            hidden = 📦 if area.hidden else ''
             locked = '🔒' if area.locked else ''
             passworded = '🔑' if area.password != '' else ''
             muted = '🔇' if area.muted else ''
-            info += f'=== [{area.id}] {area.name} (users: {len(player_list)}) {status}{locked}{passworded}{muted}==='
+            info += f'=== [{area.id}] {area.name} (users: {len(player_list)}) {status}{hidden}{locked}{passworded}{muted}==='
 
             sorted_clients = []
             for client in player_list:

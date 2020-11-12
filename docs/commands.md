@@ -346,8 +346,10 @@ needing a certain list of positions to be filled up.
     - If blank, demote yourself from being a GM.
 * **broadcast** \<id(s)>
     - Start broadcasting your IC, Music and Judge buttons to specified area ID's.
+    - To include all areas, use /broadcast all.
+    - /clear_broadcast to stop broadcasting.
 * **clear_broadcast**
-    - Stop broadcasting your IC, Music and Judge buttons..
+    - Stop broadcasting your IC, Music and Judge buttons.
 ## Messaging
 * **a**  \<area> \<message>
     - Send a message to an area that you are a CM in.
