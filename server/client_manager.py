@@ -744,7 +744,7 @@ class ClientManager:
                 owner = ''
                 if len(area._owners) > 0:
                     owner = f'[CM(s): {area.get_owners()}]'
-                hidden = 📦 if area.hidden else ''
+                hidden = '📦' if area.hidden else ''
                 locked = '🔒' if area.locked else ''
                 passworded = '🔑' if area.password != '' else ''
                 muted = '🔇' if area.muted else ''
@@ -781,7 +781,7 @@ class ClientManager:
             status = ''
             if self.area.area_manager.arup_enabled:
                 status = f' [{area.status}]'
-            hidden = 📦 if area.hidden else ''
+            hidden = '📦' if area.hidden else ''
             locked = '🔒' if area.locked else ''
             passworded = '🔑' if area.password != '' else ''
             muted = '🔇' if area.muted else ''
