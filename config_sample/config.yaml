@@ -81,7 +81,7 @@ max_chars_ic: 256
 
 # Set up a Discord Bridge bot that keeps track of user messages on both ends (AO2 and Discord).
 bridgebot:
-  enabled: true # Whether or not this bot is enabled
+  enabled: false # Whether or not this bot is enabled
   token: string1234 # Discord Token for the bot
   channel: ao2-lobby # channel to set up a bridge with
   character: Ponco # character folder for Bridgebot to use
