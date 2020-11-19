@@ -2,7 +2,7 @@ import re
 
 from server import database
 from server.constants import TargetType
-from server.exceptions import ClientError, ServerError, ArgumentError
+from server.exceptions import ClientError, ServerError, ArgumentError, AreaError
 
 from . import mod_only
 
@@ -26,6 +26,9 @@ __all__ = [
     'ooc_cmd_testimony_remove',
     'ooc_cmd_testimony_amend',
     'ooc_cmd_testimony_swap',
+    'ooc_cmd_cs',
+    'ooc_cmd_pta',
+    'ooc_cmd_concede',
 ]
 
 
@@ -492,3 +495,106 @@ def ooc_cmd_testimony_swap(client, arg):
         raise ArgumentError('Index out of bounds!')
     except ClientError:
         raise
+
+
+def ooc_cmd_cs(client, arg):
+    """
+    Start a one-on-one "Cross Swords" debate with targeted player!
+    Expires in 5 minutes. If there's an ongoing cross-swords already,
+    it will turn into a Scrum Debate (team vs team debate)
+    with you joining the side *against* the <id>.
+    Usage: /cs <id>
+    """
+    if arg == '':
+        if client.area.minigame_schedule and not client.area.minigame_schedule.cancelled():
+            msg = f"It's {client.area.minigame}!"
+            msg += '\nRed Team:'
+            red = []
+            for cid in client.area.red_team:
+                name = client.server.char_list[cid]
+                for c in client.area.clients:
+                    if c.char_id == cid:
+                        name = c.showname
+                red.append(name)
+            msg += '\n'.join(red)
+
+            msg += '\nBlue Team:'
+            blue = []
+            for cid in client.area.red_team:
+                name = client.server.char_list[cid]
+                for c in client.area.clients:
+                    if c.char_id == cid:
+                        name = c.showname
+                blue.append(name)
+            msg += '\n'.join(blue)
+            msg += f'{int(client.area.minigame_time_left)} seconds left.'
+            client.send_ooc(msg)
+        else:
+            client.send_ooc('There is no minigame running right now.')
+        return
+    try:
+        target = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), True)[0]
+    except:
+        raise ArgumentError('Target not found.')
+    else:
+        try:
+            client.area.start_debate(client, target)
+        except AreaError as ex:
+            raise ex
+
+
+def ooc_cmd_pta(client, arg):
+    """
+    Start a one-on-one "Panic Talk Action" debate with targeted player!
+    Unlike /cs, a Panic Talk Action (PTA) cannot evolve into a Scrum Debate.
+    Expires in 5 minutes.
+    Usage: /pta <id>
+    """
+    if arg == '':
+        if client.area.minigame_schedule and not client.area.minigame_schedule.cancelled():
+            msg = f"It's {client.area.minigame}!"
+            msg += '\nRed Team:'
+            red = []
+            for cid in client.area.red_team:
+                name = client.server.char_list[cid]
+                for c in client.area.clients:
+                    if c.char_id == cid:
+                        name = c.showname
+                red.append(name)
+            msg += '\n'.join(red)
+
+            msg += '\nBlue Team:'
+            blue = []
+            for cid in client.area.red_team:
+                name = client.server.char_list[cid]
+                for c in client.area.clients:
+                    if c.char_id == cid:
+                        name = c.showname
+                blue.append(name)
+            msg += '\n'.join(blue)
+            msg += f'{int(client.area.minigame_time_left)} seconds left.'
+            client.send_ooc(msg)
+        else:
+            client.send_ooc('There is no minigame running right now.')
+        return
+    try:
+        target = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), True)[0]
+    except:
+        raise ArgumentError('Target not found.')
+    else:
+        try:
+            client.area.start_debate(client, target, pta=True)
+        except AreaError as ex:
+            raise ex
+
+
+def ooc_cmd_concede(client, arg):
+    """
+    Concede a trial minigame and withdraw from either team you're part of.
+    Usage: /concede
+    """
+    if client.area.minigame != '':
+        try:
+            client.area.start_debate(client, client) # starting a debate against yourself is a concede
+        except AreaError as ex:
+            raise ex
