@@ -604,13 +604,7 @@ class ClientManager:
             if not allowed:
                 try:
                     self.try_access_area(area)
-                except ClientError as ex:
-                    message = str(ex).lower()
-                    if not 'inaccessible' in message:
-                        if not self.sneaking and not self.hidden:
-                            self.area.broadcast_ooc(f'[{self.id}] {self.showname} tried to enter [{area.id}] {area.name} but {message}')
-                        # People from within the area have no distinction between peeking and moving inside
-                        area.broadcast_ooc(f'Someone tried to enter from [{self.area.id}] {self.area.name} but {message}')
+                except ClientError:
                     raise
 
                 if (area.password != '' and password != area.password) or (
