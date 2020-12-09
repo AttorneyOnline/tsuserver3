@@ -420,11 +420,19 @@ needing a certain list of positions to be filled up.
 * **notecard** \<message>
     - Write a notecard that can only be revealed by a CM.
 * **notecard_clear**
-    - Erase a notecard.
+    - Clear all notecards as a CM.
 * **notecard_reveal**
     - Reveal all notecards and their owners.
 * **notecard_check**
     - Check all notecards and their owners privately with a message telling others you've done so.
+* **vote** \<id>
+    - Cast a vote for a particular user that can only be revealed by a CM.
+* **vote_clear**
+    - Clear all votes as a CM.
+* **vote_reveal**
+    - Reveal the number of votes, the voters and those with the highest amount of votes.
+* **vote_check**
+    - Check the number of votes, the voters and those with the highest amount of votes privately with a message telling others you've done so.
 * **rolla_reload**
     - Reload ability dice sets from a configuration file.
     - The configuration file is located in `config/dice.yaml`.

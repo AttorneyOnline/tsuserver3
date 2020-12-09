@@ -127,6 +127,7 @@ class Area:
         self.recording = False
         self.last_ic_message = None
         self.cards = dict()
+        self.votes = dict()
         self.password = ''
 
         self.jukebox_votes = []

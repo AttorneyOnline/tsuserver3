@@ -1,6 +1,7 @@
 import random
 
 from server import database
+from server.constants import TargetType
 from server.exceptions import ClientError, ServerError, ArgumentError
 
 from . import mod_only
@@ -12,6 +13,10 @@ __all__ = [
     'ooc_cmd_notecard_clear',
     'ooc_cmd_notecard_reveal',
     'ooc_cmd_notecard_check',
+    'ooc_cmd_vote',
+    'ooc_cmd_vote_clear',
+    'ooc_cmd_vote_reveal',
+    'ooc_cmd_vote_check',
     'ooc_cmd_rolla_reload',
     'ooc_cmd_rolla_set',
     'ooc_cmd_rolla',
@@ -166,25 +171,26 @@ def ooc_cmd_notecard(client, arg):
     Usage: /notecard <message>
     """
     if len(arg) == 0:
-        raise ArgumentError('You must specify the contents of the note card.')
+        if client.char_name in client.area.cards:
+            client.send_ooc(f'Your current notecard is {client.area.cards[client.char_name]}. Usage: /notecard <message>')
+        else:
+            client.send_ooc('No notecard found. Usage: /notecard <message>')
+        return
     client.area.cards[client.char_name] = arg
     client.area.broadcast_ooc('{} wrote a note card.'.format(
         client.showname))
     database.log_area('notecard', client, client.area)
 
 
+@mod_only(area_owners=True)
 def ooc_cmd_notecard_clear(client, arg):
     """
-    Erase a notecard.
+    Clear all notecards as a CM.
     Usage: /notecard_clear
     """
-    try:
-        del client.area.cards[client.char_name]
-        client.area.broadcast_ooc('{} erased their note card.'.format(
-            client.showname))
-        database.log_area('notecard_clear', client, client.area)
-    except KeyError:
-        raise ClientError('You do not have a note card.')
+    client.area.cards.clear()
+    client.area.broadcast_ooc(f'[{client.id}] {client.showname} has cleared all the note cards in this area.')
+    database.log_area('notecard_clear', client, client.area)
 
 
 @mod_only(area_owners=True)
@@ -195,11 +201,11 @@ def ooc_cmd_notecard_reveal(client, arg):
     """
     if len(client.area.cards) == 0:
         raise ClientError('There are no cards to reveal in this area.')
-    msg = 'Note cards have been revealed.'
+    msg = 'Note cards have been revealed:'
     for card_owner, card_msg in client.area.cards.items():
         msg += f'\n{card_owner}: {card_msg}'
-    client.area.cards.clear()
     client.area.broadcast_ooc(msg)
+    client.send_ooc('Use /notecard_clear for clearing.')
     database.log_area('notecard_reveal', client, client.area)
 
 
@@ -216,7 +222,94 @@ def ooc_cmd_notecard_check(client, arg):
     for card_owner, card_msg in client.area.cards.items():
         msg += f'\n{card_owner}: {card_msg}'
     client.send_ooc(msg)
+    client.send_ooc('Use /notecard_clear for clearing, or /notecard_reveal to reveal the results publicly.')
     database.log_area('notecard_check', client, client.area)
+
+
+def ooc_cmd_vote(client, arg):
+    """
+    Cast a vote for a particular user that can only be revealed by a CM.
+    Usage: /vote <id>
+    """
+    args = arg.split()
+    if len(args) == 0:
+        raise ArgumentError('Please provide a client ID. Usage: /vote <id>.')
+    target = client.server.client_manager.get_targets(client, TargetType.ID,
+                                                            int(args[0]), False)[0]
+    client.area.votes.setdefault(target.char_name, []).append(client.char_name)
+    client.area.broadcast_ooc(f'[{client.id}] {client.showname} cast a vote.')
+    database.log_area('vote', client, client.area)
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_vote_clear(client, arg):
+    """
+    Clear all votes as a CM.
+    Usage: /vote_clear
+    """
+    client.area.votes.clear()
+    client.area.broadcast_ooc(f'[{client.id}] {client.showname} has cleared all the votes in this area.')
+    database.log_area('vote_clear', client, client.area)
+
+
+def get_vote_results(votes):
+    # Sort the votes, starting from the least votes ending with the most votes. Note that x[1] is a list of voters, hence the len().
+    votes = sorted(votes.items(), key = lambda x: len(x[1]))
+    msg = ""
+    # Iterating through the votes...
+    for key, value in votes:
+        # Create a comma-separated list of people who voted for this person
+        voters = ', '.join(value)
+        num = len(value)
+        s = 's' if num > 1 else ''
+        msg += f'\n{num} vote{s} for {key} - voted by {voters}.'
+
+    # Get the maximum amount of votes someone received
+    mx = len(votes[0][1])
+    # Determine a list of winners - usually it's just one winner, but there's multiple if it's a tie.
+    winners = [k for k, v in votes if len(v) == mx]
+
+    # If we have a tie...
+    if len(winners) > 1:
+        # Create a comma-separated list of winners
+        tied = ', '.join(winners)
+        # Display.
+        msg += f'\n{tied} have tied for most votes.'
+    else:
+        # Display the sole winner.
+        msg += f'\n{winners[0]} has most votes.'
+    return msg
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_vote_reveal(client, arg):
+    """
+    Reveal the number of votes, the voters and those with the highest amount of votes.
+    Usage: /vote_reveal
+    """
+    if len(client.area.votes) == 0:
+        raise ClientError('There are no votes to reveal in this area.')
+    msg = 'Votes have been revealed:'
+    msg += get_vote_results(client.area.votes)
+    client.area.broadcast_ooc(msg)
+    client.send_ooc('Use /vote_clear for clearing.')
+    database.log_area('vote_reveal', client, client.area)
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_vote_check(client, arg):
+    """
+    Check the number of votes, the voters and those with the highest amount of votes privately with a message telling others you've done so.
+    Usage: /vote_check
+    """
+    if len(client.area.votes) == 0:
+        raise ClientError('There are no votes to check in this area.')
+    client.area.broadcast_ooc(f'[{client.id}] {client.showname} has checked the votes in this area.')
+    msg = 'Votes in this area:'
+    msg += get_vote_results(client.area.votes)
+    client.send_ooc(msg)
+    client.send_ooc('Use /vote_clear for clearing, or /vote_reveal to reveal the results publicly.')
+    database.log_area('vote_check', client, client.area)
 
 
 @mod_only()
