@@ -427,8 +427,9 @@ needing a certain list of positions to be filled up.
     - Check all notecards and their owners privately with a message telling others you've done so.
 * **vote** \<id>
     - Cast a vote for a particular user that can only be revealed by a CM.
-* **vote_clear**
+* **vote_clear** [char_folder]
     - Clear all votes as a CM.
+    - Include [char_folder] (case-sensitive) to only clear a specific voter.
 * **vote_reveal**
     - Reveal the number of votes, the voters and those with the highest amount of votes.
 * **vote_check**

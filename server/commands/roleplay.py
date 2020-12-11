@@ -234,6 +234,8 @@ def ooc_cmd_vote(client, arg):
     args = arg.split()
     if len(args) == 0:
         raise ArgumentError('Please provide a client ID. Usage: /vote <id>.')
+    if client.char_name in [y for x in client.area.votes.values() for y in x]:
+        raise ArgumentError('You already cast your vote! Wait on the CM to /vote_clear.')
     target = client.server.client_manager.get_targets(client, TargetType.ID,
                                                             int(args[0]), False)[0]
     client.area.votes.setdefault(target.char_name, []).append(client.char_name)
@@ -245,8 +247,16 @@ def ooc_cmd_vote(client, arg):
 def ooc_cmd_vote_clear(client, arg):
     """
     Clear all votes as a CM.
-    Usage: /vote_clear
+    Include [char_folder] (case-sensitive) to only clear a specific voter.
+    Usage: /vote_clear [char_folder]
     """
+    if arg != "":
+        for value in client.area.votes.values():
+            if arg in value:
+                value.remove(arg)
+                client.area.broadcast_ooc(f"[{client.id}] {client.showname} has cleared {arg}'s vote.")
+                return
+        raise ClientError(f'No vote was cast by {arg}! (This is case-sensitive - are you sure you spelt the voter character folder right?)')
     client.area.votes.clear()
     client.area.broadcast_ooc(f'[{client.id}] {client.showname} has cleared all the votes in this area.')
     database.log_area('vote_clear', client, client.area)
@@ -265,7 +275,7 @@ def get_vote_results(votes):
         msg += f'\n{num} vote{s} for {key} - voted by {voters}.'
 
     # Get the maximum amount of votes someone received
-    mx = len(votes[0][1])
+    mx = len(votes[len(votes)-1][1])
     # Determine a list of winners - usually it's just one winner, but there's multiple if it's a tie.
     winners = [k for k, v in votes if len(v) == mx]
 
