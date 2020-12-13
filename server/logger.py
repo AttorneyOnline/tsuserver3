@@ -26,7 +26,9 @@ import os
 
 class EventLogger:
     """
-    Code for the event logger, which pulls double duty as the debug logger
+    Code for the event logger. Note that this is not the same as the debug logger,
+    which is a default instance of the "logging" library's logger class. This has its own
+    debug logger, which is gross and confusing. TODO: Figure out if it's even used.
     """
 
     def setup_logger(self, debug):
@@ -82,7 +84,8 @@ class EventLogger:
 
 class MessageBuffer():
     """
-    Represents an instance of a message buffer used for as-needed logging.
+    Represents an instance of a message buffer used for as-needed logging. This should not
+    be constructed unless the user turns on buffer mode.
     """
     buffer_counter: int
     message_buffer: list
@@ -100,7 +103,7 @@ class MessageBuffer():
     def dump_log(self, area, reason, client):
         if not os.path.exists('reports'):
             os.mkdir('reports')
-        with open(os.path.join('reports', str(arrow.get().datetime).replace(':', '-') + '.txt'), 'w') as f:
+        with open(os.path.join('reports', str(arrow.get().datetime).replace(':', '.') + '.txt'), 'w') as f:
             f.write(
                 f'Mod call by: {client.char_name} ({client.ipid}) aka {client.name}\n')
             f.write('Reason: ' + reason + '\n')
