@@ -1,3 +1,5 @@
+import arrow
+
 from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, ArgumentError, AreaError
@@ -74,7 +76,10 @@ def ooc_cmd_g(client, arg):
     if len(arg) == 0:
         raise ArgumentError("You can't send an empty message.")
     client.server.broadcast_global(client, arg)
-    database.log_room('chat.global', client, client.area, message=arg)
+    if(bool(client.server.config['buffer_mode'])):
+        client.server.buffer_logger.add_to_buffer('OOC', 'g', client, arg)
+    else:
+        database.log_room('chat.global', client, client.area, message=arg)
 
 
 @mod_only()
@@ -88,7 +93,10 @@ def ooc_cmd_gm(client, arg):
     if len(arg) == 0:
         raise ArgumentError("Can't send an empty message.")
     client.server.broadcast_global(client, arg, True)
-    database.log_room('chat.global-mod', client, client.area, message=arg)
+    if(bool(client.server.config['buffer_mode'])):
+        client.server.buffer_logger.add_to_buffer('OOC', 'gm', client, arg)
+    else:
+         database.log_room('chat.global-mod', client, client.area, message=arg)
 
 
 @mod_only()
@@ -100,7 +108,10 @@ def ooc_cmd_m(client, arg):
     if len(arg) == 0:
         raise ArgumentError("You can't send an empty message.")
     client.server.send_modchat(client, arg)
-    database.log_room('chat.mod', client, client.area, message=arg)
+    if(bool(client.server.config['buffer_mode'])):
+        client.server.buffer_logger.add_to_buffer('OOC', 'm', client, arg)
+    else:
+        database.log_room('chat.mod', client, client.area, message=arg)
 
 
 @mod_only()
@@ -114,7 +125,10 @@ def ooc_cmd_lm(client, arg):
     client.area.send_command(
         'CT', '{}[MOD][{}]'.format(client.server.config['hostname'],
                                    client.char_name), arg)
-    database.log_room('chat.local-mod', client, client.area, message=arg)
+    if(bool(client.server.config['buffer_mode'])):
+        client.server.buffer_logger.add_to_buffer('OOC', 'lm', client, arg)
+    else:
+        database.log_room('chat.local-mod', client, client.area, message=arg)
 
 
 @mod_only()
@@ -128,7 +142,10 @@ def ooc_cmd_announce(client, arg):
     client.server.send_all_cmd_pred(
         'CT', '{}'.format(client.server.config['hostname']),
         f'=== Announcement ===\r\n{arg}\r\n==================', '1')
-    database.log_room('chat.announce', client, client.area, message=arg)
+    if(bool(client.server.config['buffer_mode'])):
+        client.server.buffer_logger.add_to_buffer('OOC', 'announce', client, arg)
+    else:
+        database.log_room('chat.announce', client, client.area, message=arg)
 
 
 def ooc_cmd_toggleglobal(client, arg):

@@ -96,7 +96,8 @@ class TsuServer3:
             sys.exit(1)
 
         self.client_manager = ClientManager(self)
-        server.logger.setup_logger(debug=self.config['debug'])
+        server.logger.EventLogger.setup_logger(
+            self, debug=self.config['debug'])
 
     def start(self):
         """Start the server."""
@@ -122,6 +123,9 @@ class TsuServer3:
 
         if self.config['zalgo_tolerance']:
             self.zalgo_tolerance = self.config['zalgo_tolerance']
+        
+        if self.config['buffer_mode']:
+            self.buffer_logger = server.logger.MessageBuffer()
 
         asyncio.ensure_future(self.schedule_unbans())
 
@@ -233,6 +237,8 @@ class TsuServer3:
             self.config['modpass'] = {'default': {'password': self.config['modpass']}}
         if 'multiclient_limit' not in self.config:
             self.config['multiclient_limit'] = 16
+        if 'buffer_mode' not in self.config:
+            self.config['buffer_mode'] = False  # old behaviour is the default
 
     def load_characters(self):
         """Load the character list from a YAML file."""

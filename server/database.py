@@ -1,3 +1,8 @@
+from .exceptions import ServerError
+from textwrap import dedent
+from functools import reduce
+from datetime import datetime
+from dataclasses import dataclass, field
 import os
 
 import asyncio
@@ -10,16 +15,10 @@ import logging
 logger = logging.getLogger('debug')
 event_logger = logging.getLogger('events')
 
-from dataclasses import dataclass, field
-from datetime import datetime
-from functools import reduce
-from textwrap import dedent
-
-from .exceptions import ServerError
-
 
 DB_FILE = 'storage/db.sqlite3'
 _database_singleton = None
+
 
 def __getattr__(name):
     global _database_singleton
@@ -76,7 +75,8 @@ class Database:
                             next_fallback_id = effective_id
                         else:
                             if effective_id != ipid:
-                                logger.debug(f'IPID {ipid} reassigned to {effective_id}')
+                                logger.debug(
+                                    f'IPID {ipid} reassigned to {effective_id}')
                             break
 
             with open('storage/hd_ids.json', 'r') as hdids_file:
@@ -86,7 +86,8 @@ class Database:
                         # Sometimes, there are HDID entries that do not
                         # correspond to any IPIDs in the IPID table.
                         if ipid not in ipids:
-                            logger.debug(f'IPID {ipid} in HDID list does not exist. Ignoring.')
+                            logger.debug(
+                                f'IPID {ipid} in HDID list does not exist. Ignoring.')
                             continue
                         conn.execute(dedent('''
                             INSERT OR IGNORE INTO hdids(hdid, ipid)
@@ -105,7 +106,8 @@ class Database:
                         logger.debug(f'Bad IPID {ipid} in ban list. Ignoring.')
                         continue
                     if ipid not in ipids:
-                        logger.debug(f'IPID {ipid} in ban list does not exist. Ignoring.')
+                        logger.debug(
+                            f'IPID {ipid} in ban list does not exist. Ignoring.')
                         continue
                     ban_id = conn.execute(dedent('''
                         INSERT INTO bans(ban_id, reason)
@@ -226,20 +228,20 @@ class Database:
             """Find IPIDs affected by this ban."""
             with _database_singleton.db as conn:
                 return [row['ipid'] for row in
-                    conn.execute(dedent('''
+                        conn.execute(dedent('''
                         SELECT ipid FROM ip_bans WHERE ban_id = ?
                         '''), (self.ban_id,)).fetchall()
-                ]
+                        ]
 
         @property
         def hdids(self):
             """Find HDIDs affected by this ban."""
             with _database_singleton.db as conn:
                 return [row['hdid'] for row in
-                    conn.execute(dedent('''
+                        conn.execute(dedent('''
                         SELECT hdid FROM hdid_bans WHERE ban_id = ?
                         '''), (self.ban_id,)).fetchall()
-                ]
+                        ]
 
         @property
         def banned_by_name(self):
@@ -310,7 +312,8 @@ class Database:
             ban = conn.execute(dedent('''
                 SELECT unban_date FROM bans WHERE ban_id = ?
                 '''), (ban_id,)).fetchone()
-            time_to_unban = (arrow.get(ban['unban_date']) - arrow.utcnow()).total_seconds()
+            time_to_unban = (
+                arrow.get(ban['unban_date']) - arrow.utcnow()).total_seconds()
 
             def auto_unban():
                 self.unban(ban_id)
@@ -327,7 +330,7 @@ class Database:
                 INSERT INTO ic_events(ipid, room_name, char_name, ic_name,
                     message) VALUES (?, ?, ?, ?, ?)
                 '''), (client.ipid, room.abbreviation, client.char_name,
-                    showname, message))
+                       showname, message))
 
     def log_room(self, event_subtype, client, room, message=None, target=None):
         """
@@ -343,14 +346,14 @@ class Database:
             message = json.dumps(message)
 
         event_logger.info(f'[{room.abbreviation}] {client.char_name}' +
-                    f'/{client.name} ({client.ipid}): event {event_subtype} ({message})')
+                          f'/{client.name} ({client.ipid}): event {event_subtype} ({message})')
         with self.db as conn:
             conn.execute(dedent('''
                 INSERT INTO room_events(ipid, room_name, char_name, ooc_name,
                     event_subtype, message, target_ipid)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 '''), (ipid, room.abbreviation, char_name, ooc_name,
-                    subtype_id, message, target_ipid))
+                       subtype_id, message, target_ipid))
 
     def log_connect(self, client, failed=False):
         """Log a connect attempt."""
@@ -370,7 +373,8 @@ class Database:
         target_ipid = target.ipid if target is not None else None
         subtype_id = self._subtype_atom('misc', event_subtype)
         data_json = json.dumps(data)
-        event_logger.info(f'{event_subtype} ({client_ipid} onto {target_ipid}): {data}')
+        event_logger.info(
+            f'{event_subtype} ({client_ipid} onto {target_ipid}): {data}')
 
         with self.db as conn:
             conn.execute(dedent('''
@@ -384,7 +388,7 @@ class Database:
         """
         with self.db as conn:
             return [Database.Ban(**row) for row in
-                conn.execute(dedent('''
+                    conn.execute(dedent('''
                     SELECT * FROM (SELECT * FROM bans
                         WHERE ban_date IS NOT NULL
                         ORDER BY ban_date DESC LIMIT ?)
