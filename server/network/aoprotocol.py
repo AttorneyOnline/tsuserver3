@@ -375,7 +375,7 @@ class AOProtocol(asyncio.Protocol):
         target_area = []
         showname = ""
         charid_pair = -1
-        offset_pair = 0
+        offset_pair = ""
         nonint_pre = 0
         sfx_looping = "0"
         screenshake = 0
@@ -405,7 +405,7 @@ class AOProtocol(asyncio.Protocol):
             # color, showname, charid_pair
             self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.INT,
             # offset_pair, nonint_pre
-            self.ArgType.INT, self.ArgType.INT,
+            self.ArgType.STR, self.ArgType.INT,
         ):
             # 2.6 validation monstrosity.
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre = args
@@ -418,7 +418,7 @@ class AOProtocol(asyncio.Protocol):
             # color, showname, charid_pair
             self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
             # offset_pair, nonint_pre, sfx_looping
-            self.ArgType.INT, self.ArgType.INT, self.ArgType.STR,
+            self.ArgType.STR, self.ArgType.INT, self.ArgType.STR,
             # screenshake, frames_shake, frames_realization
             self.ArgType.INT, self.ArgType.STR, self.ArgType.STR,
             # frames_sfx, additive, effect
