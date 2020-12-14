@@ -371,8 +371,6 @@ class AOProtocol(asyncio.Protocol):
             return
         elif not self.client.area.can_send_message(self.client):
             return
-        elif self.client.area.is_testifying and self.client not in self.client.area.owners:
-            self.client.send_ooc('You can\'t talk during a testimony!')
 
         target_area = []
         showname = ""
@@ -549,6 +547,22 @@ class AOProtocol(asyncio.Protocol):
                             return # don't send it again or it'll be rerecorded
                     else:
                         self.client.send_ooc('Couldn\'t amend that statement - are you sure it exists?')
+                        return
+                except ValueError:
+                    self.client.send_ooc(
+                        "That does not look like a valid statement number!")
+                    return
+            elif text.startswith('/remove '):
+                part = text.split(' ')
+                if self.client not in self.client.area.owners:
+                    self.client.send_ooc('You don\'t own this area!')
+                try:
+                    index = int(part[1])
+                    if self.client.area.testimony.remove_statement(index):
+                        self.client.send_ooc('Removed statement successfully.')
+                        text = ''
+                    else:
+                        self.client.send_ooc('Couldn\'t remove that statement - are you sure it exists?')
                         return
                 except ValueError:
                     self.client.send_ooc(

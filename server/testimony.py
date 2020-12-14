@@ -32,10 +32,12 @@ class Testimony:
         """Remove the statement at index [index]."""
         if index < 1 or index > len(self.statements) + 1:
             return False
-        for statement in self.statements:
-            if statement.index() == index - 1:
-                statement.remove()
+        i = 0
+        while i < len(self.statements):
+            if i == index:
+                self.statements.remove(self.statements[i])
                 return True
+            i += 1
         return False # shouldn't happen
                 
     def amend_statement(self, index, message):
