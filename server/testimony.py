@@ -24,9 +24,8 @@ class Testimony:
     
     def add_statement(self, message):
         """Add a statement and return whether successful."""
-        if len(self.statements) + 1 >= 30: # if you write a testimony longer than 30 statements, don't
-            return False
-        self.statements = self.statements.append(message)
+        message = message[:14] + (1,) + message[15:]
+        self.statements.append(message)
         return True
     
     def remove_statement(self, index):

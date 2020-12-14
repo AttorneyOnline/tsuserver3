@@ -94,6 +94,7 @@ class AreaManager:
             self.is_testifying = False
             self.is_examining = False
             self.testimony = testimony.Testimony('N/A')
+            self.examine_index = 0
 
 
         class Locked(Enum):

@@ -495,7 +495,7 @@ class AOProtocol(asyncio.Protocol):
             elif self.client.area.is_examining:
                 self.client.send_ooc('You can\'t start a new testimony during an examination!')
                 return
-            text = ''.join(part[1:])
+            text = ' '.join(part[1:])
             if text == '':
                 self.client.send_ooc('You can\'t start a new testimony without a title!')
             self.client.area.broadcast_ooc('Began testimony: ' + text)
@@ -515,36 +515,68 @@ class AOProtocol(asyncio.Protocol):
             elif self.client.area.is_examining:
                 self.client.send_ooc('You can\'t start an examination until you finish this one!')
                 return
+            self.client.area.examine_index = 1
             self.client.area.is_examining = True
-        elif text.startswith('/amend '):
-            part = text.split(' ')
-            if not self.client.area.is_examining and not self.client.is_testifying:
-                self.client.send_ooc('You can\'t amend testimony outside of a recording or examination.')
-                return
-            try:
-                index = int(part[1])
-                text = ' '.join(part[2:])
-                if self.client.area.testimony.amend_statement(index, text):
-                    self.client.send_ooc('Amended statement successfully.')
-                else:
-                    self.client.send_ooc('Couldn\'t amend that statement - are you sure it exists?')
+            text = '~~-- ' + self.client.area.testimony.title + ' --'
+            color = 3
+            if self.client.can_wtce:
+                self.client.area.send_command('RT', 'testimony2')
+        if self.client.area.is_testifying or self.client.area.is_examining:
+            if text.startswith('/end'): # End the current testimony or examination.
+                if self.client not in self.client.area.owners:
+                    self.client.send_ooc('You don\'t own this area!')
                     return
-            except ValueError:
-                self.client.send_ooc(
-                    "That does not look like a valid statement number!!")
-                return
-        elif text.startswith('/end'): # End the current testimony or examination.
-            if self.client not in self.client.area.owners:
-                self.client.send_ooc('You don\'t own this area!')
-                return
-            elif self.client.area.is_testifying:
-                self.client.area.is_testifying = False
-                self.client.area.broadcast_ooc('Recording stopped.')
-            elif self.client.area.is_examining:
-                self.client.area.is_examining = False
-                self.client.area.broadcast_ooc('Examination stopped.')
-            text = ''
-            
+                elif self.client.area.is_testifying:
+                    self.client.area.is_testifying = False
+                    self.client.area.broadcast_ooc('Recording stopped.')
+                elif self.client.area.is_examining:
+                    self.client.area.is_examining = False
+                    self.client.area.broadcast_ooc('Examination stopped.')
+                text = ''
+            elif text.startswith('/amend '):
+                part = text.split(' ')
+                if self.client not in self.client.area.owners:
+                    self.client.send_ooc('You don\'t own this area!')
+                elif not self.client.area.is_examining and not self.client.is_testifying:
+                    self.client.send_ooc('You can\'t amend testimony outside of a recording or examination.')
+                    return
+                try:
+                    index = int(part[1])
+                    text = ' '.join(part[2:])
+                    if self.client.area.testimony.amend_statement(index, text):
+                        self.client.send_ooc('Amended statement successfully.')
+                        if self.client.area.is_testifying:
+                            return # don't send it again or it'll be rerecorded
+                    else:
+                        self.client.send_ooc('Couldn\'t amend that statement - are you sure it exists?')
+                        return
+                except ValueError:
+                    self.client.send_ooc(
+                        "That does not look like a valid statement number!")
+                    return
+            if self.client.area.is_examining and text[0] in ['>', '<', '=']:
+                if text == '>': # go to the next statement
+                    if len(self.client.area.testimony.statements) <= self.client.area.examine_index:
+                        self.client.send_ooc('Reached end of testimony, looping...')
+                        self.client.area.examine_index = 1
+                    else:
+                        self.client.area.examine_index = self.client.area.examine_index + 1
+                elif text == '<': # go to the last statement
+                    if self.client.area.examine_index <= 1:
+                        self.client.send_ooc('You\'re already on the first statement!')
+                        return
+                    else:
+                        self.client.area.examine_index = self.client.area.examine_index - 1
+                elif text.startswith('>') or text.startswith('<'): # go to a specific statement
+                    try:
+                        self.client.area.examine_index = int(text[1:])
+                    except ValueError:
+                        self.client.send_ooc("That does not look like a valid statement number!")
+                        return
+                self.client.area.send_command('MS', self.client.area.testimony.statements[self.client.area.examine_index])
+                        
+                    
+                
         if msg_type not in ('chat', '0', '1'):
             return
         if anim_type == 4:
@@ -682,7 +714,7 @@ class AOProtocol(asyncio.Protocol):
         if self.client.area.is_recording:
             self.client.area.recorded_messages.append(args)
         if self.client.area.is_testifying:
-            self.client.area.testimony.add_statement(args)
+            self.client.area.testimony.add_statement(send_args)
 
     def net_cmd_ct(self, args):
         """OOC Message
