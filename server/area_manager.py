@@ -22,7 +22,7 @@ from enum import Enum
 
 import yaml
 
-from server import database
+from server import database, testimony
 from server.evidence import EvidenceList
 from server.exceptions import AreaError
 
@@ -89,6 +89,12 @@ class AreaManager:
             self.owners = []
             self.afkers = []
             self.last_ic_message = None
+            
+            # Testimony stuff
+            self.is_testifying = False
+            self.is_examining = False
+            self.testimony = testimony.Testimony('N/A')
+
 
         class Locked(Enum):
             """Lock state of an area."""
