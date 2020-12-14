@@ -44,7 +44,8 @@ class Testimony:
             return False
         text = message[4].split(' ')
         message[4] = ' '.join(text[2:])
-        message = tuple(message[:14]) + (1,) + tuple(message[15:])
+        message[14] = 1
+        message = tuple(message)
         self.statements = [x if self.statements.index(x) == index else message for x in self.statements]
         for statement in self.statements:
             if self.statements.index(statement) == index:
