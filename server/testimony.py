@@ -46,10 +46,12 @@ class Testimony:
         message[4] = ' '.join(text[2:])
         message[14] = 1
         message = tuple(message)
-        self.statements = [x if self.statements.index(x) == index else message for x in self.statements]
-        for statement in self.statements:
-            if self.statements.index(statement) == index:
-                statement = message
+        i = 0
+        while i < len(self.statements):
+            if i == index:
+                self.statements[i] = message
+                return True
+            i += 1
         return True
 
     
