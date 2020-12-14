@@ -515,7 +515,7 @@ class AOProtocol(asyncio.Protocol):
             elif self.client.area.is_examining:
                 self.client.send_ooc('You can\'t start an examination until you finish this one!')
                 return
-            self.client.area.examine_index = 1
+            self.client.area.examine_index = 0
             self.client.area.is_examining = True
             text = '~~-- ' + self.client.area.testimony.title + ' --'
             color = 3
@@ -537,13 +537,13 @@ class AOProtocol(asyncio.Protocol):
                 part = text.split(' ')
                 if self.client not in self.client.area.owners:
                     self.client.send_ooc('You don\'t own this area!')
-                elif not self.client.area.is_examining and not self.client.is_testifying:
+                elif not self.client.area.is_examining and not self.client.area.is_testifying:
                     self.client.send_ooc('You can\'t amend testimony outside of a recording or examination.')
                     return
                 try:
                     index = int(part[1])
                     text = ' '.join(part[2:])
-                    if self.client.area.testimony.amend_statement(index, text):
+                    if self.client.area.testimony.amend_statement(index, args):
                         self.client.send_ooc('Amended statement successfully.')
                         if self.client.area.is_testifying:
                             return # don't send it again or it'll be rerecorded
@@ -556,7 +556,7 @@ class AOProtocol(asyncio.Protocol):
                     return
             if self.client.area.is_examining and text[0] in ['>', '<', '=']:
                 if text == '>': # go to the next statement
-                    if len(self.client.area.testimony.statements) <= self.client.area.examine_index:
+                    if len(self.client.area.testimony.statements) <= self.client.area.examine_index + 1:
                         self.client.send_ooc('Reached end of testimony, looping...')
                         self.client.area.examine_index = 1
                     else:
@@ -567,14 +567,17 @@ class AOProtocol(asyncio.Protocol):
                         return
                     else:
                         self.client.area.examine_index = self.client.area.examine_index - 1
+                elif text == '=':
+                    if self.client.area.examine_index == 0:
+                        self.client.area.examine_index = 1
                 elif text.startswith('>') or text.startswith('<'): # go to a specific statement
                     try:
                         self.client.area.examine_index = int(text[1:])
                     except ValueError:
                         self.client.send_ooc("That does not look like a valid statement number!")
                         return
-                self.client.area.send_command('MS', self.client.area.testimony.statements[self.client.area.examine_index])
-                        
+                self.client.area.send_command('MS', *self.client.area.testimony.statements[self.client.area.examine_index])
+                return
                     
                 
         if msg_type not in ('chat', '0', '1'):

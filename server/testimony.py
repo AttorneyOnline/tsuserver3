@@ -42,7 +42,13 @@ class Testimony:
         """Amend the statement at index [index] to instead contain [message]."""
         if index < 1 or index > len(self.statements) + 1:
             return False
-        self.statements = [x if x.index() == index - 1 else message for x in self.statements]
+        text = message[4].split(' ')
+        message[4] = ' '.join(text[2:])
+        message = tuple(message[:14]) + (1,) + tuple(message[15:])
+        self.statements = [x if self.statements.index(x) == index else message for x in self.statements]
+        for statement in self.statements:
+            if self.statements.index(statement) == index:
+                statement = message
         return True
 
     
