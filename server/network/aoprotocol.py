@@ -18,7 +18,7 @@
 from .. import commands
 from server.fantacrypt import fanta_decrypt
 from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
-from server import database, testimony
+from server import database
 from time import localtime, strftime
 import arrow
 from enum import Enum
@@ -484,115 +484,62 @@ class AOProtocol(asyncio.Protocol):
             text = ' '.join(part[1:])
         elif text.startswith('/testify '): # Start a new testimony in this area.
             part = text.split(' ')
-            if self.client not in self.client.area.owners:
-                self.client.send_ooc('You don\'t own this area!')
+            text = ' '.join(part[1:]) # remove command
+            if not self.client.area.start_testimony(self.client, text):
                 return
-            elif self.client.area.is_testifying:
-                self.client.send_ooc('You can\'t start a new testimony until you finish this one!')
-                return
-            elif self.client.area.is_examining:
-                self.client.send_ooc('You can\'t start a new testimony during an examination!')
-                return
-            text = ' '.join(part[1:])
-            if text == '':
-                self.client.send_ooc('You can\'t start a new testimony without a title!')
-            self.client.area.broadcast_ooc('Began testimony: ' + text)
-            self.client.area.testimony = testimony.Testimony(text)
             text = '~~-- ' + text + ' --'
-            color = 3
-            self.client.area.is_testifying = True
-            if self.client.can_wtce:
-                self.client.area.send_command('RT', 'testimony1')
+            color = 3 # orange
         elif text.startswith('/examine'): # Start an examination of this area's testimony.
-            if self.client not in self.client.area.owners:
-                self.client.send_ooc('You don\'t own this area!')
+            if not self.client.area.start_examination(self.client):
                 return
-            elif self.client.area.is_testifying:
-                self.client.send_ooc('You can\'t start an examination during a testimony! (Hint: Say \'/end\' to stop recording!)')
-                return
-            elif self.client.area.is_examining:
-                self.client.send_ooc('You can\'t start an examination until you finish this one!')
-                return
-            self.client.area.examine_index = 0
-            self.client.area.is_examining = True
             text = '~~-- ' + self.client.area.testimony.title + ' --'
             color = 3
-            if self.client.can_wtce:
-                self.client.area.send_command('RT', 'testimony2')
         if self.client.area.is_testifying or self.client.area.is_examining:
             if text.startswith('/end'): # End the current testimony or examination.
-                if self.client not in self.client.area.owners:
-                    self.client.send_ooc('You don\'t own this area!')
+                if not self.client.area.end_testimony(self.client):
                     return
-                elif self.client.area.is_testifying:
-                    self.client.area.is_testifying = False
-                    self.client.area.broadcast_ooc('Recording stopped.')
-                elif self.client.area.is_examining:
-                    self.client.area.is_examining = False
-                    self.client.area.broadcast_ooc('Examination stopped.')
                 text = ''
             elif text.startswith('/amend '):
                 part = text.split(' ')
-                if self.client not in self.client.area.owners:
-                    self.client.send_ooc('You don\'t own this area!')
-                elif not self.client.area.is_examining and not self.client.area.is_testifying:
-                    self.client.send_ooc('You can\'t amend testimony outside of a recording or examination.')
-                    return
+                text = ' '.join(part[2:])
+                args[4] = text
+                color = 1
                 try:
                     index = int(part[1])
-                    text = ' '.join(part[2:])
-                    if self.client.area.testimony.amend_statement(index, args):
-                        self.client.send_ooc('Amended statement successfully.')
-                        if self.client.area.is_testifying:
-                            return # don't send it again or it'll be rerecorded
-                    else:
-                        self.client.send_ooc('Couldn\'t amend that statement - are you sure it exists?')
+                    if not self.client.area.amend_testimony(self.client, index, args):
                         return
+                    if self.client.area.is_testifying:
+                        return # don't send it again or it'll be rerecorded
+                    elif self.client.area.is_examining:
+                        self.client.area.examine_index = index # jump to the amended statement
                 except ValueError:
                     self.client.send_ooc(
                         "That does not look like a valid statement number!")
                     return
+            elif text.startswith('/add ') and self.client.area.is_examining:
+                part = text.split(' ')
+                text = ' '.join(part[1:])
+                args[4] = text
+                self.client.area.testimony.add_statement(tuple(args))
+                color = 1 # green
+                self.client.area.examine_index = len(self.client.area.testimony.statements) - 1 # jump to the new statement
             elif text.startswith('/remove '):
                 part = text.split(' ')
-                if self.client not in self.client.area.owners:
-                    self.client.send_ooc('You don\'t own this area!')
                 try:
                     index = int(part[1])
-                    if self.client.area.testimony.remove_statement(index):
-                        self.client.send_ooc('Removed statement successfully.')
-                        text = ''
-                    else:
-                        self.client.send_ooc('Couldn\'t remove that statement - are you sure it exists?')
+                    if not self.client.area.remove_statement(self.client, index):
                         return
+                    text = ''
                 except ValueError:
                     self.client.send_ooc(
                         "That does not look like a valid statement number!")
                     return
             if self.client.area.is_examining and text[0] in ['>', '<', '=']:
-                if text == '>': # go to the next statement
-                    if len(self.client.area.testimony.statements) <= self.client.area.examine_index + 1:
-                        self.client.send_ooc('Reached end of testimony, looping...')
-                        self.client.area.examine_index = 1
-                    else:
-                        self.client.area.examine_index = self.client.area.examine_index + 1
-                elif text == '<': # go to the last statement
-                    if self.client.area.examine_index <= 1:
-                        self.client.send_ooc('You\'re already on the first statement!')
-                        return
-                    else:
-                        self.client.area.examine_index = self.client.area.examine_index - 1
-                elif text == '=':
-                    if self.client.area.examine_index == 0:
-                        self.client.area.examine_index = 1
-                elif text.startswith('>') or text.startswith('<'): # go to a specific statement
-                    try:
-                        self.client.area.examine_index = int(text[1:])
-                    except ValueError:
-                        self.client.send_ooc("That does not look like a valid statement number!")
-                        return
-                self.client.area.send_command('MS', *self.client.area.testimony.statements[self.client.area.examine_index])
+                try:
+                    self.client.area.navigate_testimony(self.client, text[0], int(text[1:]))
+                except ValueError:
+                    self.client.area.navigate_testimony(self.client, text[0], None)
                 return
-                    
                 
         if msg_type not in ('chat', '0', '1'):
             return
