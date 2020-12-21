@@ -98,7 +98,6 @@ class MessageBuffer():
         self.buffer_counter = (self.buffer_counter + 1) % 500
         fullstr = (f'[{arrow.get().datetime}][{message_subtype}][{message_type}][{client.area.abbreviation}]{"[MOD]" if client.is_mod else ""} {client.char_name}/{showname if message_type == "IC" else client.name} ({client.ipid}): {message}')
         self.message_buffer[self.buffer_counter] = fullstr
-        print(fullstr)  # DEBUG REMOVE ME
 
     def dump_log(self, area, reason, client):
         if not os.path.exists('reports'):
