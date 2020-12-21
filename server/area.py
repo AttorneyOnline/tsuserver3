@@ -896,10 +896,6 @@ class Area:
         Check if a client can send an IC message in this area.
         :param client: sender
         """
-        if self.cannot_ic_interact(client):
-            client.send_ooc(
-                'This is a muted area - ask the CM to be included in the invite list.')
-            return False
         return (time.time() * 1000.0 - self.next_message_time) > 0
 
     def cannot_ic_interact(self, client):

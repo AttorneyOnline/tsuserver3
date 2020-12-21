@@ -420,6 +420,13 @@ class AOProtocol(asyncio.Protocol):
         if self.client.is_mod or self.client in self.client.area.owners:
             target_area = self.client.broadcast_list.copy()
 
+        if self.client.area.cannot_ic_interact(client):
+            client.send_ooc(
+                'This is a muted area - ask the CM to be included in the invite list.')
+            return False
+        if int(button) <= 0 and not self.client.area.can_send_message(self.client):
+            return
+
         if len(showname) > 0 and not self.client.area.showname_changes_allowed and not self.client.is_mod and not (self.client in self.client.area.owners):
             self.client.send_ooc(
                 "Showname changes are forbidden in this area!")
@@ -560,8 +567,6 @@ class AOProtocol(asyncio.Protocol):
             button = 0
             # Turn off the ding.
             ding = 0
-        if int(button) <= 0 and not self.client.area.can_send_message(self.client):
-            return
         max_char = 0
         try:
             max_char = int(self.server.config['max_chars_ic'])
