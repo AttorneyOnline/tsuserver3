@@ -534,7 +534,7 @@ class AOProtocol(asyncio.Protocol):
                     self.client.send_ooc(
                         "That does not look like a valid statement number!")
                     return
-            if self.client.area.is_examining and text[0] in ['>', '<', '=']:
+            if self.client.area.is_examining and text != '' and text[0] in ['>', '<', '=']:
                 try:
                     self.client.area.navigate_testimony(self.client, text[0], int(text[1:]))
                 except ValueError:
