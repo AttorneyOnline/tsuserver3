@@ -153,8 +153,21 @@ def ooc_cmd_jukebox(client, arg):
 @mod_only(area_owners=True)
 def ooc_cmd_play(client, arg):
     """
-    Play a track.
+    Play a track and loop it. See /play_once for this command without looping.
     Usage: /play <name>
+    """
+    if len(arg) == 0:
+        raise ArgumentError('You must specify a song.')
+    client.area.play_music(arg, client.char_id, 1) #loop it
+    client.area.add_music_playing(client, arg)
+    database.log_area('play', client, client.area, message=arg)
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_play_once(client, arg):
+    """
+    Play a track without looping it. See /play for this command with looping.
+    Usage: /play_once <name>
     """
     if len(arg) == 0:
         raise ArgumentError('You must specify a song.')
