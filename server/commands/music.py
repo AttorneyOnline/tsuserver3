@@ -13,6 +13,7 @@ __all__ = [
     'ooc_cmd_jukebox_skip',
     'ooc_cmd_jukebox',
     'ooc_cmd_play',
+    'ooc_cmd_play_once',
     'ooc_cmd_blockdj',
     'ooc_cmd_unblockdj',
     'ooc_cmd_musiclists',

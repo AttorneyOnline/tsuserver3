@@ -387,7 +387,9 @@ needing a certain list of positions to be filled up.
 * **jukebox**
     - Show information about the jukebox's queue and votes.
 * **play** \<name>
-    - Play a track.
+    - Play a track and loop it. See /play_once for this command without looping.
+* **play_once** \<name>
+    - Play a track without looping it. See /play for this command with looping.
 * **blockdj** \<id>
     - Prevent a user from changing music.
 * **unblockdj** \<id>
