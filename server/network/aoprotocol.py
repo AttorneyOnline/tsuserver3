@@ -111,6 +111,8 @@ class AOProtocol(asyncio.Protocol):
             except KeyError:
                 logger_debug.debug(
                     f'Unknown incoming message from {ipid}: {msg}')
+                if not self.client.is_checked:
+                    self.client.disconnect()
 
     def connection_made(self, transport):
         """Called upon a new client connecting
