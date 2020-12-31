@@ -32,6 +32,10 @@ logger_debug = logging.getLogger('debug')
 logger = logging.getLogger('events')
 
 
+class ProtocolError(Exception):
+    pass
+
+
 class AOProtocol(asyncio.Protocol):
     """The main class that deals with the AO protocol."""
 
@@ -96,23 +100,26 @@ class AOProtocol(asyncio.Protocol):
 
         if len(self.buffer) > 8192:
             self.client.disconnect()
-        for msg in self.get_messages():
-            if len(msg) < 2:
-                continue
-            # general netcode structure is not great
-            if msg[0] in ('#', '3', '4'):
-                if msg[0] == '#':
-                    msg = msg[1:]
-                spl = msg.split('#', 1)
-                msg = '#'.join([fanta_decrypt(spl[0])] + spl[1:])
-            try:
-                cmd, *args = msg.split('#')
-                self.net_cmd_dispatcher[cmd](self, args)
-            except KeyError:
-                logger_debug.debug(
-                    f'Unknown incoming message from {ipid}: {msg}')
-                if not self.client.is_checked:
-                    self.client.disconnect()
+        try:
+            for msg in self.get_messages():
+                if len(msg) < 2:
+                    continue
+                # general netcode structure is not great
+                if msg[0] in ('#', '3', '4'):
+                    if msg[0] == '#':
+                        msg = msg[1:]
+                    spl = msg.split('#', 1)
+                    msg = '#'.join([fanta_decrypt(spl[0])] + spl[1:])
+                try:
+                    cmd, *args = msg.split('#')
+                    self.net_cmd_dispatcher[cmd](self, args)
+                except KeyError:
+                    logger_debug.debug(
+                        f'Unknown incoming message from {ipid}: {msg}')
+                    if not self.client.is_checked:
+                        raise ProtocolError
+        except ProtocolError:
+            self.client.disconnect()
 
     def connection_made(self, transport):
         """Called upon a new client connecting
@@ -158,6 +165,10 @@ class AOProtocol(asyncio.Protocol):
         :return: yields messages
 
         """
+        # Long header - not likely to be a valid message
+        if len(self.buffer) >= 8 and '#%' not in self.buffer[:8]:
+            raise ProtocolError
+
         while '#%' in self.buffer:
             spl = self.buffer.split('#%', 1)
             self.buffer = spl[1]
