@@ -166,7 +166,7 @@ class AOProtocol(asyncio.Protocol):
 
         """
         # Long header - not likely to be a valid message
-        if len(self.buffer) >= 8 and '#%' not in self.buffer[:8]:
+        if len(self.buffer) >= 24 and '#' not in self.buffer[:24]:
             raise ProtocolError
 
         while '#%' in self.buffer:
