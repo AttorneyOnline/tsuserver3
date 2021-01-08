@@ -400,7 +400,7 @@ class AOProtocol(asyncio.Protocol):
                 self.ArgType.INT, self.ArgType.INT, self.ArgType.INT_OR_STR,    # cid, sfx_delay, button
                 self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,           # evidence, flip, ding
                 self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,  # color, showname, charid_pair
-                self.ArgType.INT, self.ArgType.INT, self.ArgType.STR,           # offset_pair, nonint_pre, sfx_looping
+                self.ArgType.STR, self.ArgType.INT, self.ArgType.STR,           # offset_pair, nonint_pre, sfx_looping
                 self.ArgType.INT, self.ArgType.STR, self.ArgType.STR,           # screenshake, frames_shake, frames_realization
                 self.ArgType.STR, self.ArgType.INT, self.ArgType.STR,           # frames_sfx, additive, effect
             ):
