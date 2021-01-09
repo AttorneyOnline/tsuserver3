@@ -25,7 +25,7 @@ from enum import Enum
 import asyncio
 import re
 import unicodedata
-
+import datetime
 import logging
 
 logger_debug = logging.getLogger('debug')
@@ -581,7 +581,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.last_sprite = anim
         self.client.flip = flip
         self.client.claimed_folder = folder
-        other_offset = '0'
+        other_offset = 0
         other_emote = ''
         other_flip = 0
         other_folder = ''
@@ -627,8 +627,10 @@ class AOProtocol(asyncio.Protocol):
                                             )
 
         self.client.area.set_next_msg_delay(len(msg))
-        database.log_ic(self.client, self.client.area, showname, msg)
-
+        if(bool(self.server.config['buffer_mode'])):
+            self.server.buffer_logger.add_to_buffer('IC', 'local', self.client, msg, showname=showname)
+        else:
+            database.log_ic(self.client, self.client.area, showname, msg)
         if (self.client.area.is_recording):
             self.client.area.recorded_messages.append(args)
 
@@ -689,6 +691,8 @@ class AOProtocol(asyncio.Protocol):
                 arg = spl[1][:256]
             try:
                 called_function = f'ooc_cmd_{cmd}'
+                if cmd == 'help' and arg != '':
+                    self.client.send_ooc(commands.help(f'ooc_cmd_{arg}'))
                 if not hasattr(commands, called_function):
                     self.client.send_ooc('Invalid command.')
                 else:
@@ -710,8 +714,11 @@ class AOProtocol(asyncio.Protocol):
                 'CT',
                 '[' + self.client.area.abbreviation + ']' + self.client.name,
                 args[1])
-            database.log_room('ooc', self.client,
-                              self.client.area, message=args[1])
+            if(bool(self.server.config['buffer_mode'])):
+                self.server.buffer_logger.add_to_buffer('OOC', 'local', self.client, args[1])
+            else:
+                database.log_room('ooc', self.client,
+                                  self.client.area, message=args[1])
 
     def net_cmd_mc(self, args):
         """Play music.
@@ -1028,6 +1035,8 @@ class AOProtocol(asyncio.Protocol):
             self.client.set_mod_call_delay()
             database.log_room('modcall', self.client,
                               self.client.area, message=args[0])
+        if(bool(self.server.config['buffer_mode'])):
+            self.server.buffer_logger.dump_log(self.client.area.abbreviation, args[0], self.client)
 
     def net_cmd_opKICK(self, args):
         """
