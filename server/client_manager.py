@@ -298,7 +298,12 @@ class ClientManager:
                 return
 
             try:
-                name, length = self.server.get_song_data(self.construct_music_list(), args[0])
+                if args[0] == "~stop.mp3" or self.server.get_song_is_category(self.server.music_list, args[0]):
+                    name, length = "~stop.mp3", 0
+                else:
+                    name, length = self.server.get_song_data(
+                        self.server.music_list, args[0])
+
                 target_areas = [self.area]
                 if len(self.broadcast_list) > 0 and (self.is_mod or self in self.area.owners):
                     try:
