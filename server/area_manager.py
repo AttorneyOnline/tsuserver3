@@ -85,6 +85,10 @@ class AreaManager:
             self.jukebox = jukebox
             self.jukebox_votes = []
             self.jukebox_prev_char_id = -1
+            self.timer_set = False
+            self.timer_started = False
+            self.timer_static = None
+            self.timer_target = None
 
             self.owners = []
             self.afkers = []
