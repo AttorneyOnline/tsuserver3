@@ -517,7 +517,7 @@ class AOProtocol(asyncio.Protocol):
             except:
                 self.client.send_ooc('Invalid index!')
             return
-        if msg_type not in ('chat', '0', '1'):
+        if msg_type not in ('chat', '0', '1', '2', '3', '4', '5'):
             return
         # Disable the meme functionality of desk_mod that makes you selectively hide
         # jud/hld/hlp foregrounds when showing every other foreground due to how many
