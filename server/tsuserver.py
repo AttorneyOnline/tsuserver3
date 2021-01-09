@@ -351,6 +351,20 @@ class TsuServer3:
                         return song['name'], -1
         raise ServerError('Music not found.')
 
+    def get_song_is_category(self, music_list, music):
+        """
+        Get whether a track is a category.
+        :param music_list: music list to search
+        :param music: track name
+        :returns: bool
+        """
+        for item in music_list:
+            if 'category' not in item: #skip settings n stuff
+                continue
+            if item['category'] == music:
+                return True
+        return False
+    
     def send_all_cmd_pred(self, cmd, *args, pred=lambda x: True):
         """
         Broadcast an AO-compatible command to all clients that satisfy
