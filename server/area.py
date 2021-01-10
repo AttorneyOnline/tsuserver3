@@ -141,6 +141,11 @@ class Area:
         # Dictionary of dictionaries with further info, examine def link for more info
         self.links = {}
 
+        self.timer_set = False
+        self.timer_started = False
+        self.timer_static = None
+        self.timer_target = None
+
     @property
     def name(self):
         """Area's name string. Abbreviation is also updated according to this."""

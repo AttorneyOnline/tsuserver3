@@ -1,5 +1,9 @@
 import random
 
+import arrow
+import datetime
+import pytimeparse
+
 from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, ServerError, ArgumentError
@@ -22,6 +26,7 @@ __all__ = [
     'ooc_cmd_rolla',
     'ooc_cmd_coinflip',
     'ooc_cmd_8ball',
+    'ooc_cmd_timer'
 ]
 
 
@@ -416,3 +421,65 @@ def ooc_cmd_8ball(client, arg):
     ability_dice = client.area.ability_dice['8ball']
     client.area.broadcast_ooc('{} asked a question: "{}" and the answer is: "{}".'.format(
         client.showname, arg, rolla(ability_dice)[2]))
+
+def ooc_cmd_timer(client, arg):
+    """
+    Manage a countdown timer in the current area.
+    Usage:
+    /timer [+/-][time]
+        Set the timer's time, optionally adding or subtracting time. If the timer had
+        not been previously set up, it will be shown paused.
+    /timer start
+    /timer <pause|stop>
+    /timer hide
+    """
+
+    arg = arg.strip()
+    if len(arg) == 0:
+        if client.area.timer_set:
+            if client.area.timer_started:
+                client.send_ooc(f'Timer is at {client.area.timer_target - arrow.get()}')
+            else:
+                client.send_ooc(f'Timer is at {client.area.timer_static}')
+        else:
+            client.send_ooc(f'Timer is unset.')
+        return
+
+    duration = pytimeparse.parse(arg)
+    if duration is not None:
+        if client.area.timer_set:
+            if client.area.timer_started:
+                if not (arg[0] == '+' or duration < 0):
+                    client.area.timer_target = arrow.get()
+                client.area.timer_target = client.area.timer_target.shift(seconds=duration)
+                client.area.timer_static = client.area.timer_target - arrow.get()
+            else:
+                if not (arg[0] == '+' or duration < 0):
+                    client.area.timer_static = datetime.timedelta(0)
+                client.area.timer_static += datetime.timedelta(seconds=duration)
+        else:
+            client.area.timer_static = datetime.timedelta(seconds=abs(duration))
+            client.area.timer_set = True
+            client.area.send_command('TI', -1, 2)
+
+    if not client.area.timer_set:
+        raise ArgumentError('There is no timer set in this area.')
+    elif arg == 'start':
+        client.area.timer_target = client.area.timer_static + arrow.get()
+        client.area.timer_started = True
+    elif arg in ('pause', 'stop'):
+        client.area.timer_static = client.area.timer_target - arrow.get()
+        client.area.timer_started = False
+    elif arg == 'hide':
+        client.area.timer_set = False
+        client.area.timer_started = False
+        client.area.timer_static = None
+        client.area.timer_target = None
+        client.send_ooc('Timer unset and hidden.')
+        client.area.send_command('TI', -1, 3)
+
+    # Send static time if applicable
+    if client.area.timer_set:
+        s = int(not client.area.timer_started)
+        client.area.send_command('TI', -1, s, int(client.area.timer_static.total_seconds()) * 1000)
+        client.send_ooc(f'Timer is at {client.area.timer_static}')
