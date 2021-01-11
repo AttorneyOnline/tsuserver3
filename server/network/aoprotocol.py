@@ -748,10 +748,11 @@ class AOProtocol(asyncio.Protocol):
             if args[1] != self.client.char_id:
                 return
             if self.client.change_music_cd():
-                self.client.send_ooc(
-                    f'You changed song too many times. Please try again after {int(self.client.change_music_cd())} seconds.'
-                )
-                return
+                if (len(self.client.area.clients) != 1):
+                    self.client.send_ooc(
+                        f'You changed the song too many times. Please try again after {int(self.client.change_music_cd())} seconds.'
+                    )
+                    return
             try:
                 if args[0] == "~stop.mp3" or self.server.get_song_is_category(self.server.music_list, args[0]):
                     name, length = "~stop.mp3", 0
