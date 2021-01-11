@@ -462,7 +462,7 @@ class AreaManager:
             
             def __init__(self, title):
                 self.title = title
-                self.statements = []
+                self.statements = [] % 50
             
             def add_statement(self, message):
                 """Add a statement and return whether successful."""
