@@ -263,6 +263,13 @@ class ClientManager:
             """
             if self.is_mod or self in self.area.owners:
                 return 0
+
+            # Get a list of unique IPIDs from the current area to determine if the "player" is truly alone in an area (spectators or hidden players don't count).
+            players = set([c.ipid for c in self.area.clients if not c.hidden])
+            # If we're alone in the area, we don't get spam protection.
+            if len(players) <= 1:
+                return 0
+
             if self.mus_mute_time:
                 if time.time() - self.mus_mute_time < self.server.config[
                         'music_change_floodguard']['mute_length']:

@@ -789,7 +789,7 @@ class Area:
         else:
             if client.change_music_cd():
                 client.send_ooc(
-                    f'You changed song too many times. Please try again after {int(client.change_music_cd())} seconds.'
+                    f'You changed the song too many times. Please try again after {int(client.change_music_cd())} seconds.'
                 )
                 return
             self.remove_jukebox_vote(client, True)
