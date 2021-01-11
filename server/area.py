@@ -33,6 +33,14 @@ from server.constants import MusicEffect
 from collections import OrderedDict
 
 class Area:
+    class Timer:
+        """Represents a single instance of a timer in the area."""
+        def __init__(self, Set = False, started = False, static = None, target = None):
+            self.set = Set
+            self.started = started
+            self.static = static
+            self.target = target
+
     """Represents a single instance of an area."""
     def __init__(self,
                     area_manager,
@@ -141,10 +149,9 @@ class Area:
         # Dictionary of dictionaries with further info, examine def link for more info
         self.links = {}
 
-        self.timer_set = False
-        self.timer_started = False
-        self.timer_static = None
-        self.timer_target = None
+        self.timers = [
+            self.Timer() for x in range(5)
+        ]
 
     @property
     def name(self):
