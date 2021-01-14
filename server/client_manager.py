@@ -41,6 +41,7 @@ class ClientManager:
             self.area = server.area_manager.default_area()
             self.server = server
             self.name = ''
+            self.showname = ''
             self.fake_name = ''
             self.is_mod = False
             self.mod_profile_name = None
@@ -403,6 +404,8 @@ class ClientManager:
                 if c in area.afkers:
                     info += '[AFK]'
                 info += f' [{c.id}] {c.char_name}'
+                if c.showname != "":
+                    info += f' ({c.showname})'
                 if self.is_mod:
                     info += f' ({c.ipid}): {c.name}'
             return info
