@@ -206,7 +206,7 @@ class AOProtocol(asyncio.Protocol):
         :param args: a list containing all the arguments
 
         """
-        if self.client.hdid != '':
+        if self.client.is_checked:
             self.client.disconnect()
             return
 
