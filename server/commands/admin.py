@@ -32,12 +32,17 @@ __all__ = [
 
 def ooc_cmd_motd(client, arg):
     """
-    Show the message of the day.
-    Usage: /motd
+    Show or change the message of the day.
+    Usage: /motd [new motd]
     """
-    if len(arg) != 0:
-        raise ArgumentError("This command doesn't take any arguments")
-    client.send_motd()
+    if len(arg) == 0:
+        client.send_motd()
+    elif client.is_mod:
+        client.server.config['motd'] = arg
+        client.send_ooc('MOTD changed.')
+    else:
+        raise ClientError('You must be authorized to do that.')
+        
 
 
 def ooc_cmd_help(client, arg):
