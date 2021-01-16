@@ -277,6 +277,26 @@ class Database:
             else:
                 return None
 
+    def ban_history(self, ipid=None, hdid=None, ban_id=None):
+        """Check if an IPID and/or HDID has been banned in the past."""
+        with self.db as conn:
+            bans = conn.execute(dedent('''
+                SELECT *
+                FROM (
+                    SELECT ban_id FROM ip_bans WHERE ipid = ?
+                    UNION SELECT ban_id FROM hdid_bans WHERE hdid = ?
+                    UNION SELECT ban_id FROM bans WHERE ban_id = ?
+                )
+                JOIN bans USING (ban_id)
+                '''), (ipid, hdid, ban_id)).fetchall()
+            if bans is not None:
+                history = []
+                for ban in bans:
+                    history.append(Database.Ban(**ban))
+                return history
+            else:
+                return None
+
     def unban(self, ban_id):
         """Remove a ban entry."""
         event_logger.info(f'Unbanning {ban_id}')

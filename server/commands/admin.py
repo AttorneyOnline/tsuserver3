@@ -396,21 +396,24 @@ def ooc_cmd_baninfo(client, arg):
     if lookup_type not in ('ban_id', 'ipid', 'hdid'):
         raise ArgumentError('Incorrect lookup type.')
 
-    ban = database.find_ban(**{lookup_type: args[0]})
-    if ban is None:
+    bans = database.ban_history(**{lookup_type: args[0]})
+    if bans is None:
         client.send_ooc('No ban found for this ID.')
     else:
-        msg = f'Ban ID: {ban.ban_id}\n'
-        msg += 'Affected IPIDs: ' + ', '.join([str(ipid) for ipid in ban.ipids]) + '\n'
-        msg += 'Affected HDIDs: ' + ', '.join(ban.hdids) + '\n'
-        msg += f'Reason: "{ban.reason}"\n'
-        msg += f'Banned by: {ban.banned_by_name} ({ban.banned_by})\n'
+        msg = f'Bans for {args[0]}'
+        for ban in bans:
+            msg += f'\nBan ID: {ban.ban_id}\n'
+            msg += 'Affected IPIDs: ' + ', '.join([str(ipid) for ipid in ban.ipids]) + '\n'
+            msg += 'Affected HDIDs: ' + ', '.join(ban.hdids) + '\n'
+            msg += f'Reason: "{ban.reason}"\n'
+            msg += 'Unbanned: {}\n'.format(bool(ban.unbanned))
+            msg += f'Banned by: {ban.banned_by_name} ({ban.banned_by})\n'
 
-        ban_date = arrow.get(ban.ban_date)
-        msg += f'Banned on: {ban_date.format()} ({ban_date.humanize()})\n'
-        if ban.unban_date is not None:
-            unban_date = arrow.get(ban.unban_date)
-            msg += f'Unban date: {unban_date.format()} ({unban_date.humanize()})'
-        else:
-            msg += 'Unban date: N/A'
+            ban_date = arrow.get(ban.ban_date)
+            msg += f'Banned on: {ban_date.format()} ({ban_date.humanize()})\n'
+            if ban.unban_date is not None:
+                unban_date = arrow.get(ban.unban_date)
+                msg += f'Unban date: {unban_date.format()} ({unban_date.humanize()})'
+            else:
+                msg += 'Unban date: N/A'
         client.send_ooc(msg)
