@@ -206,6 +206,10 @@ class AOProtocol(asyncio.Protocol):
         :param args: a list containing all the arguments
 
         """
+        if self.client.is_checked:
+            self.client.disconnect()
+            return
+
         if not self.validate_net_cmd(args, self.ArgType.STR, needs_auth=False):
             return
         hdid = self.client.hdid = args[0]
