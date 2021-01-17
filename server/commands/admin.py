@@ -406,7 +406,7 @@ def ooc_cmd_baninfo(client, arg):
             msg += 'Affected IPIDs: ' + ', '.join([str(ipid) for ipid in ban.ipids]) + '\n'
             msg += 'Affected HDIDs: ' + ', '.join(ban.hdids) + '\n'
             msg += f'Reason: "{ban.reason}"\n'
-            msg += 'Unbanned: {}\n'.format(bool(ban.unbanned))
+            msg += f'Unbanned: {bool(ban.unbanned)}\n'
             msg += f'Banned by: {ban.banned_by_name} ({ban.banned_by})\n'
 
             ban_date = arrow.get(ban.ban_date)
