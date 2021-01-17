@@ -289,7 +289,7 @@ class Database:
                 )
                 JOIN bans USING (ban_id)
                 '''), (ipid, hdid, ban_id)).fetchall()
-            if bans is not None:
+            if bans is not []:
                 history = []
                 for ban in bans:
                     history.append(Database.Ban(**ban))
