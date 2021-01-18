@@ -160,6 +160,12 @@ def kickban(client, arg, ban_hdid):
     except ValueError:
         raise ClientError(f'{raw_ipid} does not look like a valid IPID.')
 
+    if ban_id != None:
+        existing_ban = database.find_ban(None, None, ban_id)
+        if existing_ban:
+            if bool(existing_ban.unbanned) == True:
+                raise ClientError(f'{ban_id} is already unbanned.')
+
     ban_id = database.ban(ipid, reason, ban_type='ipid', banned_by=client,
         ban_id=ban_id, unban_date=unban_date)
 
