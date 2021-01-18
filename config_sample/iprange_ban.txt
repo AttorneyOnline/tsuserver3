@@ -1,6 +1,4 @@
 # line 0
-# This is a list of example tor networks that can contact you on port 27017 #
-# You can update this list by visiting https://check.torproject.org/cgi-bin/TorBulkExitList.py?ip=___.___.___.___&port=27017 #
 23.120.182.
 23.129.64.
 45.153.160.
@@ -49,6 +47,13 @@
 63479
 63997
 12989
+15003
+24806
+48031
+49367
+52173
+53850
+61317
 137409
 197595
 199524
@@ -58,3 +63,8 @@
 205544
 394380
 395954
+205016
+205544
+394380
+395954
+396919
