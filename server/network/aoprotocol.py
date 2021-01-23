@@ -15,18 +15,22 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from .. import commands
-from server.fantacrypt import fanta_decrypt
-from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
-from server import database
-from time import localtime, strftime
-import arrow
-from enum import Enum
-import asyncio
 import re
+import arrow
+import asyncio
+import logging
 import unicodedata
 
-import logging
+from enum import Enum
+from typing import List
+from time import localtime, strftime
+
+from .. import commands
+from server import database
+from server.fantacrypt import fanta_decrypt
+from server.constants import ESCAPE_CHARACTERS
+from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
+
 
 logger_debug = logging.getLogger('debug')
 logger = logging.getLogger('events')
@@ -325,8 +329,9 @@ class AOProtocol(asyncio.Protocol):
         AC#%
 
         """
-
-        self.client.send_command('SC', *self.server.char_list)
+        escaped_char_list = self._change_to_escape_characters(
+            self.server.char_list)
+        self.client.send_command('SC', *escaped_char_list)
 
     def net_cmd_rm(self, _):
         """Asks for the whole music list (AO2)
@@ -1049,6 +1054,29 @@ class AOProtocol(asyncio.Protocol):
 
         """
         self.net_cmd_ct(['opban', '/ban {}'.format(args[0])])
+
+    @classmethod
+    def _change_to_escape_characters(cls, list_to_change: List[str]) -> List[str]:
+        escaped_names = []
+        for not_escaped_string in list_to_change:
+            if cls._contains_escape_character(not_escaped_string):
+                escaped_name = cls._add_escape_characters(not_escaped_string)
+            else:
+                escaped_name = not_escaped_string
+            escaped_names.append(escaped_name)
+        return escaped_names
+
+    @staticmethod
+    def _contains_escape_character(word: str) -> bool:
+        return any(char for char in ESCAPE_CHARACTERS.keys() if char in word)
+
+    @staticmethod
+    def _add_escape_characters(word_to_change: str) -> str:
+        for char in word_to_change:
+            escape_character = ESCAPE_CHARACTERS.get(char)
+            if escape_character:
+                word_to_change = word_to_change.replace(char, escape_character)
+        return word_to_change
 
     net_cmd_dispatcher = {
         'HI': net_cmd_hi,  # handshake
