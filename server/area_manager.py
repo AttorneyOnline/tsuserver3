@@ -18,13 +18,15 @@
 import asyncio
 import random
 import time
-from enum import Enum
-
 import yaml
 
+from enum import Enum
+from typing import List
+
 from server import database
-from server.evidence import EvidenceList
 from server.exceptions import AreaError
+from server.evidence import EvidenceList
+from server.client_manager import ClientManager
 
 
 class AreaManager:
@@ -96,15 +98,21 @@ class AreaManager:
             SPECTATABLE = 2,
             LOCKED = 3
 
-        def new_client(self, client):
+        def new_client(self, client: ClientManager.Client):
             """Add a client to the area."""
             self.clients.add(client)
             self.server.area_manager.send_arup_players()
+            
             if client.char_id != -1:
                 database.log_room('area.join', client, self)
 
-        def remove_client(self, client):
-            """Remove a disconnected client from the area."""
+        def remove_client(self, client: ClientManager.Client):
+            """Remove a disconnected client from the area.
+
+            Args:
+                client (ClientManager.Client): Client to remove
+            """
+
             self.clients.remove(client)
             if client in self.afkers:
                 self.afkers.remove(client)
@@ -141,11 +149,15 @@ class AreaManager:
             self.server.area_manager.send_arup_lock()
             self.broadcast_ooc('This area is locked now.')
 
-        def is_char_available(self, char_id):
+        def is_char_available(self, char_id: int) -> bool:
+            """Check if a character is available for use.
+            Args:
+                char_id (int): character ID
+
+            Returns:
+                bool: True if the character is available. False if not available
             """
-            Check if a character is available for use.
-            :param char_id: character ID
-            """
+
             return char_id not in [x.char_id for x in self.clients]
 
         def get_rand_avail_char_id(self):
@@ -157,50 +169,65 @@ class AreaManager:
                 raise AreaError('No available characters.')
             return random.choice(tuple(avail_set))
 
-        def send_command(self, cmd, *args):
+        def send_command(self, cmd: str, *args):
+            """Broadcast an AO-compatible command to all clients in the area.
+
+            Args:
+                cmd (str): Command to send
             """
-            Broadcast an AO-compatible command to all clients in the area.
-            """
+
             for c in self.clients:
                 c.send_command(cmd, *args)
 
-        def send_owner_command(self, cmd, *args):
-            """
-            Send an AO-compatible command to all owners of the area
+        def send_owner_command(self, cmd: str, *args):
+            """Send an AO-compatible command to all owners of the area
             that are not currently in the area.
+
+            Args:
+                cmd (str): Command to send
             """
             for c in self.owners:
                 if c not in self.clients:
                     c.send_command(cmd, *args)
 
-        def broadcast_ooc(self, msg):
+        def broadcast_ooc(self, msg: str):
+            """Broadcast an OOC message to all clients in the area.
+
+            Args:
+                msg (str): message to be broadcasted
             """
-            Broadcast an OOC message to all clients in the area.
-            :param msg: message
-            """
+
             self.send_command('CT', self.server.config['hostname'], msg, '1')
             self.send_owner_command(
                 'CT',
                 '[' + self.abbreviation + ']' + self.server.config['hostname'],
                 msg, '1')
 
-        def set_next_msg_delay(self, msg_length):
+        def set_next_msg_delay(self, msg_length: int):
+            """Set the delay when the next IC message can be send by any client.
+
+            Args:
+                msg_length (int): estimated length of message (ms)
             """
-            Set the delay when the next IC message can be send by any client.
-            :param msg_length: estimated length of message (ms)
-            """
+
             delay = min(3000, 100 + 60 * msg_length)
             self.next_message_time = round(time.time() * 1000.0 + delay)
 
-        def is_iniswap(self, client, preanim, anim, char, sfx):
-            """
-            Determine if a client is performing an INI swap.
-            :param client: client attempting the INI swap.
-            :param preanim: name of preanimation
-            :param anim: name of idle/talking animation
-            :param char: name of character
+        # TODO: Find out what SFX is. Also add typing hinting to it where it is created
+        def is_iniswap(self, client: ClientManager.Client, preanim: str, anim: str, char: str, sfx) -> bool:
+            """Determine if a client is performing an INI swap.
 
+            Args:
+                client (ClientManager.Client): client attempting the INI swap.
+                preanim (str): name of preanimation
+                anim (str): name of idle/talking animation
+                char (str): name of character
+                sfx ([type]): [description]
+
+            Returns:
+                bool: True if client is ini_swap, false if client is not
             """
+
             if self.iniswap_allowed:
                 return False
             if '..' in preanim or '..' in anim or '..' in char:
@@ -214,12 +241,14 @@ class AreaManager:
                         return False
             return not self.server.char_emotes[char].validate(preanim, anim, sfx)
 
-        def add_jukebox_vote(self, client, music_name, length=-1, showname=''):
-            """
-            Cast a vote on the jukebox.
-            :param music_name: track name
-            :param length: length of track (Default value = -1)
-            :param showname: showname of voter (?) (Default value = '')
+        def add_jukebox_vote(self, client: ClientManager.Client, music_name: str, length: int = -1, showname: str = ''):
+            """Cast a vote on the jukebox.
+
+            Args:
+                client (ClientManager.Client): Client that is requesting
+                music_name (str): track name
+                length (int, optional): length of track. Defaults to -1.
+                showname (str, optional): showname of voter. Defaults to ''.
             """
             if not self.jukebox:
                 return
@@ -233,13 +262,14 @@ class AreaManager:
                 if len(self.jukebox_votes) == 1:
                     self.start_jukebox()
 
-        def remove_jukebox_vote(self, client, silent):
-            """
-            Removes a vote on the jukebox.
-            :param client: client whose vote should be removed
-            :param silent: do not notify client
+        def remove_jukebox_vote(self, client: ClientManager.Client, silent: bool):
+            """Removes a vote on the jukebox.
 
+            Args:
+                client (ClientManager.Client): client whose vote should be removed
+                silent (bool): do not notify client
             """
+
             if not self.jukebox:
                 return
             for current_vote in self.jukebox_votes:
@@ -312,43 +342,58 @@ class AreaManager:
             self.music_looper = asyncio.get_event_loop().call_later(
                 vote_picked.length, lambda: self.start_jukebox())
 
-        def play_music(self, name, cid, loop=0, showname="", effects=0):
+        def play_music(self, name: str, cid: int, loop: int = 0, showname: str ="", effects: int = 0):
+            """Play a track.
+
+            Args:
+                name (str): track name
+                cid (int): origin character ID
+                loop (int, optional): 1 for clientside looping, 0 for no looping (2.8). Defaults to 0.
+                showname (str, optional): showname of origin user. Defaults to "".
+                effects (int, optional): fade out/fade in/sync/etc. effect bitflags. Defaults to 0.
             """
-            Play a track.
-            :param name: track name
-            :param cid: origin character ID
-            :param loop: 1 for clientside looping, 0 for no looping (2.8)
-            :param showname: showname of origin user
-            :param effects: fade out/fade in/sync/etc. effect bitflags
-            """
+
             # If it's anything other than 0, it's looping. (Legacy music.yaml support)
             if loop != 0:
                 loop = 1
             self.send_command('MC', name, cid, showname, loop, 0, effects)
 
-        def can_send_message(self, client):
+        def can_send_message(self, client: ClientManager.Client) -> bool:
+            """Check if a client can send an IC message in this area.
+
+            Args:
+                client (ClientManager.Client): sender
+
+            Returns:
+                bool: True is client can send a message, False if not
             """
-            Check if a client can send an IC message in this area.
-            :param client: sender
-            """
+            
             if self.cannot_ic_interact(client):
                 client.send_ooc(
                     'This is a locked area - ask the CM to speak.')
                 return False
             return (time.time() * 1000.0 - self.next_message_time) > 0
 
-        def cannot_ic_interact(self, client):
-            """
-            Check if this room is locked to a client.
-            :param client: sender
-            """
+        def cannot_ic_interact(self, client: ClientManager.Client) -> bool:
+            """Check if this room is locked to a client.
+
+            Args:
+                client (ClientManager.Client): sender
+
+            Returns:
+                bool: True if the client cannot interact, False otherwise
+            """            
             return self.is_locked != self.Locked.FREE and not client.is_mod and not client.id in self.invite_list
 
-        def change_hp(self, side, val):
-            """
-            Set the penalty bars.
-            :param side: 1 for defense; 2 for prosecution
-            :param val: value from 0 to 10
+        def change_hp(self, side: int, val: int):
+            """Set the penalty bars.
+
+            Args:
+                side (int): 1 for defense; 2 for prosecution
+                val (int): value from 0 to 10
+
+            Raises:
+                AreaError: If side is not between 1-2 inclusive or val is not between 0-10
             """
             if not 0 <= val <= 10:
                 raise AreaError('Invalid penalty value.')
@@ -360,23 +405,31 @@ class AreaManager:
                 self.hp_pro = val
             self.send_command('HP', side, val)
 
-        def change_background(self, bg):
+        def change_background(self, bg: str):
+            """ Set the background.            
+            Args:
+                bg (str): background name
+
+            Raises:
+                AreaError: if `bg` is not in background list
             """
-            Set the background.
-            :param bg: background name
-            :raises: AreaError if `bg` is not in background list
-            """
+
             if bg.lower() not in (name.lower()
                                   for name in self.server.backgrounds):
                 raise AreaError('Invalid background name.')
             self.background = bg
             self.send_command('BN', self.background)
 
-        def change_status(self, value):
+        def change_status(self, value: str):
+            """Set the status of the room.
+
+            Args:
+                value (str): status code
+
+            Raises:
+                AreaError: If the value is not a valid status code
             """
-            Set the status of the room.
-            :param value: status code
-            """
+
             allowed_values = ('idle', 'rp', 'casing', 'looking-for-players',
                               'lfp', 'recess', 'gaming')
             if value.lower() not in allowed_values:
@@ -389,30 +442,36 @@ class AreaManager:
             self.server.area_manager.send_arup_status()
 
         def change_doc(self, doc='No document.'):
+            """Set the doc link.
+
+            Args:
+                doc (str, optional): doc link. Defaults to 'No document.'.
             """
-            Set the doc link.
-            :param doc: doc link (Default value = 'No document.')
-            """
+            
             self.doc = doc
 
-        def add_to_judgelog(self, client, msg):
+        def add_to_judgelog(self, client: ClientManager.Client, msg: str):
+            """Append an event to the judge log (max 10 items).
+
+            Args:
+                client (ClientManager.Client): event origin
+                msg (str): event message
             """
-            Append an event to the judge log (max 10 items).
-            :param client: event origin
-            :param msg: event message
-            """
+
             if len(self.judgelog) >= 10:
                 self.judgelog = self.judgelog[1:]
             self.judgelog.append(
                 f'{client.char_name} ({client.ip}) {msg}.')
 
-        def add_music_playing(self, client, name, showname=''):
+        def add_music_playing(self, client: ClientManager.Client, name: str, showname: str = ''):
+            """Set info about the current track playing.
+
+            Args:
+                client (ClientManager.Client): player
+                name (str): showname of player (can be blank)
+                showname (str, optional): track name. Defaults to ''.
             """
-            Set info about the current track playing.
-            :param client: player
-            :param showname: showname of player (can be blank)
-            :param name: track name
-            """
+
             if showname != '':
                 self.current_music_player = f'{showname} ({client.char_name})'
             else:
@@ -420,10 +479,14 @@ class AreaManager:
             self.current_music_player_ipid = client.ipid
             self.current_music = name
 
-        def get_evidence_list(self, client):
-            """
-            Get the evidence list of the area.
-            :param client: requester
+        def get_evidence_list(self, client: ClientManager.Client) -> List[EvidenceList.Evidence]:
+            """Get the evidence list of the area.
+
+            Args:
+                client (ClientManager.Client): requester
+
+            Returns:
+                List[EvidenceList.Evidence]: A list containing Evidence
             """
             client.evi_list, evi_list = self.evi_list.create_evi_list(client)
             return evi_list
@@ -436,11 +499,13 @@ class AreaManager:
             for client in self.clients:
                 client.send_command('LE', *self.get_evidence_list(client))
 
-        def get_cms(self):
+        def get_cms(self) -> str:
+            """Get a list of CMs.
+
+            Returns:
+                str: String of CM's comma separated
             """
-            Get a list of CMs.
-            :return: message
-            """
+            
             msg = ''
             for i in self.owners:
                 msg += f'[{str(i.id)}] {i.char_name}, '
@@ -499,22 +564,51 @@ class AreaManager:
         """Get the default area."""
         return self.areas[0]
 
-    def get_area_by_name(self, name):
-        """Get an area by name."""
+    def get_area_by_name(self, name: str) -> Area:
+        """Get an area by name.
+
+        Args:
+            name (str): Name of the area you are looking for
+
+        Raises:
+            AreaError: Area name not found
+
+        Returns:
+            Area: The Area
+        """
+
         for area in self.areas:
             if area.name == name:
                 return area
         raise AreaError('Area not found.')
 
-    def get_area_by_id(self, num):
-        """Get an area by ID."""
+    def get_area_by_id(self, area_id: int) -> Area:
+        """Get an area by ID
+
+        Args:
+            area_id (int): The ID of the area you are looking for
+
+        Raises:
+            AreaError: The Area ID does not exist
+
+        Returns:
+            Area: The Area
+        """
+
         for area in self.areas:
-            if area.id == num:
+            if area.id == area_id:
                 return area
         raise AreaError('Area not found.')
 
-    def abbreviate(self, name):
-        """Abbreviate the name of a room."""
+    def abbreviate(self, name: str) -> str:
+        """Abbreviate the name of a room.
+
+        Args:
+            name (str): What you want to abbreviate
+        Returns:
+            str: Abbreviated room name
+        """
+
         if name.lower().startswith("courtroom"):
             return "CR" + name.split()[-1]
         elif name.lower().startswith("area"):
@@ -526,14 +620,15 @@ class AreaManager:
         else:
             return name.upper()
 
-    def send_remote_command(self, area_ids, cmd, *args):
-        """
-        Broadcast an AO-compatible command to a specified
+    def send_remote_command(self, area_ids: List[int], cmd: str, *args):
+        """Broadcast an AO-compatible command to a specified
         list of areas and their owners.
-        :param area_ids: list of area IDs
-        :param cmd: command name
-        :param *args: command arguments
+
+        Args:
+            area_ids (List[int]): list of area IDs
+            cmd (str): command name
         """
+
         for a_id in area_ids:
             self.get_area_by_id(a_id).send_command(cmd, *args)
             self.get_area_by_id(a_id).send_owner_command(cmd, *args)
