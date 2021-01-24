@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from server.network.dataclasses.ms_28 import MS_28
+from server.network.dataclasses.ms_26 import MS_26
+from server.network.dataclasses.ms_pre_26 import MS_Pre_26
 from .. import commands
 from server.fantacrypt import fanta_decrypt
 from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
@@ -383,169 +386,117 @@ class AOProtocol(asyncio.Protocol):
         """
         if not self.client.is_checked:
             return
-        elif self.client.is_muted:  # Checks to see if the client has been muted by a mod
+        elif self.client.is_muted:
             self.client.send_ooc('You are muted by a moderator.')
             return
-        elif not self.client.area.can_send_message(self.client):
+        if not self.client.area.can_send_message(self.client):
             return
 
         target_area = []
-        showname = ""
-        charid_pair = -1
-        offset_pair = ""
-        nonint_pre = 0
-        sfx_looping = "0"
-        screenshake = 0
-        frames_shake = ""
-        frames_realization = ""
-        frames_sfx = ""
-        additive = 0
-        effect = ""
         pair_order = 0
-        if self.validate_net_cmd(args, self.ArgType.STR,  # msg_type
-                                 self.ArgType.STR_OR_EMPTY, self.ArgType.STR,   # pre, folder
-                                 self.ArgType.STR, self.ArgType.STR_OR_EMPTY,   # anim, text
-                                 self.ArgType.STR, self.ArgType.STR,            # pos, sfx
-                                 self.ArgType.INT, self.ArgType.INT,            # anim_type, cid
-                                 self.ArgType.INT, self.ArgType.INT_OR_STR,     # sfx_delay, button
-                                 self.ArgType.INT, self.ArgType.INT,            # evidence, flip
-                                 self.ArgType.INT, self.ArgType.INT,            # ding, color
-                                 ):
-            # Pre-2.6 validation monstrosity.
-            msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color = args
-        elif self.validate_net_cmd(
-            args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,              # msg_type, pre
-            self.ArgType.STR, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,  # folder, anim, text
-            self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,           # pos, sfx, anim_type
-            self.ArgType.INT, self.ArgType.INT, self.ArgType.INT_OR_STR,    # cid, sfx_delay, button
-            self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,           # evidence, flip, ding
-            # color, showname, charid_pair
-            self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.INT,
-            # offset_pair, nonint_pre
-            self.ArgType.STR, self.ArgType.INT,
-        ):
-            # 2.6 validation monstrosity.
-            msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre = args
-        elif self.validate_net_cmd(
-            args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,              # msg_type, pre
-            self.ArgType.STR, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,  # folder, anim, text
-            self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,           # pos, sfx, anim_type
-            self.ArgType.INT, self.ArgType.INT, self.ArgType.INT_OR_STR,    # cid, sfx_delay, button
-            self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,           # evidence, flip, ding
-            # color, showname, charid_pair
-            self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
-            # offset_pair, nonint_pre, sfx_looping
-            self.ArgType.STR, self.ArgType.INT, self.ArgType.STR,
-            # screenshake, frames_shake, frames_realization
-            self.ArgType.INT, self.ArgType.STR, self.ArgType.STR,
-            # frames_sfx, additive, effect
-            self.ArgType.STR, self.ArgType.INT, self.ArgType.STR,
-        ):
-            # 2.8 validation monstrosity. (rip 2.7)
-            msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive, effect = args
-            pair_args = charid_pair.split("^")
-            charid_pair = int(pair_args[0])
-            if (len(pair_args) > 1):
-                pair_order = pair_args[1]
-        else:
-            return
 
-        if len(showname) > 0 and not self.client.area.showname_changes_allowed:
+        packet_28 = MS_28.from_args(args)
+        # pair_args = packet_28.charid_pair.split("^")
+
+        # charid_pair = int(pair_args[0])
+        # if (len(pair_args) > 1):
+        #     pair_order = pair_args[1]
+
+        if len(packet_28.showname) > 0 and not self.client.area.showname_changes_allowed:
             self.client.send_ooc(
                 "Showname changes are forbidden in this area!")
             return
         else:
-            self.client.showname = showname
-        if self.client.area.is_iniswap(self.client, pre, anim,
-                                       folder, sfx):
+            self.client.showname = packet_28.showname
+        if self.client.area.is_iniswap(self.client, packet_28.pre, packet_28.anim, packet_28.folder, packet_28.sfx):
             self.client.send_ooc(
                 "Iniswap/custom emotes are blocked in this area")
             return
         if len(self.client.charcurse) > 0 and \
-                folder != self.client.char_name:
+                packet_28.folder != self.client.char_name:
             self.client.send_ooc(
                 "You may not iniswap while you are charcursed!")
             return
         if not self.client.area.blankposting_allowed:
-            if text.strip() == '':
+            if packet_28.text.strip() == '':
                 self.client.send_ooc(
                     "Blankposting is forbidden in this area!")
                 return
-            if len(re.sub(r'[{}\\`|(~~)]', '', text).replace(
-                    ' ', '')) < 3 and not text.startswith('<') and not text.startswith('>'):
+            if len(re.sub(r'[{}\\`|(~~)]', '', packet_28.text).replace(
+                    ' ', '')) < 3 and not packet_28.text.startswith('<') and not packet_28.text.startswith('>'):
                 self.client.send_ooc(
                     "While that is not a blankpost, it is still pretty spammy. Try forming sentences."
                 )
                 return
-        if text.startswith('/a '):
-            part = text.split(' ')
+        if packet_28.text.startswith('/a '):
+            split_text = packet_28.text.split(' ')
             try:
-                aid = int(part[1])
+                aid = int(split_text[1])
                 area = self.server.area_manager.get_area_by_id(aid)
                 if self.client in area.owners:
                     target_area.append(aid)
                 if not target_area:
-                    self.client.send_ooc(f'You don\'t own {area.name}!')
+                    self.client.send_ooc(f"You don't own {area.name}!")
                     return
-                text = ' '.join(part[2:])
+                packet_28.text = ' '.join(split_text[2:])
             except ValueError:
                 self.client.send_ooc(
                     "That does not look like a valid area ID!")
                 return
-        elif text.startswith('/s '):
-            part = text.split(' ')
+        elif packet_28.text.startswith('/s '):
+            part = packet_28.text.split(' ')
             for a in self.server.area_manager.areas:
                 if self.client in a.owners:
                     target_area.append(a.id)
             if not target_area:
-                self.client.send_ooc('You don\'t any areas!')
+                self.client.send_ooc(f"You don't any areas!")
                 return
-            text = ' '.join(part[1:])
-        if msg_type not in ('chat', '0', '1', '2', '3', '4', '5'):
+            packet_28.text = ' '.join(part[1:])
+        if packet_28.msg_type not in ('chat', '0', '1', '2', '3', '4', '5'):
             return
-        if anim_type == 4:
-            anim_type = 6
-        if anim_type not in (0, 1, 2, 5, 6):
+        if packet_28.anim_type == 4:
+            packet_28.anim_type = 6
+        if packet_28.anim_type not in (0, 1, 2, 5, 6):
             return
-        if cid != self.client.char_id:
+        if packet_28.cid != self.client.char_id:
             return
-        if sfx_delay < 0:
+        if packet_28.sfx_delay < 0:
             return
-        if '4' in str(button) and "<and>" not in str(button):
-            if not button.isdigit():
+        if '4' in str(packet_28.button) and "<and>" not in str(packet_28.button):
+            if not packet_28.button.isdigit():
                 return
-        if evidence < 0:
+        if packet_28.evidence < 0:
             return
-        if ding not in (0, 1):
+        if packet_28.ding not in (0, 1):
             return
-        if color not in (0, 1, 2, 3, 4, 5, 6, 7, 8):
+        if packet_28.color not in (0, 1, 2, 3, 4, 5, 6, 7, 8):
             return
-        if len(showname) > 15:
+        if len(packet_28.showname) > 15:
             self.client.send_ooc("Your IC showname is way too long!")
             return
-        if nonint_pre == 1:
-            if button in (1, 2, 3, 4, 23):
-                if anim_type == 1 or anim_type == 2:
-                    anim_type = 0
-                elif anim_type == 6:
-                    anim_type = 5
+        if packet_28.nonint_pre == 1:
+            if packet_28.button in (1, 2, 3, 4, 23):
+                if packet_28.anim_type == 1 or packet_28.anim_type == 2:
+                    packet_28.anim_type = 0
+                elif packet_28.anim_type == 6:
+                    packet_28.anim_type = 5
         if self.client.area.non_int_pres_only:
-            if anim_type == 1 or anim_type == 2:
-                anim_type = 0
-                nonint_pre = 1
-            elif anim_type == 6:
-                anim_type = 5
-                nonint_pre = 1
+            if packet_28.anim_type == 1 or packet_28.anim_type == 2:
+                packet_28.anim_type = 0
+                packet_28.nonint_pre = 1
+            elif packet_28.anim_type == 6:
+                packet_28.anim_type = 5
+                packet_28.nonint_pre = 1
         if not self.client.area.shouts_allowed:
             # Old clients communicate the objecting in anim_type.
-            if anim_type == 2:
-                anim_type = 1
-            elif anim_type == 6:
-                anim_type = 5
+            if packet_28.anim_type == 2:
+                packet_28.anim_type = 1
+            elif packet_28.anim_type == 6:
+                packet_28.anim_type = 5
             # New clients do it in a specific objection message area.
-            button = 0
+            packet_28.button = 0
             # Turn off the ding.
-            ding = 0
+            packet_28.ding = 0
 
         max_char = 0
         try:
@@ -553,40 +504,40 @@ class AOProtocol(asyncio.Protocol):
         except:
             max_char = 256
 
-        if len(text) > max_char:
+        if len(packet_28.text) > max_char:
             return
 
         # Transform text
-        msg = self.dezalgo(text)[:256]
+        msg = self.dezalgo(packet_28.text)[:256]
         if self.client.shaken:
             msg = self.client.shake_message(msg)
         if self.client.disemvowel:
             msg = self.client.disemvowel_message(msg)
 
         # Really simple spam protection that functions on the clientside pre-2.8.5, and really should've been serverside from the start
-        if msg.strip() != '' and self.client.area.last_ic_message is not None and cid == self.client.area.last_ic_message[8] and msg.rstrip() == self.client.area.last_ic_message[4].rstrip():
+        if msg.strip() != '' and self.client.area.last_ic_message is not None and packet_28.cid == self.client.area.last_ic_message[8] and msg.rstrip() == self.client.area.last_ic_message[4].rstrip():
             self.client.send_ooc(
                 "Your message is a repeat of the last one. Don't spam!")
             return
 
         # Reveal evidence to everyone if hidden
-        if evidence:
+        if packet_28.evidence:
             if self.client.area.evi_list.evidences[
-                    self.client.evi_list[evidence] - 1].pos != 'all':
+                    self.client.evi_list[packet_28.evidence] - 1].pos != 'all':
                 self.client.area.evi_list.evidences[
-                    self.client.evi_list[evidence] - 1].pos = 'all'
+                    self.client.evi_list[packet_28.evidence] - 1].pos = 'all'
                 self.client.area.broadcast_evidence_list()
 
         # Here, we check the pair stuff, and save info about it to the client.
         # Notably, while we only get a charid_pair and an offset, we send back a chair_pair, an emote, a talker offset
         # and an other offset.
 
-        self.client.charid_pair = charid_pair
-        self.client.offset_pair = offset_pair
-        if anim_type not in (5, 6):
-            self.client.last_sprite = anim
-        self.client.flip = flip
-        self.client.claimed_folder = folder
+        self.client.charid_pair = packet_28.charid_pair
+        self.client.offset_pair = packet_28.offset_pair
+        if packet_28.anim_type not in (5, 6):
+            self.client.last_sprite = packet_28.anim
+        self.client.flip = packet_28.flip
+        self.client.claimed_folder = packet_28.folder
         other_offset = '0'
         other_emote = ''
         other_flip = 0
@@ -611,15 +562,15 @@ class AOProtocol(asyncio.Protocol):
         if self.client in self.client.area.afkers:
             self.client.server.client_manager.toggle_afk(self.client)
 
-        send_args = (msg_type, pre, folder, anim, msg,
-                     pos, sfx, anim_type, cid, sfx_delay,
-                     button, self.client.evi_list[evidence],
-                     flip, ding, color, showname, charid_pair,
-                     other_folder, other_emote, offset_pair,
-                     other_offset, other_flip, nonint_pre,
-                     sfx_looping, screenshake, frames_shake,
-                     frames_realization, frames_sfx,
-                     additive, effect)
+        send_args = (packet_28.msg_type, packet_28.pre, packet_28.folder, packet_28.anim, msg,
+                     packet_28.pos, packet_28.sfx, packet_28.anim_type, packet_28.cid, packet_28.sfx_delay,
+                     packet_28.button, self.client.evi_list[packet_28.evidence],
+                     packet_28.flip, packet_28.ding, packet_28.color, packet_28.showname, charid_pair,
+                     other_folder, other_emote, packet_28.offset_pair,
+                     other_offset, other_flip, packet_28.nonint_pre,
+                     packet_28.sfx_looping, packet_28.screenshake, packet_28.frames_shake,
+                     packet_28.frames_realization, packet_28.frames_sfx,
+                     packet_28.additive, packet_28.effect)
 
         self.client.area.last_ic_message = send_args
         self.client.area.send_command('MS', *send_args)
@@ -633,7 +584,7 @@ class AOProtocol(asyncio.Protocol):
                                             )
 
         self.client.area.set_next_msg_delay(len(msg))
-        database.log_ic(self.client, self.client.area, showname, msg)
+        database.log_ic(self.client, self.client.area, packet_28.showname, msg)
 
         if (self.client.area.is_recording):
             self.client.area.recorded_messages.append(args)
