@@ -95,7 +95,8 @@ class AreaManager:
             # Testimony stuff
             self.is_testifying = False
             self.is_examining = False
-            self.testimony = self.Testimony('N/A')
+            self.testimony_limit = self.server.config['testimony_limit'] + 1
+            self.testimony = self.Testimony('N/A', self.testimony_limit)
             self.examine_index = 0
 
 
@@ -460,14 +461,18 @@ class AreaManager:
         class Testimony:
             """Represents a complete group of statements to be pressed or objected to."""
             
-            def __init__(self, title):
+            def __init__(self, title, limit):
                 self.title = title
-                self.statements = [] * 30 # if you have more than 30 statements, don't.
+                self.statements = []
+                self.limit = limit
             
             def add_statement(self, message):
                 """Add a statement and return whether successful."""
                 message = message[:14] + (1,) + message[15:]
                 self.statements.append(message)
+                if len(self.statements) > self.limit:
+                    self.statements = self.statements[:self.limit]
+                    return False
                 return True
             
             def remove_statement(self, index):
@@ -501,8 +506,9 @@ class AreaManager:
             Start a new testimony in this area. Returns False if the testimony was
             not started.
             """
-            if client not in self.owners and self.evidence_mod == "HiddenCM": # some servers don't utilise area owners, so we use evidence_mod to determine behavior
-                client.send_ooc('You don\'t own this area!')
+            if client not in self.owners and (self.evidence_mod == "HiddenCM" or self.evidence_mod == "Mods"):
+                # some servers don't utilise area owners, so we use evidence_mod to determine behavior
+                client.send_ooc('You don\'t have permission to start a new testimony in this area!')
                 return False
             elif self.is_testifying:
                 client.send_ooc('You can\'t start a new testimony until you finish this one!')
@@ -513,7 +519,7 @@ class AreaManager:
             elif title == '':
                 client.send_ooc('You can\'t start a new testimony without a title!')
                 return False
-            self.testimony = self.Testimony(title)
+            self.testimony = self.Testimony(title, self.testimony_limit)
             self.broadcast_ooc('Began testimony: ' + title)
             self.is_testifying = True
             self.send_command('RT', 'testimony1')
@@ -524,8 +530,8 @@ class AreaManager:
             Start an examination of this area's testimony. Returns False
             if the examination was not started.
             """
-            if client not in self.owners and self.evidence_mod == "HiddenCM":
-                client.send_ooc('You don\'t own this area!')
+            if client not in self.owners and (self.evidence_mod == "HiddenCM" or self.evidence_mod == "Mods"):
+                client.send_ooc('You don\'t have permission to start a new examination in this area!')
                 return False
             elif client.area.is_testifying:
                 client.send_ooc('You can\'t start an examination during a testimony! (Hint: Say \'/end\' to stop recording!)')
@@ -544,8 +550,8 @@ class AreaManager:
             Returns False if the current testimony or examination could
             not be ended, or if it is not in progress.
             """
-            if client not in self.owners and self.evidence_mod == "HiddenCM":
-                client.send_ooc('You don\'t own this area!')
+            if client not in self.owners and (self.evidence_mod == "HiddenCM" or self.evidence_mod == "Mods"):
+                client.send_ooc('You don\'t have permission to end testimonies or examinations in this area!')
                 return False
             elif self.is_testifying:
                 if not self.testimony.statements:
@@ -567,8 +573,8 @@ class AreaManager:
             Replace the statement at <index> with a new <statement>.
             Returns False if the statement was not amended.
             """
-            if client not in self.owners and self.evidence_mod == "HiddenCM":
-                client.send_ooc('You don\'t own this area!')
+            if client not in self.owners and (self.evidence_mod == "HiddenCM" or self.evidence_mod == "Mods"):
+                client.send_ooc('You don\'t have permission to amend testimony in this area!')
                 return False
             if self.testimony.amend_statement(index, statement):
                 client.send_ooc('Amended statement ' + str(index) + ' successfully.')
@@ -582,8 +588,8 @@ class AreaManager:
             Remove the statement at <index>.
             Returns False if the statement was not removed.
             """
-            if client not in self.owners and self.evidence_mod == "HiddenCM":
-                client.send_ooc('You don\'t own this area!')
+            if client not in self.owners and (self.evidence_mod == "HiddenCM" or self.evidence_mod == "Mods"):
+                client.send_ooc('You don\'t have permission to amend testimony in this area!')
                 return False
             if self.testimony.remove_statement(index):
                 client.send_ooc('Removed statement ' + str(index) + ' successfully.')

@@ -317,7 +317,7 @@ def ooc_cmd_testimony(client, arg):
     """
     if len(arg) != 0:
         raise ArgumentError('This command does not take any arguments.')
-    testi = client.area.testimony.statements
+    testi = list(client.area.testimony.statements)
     testi.pop(0)
     if len(testi) > 0:
         testi_msg = 'Testimony: '+ client.area.testimony.title
