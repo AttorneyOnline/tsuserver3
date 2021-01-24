@@ -34,3 +34,7 @@ class MusicEffect(IntFlag):
     FADE_IN = 1
     FADE_OUT = 2
     SYNC_POS = 4
+
+VALID_MESSAGE_TYPES = ('chat', '0', '1', '2', '3', '4', '5')
+
+VALID_ANIM_TYPES = (0, 1, 2, 5, 6)

@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from server.constants import VALID_ANIM_TYPES, VALID_MESSAGE_TYPES
 from server.network.dataclasses.ms_28 import MS_28
 from server.network.dataclasses.ms_26 import MS_26
 from server.network.dataclasses.ms_pre_26 import MS_Pre_26
@@ -377,6 +378,9 @@ class AOProtocol(asyncio.Protocol):
             self.client.change_character(cid)
         except ClientError:
             return
+    
+    def _is_charcursed(self, packet_folder: str) -> bool:
+        return len(self.client.charcurse) > 0 and packet_folder != self.client.char_name
 
     def net_cmd_ms(self, args):
         """IC message.
@@ -389,7 +393,7 @@ class AOProtocol(asyncio.Protocol):
         elif self.client.is_muted:
             self.client.send_ooc('You are muted by a moderator.')
             return
-        if not self.client.area.can_send_message(self.client):
+        if self.client.area.can_send_message(self.client) is False:
             return
 
         target_area = []
@@ -402,32 +406,31 @@ class AOProtocol(asyncio.Protocol):
         # if (len(pair_args) > 1):
         #     pair_order = pair_args[1]
 
-        if len(packet_28.showname) > 0 and not self.client.area.showname_changes_allowed:
-            self.client.send_ooc(
-                "Showname changes are forbidden in this area!")
+        if self.client.area.showname_changes_allowed is False:
+            self.client.send_ooc("Showname changes are forbidden in this area!")
             return
-        else:
-            self.client.showname = packet_28.showname
+
+        self.client.showname = packet_28.showname
+
         if self.client.area.is_iniswap(self.client, packet_28.pre, packet_28.anim, packet_28.folder, packet_28.sfx):
-            self.client.send_ooc(
-                "Iniswap/custom emotes are blocked in this area")
+            self.client.send_ooc("Iniswap/custom emotes are blocked in this area")
             return
-        if len(self.client.charcurse) > 0 and \
-                packet_28.folder != self.client.char_name:
-            self.client.send_ooc(
-                "You may not iniswap while you are charcursed!")
+
+        if self._is_charcursed(packet_28.folder):
+            self.client.send_ooc("You may not iniswap while you are charcursed!")
             return
-        if not self.client.area.blankposting_allowed:
+
+        if self.client.area.blankposting_allowed is False:
             if packet_28.text.strip() == '':
-                self.client.send_ooc(
-                    "Blankposting is forbidden in this area!")
+                self.client.send_ooc("Blankposting is forbidden in this area!")
                 return
+
+            # TODO: Make this easier to understand
             if len(re.sub(r'[{}\\`|(~~)]', '', packet_28.text).replace(
                     ' ', '')) < 3 and not packet_28.text.startswith('<') and not packet_28.text.startswith('>'):
-                self.client.send_ooc(
-                    "While that is not a blankpost, it is still pretty spammy. Try forming sentences."
-                )
+                self.client.send_ooc("While that is not a blankpost, it is still pretty spammy. Try forming sentences.")
                 return
+
         if packet_28.text.startswith('/a '):
             split_text = packet_28.text.split(' ')
             try:
@@ -443,6 +446,7 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_ooc(
                     "That does not look like a valid area ID!")
                 return
+        
         elif packet_28.text.startswith('/s '):
             part = packet_28.text.split(' ')
             for a in self.server.area_manager.areas:
@@ -452,12 +456,11 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_ooc(f"You don't any areas!")
                 return
             packet_28.text = ' '.join(part[1:])
-        if packet_28.msg_type not in ('chat', '0', '1', '2', '3', '4', '5'):
-            return
-        if packet_28.anim_type == 4:
-            packet_28.anim_type = 6
-        if packet_28.anim_type not in (0, 1, 2, 5, 6):
-            return
+        
+        if packet_28.msg_type not in VALID_MESSAGE_TYPES: return
+                    
+        if packet_28.anim_type not in VALID_ANIM_TYPES: return
+        
         if packet_28.cid != self.client.char_id:
             return
         if packet_28.sfx_delay < 0:
