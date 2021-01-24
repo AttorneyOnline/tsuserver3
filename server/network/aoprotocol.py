@@ -32,6 +32,10 @@ logger_debug = logging.getLogger('debug')
 logger = logging.getLogger('events')
 
 
+class ProtocolError(Exception):
+    pass
+
+
 class AOProtocol(asyncio.Protocol):
     """The main class that deals with the AO protocol."""
 
@@ -96,21 +100,26 @@ class AOProtocol(asyncio.Protocol):
 
         if len(self.buffer) > 8192:
             self.client.disconnect()
-        for msg in self.get_messages():
-            if len(msg) < 2:
-                continue
-            # general netcode structure is not great
-            if msg[0] in ('#', '3', '4'):
-                if msg[0] == '#':
-                    msg = msg[1:]
-                spl = msg.split('#', 1)
-                msg = '#'.join([fanta_decrypt(spl[0])] + spl[1:])
-            try:
-                cmd, *args = msg.split('#')
-                self.net_cmd_dispatcher[cmd](self, args)
-            except KeyError:
-                logger_debug.debug(
-                    f'Unknown incoming message from {ipid}: {msg}')
+        try:
+            for msg in self.get_messages():
+                if len(msg) < 2:
+                    continue
+                # general netcode structure is not great
+                if msg[0] in ('#', '3', '4'):
+                    if msg[0] == '#':
+                        msg = msg[1:]
+                    spl = msg.split('#', 1)
+                    msg = '#'.join([fanta_decrypt(spl[0])] + spl[1:])
+                try:
+                    cmd, *args = msg.split('#')
+                    self.net_cmd_dispatcher[cmd](self, args)
+                except KeyError:
+                    logger_debug.debug(
+                        f'Unknown incoming message from {ipid}: {msg}')
+                    if not self.client.is_checked:
+                        raise ProtocolError
+        except ProtocolError:
+            self.client.disconnect()
 
     def connection_made(self, transport):
         """Called upon a new client connecting
@@ -156,6 +165,10 @@ class AOProtocol(asyncio.Protocol):
         :return: yields messages
 
         """
+        # Long header - not likely to be a valid message
+        if len(self.buffer) >= 24 and '#' not in self.buffer[:24]:
+            raise ProtocolError
+
         while '#%' in self.buffer:
             spl = self.buffer.split('#%', 1)
             self.buffer = spl[1]
@@ -193,6 +206,10 @@ class AOProtocol(asyncio.Protocol):
         :param args: a list containing all the arguments
 
         """
+        if self.client.is_checked:
+            self.client.disconnect()
+            return
+
         if not self.validate_net_cmd(args, self.ArgType.STR, needs_auth=False):
             return
         hdid = self.client.hdid = args[0]
@@ -233,7 +250,7 @@ class AOProtocol(asyncio.Protocol):
                                  'flipping', 'fastloading', 'noencryption',
                                  'deskmod', 'evidence', 'modcall_reason',
                                  'cccc_ic_support', 'arup', 'casing_alerts',
-                                 'prezoom', 'looping_sfx', 'additive', 'effects')
+                                 'prezoom', 'looping_sfx', 'additive', 'effects', 'expanded_desk_mods')
 
     def net_cmd_ch(self, _):
         """Reset the client drop timeout (keepalive).
@@ -437,6 +454,8 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_ooc(
                 "Showname changes are forbidden in this area!")
             return
+        else:
+            self.client.showname = showname
         if self.client.area.is_iniswap(self.client, pre, anim,
                                        folder, sfx):
             self.client.send_ooc(
@@ -540,8 +559,7 @@ class AOProtocol(asyncio.Protocol):
                 except ValueError:
                     self.client.area.navigate_testimony(self.client, text[0], None)
                 return
-                
-        if msg_type not in ('chat', '0', '1'):
+        if msg_type not in ('chat', '0', '1', '2', '3', '4', '5'):
             return
         if anim_type == 4:
             anim_type = 6
@@ -797,13 +815,14 @@ class AOProtocol(asyncio.Protocol):
             if args[1] != self.client.char_id:
                 return
             if self.client.change_music_cd():
-                self.client.send_ooc(
-                    f'You changed song too many times. Please try again after {int(self.client.change_music_cd())} seconds.'
-                )
-                return
+                if (len(self.client.area.clients) != 1):
+                    self.client.send_ooc(
+                        f'You changed the song too many times. Please try again after {int(self.client.change_music_cd())} seconds.'
+                    )
+                    return
             try:
-                if args[0] == "~stop.mp3":
-                    name, length = args[0], 0
+                if args[0] == "~stop.mp3" or self.server.get_song_is_category(self.server.music_list, args[0]):
+                    name, length = "~stop.mp3", 0
                 else:
                     name, length = self.server.get_song_data(
                         self.server.music_list, args[0])

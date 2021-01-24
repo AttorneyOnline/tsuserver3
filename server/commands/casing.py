@@ -95,7 +95,7 @@ def ooc_cmd_cm(client, arg):
     Add a case manager for the current room.
     Usage: /cm <id>
     """
-    if 'CM' not in client.area.evidence_mod:
+    if 'CM' not in client.area.evidence_mod and not client.is_mod:
         raise ClientError('You can\'t become a CM in this area')
     if len(client.area.owners) == 0:
         if len(arg) > 0:
