@@ -459,7 +459,6 @@ class AOProtocol(asyncio.Protocol):
         if self._packet_settings_are_valid(packet_28) is False:
             return
 
-        packet_28 = self._apply_nonint_pre_settings(packet_28)
         packet_28 = self._set_packet_for_non_int_pres_only(packet_28)
         packet_28 = self._set_shout_anims(packet_28)
 
@@ -556,19 +555,19 @@ class AOProtocol(asyncio.Protocol):
 
         if packet.color not in VALID_COLORS:
             return False
-        
+
         objection_modifier_as_str = str(packet.objection_modifier)
         if '4' in objection_modifier_as_str and "<and>" not in objection_modifier_as_str:
             if not objection_modifier_as_str.isdigit():
                 return False
-                
+
         # TODO: Maybe make 15 a configuration setting?
         if len(packet.showname) > 15:
             self.client.send_ooc("Your IC showname is way too long!")
             return False
 
         return True
-    
+
     def _transform_text(self, packet_text: str) -> str:
         msg = self.dezalgo(packet_text)[:256]
         if self.client.shaken:
@@ -576,16 +575,6 @@ class AOProtocol(asyncio.Protocol):
         if self.client.disemvowel:
             msg = self.client.disemvowel_message(msg)
         return msg
-
-    @staticmethod
-    def _apply_nonint_pre_settings(packet: MS_28) -> MS_28:
-        if packet.nonint_pre == 1:
-            if packet.objection_modifier in (1, 2, 3, 4, 23):
-                if packet.anim_type == 1 or packet.anim_type == 2:
-                    packet.anim_type = 0
-                elif packet.anim_type == 6:
-                    packet.anim_type = 5
-        return packet
 
     def _set_shout_anims(self, packet: MS_28) -> MS_28:
         if self.client.area.shouts_allowed is False:
