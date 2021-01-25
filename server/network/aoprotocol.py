@@ -389,19 +389,19 @@ class AOProtocol(asyncio.Protocol):
         Refer to the implementation for details.
 
         """
-        if self.client.is_checked is False:
+        if not self.client.is_checked:
             return
 
         if self.client.is_muted:
             self.client.send_ooc('You are muted by a moderator.')
             return
 
-        if self.client.area.can_send_message(self.client) is False:
+        if not self.client.area.can_send_message(self.client):
             return
 
         packet_28 = MS_28.from_args(args)
 
-        if self.client.area.showname_changes_allowed is False:
+        if not self.client.area.showname_changes_allowed:
             self.client.send_ooc(
                 "Showname changes are forbidden in this area!")
             return
@@ -418,7 +418,7 @@ class AOProtocol(asyncio.Protocol):
                 "You may not iniswap while you are charcursed!")
             return
 
-        if self.client.area.blankposting_allowed is False:
+        if not self.client.area.blankposting_allowed:
             if packet_28.text.strip() == '':
                 self.client.send_ooc("Blankposting is forbidden in this area!")
                 return
