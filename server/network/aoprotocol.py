@@ -379,7 +379,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.change_character(cid)
         except ClientError:
             return
-    
+
     def _is_charcursed(self, packet_folder: str) -> bool:
         return len(self.client.charcurse) > 0 and packet_folder != self.client.char_name
 
@@ -389,31 +389,33 @@ class AOProtocol(asyncio.Protocol):
         Refer to the implementation for details.
 
         """
-        if not self.client.is_checked:
+        if self.client.is_checked is False:
             return
-        elif self.client.is_muted:
+
+        if self.client.is_muted:
             self.client.send_ooc('You are muted by a moderator.')
             return
+
         if self.client.area.can_send_message(self.client) is False:
             return
 
-        pair_order = 0
-
         packet_28 = MS_28.from_args(args)
 
-
         if self.client.area.showname_changes_allowed is False:
-            self.client.send_ooc("Showname changes are forbidden in this area!")
+            self.client.send_ooc(
+                "Showname changes are forbidden in this area!")
             return
 
         self.client.showname = packet_28.showname
 
         if self.client.area.is_iniswap(self.client, packet_28.pre, packet_28.anim, packet_28.folder, packet_28.sfx):
-            self.client.send_ooc("Iniswap/custom emotes are blocked in this area")
+            self.client.send_ooc(
+                "Iniswap/custom emotes are blocked in this area")
             return
 
         if self._is_charcursed(packet_28.folder):
-            self.client.send_ooc("You may not iniswap while you are charcursed!")
+            self.client.send_ooc(
+                "You may not iniswap while you are charcursed!")
             return
 
         if self.client.area.blankposting_allowed is False:
@@ -424,7 +426,8 @@ class AOProtocol(asyncio.Protocol):
             # TODO: Make this easier to understand
             if len(re.sub(r'[{}\\`|(~~)]', '', packet_28.text).replace(
                     ' ', '')) < 3 and not packet_28.text.startswith('<') and not packet_28.text.startswith('>'):
-                self.client.send_ooc("While that is not a blankpost, it is still pretty spammy. Try forming sentences.")
+                self.client.send_ooc(
+                    "While that is not a blankpost, it is still pretty spammy. Try forming sentences.")
                 return
 
         target_area = []
@@ -443,7 +446,7 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_ooc(
                     "That does not look like a valid area ID!")
                 return
-    
+
         elif packet_28.text.startswith('/s '):
             for a in self.server.area_manager.areas:
                 if self.client in a.owners:
@@ -452,50 +455,28 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_ooc(f"You don't any areas!")
                 return
             packet_28.text = ' '.join(split_packet_text[1:])
-        
-        if packet_28.msg_type not in VALID_MESSAGE_TYPES: return
-                    
-        if packet_28.anim_type not in VALID_ANIM_TYPES: return
 
-        if packet_28.cid != self.client.char_id: return
-
-        if packet_28.sfx_delay < 0: return
-        
-        if packet_28.evidence < 0: return
-            
-        if packet_28.ding not in VALID_DINGS: return
-
-        if packet_28.color not in VALID_COLORS: return
-
-        objection_modifier_as_str = str(packet_28.objection_modifier)
-        if '4' in objection_modifier_as_str and "<and>" not in objection_modifier_as_str:
-            if not objection_modifier_as_str.isdigit():
-                return
-
-
-        # TODO: Maybe make 15 a configuration setting?
-        if len(packet_28.showname) > 15:
-            self.client.send_ooc("Your IC showname is way too long!")
+        if self._packet_settings_are_valid(packet_28) is False:
             return
-            
-        
+
         packet_28 = self._apply_nonint_pre_settings(packet_28)
         packet_28 = self._set_packet_for_non_int_pres_only(packet_28)
         packet_28 = self._set_shout_anims(packet_28)
 
         max_characters_per_message = self._get_max_characters()
-        if len(packet_28.text) > max_characters_per_message: return
+        if len(packet_28.text) > max_characters_per_message:
+            return
 
-        # Transform text
         msg = self._transform_text(packet_28.text)
 
         # Really simple spam protection that functions on the clientside pre-2.8.5
         if self._repeat_message(msg, packet_28.cid):
-            self.client.send_ooc("Your message is a repeat of the last one. Don't spam!")
+            self.client.send_ooc(
+                "Your message is a repeat of the last one. Don't spam!")
             return
 
         self._show_evidence_if_hidden(packet_28.evidence)
-        
+
         # Here, we check the pair stuff, and save info about it to the client.
         # Notably, while we only get a charid_pair and an offset, we send back a chair_pair, an emote, a talker offset
         # and an other offset.
@@ -514,7 +495,8 @@ class AOProtocol(asyncio.Protocol):
 
         pair_args = packet_28.charid_pair.split("^")
         charid_pair = int(pair_args[0])
-        pair_order = ""
+        pair_order = 0
+
         if (len(pair_args) > 1):
             pair_order = pair_args[1]
 
@@ -530,25 +512,62 @@ class AOProtocol(asyncio.Protocol):
                         charid_pair = "{}^{}".format(charid_pair, pair_order)
                     break
 
-        if confirmed is False: charid_pair = -1
+        if confirmed is False:
+            charid_pair = -1
 
         if self.client in self.client.area.afkers:
             self.client.server.client_manager.toggle_afk(self.client)
 
         other_settings = (other_folder, other_emote, other_offset, other_flip)
-        send_args = self._build_send_arguments(packet_28, other_settings, msg, charid_pair)
+        send_args = self._build_send_arguments(
+            packet_28, other_settings, msg, charid_pair)
 
         self.client.area.last_ic_message = send_args
         self.client.area.send_command('MS', *send_args)
-        self.server.area_manager.send_remote_command(target_area, 'MS', *send_args)
+        self.server.area_manager.send_remote_command(
+            target_area, 'MS', *send_args)
 
-        self.client.area.send_owner_command("MS", *send_args[:5], "[" + self.client.area.abbreviation + "]" + msg, *send_args[5:])
+        self.client.area.send_owner_command(
+            "MS", *send_args[:5], "[" + self.client.area.abbreviation + "]" + msg, *send_args[5:])
         self.client.area.set_next_msg_delay(len(msg))
         database.log_ic(self.client, self.client.area, packet_28.showname, msg)
 
         if (self.client.area.is_recording):
             self.client.area.recorded_messages.append(args)
 
+    def _packet_settings_are_valid(self, packet: MS_28) -> bool:
+        if packet.msg_type not in VALID_MESSAGE_TYPES:
+            return False
+
+        if packet.anim_type not in VALID_ANIM_TYPES:
+            return False
+
+        if packet.cid != self.client.char_id:
+            return False
+
+        if packet.sfx_delay < 0:
+            return False
+
+        if packet.evidence < 0:
+            return False
+
+        if packet.ding not in VALID_DINGS:
+            return False
+
+        if packet.color not in VALID_COLORS:
+            return False
+        
+        objection_modifier_as_str = str(packet.objection_modifier)
+        if '4' in objection_modifier_as_str and "<and>" not in objection_modifier_as_str:
+            if not objection_modifier_as_str.isdigit():
+                return False
+                
+        # TODO: Maybe make 15 a configuration setting?
+        if len(packet.showname) > 15:
+            self.client.send_ooc("Your IC showname is way too long!")
+            return False
+
+        return True
     
     def _transform_text(self, packet_text: str) -> str:
         msg = self.dezalgo(packet_text)[:256]
@@ -581,12 +600,12 @@ class AOProtocol(asyncio.Protocol):
             packet.ding = 0
         return packet
 
-    def _get_max_characters(self)->int:
+    def _get_max_characters(self) -> int:
         max_chars = self.server.config.get('max_chars')
         if max_chars is None:
             max_chars = 256
         return max_chars
-        
+
     def _show_evidence_if_hidden(self, packet_evidence: int):
         if packet_evidence:
             if self.client.area.evi_list.evidences[self.client.evi_list[packet_evidence] - 1].pos != 'all':
@@ -597,19 +616,20 @@ class AOProtocol(asyncio.Protocol):
         query_1 = msg.strip() != '' and self.client.area.last_ic_message is not None
         if query_1 is True:
             query_2 = packet_cid == self.client.area.last_ic_message[8]
-            query_3 = msg.rstrip() == self.client.area.last_ic_message[4].rstrip()
+            query_3 = msg.rstrip(
+            ) == self.client.area.last_ic_message[4].rstrip()
             return query_2 and query_3
         return False
 
     def _build_send_arguments(self, packet: MS_28, other_settings: Tuple[Any, ...], msg: str, charid_pair) -> Tuple[Any, ...]:
-        return (packet.msg_type, packet.pre, packet.folder, packet.anim, msg,\
-                packet.pos, packet.sfx, packet.anim_type, packet.cid, packet.sfx_delay,\
-                packet.objection_modifier, self.client.evi_list[packet.evidence],\
-                packet.flip, packet.ding, packet.color, packet.showname, charid_pair,\
-                other_settings[0], other_settings[1], packet.offset_pair,\
-                other_settings[2], other_settings[3], packet.nonint_pre,\
-                packet.sfx_looping, packet.screenshake, packet.frames_shake,\
-                packet.frames_realization, packet.frames_sfx,\
+        return (packet.msg_type, packet.pre, packet.folder, packet.anim, msg,
+                packet.pos, packet.sfx, packet.anim_type, packet.cid, packet.sfx_delay,
+                packet.objection_modifier, self.client.evi_list[packet.evidence],
+                packet.flip, packet.ding, packet.color, packet.showname, charid_pair,
+                other_settings[0], other_settings[1], packet.offset_pair,
+                other_settings[2], other_settings[3], packet.nonint_pre,
+                packet.sfx_looping, packet.screenshake, packet.frames_shake,
+                packet.frames_realization, packet.frames_sfx,
                 packet.additive, packet.effect
                 )
 
