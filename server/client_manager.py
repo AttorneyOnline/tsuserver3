@@ -32,7 +32,6 @@ class ClientManager:
 
         Clients may only belong to a single room.
         """
-
         def __init__(self, server, transport, user_id, ipid):
             self.is_checked = False
             self.transport = transport
@@ -159,7 +158,7 @@ class ClientManager:
             name_ws = name.replace(' ', '')
             if not name_ws or name_ws.isdigit():
                 return False
-            if not set(name_ws).issubset(printset):  # illegal chars in ooc name
+            if not set(name_ws).issubset(printset): #illegal chars in ooc name
                 return False
             for client in self.server.client_manager.clients:
                 if client.name == name:
@@ -203,7 +202,7 @@ class ClientManager:
 
             new_char = self.char_name
             database.log_room('char.change', self, self.area,
-                              message={'from': old_char, 'to': new_char})
+                message={'from': old_char, 'to': new_char})
 
         def change_music_cd(self):
             """
@@ -295,6 +294,7 @@ class ClientManager:
             # KEEP THE ASTERISK
             self.send_command('FA', *area_list)
 
+
         def change_area(self, area):
             """
             Switch the client to another area, unless the area is locked.
@@ -333,8 +333,7 @@ class ClientManager:
                 f'Changed area to {area.name} [{self.area.status}].')
             self.area.send_command('CharsCheck',
                                    *self.get_available_char_list())
-            self.area.send_command(
-                'CharsCheck', *self.get_available_char_list())
+            self.area.send_command('CharsCheck', *self.get_available_char_list())
             self.send_command('HP', 1, self.area.hp_def)
             self.send_command('HP', 2, self.area.hp_pro)
             self.send_command('BN', self.area.background, self.pos)
@@ -432,7 +431,7 @@ class ClientManager:
                         client_list = client_list.clients
                     area_info = self.get_area_info(i, mods, afk_check)
                     if len(client_list) > 0 or len(
-                            self.server.area_manager.areas[i].owners) > 0:
+                               self.server.area_manager.areas[i].owners) > 0:
                         cnt += len(client_list)
                         info += f'{area_info}'
                 if afk_check:
@@ -509,7 +508,7 @@ class ClientManager:
             modpasses = self.server.config['modpass']
             if isinstance(modpasses, dict):
                 matches = [k for k in modpasses
-                           if modpasses[k]['password'] == password]
+                    if modpasses[k]['password'] == password]
             elif modpasses == password:
                 matches = ['default']
             else:
@@ -543,7 +542,7 @@ class ClientManager:
             """
             self.pos = pos
             self.send_ooc(f'Position set to {pos}.')
-            self.send_command('SP', self.pos)  # Send a "Set Position" packet
+            self.send_command('SP', self.pos) #Send a "Set Position" packet
             self.send_command('LE', *self.area.get_evidence_list(self))
 
         def set_mod_call_delay(self):
@@ -599,7 +598,7 @@ class ClientManager:
             raise ClientError
 
         peername = transport.get_extra_info('peername')[0]
-
+        
         c = self.Client(
             self.server, transport, user_id,
             database.ipid(peername))
@@ -643,7 +642,6 @@ class ClientManager:
         :param local: search in current area only (Default value = False)
         :param single: search only a single user (Default value = False)
         """
-        print(client, key, value)
         areas = None
         if local:
             areas = [client.area]
@@ -655,7 +653,6 @@ class ClientManager:
                 targets += self.get_targets(client, nkey, value, local)
         for area in areas:
             for client in area.clients:
-                print(vars(client))
                 if key == TargetType.IP:
                     if value.lower().startswith(client.ip.lower()):
                         targets.append(client)
@@ -668,7 +665,7 @@ class ClientManager:
                             client.char_name.lower()):
                         targets.append(client)
                 elif key == TargetType.ID:
-                    if client.char_id == value:
+                    if client.id == value:
                         targets.append(client)
                 elif key == TargetType.IPID:
                     if client.ipid == value:
@@ -695,14 +692,11 @@ class ClientManager:
         return clients
 
     def toggle_afk(self, client):
-        if client in client.area.afkers:
-            client.area.broadcast_ooc(
-                '{} is no longer AFK.'.format(client.char_name))
-            # Making the server a bit friendly wouldn't hurt, right?
-            client.send_ooc('You are no longer AFK. Welcome back!')
-            client.area.afkers.remove(client)
-        else:
-            client.area.broadcast_ooc(
-                '{} is now AFK.'.format(client.char_name))
-            client.send_ooc('You are now AFK. Have a good day!')
-            client.area.afkers.append(client)
+            if client in client.area.afkers:
+                client.area.broadcast_ooc('{} is no longer AFK.'.format(client.char_name))
+                client.send_ooc('You are no longer AFK. Welcome back!')  # Making the server a bit friendly wouldn't hurt, right?
+                client.area.afkers.remove(client)
+            else:
+                client.area.broadcast_ooc('{} is now AFK.'.format(client.char_name))
+                client.send_ooc('You are now AFK. Have a good day!')
+                client.area.afkers.append(client)
