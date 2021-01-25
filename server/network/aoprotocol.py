@@ -601,10 +601,7 @@ class AOProtocol(asyncio.Protocol):
         return packet
 
     def _get_max_characters(self) -> int:
-        max_chars = self.server.config.get('max_chars')
-        if max_chars is None:
-            max_chars = 256
-        return max_chars
+        return self.server.config.get('max_chars') or 256
 
     def _show_evidence_if_hidden(self, packet_evidence: int):
         if packet_evidence:
