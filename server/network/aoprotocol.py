@@ -478,30 +478,13 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_ooc("Your IC showname is way too long!")
             return
             
-        if packet_28.nonint_pre == 1:
-            if packet_28.objection_modifier in (1, 2, 3, 4, 23):
-                if packet_28.anim_type == 1 or packet_28.anim_type == 2:
-                    packet_28.anim_type = 0
-                elif packet_28.anim_type == 6:
-                    packet_28.anim_type = 5
-
-        if self.client.area.non_int_pres_only:
-            packet_28 = self._set_packet_for_non_int_pres_only(packet_28)
-
-        if self.client.area.shouts_allowed is False:
-            # Old clients communicate the objecting in anim_type.
-            if packet_28.anim_type == 2:
-                packet_28.anim_type = 1
-            elif packet_28.anim_type == 6:
-                packet_28.anim_type = 5
-            # New clients do it in a specific objection message area.
-            packet_28.objection_modifier = 0
-            # Turn off the ding.
-            packet_28.ding = 0
+        
+        packet_28 = self._apply_nonint_pre_settings(packet_28)
+        packet_28 = self._set_packet_for_non_int_pres_only(packet_28)
+        packet_28 = self._set_shout_anims(packet_28)
 
         max_characters_per_message = self._get_max_characters()
-        if len(packet_28.text) > max_characters_per_message:
-            return
+        if len(packet_28.text) > max_characters_per_message: return
 
         # Transform text
         msg = self._transform_text(packet_28.text)
@@ -575,6 +558,29 @@ class AOProtocol(asyncio.Protocol):
             msg = self.client.disemvowel_message(msg)
         return msg
 
+    @staticmethod
+    def _apply_nonint_pre_settings(packet: MS_28) -> MS_28:
+        if packet.nonint_pre == 1:
+            if packet.objection_modifier in (1, 2, 3, 4, 23):
+                if packet.anim_type == 1 or packet.anim_type == 2:
+                    packet.anim_type = 0
+                elif packet.anim_type == 6:
+                    packet.anim_type = 5
+        return packet
+
+    def _set_shout_anims(self, packet: MS_28) -> MS_28:
+        if self.client.area.shouts_allowed is False:
+            # Old clients communicate the objecting in anim_type.
+            if packet.anim_type == 2:
+                packet.anim_type = 1
+            elif packet.anim_type == 6:
+                packet.anim_type = 5
+            # New clients do it in a specific objection message area.
+            packet.objection_modifier = 0
+            # Turn off the ding.
+            packet.ding = 0
+        return packet
+
     def _get_max_characters(self)->int:
         max_chars = self.server.config.get('max_chars')
         if max_chars is None:
@@ -607,14 +613,14 @@ class AOProtocol(asyncio.Protocol):
                 packet.additive, packet.effect
                 )
 
-    @staticmethod
-    def _set_packet_for_non_int_pres_only(packet: MS_28) -> MS_28:
-        if packet.anim_type == 1 or packet.anim_type == 2:
-            packet.anim_type = 0
-            packet.nonint_pre = 1
-        elif packet.anim_type == 6:
-            packet.anim_type = 5
-            packet.nonint_pre = 1
+    def _set_packet_for_non_int_pres_only(self, packet: MS_28) -> MS_28:
+        if self.client.area.non_int_pres_only:
+            if packet.anim_type == 1 or packet.anim_type == 2:
+                packet.anim_type = 0
+                packet.nonint_pre = 1
+            elif packet.anim_type == 6:
+                packet.anim_type = 5
+                packet.nonint_pre = 1
         return packet
 
     def net_cmd_ct(self, args):
