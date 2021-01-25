@@ -459,8 +459,8 @@ class AOProtocol(asyncio.Protocol):
         if self._packet_settings_are_valid(packet_28) is False:
             return
 
-        packet_28 = self._set_packet_for_non_int_pres_only(packet_28)
-        packet_28 = self._set_shout_anims(packet_28)
+        self._set_packet_for_non_int_pres_only(packet_28)
+        self._set_shout_anims(packet_28)
 
         max_characters_per_message = self._get_max_characters()
         if len(packet_28.text) > max_characters_per_message:
@@ -576,7 +576,7 @@ class AOProtocol(asyncio.Protocol):
             msg = self.client.disemvowel_message(msg)
         return msg
 
-    def _set_shout_anims(self, packet: MS_28) -> MS_28:
+    def _set_shout_anims(self, packet: MS_28):
         if self.client.area.shouts_allowed is False:
             # Old clients communicate the objecting in anim_type.
             if packet.anim_type == 2:
@@ -619,7 +619,7 @@ class AOProtocol(asyncio.Protocol):
                 packet.additive, packet.effect
                 )
 
-    def _set_packet_for_non_int_pres_only(self, packet: MS_28) -> MS_28:
+    def _set_packet_for_non_int_pres_only(self, packet: MS_28):
         if self.client.area.non_int_pres_only:
             if packet.anim_type == 1 or packet.anim_type == 2:
                 packet.anim_type = 0
@@ -627,7 +627,6 @@ class AOProtocol(asyncio.Protocol):
             elif packet.anim_type == 6:
                 packet.anim_type = 5
                 packet.nonint_pre = 1
-        return packet
 
     def net_cmd_ct(self, args):
         """OOC Message
