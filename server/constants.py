@@ -38,3 +38,7 @@ class MusicEffect(IntFlag):
 VALID_MESSAGE_TYPES = ('chat', '0', '1', '2', '3', '4', '5')
 
 VALID_ANIM_TYPES = (0, 1, 2, 5, 6)
+
+VALID_COLORS = (0, 1, 2, 3, 4, 5, 6, 7, 8)
+
+VALID_DINGS = (0, 1)

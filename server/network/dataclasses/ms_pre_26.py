@@ -14,7 +14,7 @@ class MS_Pre_26:
     anim_type: int
     cid: int
     sfx_delay: int
-    button: Union[str, int]
+    objection_modifier: Union[str, int]
     evidence: int
     flip: int
     ding: int
@@ -22,6 +22,6 @@ class MS_Pre_26:
 
     @classmethod
     def from_args(cls, args):
-        return cls(msg_type=args[0], pre=args[1], folder=args[2], anim=args[3], text=args[4], pos=args[5], sfx=args[6], anim_type=int(args[7]), cid=int(args[8]), sfx_delay=int(args[9]), button=args[10], evidence=int(args[11]), flip=int(args[12]), ding=int(args[13]), color=int(args[14]))
+        return cls(msg_type=args[0], pre=args[1], folder=args[2], anim=args[3], text=args[4], pos=args[5], sfx=args[6], anim_type=int(args[7]), cid=int(args[8]), sfx_delay=int(args[9]), objection_modifier=args[10], evidence=int(args[11]), flip=int(args[12]), ding=int(args[13]), color=int(args[14]))
 
 
