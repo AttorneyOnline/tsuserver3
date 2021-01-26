@@ -33,7 +33,7 @@ def ooc_cmd_bg(client, arg):
         raise ArgumentError('You must specify a name. Use /bg <background>.')
     if not client.is_mod and client.area.bg_lock == "true":
         raise AreaError("This area's background is locked!")
-    elif not client.is_mod and client.area.is_locked == client.area.Locked.SPECTATABLE and client not in client.area.area_owners:
+    elif client.area.cannot_ic_interact(client):
         raise AreaError("You are not permitted to change the background in this area!")
     try:
         client.area.change_background(arg)
