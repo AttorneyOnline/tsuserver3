@@ -18,6 +18,7 @@
 from .. import commands
 from server.fantacrypt import fanta_decrypt
 from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
+from server.client_manager import ClientManager
 from server import database
 from time import localtime, strftime
 import arrow
@@ -38,6 +39,7 @@ class ProtocolError(Exception):
 
 class AOProtocol(asyncio.Protocol):
     """The main class that deals with the AO protocol."""
+    last_message_char_id: int = -1
 
     class ArgType(Enum):
         """Represents the data type of an argument for a network command."""
@@ -448,7 +450,13 @@ class AOProtocol(asyncio.Protocol):
             if (len(pair_args) > 1):
                 pair_order = pair_args[1]
         else:
-            return
+            return        
+        
+        if additive == 1 and self._client_can_additive(self.client):
+            additive = 1
+        else:
+            additive = 0
+        self._change_class_last_char_id(self.client.char_id)
 
         if len(showname) > 0 and not self.client.area.showname_changes_allowed:
             self.client.send_ooc(
@@ -637,6 +645,16 @@ class AOProtocol(asyncio.Protocol):
 
         if (self.client.area.is_recording):
             self.client.area.recorded_messages.append(args)
+    
+    @classmethod
+    def _client_can_additive(cls, client: ClientManager.Client):
+        if client.char_id == cls.last_message_char_id:
+            return True
+        return False
+
+    @classmethod
+    def _change_class_last_char_id(cls, charid: int):
+        cls.last_message_char_id = charid
 
     def net_cmd_ct(self, args):
         """OOC Message
