@@ -23,18 +23,11 @@ import yaml
 from enum import Enum
 from typing import List
 
-import yaml
-
-
-from server import database
 from server import database
 from server.exceptions import AreaError
 from server.evidence import EvidenceList
-from server.evidence import EvidenceList
 from server.client_manager import ClientManager
 
-import logging
-logger_debug = logging.getLogger('debug')
 
 class AreaManager:
     """Holds the list of all areas."""
@@ -486,11 +479,12 @@ class AreaManager:
             for client in self.clients:
                 client.send_command('LE', *self.get_evidence_list(client))
 
-        def get_cms(self):
+        def get_cms(self) -> str:
+            """Get a list of CMs.
+            Returns:
+                str: String of CM's comma separated
             """
-            Get a list of CMs.
-            :return: message
-            """
+            
             msg = ''
             for i in self.owners:
                 msg += f'[{str(i.id)}] {i.char_name}, '
