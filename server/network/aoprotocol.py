@@ -15,23 +15,22 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from server.constants import VALID_ANIM_TYPES, VALID_COLORS, VALID_DINGS, VALID_MESSAGE_TYPES
-from server.network.dataclasses.ms_28 import MS_28
-from server.network.dataclasses.ms_26 import MS_26
-from server.network.dataclasses.ms_pre_26 import MS_Pre_26
-from .. import commands
-from server.fantacrypt import fanta_decrypt
-from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
-from server import database
-from time import localtime, strftime
-from typing import Tuple, Any
+import logging
 import arrow
-from enum import Enum
 import asyncio
 import re
 import unicodedata
 
-import logging
+from enum import Enum
+from .. import commands
+from typing import Tuple, Any
+from time import localtime, strftime
+from server import database
+from server.fantacrypt import fanta_decrypt
+from server.network.dataclasses.ms_28 import MS_28
+from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
+from server.constants import VALID_ANIM_TYPES, VALID_COLORS, VALID_DINGS, VALID_MESSAGE_TYPES
+
 
 logger_debug = logging.getLogger('debug')
 logger = logging.getLogger('events')
