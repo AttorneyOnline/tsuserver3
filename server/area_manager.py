@@ -495,21 +495,31 @@ class AreaManager:
         class Testimony:
             """Represents a complete group of statements to be pressed or objected to."""
             
-            def __init__(self, title, limit):
+            def __init__(self, title: str, limit: int):
                 self.title = title
                 self.statements = []
                 self.limit = limit
             
-            def add_statement(self, message):
-                """Add a statement and return whether successful."""
+            def add_statement(self, message: tuple) -> bool:
+                """Add a statement.
+                Args:
+                    message (tuple): the IC message to add
+                Returns:
+                    bool: whether the message was added
+                """
                 message = message[:14] + (1,) + message[15:]
                 if len(self.statements) >= self.limit:
                     return False
                 self.statements.append(message)
                 return True
             
-            def remove_statement(self, index):
-                """Remove the statement at index [index]."""
+            def remove_statement(self, index: int) -> bool:
+                """Remove a statement.
+                Args:
+                    index (int): index of the statement to remove
+                Returns:
+                    bool: whether the statement was removed
+                """
                 if index < 1 or index > len(self.statements) + 1:
                     return False
                 i = 0
@@ -520,8 +530,14 @@ class AreaManager:
                     i += 1
                 return False # shouldn't happen
                         
-            def amend_statement(self, index, message):
-                """Amend the statement at index [index] to instead contain [message]."""
+            def amend_statement(self, index: int, message: list) -> bool:
+                """Amend a statement.
+                Args:
+                    index (int): index of the statement to amend
+                    message (list): the new statement
+                Returns:
+                    bool: whether the statement was amended
+                """
                 if index < 1 or index > len(self.statements) + 1:
                     return False
                 message[14] = 1 # message[14] is color, and 1 is (by default) green
@@ -534,10 +550,14 @@ class AreaManager:
                     i += 1
                 return True
             
-        def start_testimony(self, client, title):
+        def start_testimony(self, client: ClientManager.Client, title: str) -> bool:
             """
-            Start a new testimony in this area. Returns False if the testimony was
-            not started.
+            Start a new testimony in this area.
+            Args:
+                client (ClientManager.Client): requester
+                title (str): title of the testimony
+            Returns:
+                bool: whether the testimony was started
             """
             if client not in self.owners and (self.evidence_mod == "HiddenCM" or self.evidence_mod == "Mods"):
                 # some servers don't utilise area owners, so we use evidence_mod to determine behavior
@@ -558,10 +578,13 @@ class AreaManager:
             self.send_command('RT', 'testimony1')
             return True
 
-        def start_examination(self, client):
+        def start_examination(self, client: ClientManager.Client) -> bool:
             """
-            Start an examination of this area's testimony. Returns False
-            if the examination was not started.
+            Start an examination of this area's testimony.
+            Args:
+                client (ClientManager.Client): requester
+            Returns:
+                bool: whether the examination was started
             """
             if client not in self.owners and (self.evidence_mod == "HiddenCM" or self.evidence_mod == "Mods"):
                 client.send_ooc('You don\'t have permission to start a new examination in this area!')
@@ -577,11 +600,13 @@ class AreaManager:
             self.send_command('RT', 'testimony2')
             return True
         
-        def end_testimony(self, client):
+        def end_testimony(self, client: ClientManager.Client) -> bool:
             """
             End the current testimony or examination.
-            Returns False if the current testimony or examination could
-            not be ended, or if it is not in progress.
+            Args:
+                client (ClientManager.Client): requester
+            Returns:
+                bool: if the current testimony or examination was ended
             """
             if client not in self.owners and (self.evidence_mod == "HiddenCM" or self.evidence_mod == "Mods"):
                 client.send_ooc('You don\'t have permission to end testimonies or examinations in this area!')
@@ -601,10 +626,15 @@ class AreaManager:
                 client.send_ooc('No testimony or examination in progress.')
                 return False
             
-        def amend_testimony(self, client, index, statement):
+        def amend_testimony(self, client: ClientManager.Client, index:int, statement: list) -> bool:
             """
             Replace the statement at <index> with a new <statement>.
-            Returns False if the statement was not amended.
+            Args:
+                client (ClientManager.Client): requester
+                index (int): index of the statement to amend
+                statement (list): the new statement
+            Returns:
+                bool: whether the statement was amended
             """
             if client not in self.owners and (self.evidence_mod == "HiddenCM" or self.evidence_mod == "Mods"):
                 client.send_ooc('You don\'t have permission to amend testimony in this area!')
@@ -616,10 +646,14 @@ class AreaManager:
                 client.send_ooc('Couldn\'t amend statement ' + str(index) + '. Are you sure it exists?')
                 return False
             
-        def remove_statement(self, client, index):
+        def remove_statement(self, client: ClientManager.Client, index: int) -> bool:
             """
             Remove the statement at <index>.
-            Returns False if the statement was not removed.
+            Args:
+                client (ClientManager.Client): requester
+                index (int): index of the statement to remove
+            Returns:
+                bool: whether the statement was removed
             """
             if client not in self.owners and (self.evidence_mod == "HiddenCM" or self.evidence_mod == "Mods"):
                 client.send_ooc('You don\'t have permission to amend testimony in this area!')
@@ -631,13 +665,18 @@ class AreaManager:
                 client.send_ooc('Couldn\'t remove statement ' + str(index) + '. Are you sure it exists?')
                 return True
             
-        def navigate_testimony(self, client, command, index):
+        def navigate_testimony(self, client: ClientManager.Client, command: str, index: int = None) -> bool:
             """
             Navigate the current testimony using the commands >, <, =, and [>|<]<index>.
-            Returns False if the navigation was unsuccessful.
+            Args:
+                client (ClientManager.Client): requester
+                command (str): either >, <, or =
+                index (int): index of the statement to move to, or None
+            Returns:
+                bool: if the navigation was successful
             """
-            if not self.testimony.statements:
-                client.send_ooc('Testimony is empty, can\'t navigate!')
+            if len(self.testimony.statements) <= 1:
+                client.send_ooc('Testimony is empty, can\'t navigate!') # should never happen
                 return False
             if index == None:
                 if command == '=':

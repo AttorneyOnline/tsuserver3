@@ -557,7 +557,7 @@ class AOProtocol(asyncio.Protocol):
                 try:
                     self.client.area.navigate_testimony(self.client, text[0], int(text[1:]))
                 except ValueError:
-                    self.client.area.navigate_testimony(self.client, text[0], None)
+                    self.client.area.navigate_testimony(self.client, text[0])
                 return
         if msg_type not in ('chat', '0', '1', '2', '3', '4', '5'):
             return
