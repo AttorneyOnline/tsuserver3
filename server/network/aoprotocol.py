@@ -399,7 +399,11 @@ class AOProtocol(asyncio.Protocol):
         if not self.client.area.can_send_message(self.client):
             return
 
-        packet_28 = MS_28.from_args(args)
+        try:
+            packet_28 = MS_28.from_args(args)
+        except Exception as error:
+            logger_debug.exception(error)
+            return
 
         if not self.client.area.showname_changes_allowed:
             self.client.send_ooc(
@@ -461,7 +465,6 @@ class AOProtocol(asyncio.Protocol):
 
         self._set_packet_for_non_int_pres_only(packet_28)
         self._set_shout_anims(packet_28)
-
         max_characters_per_message = self._get_max_characters()
         if len(packet_28.text) > max_characters_per_message:
             return
