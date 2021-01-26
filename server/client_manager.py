@@ -25,8 +25,6 @@ from heapq import heappop, heappush
 
 from server import database
 from server.constants import TargetType
-from server.tsuserver import TsuServer3
-from server.area_manager import AreaManager
 from server.exceptions import ClientError, AreaError
 
 class ClientManager:
@@ -37,7 +35,7 @@ class ClientManager:
         Clients may only belong to a single room.
         """
 
-        def __init__(self, server, transport, user_id, ipid):
+        def __init__(self, server, transport: asyncio.Transport, user_id: int, ipid: int):
             self.is_checked = False
             self.transport = transport
             self.hdid = ''
@@ -300,7 +298,7 @@ class ClientManager:
             # KEEP THE ASTERISK
             self.send_command('FM', *song_list)
 
-        def reload_area_list(self, areas: List[AreaManager.Area]=[]):
+        def reload_area_list(self, areas=[]):
             """Reload the area list
 
             Args:
@@ -314,7 +312,7 @@ class ClientManager:
             # KEEP THE ASTERISK
             self.send_command('FA', *area_list)
 
-        def change_area(self, area: AreaManager.Area):
+        def change_area(self, area):
             """Switch the client to another area, unless the area is locked.
 
             Args:
@@ -610,7 +608,7 @@ class ClientManager:
             random.shuffle(parts)
             return ' '.join(parts)
 
-    def __init__(self, server: TsuServer3):
+    def __init__(self, server):
         self.clients = set()
         self.server = server
         self.cur_id = [i for i in range(self.server.config['playerlimit'])]
