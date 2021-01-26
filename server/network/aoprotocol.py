@@ -206,6 +206,10 @@ class AOProtocol(asyncio.Protocol):
         :param args: a list containing all the arguments
 
         """
+        if self.client.is_checked:
+            self.client.disconnect()
+            return
+
         if not self.validate_net_cmd(args, self.ArgType.STR, needs_auth=False):
             return
         hdid = self.client.hdid = args[0]
@@ -450,6 +454,8 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_ooc(
                 "Showname changes are forbidden in this area!")
             return
+        else:
+            self.client.showname = showname
         if self.client.area.is_iniswap(self.client, pre, anim,
                                        folder, sfx):
             self.client.send_ooc(
@@ -748,10 +754,11 @@ class AOProtocol(asyncio.Protocol):
             if args[1] != self.client.char_id:
                 return
             if self.client.change_music_cd():
-                self.client.send_ooc(
-                    f'You changed song too many times. Please try again after {int(self.client.change_music_cd())} seconds.'
-                )
-                return
+                if (len(self.client.area.clients) != 1):
+                    self.client.send_ooc(
+                        f'You changed the song too many times. Please try again after {int(self.client.change_music_cd())} seconds.'
+                    )
+                    return
             try:
                 if args[0] == "~stop.mp3" or self.server.get_song_is_category(self.server.music_list, args[0]):
                     name, length = "~stop.mp3", 0

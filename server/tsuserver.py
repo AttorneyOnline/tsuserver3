@@ -17,18 +17,13 @@
 
 import sys
 import importlib
-
 import asyncio
 import websockets
-
 import geoip2.database
-
-import json
 import yaml
-
 import logging
-logger = logging.getLogger('debug')
 
+import server.logger
 from server import database
 from server.area_manager import AreaManager
 from server.client_manager import ClientManager
@@ -37,7 +32,8 @@ from server.exceptions import ClientError,ServerError
 from server.network.aoprotocol import AOProtocol
 from server.network.aoprotocol_ws import new_websocket_client
 from server.network.masterserverclient import MasterServerClient
-import server.logger
+
+logger = logging.getLogger('debug')
 
 class TsuServer3:
     """The main class for tsuserver3 server software."""
@@ -294,8 +290,11 @@ class TsuServer3:
             song_list.append('{}#{}'.format(index, item['category']))
             index += 1
             for song in item['songs']:
-                song_list.append('{}#{}'.format(index, song['name']))
-                index += 1
+                if self._is_valid_song_name(song['name']):
+                    song_list.append('{}#{}'.format(index, song['name']))
+                    index += 1
+                else:
+                    logger.debug(f"{song['name']} is not a valid song name")
         song_list = [song_list[x:x + 10] for x in range(0, len(song_list), 10)]
         return song_list
 
@@ -306,8 +305,15 @@ class TsuServer3:
                 continue
             song_list.append(item['category'])
             for song in item['songs']:
-                song_list.append(song['name'])
+                if self._is_valid_song_name(song['name']):
+                    song_list.append(song['name'])
+                else:
+                    logger.debug(f"{song['name']} is not a valid song name")
         return song_list
+
+    @staticmethod
+    def _is_valid_song_name(song_name: str) -> bool:
+        return '.' in song_name
 
     def is_valid_char_id(self, char_id):
         """
