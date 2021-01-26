@@ -20,14 +20,14 @@ import time
 import string
 import asyncio
 
-from typing import Any, List
+from typing import Any, List, Dict
 from heapq import heappop, heappush
 
 from server import database
 from server.constants import TargetType
+from server.tsuserver import TsuServer3
 from server.area_manager import AreaManager
 from server.exceptions import ClientError, AreaError
-
 
 class ClientManager:
     """Holds the list of all clients currently connected to the server."""
@@ -283,10 +283,11 @@ class ClientManager:
             except ClientError:
                 raise
 
-        # TODO: Add type hinting for music
-        def reload_music_list(self, music=[]):
-            """
-            Rebuild the music list with the provided array, or the server music list as a whole.
+        def reload_music_list(self, music: List[Dict[str, str]]=[]):
+            """Rebuild the music list with the provided array, or the server music list as a whole.
+
+            Args:
+                music (List[Dict[str, str]], optional): List containing music information. Defaults to [].
             """
             song_list = []
 
@@ -299,10 +300,11 @@ class ClientManager:
             # KEEP THE ASTERISK
             self.send_command('FM', *song_list)
 
-        # TODO: Add type hinting for areas
-        def reload_area_list(self, areas=[]):
-            """
-            Rebuild the area list according to provided areas list.
+        def reload_area_list(self, areas: List[AreaManager.Area]=[]):
+            """Reload the area list
+
+            Args:
+                areas (List[AreaManager.Area], optional): List containing areas. Defaults to [].
             """
             area_list = []
 
@@ -557,9 +559,8 @@ class ClientManager:
             else:
                 raise ClientError('Invalid password.')
 
-        # TODO: Add type hinting
         @property
-        def ip(self):
+        def ip(self) -> int:
             """Get an anonymized version of the IP address."""
             return self.ipid
 
@@ -609,22 +610,12 @@ class ClientManager:
             random.shuffle(parts)
             return ' '.join(parts)
 
-    # TODO: Add Type Hinting
-    def __init__(self, server):
+    def __init__(self, server: TsuServer3):
         self.clients = set()
         self.server = server
         self.cur_id = [i for i in range(self.server.config['playerlimit'])]
 
-    # TODO: Fill out documentation for method
     def new_client_preauth(self, client: Client) -> bool:
-        """[summary]
-
-        Args:
-            client (Client): [description]
-
-        Returns:
-            bool: [description]
-        """
         maxclients = self.server.config['multiclient_limit']
         for c in self.server.client_manager.clients:
             if c.ipid == client.ipid:
