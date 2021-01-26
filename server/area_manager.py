@@ -469,10 +469,9 @@ class AreaManager:
             def add_statement(self, message):
                 """Add a statement and return whether successful."""
                 message = message[:14] + (1,) + message[15:]
-                self.statements.append(message)
-                if len(self.statements) > self.limit:
-                    self.statements = self.statements[:self.limit]
+                if len(self.statements) >= self.limit:
                     return False
+                self.statements.append(message)
                 return True
             
             def remove_statement(self, index):
