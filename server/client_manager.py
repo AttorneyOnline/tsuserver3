@@ -16,14 +16,16 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import re
-from typing import Any, List
-from server.area_manager import AreaManager
-import string
 import time
-from heapq import heappop, heappush
+import string
 import asyncio
+
+from typing import Any, List
+from heapq import heappop, heappush
+
 from server import database
 from server.constants import TargetType
+from server.area_manager import AreaManager
 from server.exceptions import ClientError, AreaError
 
 
