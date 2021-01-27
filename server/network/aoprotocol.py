@@ -254,7 +254,8 @@ class AOProtocol(asyncio.Protocol):
                                  'flipping', 'fastloading', 'noencryption',
                                  'deskmod', 'evidence', 'modcall_reason',
                                  'cccc_ic_support', 'arup', 'casing_alerts',
-                                 'prezoom', 'looping_sfx', 'additive', 'effects', 'expanded_desk_mods')
+                                 'prezoom', 'looping_sfx', 'additive', 'effects',
+                                 'y_offset', 'expanded_desk_mods')
 
     def net_cmd_ch(self, _):
         """Reset the client drop timeout (keepalive).
@@ -528,8 +529,12 @@ class AOProtocol(asyncio.Protocol):
         self.server.area_manager.send_remote_command(
             target_area, 'MS', *send_args)
 
-        self.client.area.send_owner_command(
-            "MS", *send_args[:5], "[" + self.client.area.abbreviation + "]" + msg, *send_args[5:])
+        self.client.area.send_owner_command('MS',
+                                            *send_args[:4],
+                                            '[' + self.client.area.abbreviation + ']' + msg,
+                                            *send_args[5:]
+                                            )
+
         self.client.area.set_next_msg_delay(len(msg))
         database.log_ic(self.client, self.client.area, packet_28.showname, msg)
 

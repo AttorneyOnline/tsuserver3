@@ -254,7 +254,7 @@ class ClientManager:
                 (self.wtce_counter - times_per_interval + 1) %
                     times_per_interval] < interval_length:
                 self.wtce_mute_time = time.time()
-                return self.server.config['music_change_floodguard'][
+                return self.server.config['wtce_floodguard'][
                     'mute_length']
             self.wtce_counter = (self.wtce_counter + 1) % times_per_interval
             self.wtce_time[self.wtce_counter] = time.time()
