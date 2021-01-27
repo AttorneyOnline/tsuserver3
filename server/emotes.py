@@ -4,8 +4,6 @@ from configparser import ConfigParser
 import logging
 logger = logging.getLogger('debug')
 
-char_dir = 'characters'
-
 
 class Emotes:
     """
@@ -13,16 +11,19 @@ class Emotes:
     used for validating which emotes can be sent by clients.
     """
 
-    def __init__(self, name):
+    def __init__(self, name: str):
+        self.CHAR_DIR = 'characters'
         self.name = name
         self.emotes = set()
+
         self.read_ini()
 
     def read_ini(self):
         char_ini = ConfigParser(comment_prefixes=('#', ';', '//', '\\\\'),
                                 strict=False)
+
+        char_path = path.join(self.CHAR_DIR, self.name, 'char.ini')
         try:
-            char_path = path.join(char_dir, self.name, 'char.ini')
             with open(char_path) as f:
                 char_ini.read_file(f)
         except FileNotFoundError:
@@ -32,7 +33,8 @@ class Emotes:
         try:
             for emote_id in range(1, int(char_ini['Emotions']['number']) + 1):
                 emote_id = str(emote_id)
-                _name, preanim, anim, _mod = char_ini['Emotions'][str(emote_id)].split('#')[:4]
+                _name, preanim, anim, _mod = char_ini['Emotions'][str(emote_id)].split('#')[
+                    :4]
                 if emote_id in char_ini['SoundN']:
                     sfx = char_ini['SoundN'][str(emote_id)]
                     if len(sfx) == 1:
@@ -51,7 +53,7 @@ class Emotes:
             return
         except ValueError as e:
             logger.warn(f'Value error in character file {char_path}:\n{e}\n'
-                         'This indicates a malformed character INI file.')
+                        'This indicates a malformed character INI file.')
             return
 
     def validate(self, preanim, anim, sfx):
