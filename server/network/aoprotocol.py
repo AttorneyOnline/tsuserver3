@@ -628,7 +628,7 @@ class AOProtocol(asyncio.Protocol):
             target_area, 'MS', *send_args)
 
         self.client.area.send_owner_command('MS',
-                                            *send_args[:5],
+                                            *send_args[:4],
                                             '[' + self.client.area.abbreviation + ']' + msg,
                                             *send_args[5:]
                                             )
