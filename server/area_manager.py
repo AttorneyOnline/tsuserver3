@@ -612,7 +612,7 @@ class AreaManager:
                 client.send_ooc('You don\'t have permission to end testimonies or examinations in this area!')
                 return False
             elif self.is_testifying:
-                if len(self.testimony.statements) == 1:
+                if len(self.testimony.statements) <= 1:
                     client.send_ooc('Please add at least one statement before ending your testimony.')
                     return False
                 self.is_testifying = False
