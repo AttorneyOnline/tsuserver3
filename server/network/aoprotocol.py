@@ -452,11 +452,10 @@ class AOProtocol(asyncio.Protocol):
         else:
             return        
         
-        if additive == 1 and self._client_can_additive(self.client):
+        if additive == 1 and self.client.area.client_can_additive(self.client):
             additive = 1
         else:
             additive = 0
-        self._change_class_last_char_id(self.client.char_id)
 
         if len(showname) > 0 and not self.client.area.showname_changes_allowed:
             self.client.send_ooc(
@@ -646,16 +645,6 @@ class AOProtocol(asyncio.Protocol):
         if (self.client.area.is_recording):
             self.client.area.recorded_messages.append(args)
     
-    @classmethod
-    def _client_can_additive(cls, client: ClientManager.Client):
-        if client.char_id == cls.last_message_char_id:
-            return True
-        return False
-
-    @classmethod
-    def _change_class_last_char_id(cls, charid: int):
-        cls.last_message_char_id = charid
-
     def net_cmd_ct(self, args):
         """OOC Message
 
