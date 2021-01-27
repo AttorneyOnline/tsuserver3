@@ -780,7 +780,7 @@ class AreaManager:
         """
 
         for area in self.areas:
-            if area.id == num:
+            if area.id == area_id:
                 return area
         raise AreaError('Area not found.')
 
