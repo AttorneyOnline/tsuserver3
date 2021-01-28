@@ -132,7 +132,6 @@ def ooc_cmd_ban(client, arg):
 def ooc_cmd_banhdid(client, arg):
     """
     Ban both a user's HDID and IPID.
-    DANGER: Banning webAO users by HDID has unintended consequences.
     Usage: See /ban.
     """
     kickban(client, arg, True)

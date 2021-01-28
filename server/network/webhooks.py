@@ -93,7 +93,7 @@ class Webhooks:
 		message += f' by {client.name} ({client.ipid})' if client != None else ' from the server'
 		message += f' with reason: {reason}' if reason.strip() != '' else ''
 		message += f' (Ban ID: {ban_id}).'
-		message += f' It will expire {unban_date}' if unban_date != None else ''
+		message += f' It will expire {unban_date}' if unban_date != None else ' It is a permanent ban.'
 		
 		self.send_webhook(username=username, avatar_url=avatar_url, message=message)
 
