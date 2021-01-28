@@ -18,6 +18,7 @@
 from .. import commands
 from server.fantacrypt import fanta_decrypt
 from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
+from server.client_manager import ClientManager
 from server import database
 from time import localtime, strftime
 import arrow
@@ -38,6 +39,7 @@ class ProtocolError(Exception):
 
 class AOProtocol(asyncio.Protocol):
     """The main class that deals with the AO protocol."""
+    last_message_char_id: int = -1
 
     class ArgType(Enum):
         """Represents the data type of an argument for a network command."""
@@ -250,7 +252,8 @@ class AOProtocol(asyncio.Protocol):
                                  'flipping', 'fastloading', 'noencryption',
                                  'deskmod', 'evidence', 'modcall_reason',
                                  'cccc_ic_support', 'arup', 'casing_alerts',
-                                 'prezoom', 'looping_sfx', 'additive', 'effects', 'expanded_desk_mods')
+                                 'prezoom', 'looping_sfx', 'additive', 'effects',
+                                 'y_offset', 'expanded_desk_mods')
 
     def net_cmd_ch(self, _):
         """Reset the client drop timeout (keepalive).
@@ -448,7 +451,12 @@ class AOProtocol(asyncio.Protocol):
             if (len(pair_args) > 1):
                 pair_order = pair_args[1]
         else:
-            return
+            return        
+        
+        if additive == 1 and self.client.area.client_can_additive(self.client):
+            additive = 1
+        else:
+            additive = 0
 
         if len(showname) > 0 and not self.client.area.showname_changes_allowed:
             self.client.send_ooc(
@@ -685,7 +693,7 @@ class AOProtocol(asyncio.Protocol):
             target_area, 'MS', *send_args)
 
         self.client.area.send_owner_command('MS',
-                                            *send_args[:5],
+                                            *send_args[:4],
                                             '[' + self.client.area.abbreviation + ']' + msg,
                                             *send_args[5:]
                                             )
@@ -695,6 +703,7 @@ class AOProtocol(asyncio.Protocol):
 
         if self.client.area.is_recording:
             self.client.area.recorded_messages.append(args)
+
         if self.client.area.is_testifying:
             if (not self.client.area.testimony.add_statement(send_args)):
                 self.client.send_ooc("That statement was not recorded because you reached the statement limit.")

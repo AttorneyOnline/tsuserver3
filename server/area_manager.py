@@ -127,6 +127,15 @@ class AreaManager:
             if client.char_id != -1:
                 database.log_room('area.leave', client, self)
 
+        def client_can_additive(self, client: ClientManager.Client):
+            if self.last_ic_message is None:
+                return False
+
+            last_char_id = self.last_ic_message[8]
+            if client.char_id == last_char_id:
+                return True
+            return False
+
         def unlock(self):
             """Mark the area as unlocked."""
             self.is_locked = self.Locked.FREE
