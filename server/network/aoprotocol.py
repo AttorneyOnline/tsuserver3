@@ -434,6 +434,7 @@ class AOProtocol(asyncio.Protocol):
                     "While that is not a blankpost, it is still pretty spammy. Try forming sentences.")
                 return
 
+
         target_area = []
         split_packet_text = packet_28.text.split(' ')
         if packet_28.text.startswith('/a '):
@@ -459,6 +460,65 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_ooc(f"You don't any areas!")
                 return
             packet_28.text = ' '.join(split_packet_text[1:])
+
+        elif packet_28.text.startswith('/testify '): # Start a new testimony in this area.
+            part = packet_28.text.split(' ')
+            packet_28.text = ' '.join(part[1:]) # remove command
+            if not self.client.area.start_testimony(self.client, packet_28.text):
+                return
+            packet_28.text = '~~-- ' + packet_28.text + ' --'
+            color = 3 # orange
+        elif packet_28.text.startswith('/examine'): # Start an examination of this area's testimony.
+            if not self.client.area.start_examination(self.client):
+                return
+            packet_28.text = '~~-- ' + self.client.area.testimony.title + ' --'
+            color = 3
+        if self.client.area.is_testifying or self.client.area.is_examining:
+            if packet_28.text.startswith('/end'): # End the current testimony or examination.
+                if not self.client.area.end_testimony(self.client):
+                    return
+                packet_28.text = ''
+            elif packet_28.text.startswith('/amend '):
+                part = packet_28.text.split(' ')
+                packet_28.text = ' '.join(part[2:])
+                args[4] = packet_28.text
+                color = 1
+                try:
+                    index = int(part[1])
+                    if not self.client.area.amend_testimony(self.client, index, args):
+                        return
+                    if self.client.area.is_testifying:
+                        return # don't send it again or it'll be rerecorded
+                    elif self.client.area.is_examining:
+                        self.client.area.examine_index = index # jump to the amended statement
+                except ValueError:
+                    self.client.send_ooc(
+                        "That does not look like a valid statement number!")
+                    return
+            elif packet_28.text.startswith('/add ') and self.client.area.is_examining:
+                part = packet_28.text.split(' ')
+                packet_28.text = ' '.join(part[1:])
+                args[4] = packet_28.text
+                self.client.area.testimony.add_statement(tuple(args))
+                color = 1 # green
+                self.client.area.examine_index = len(self.client.area.testimony.statements) - 1 # jump to the new statement
+            elif packet_28.text.startswith('/remove '):
+                part = packet_28.text.split(' ')
+                try:
+                    index = int(part[1])
+                    if not self.client.area.remove_statement(self.client, index):
+                        return
+                    packet_28.text = ''
+                except ValueError:
+                    self.client.send_ooc(
+                        "That does not look like a valid statement number!")
+                    return
+            if self.client.area.is_examining and packet_28.text != '' and packet_28.text[0] in ['>', '<', '=']:
+                try:
+                    self.client.area.navigate_testimony(self.client, packet_28.text[0], int(packet_28.text[1:]))
+                except ValueError:
+                    self.client.area.navigate_testimony(self.client, packet_28.text[0])
+                return
 
         if self._packet_settings_are_valid(packet_28) is False:
             return
@@ -538,8 +598,11 @@ class AOProtocol(asyncio.Protocol):
         self.client.area.set_next_msg_delay(len(msg))
         database.log_ic(self.client, self.client.area, packet_28.showname, msg)
 
-        if (self.client.area.is_recording):
+        if self.client.area.is_recording:
             self.client.area.recorded_messages.append(args)
+        if self.client.area.is_testifying:
+            if (not self.client.area.testimony.add_statement(send_args)):
+                self.client.send_ooc("That statement was not recorded because you reached the statement limit.")
 
     def _packet_settings_are_valid(self, packet: MS_28) -> bool:
         if packet.msg_type not in VALID_MESSAGE_TYPES:

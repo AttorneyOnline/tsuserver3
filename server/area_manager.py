@@ -91,6 +91,14 @@ class AreaManager:
             self.owners = []
             self.afkers = []
             self.last_ic_message = None
+            
+            # Testimony stuff
+            self.is_testifying = False
+            self.is_examining = False
+            self.testimony_limit = self.server.config['testimony_limit'] + 1
+            self.testimony = self.Testimony('N/A', self.testimony_limit)
+            self.examine_index = 0
+
 
         class Locked(Enum):
             """Lock state of an area."""
@@ -102,13 +110,11 @@ class AreaManager:
             """Add a client to the area."""
             self.clients.add(client)
             self.server.area_manager.send_arup_players()
-            
             if client.char_id != -1:
                 database.log_room('area.join', client, self)
 
         def remove_client(self, client: ClientManager.Client):
             """Remove a disconnected client from the area.
-
             Args:
                 client (ClientManager.Client): Client to remove
             """
@@ -153,7 +159,6 @@ class AreaManager:
             """Check if a character is available for use.
             Args:
                 char_id (int): character ID
-
             Returns:
                 bool: True if the character is available. False if not available
             """
@@ -171,7 +176,6 @@ class AreaManager:
 
         def send_command(self, cmd: str, *args):
             """Broadcast an AO-compatible command to all clients in the area.
-
             Args:
                 cmd (str): Command to send
             """
@@ -182,7 +186,6 @@ class AreaManager:
         def send_owner_command(self, cmd: str, *args):
             """Send an AO-compatible command to all owners of the area
             that are not currently in the area.
-
             Args:
                 cmd (str): Command to send
             """
@@ -192,7 +195,6 @@ class AreaManager:
 
         def broadcast_ooc(self, msg: str):
             """Broadcast an OOC message to all clients in the area.
-
             Args:
                 msg (str): message to be broadcasted
             """
@@ -205,7 +207,6 @@ class AreaManager:
 
         def set_next_msg_delay(self, msg_length: int):
             """Set the delay when the next IC message can be send by any client.
-
             Args:
                 msg_length (int): estimated length of message (ms)
             """
@@ -213,17 +214,14 @@ class AreaManager:
             delay = min(3000, 100 + 60 * msg_length)
             self.next_message_time = round(time.time() * 1000.0 + delay)
 
-        # TODO: Find out what SFX is. Also add typing hinting to it where it is created
         def is_iniswap(self, client: ClientManager.Client, preanim: str, anim: str, char: str, sfx) -> bool:
             """Determine if a client is performing an INI swap.
-
             Args:
                 client (ClientManager.Client): client attempting the INI swap.
                 preanim (str): name of preanimation
                 anim (str): name of idle/talking animation
                 char (str): name of character
                 sfx ([type]): [description]
-
             Returns:
                 bool: True if client is ini_swap, false if client is not
             """
@@ -243,7 +241,6 @@ class AreaManager:
 
         def add_jukebox_vote(self, client: ClientManager.Client, music_name: str, length: int = -1, showname: str = ''):
             """Cast a vote on the jukebox.
-
             Args:
                 client (ClientManager.Client): Client that is requesting
                 music_name (str): track name
@@ -264,7 +261,6 @@ class AreaManager:
 
         def remove_jukebox_vote(self, client: ClientManager.Client, silent: bool):
             """Removes a vote on the jukebox.
-
             Args:
                 client (ClientManager.Client): client whose vote should be removed
                 silent (bool): do not notify client
@@ -344,7 +340,6 @@ class AreaManager:
 
         def play_music(self, name: str, cid: int, loop: int = 0, showname: str ="", effects: int = 0):
             """Play a track.
-
             Args:
                 name (str): track name
                 cid (int): origin character ID
@@ -360,10 +355,8 @@ class AreaManager:
 
         def can_send_message(self, client: ClientManager.Client) -> bool:
             """Check if a client can send an IC message in this area.
-
             Args:
                 client (ClientManager.Client): sender
-
             Returns:
                 bool: True is client can send a message, False if not
             """
@@ -376,22 +369,18 @@ class AreaManager:
 
         def cannot_ic_interact(self, client: ClientManager.Client) -> bool:
             """Check if this room is locked to a client.
-
             Args:
                 client (ClientManager.Client): sender
-
             Returns:
                 bool: True if the client cannot interact, False otherwise
-            """            
+            """     
             return self.is_locked != self.Locked.FREE and not client.is_mod and not client.id in self.invite_list
 
         def change_hp(self, side: int, val: int):
             """Set the penalty bars.
-
             Args:
                 side (int): 1 for defense; 2 for prosecution
                 val (int): value from 0 to 10
-
             Raises:
                 AreaError: If side is not between 1-2 inclusive or val is not between 0-10
             """
@@ -409,7 +398,6 @@ class AreaManager:
             """ Set the background.            
             Args:
                 bg (str): background name
-
             Raises:
                 AreaError: if `bg` is not in background list
             """
@@ -422,10 +410,8 @@ class AreaManager:
 
         def change_status(self, value: str):
             """Set the status of the room.
-
             Args:
                 value (str): status code
-
             Raises:
                 AreaError: If the value is not a valid status code
             """
@@ -443,21 +429,18 @@ class AreaManager:
 
         def change_doc(self, doc='No document.'):
             """Set the doc link.
-
             Args:
                 doc (str, optional): doc link. Defaults to 'No document.'.
             """
-            
             self.doc = doc
 
         def add_to_judgelog(self, client: ClientManager.Client, msg: str):
             """Append an event to the judge log (max 10 items).
-
             Args:
                 client (ClientManager.Client): event origin
                 msg (str): event message
             """
-
+            
             if len(self.judgelog) >= 10:
                 self.judgelog = self.judgelog[1:]
             self.judgelog.append(
@@ -465,7 +448,6 @@ class AreaManager:
 
         def add_music_playing(self, client: ClientManager.Client, name: str, showname: str = ''):
             """Set info about the current track playing.
-
             Args:
                 client (ClientManager.Client): player
                 name (str): showname of player (can be blank)
@@ -481,10 +463,8 @@ class AreaManager:
 
         def get_evidence_list(self, client: ClientManager.Client) -> List[EvidenceList.Evidence]:
             """Get the evidence list of the area.
-
             Args:
                 client (ClientManager.Client): requester
-
             Returns:
                 List[EvidenceList.Evidence]: A list containing Evidence
             """
@@ -501,7 +481,6 @@ class AreaManager:
 
         def get_cms(self) -> str:
             """Get a list of CMs.
-
             Returns:
                 str: String of CM's comma separated
             """
@@ -513,6 +492,217 @@ class AreaManager:
                 msg = msg[:-2]
             return msg
 
+        class Testimony:
+            """Represents a complete group of statements to be pressed or objected to."""
+            
+            def __init__(self, title: str, limit: int):
+                self.title = title
+                self.statements = []
+                self.limit = limit
+            
+            def add_statement(self, message: tuple) -> bool:
+                """Add a statement.
+                Args:
+                    message (tuple): the IC message to add
+                Returns:
+                    bool: whether the message was added
+                """
+                message = message[:14] + (1,) + message[15:]
+                if len(self.statements) >= self.limit:
+                    return False
+                self.statements.append(message)
+                return True
+            
+            def remove_statement(self, index: int) -> bool:
+                """Remove a statement.
+                Args:
+                    index (int): index of the statement to remove
+                Returns:
+                    bool: whether the statement was removed
+                """
+                if index < 1 or index > len(self.statements) + 1:
+                    return False
+                i = 0
+                while i < len(self.statements):
+                    if i == index:
+                        self.statements.remove(self.statements[i])
+                        return True
+                    i += 1
+                return False # shouldn't happen
+                        
+            def amend_statement(self, index: int, message: list) -> bool:
+                """Amend a statement.
+                Args:
+                    index (int): index of the statement to amend
+                    message (list): the new statement
+                Returns:
+                    bool: whether the statement was amended
+                """
+                if index < 1 or index > len(self.statements) + 1:
+                    return False
+                message[14] = 1 # message[14] is color, and 1 is (by default) green
+                message = tuple(message)
+                i = 0
+                while i < len(self.statements):
+                    if i == index:
+                        self.statements[i] = message
+                        return True
+                    i += 1
+                return True
+            
+        def start_testimony(self, client: ClientManager.Client, title: str) -> bool:
+            """
+            Start a new testimony in this area.
+            Args:
+                client (ClientManager.Client): requester
+                title (str): title of the testimony
+            Returns:
+                bool: whether the testimony was started
+            """
+            if client not in self.owners and (self.evidence_mod == "HiddenCM" or self.evidence_mod == "Mods"):
+                # some servers don't utilise area owners, so we use evidence_mod to determine behavior
+                client.send_ooc('You don\'t have permission to start a new testimony in this area!')
+                return False
+            elif self.is_testifying:
+                client.send_ooc('You can\'t start a new testimony until you finish this one!')
+                return False
+            elif self.is_examining:
+                client.send_ooc('You can\'t start a new testimony during an examination!')
+                return False
+            elif title == '':
+                client.send_ooc('You can\'t start a new testimony without a title!')
+                return False
+            self.testimony = self.Testimony(title, self.testimony_limit)
+            self.broadcast_ooc('Began testimony: ' + title)
+            self.is_testifying = True
+            self.send_command('RT', 'testimony1')
+            return True
+
+        def start_examination(self, client: ClientManager.Client) -> bool:
+            """
+            Start an examination of this area's testimony.
+            Args:
+                client (ClientManager.Client): requester
+            Returns:
+                bool: whether the examination was started
+            """
+            if client not in self.owners and (self.evidence_mod == "HiddenCM" or self.evidence_mod == "Mods"):
+                client.send_ooc('You don\'t have permission to start a new examination in this area!')
+                return False
+            elif self.is_testifying:
+                client.send_ooc('You can\'t start an examination during a testimony! (Hint: Say \'/end\' to stop recording!)')
+                return False
+            elif self.is_examining:
+                client.send_ooc('You can\'t start an examination until you finish this one!')
+                return False
+            self.examine_index = 0
+            self.is_examining = True
+            self.send_command('RT', 'testimony2')
+            return True
+        
+        def end_testimony(self, client: ClientManager.Client) -> bool:
+            """
+            End the current testimony or examination.
+            Args:
+                client (ClientManager.Client): requester
+            Returns:
+                bool: if the current testimony or examination was ended
+            """
+            if client not in self.owners and (self.evidence_mod == "HiddenCM" or self.evidence_mod == "Mods"):
+                client.send_ooc('You don\'t have permission to end testimonies or examinations in this area!')
+                return False
+            elif self.is_testifying:
+                if len(self.testimony.statements) == 1:
+                    client.send_ooc('Please add at least one statement before ending your testimony.')
+                    return False
+                self.is_testifying = False
+                self.broadcast_ooc('Recording stopped.')
+                return True
+            elif self.is_examining:
+                self.is_examining = False
+                self.broadcast_ooc('Examination stopped.')
+                return True
+            else:
+                client.send_ooc('No testimony or examination in progress.')
+                return False
+            
+        def amend_testimony(self, client: ClientManager.Client, index:int, statement: list) -> bool:
+            """
+            Replace the statement at <index> with a new <statement>.
+            Args:
+                client (ClientManager.Client): requester
+                index (int): index of the statement to amend
+                statement (list): the new statement
+            Returns:
+                bool: whether the statement was amended
+            """
+            if client not in self.owners and (self.evidence_mod == "HiddenCM" or self.evidence_mod == "Mods"):
+                client.send_ooc('You don\'t have permission to amend testimony in this area!')
+                return False
+            if self.testimony.amend_statement(index, statement):
+                client.send_ooc('Amended statement ' + str(index) + ' successfully.')
+                return True
+            else:
+                client.send_ooc('Couldn\'t amend statement ' + str(index) + '. Are you sure it exists?')
+                return False
+            
+        def remove_statement(self, client: ClientManager.Client, index: int) -> bool:
+            """
+            Remove the statement at <index>.
+            Args:
+                client (ClientManager.Client): requester
+                index (int): index of the statement to remove
+            Returns:
+                bool: whether the statement was removed
+            """
+            if client not in self.owners and (self.evidence_mod == "HiddenCM" or self.evidence_mod == "Mods"):
+                client.send_ooc('You don\'t have permission to amend testimony in this area!')
+                return False
+            if self.testimony.remove_statement(index):
+                client.send_ooc('Removed statement ' + str(index) + ' successfully.')
+                return True
+            else:
+                client.send_ooc('Couldn\'t remove statement ' + str(index) + '. Are you sure it exists?')
+                return True
+            
+        def navigate_testimony(self, client: ClientManager.Client, command: str, index: int = None) -> bool:
+            """
+            Navigate the current testimony using the commands >, <, =, and [>|<]<index>.
+            Args:
+                client (ClientManager.Client): requester
+                command (str): either >, <, or =
+                index (int): index of the statement to move to, or None
+            Returns:
+                bool: if the navigation was successful
+            """
+            if len(self.testimony.statements) <= 1:
+                client.send_ooc('Testimony is empty, can\'t navigate!') # should never happen
+                return False
+            if index == None:
+                if command == '=':
+                    if self.examine_index == 0:
+                        self.examine_index = 1
+                elif command == '>':
+                    if len(self.testimony.statements) <= self.examine_index + 1:
+                        self.broadcast_ooc('Reached end of testimony, looping...')
+                        self.examine_index = 1
+                    else:
+                        self.examine_index = self.examine_index + 1
+                elif command == '<':
+                    if self.examine_index <= 1:
+                        client.send_ooc('Can\'t go back, already on the first statement!')
+                        return False
+                    else:
+                        self.examine_index = self.examine_index - 1
+            else:
+                try:
+                    self.examine_index = int(index)
+                except ValueError:
+                    client.send_ooc("That does not look like a valid statement number!")
+                    return False
+            self.send_command('MS', *self.testimony.statements[self.examine_index])
+            return True
+                
         class JukeboxVote:
             """Represents a single vote cast for the jukebox."""
             def __init__(self, client, name, length, showname):
@@ -566,13 +756,10 @@ class AreaManager:
 
     def get_area_by_name(self, name: str) -> Area:
         """Get an area by name.
-
         Args:
             name (str): Name of the area you are looking for
-
         Raises:
             AreaError: Area name not found
-
         Returns:
             Area: The Area
         """
@@ -584,25 +771,21 @@ class AreaManager:
 
     def get_area_by_id(self, area_id: int) -> Area:
         """Get an area by ID
-
         Args:
             area_id (int): The ID of the area you are looking for
-
         Raises:
             AreaError: The Area ID does not exist
-
         Returns:
             Area: The Area
         """
 
         for area in self.areas:
-            if area.id == area_id:
+            if area.id == num:
                 return area
         raise AreaError('Area not found.')
 
     def abbreviate(self, name: str) -> str:
         """Abbreviate the name of a room.
-
         Args:
             name (str): What you want to abbreviate
         Returns:
@@ -623,7 +806,6 @@ class AreaManager:
     def send_remote_command(self, area_ids: List[int], cmd: str, *args):
         """Broadcast an AO-compatible command to a specified
         list of areas and their owners.
-
         Args:
             area_ids (List[int]): list of area IDs
             cmd (str): command name
@@ -663,3 +845,5 @@ class AreaManager:
         for area in self.areas:
             lock_list.append(area.is_locked.name)
         self.server.send_arup(lock_list)
+        
+    

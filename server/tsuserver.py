@@ -229,6 +229,8 @@ class TsuServer3:
             self.config['modpass'] = {'default': {'password': self.config['modpass']}}
         if 'multiclient_limit' not in self.config:
             self.config['multiclient_limit'] = 16
+        if 'testimony_limit' not in self.config:
+            self.config['testimony_limit'] = 30
 
     def load_characters(self):
         """Load the character list from a YAML file."""
