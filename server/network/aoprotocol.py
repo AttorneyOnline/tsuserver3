@@ -42,6 +42,7 @@ class ProtocolError(Exception):
 
 class AOProtocol(asyncio.Protocol):
     """The main class that deals with the AO protocol."""
+    last_message_char_id: int = -1
 
     class ArgType(Enum):
         """Represents the data type of an argument for a network command."""
@@ -405,6 +406,11 @@ class AOProtocol(asyncio.Protocol):
             logger_debug.exception(error)
             return
 
+        if packet_28.additive == 1 and self.client.area.client_can_additive(self.client):
+            packet_28.additive = 1
+        else:
+            packet_28.additive = 0
+
         if not self.client.area.showname_changes_allowed:
             self.client.send_ooc(
                 "Showname changes are forbidden in this area!")
@@ -697,6 +703,10 @@ class AOProtocol(asyncio.Protocol):
             elif packet.anim_type == 6:
                 packet.anim_type = 5
                 packet.nonint_pre = 1
+
+        if self.client.area.is_testifying:
+            if (not self.client.area.testimony.add_statement(send_args)):
+                self.client.send_ooc("That statement was not recorded because you reached the statement limit.")
 
     def net_cmd_ct(self, args):
         """OOC Message
