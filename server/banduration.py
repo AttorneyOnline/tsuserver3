@@ -13,7 +13,7 @@ class BanTimeUnits:
 class BanDuration:
     TIME_AND_UNIT_RE = re.compile(r'(\d*)(\w*)')
     def __init__(self, ban_duration: str):
-        self.ban_duration_arg = ban_duration
+        self.ban_duration_arg = str(ban_duration)
         self.ban_duration = BanTimeUnits()
 
         self._solve_ban_duration_time_unit()
