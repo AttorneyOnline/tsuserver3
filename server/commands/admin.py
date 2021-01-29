@@ -148,7 +148,6 @@ def _convert_ipid_to_int(value):
 def kickban(client, arg: str, ban_hdid):
     args = shlex.split(arg)
     ban_id = None
-    print(args)
     if len(args) < 2:
         raise ArgumentError('Not enough arguments.')
 
