@@ -6,7 +6,7 @@ import pytimeparse
 from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, ServerError, ArgumentError
-
+from server.banduration import BanDuration
 from . import mod_only, list_commands, list_submodules, help
 
 __all__ = [
@@ -138,56 +138,53 @@ def ooc_cmd_banhdid(client, arg):
     """
     kickban(client, arg, True)
 
-
+def _convert_ipid_to_int(value):
+    try:
+        return int(value)
+    except ValueError:
+        raise ClientError(f'{value} does not look like a valid IPID.')
+    
 @mod_only()
-def kickban(client, arg, ban_hdid):
+def kickban(client, arg: str, ban_hdid):
     args = shlex.split(arg)
+    ban_id = None
+    print(args)
     if len(args) < 2:
         raise ArgumentError('Not enough arguments.')
+
     elif len(args) == 2:
+        ipid = _convert_ipid_to_int(args[0])
+        ban_id = args[1]
         reason = None
-        ban_id = None
-        try:
-            ban_id = int(args[1])
-            unban_date = None
-        except ValueError:
-            reason = args[1]
-            unban_date = arrow.get().shift(hours=6).datetime
+        default_ban_duration = client.server.config['default_ban_duration']
+        ban_duration = BanDuration(default_ban_duration).ban_duration
+        unban_date = arrow.get().shift(seconds=ban_duration.seconds, minutes=ban_duration.minutes, hours=ban_duration.hours, days=ban_duration.days).datetime
+
     elif len(args) == 3:
-        ban_id = None
+        ipid = _convert_ipid_to_int(args[0])
         reason = args[1]
-        if 'perma' in args[2]:
-            unban_date = None
-        else:
-            duration = pytimeparse.parse(args[2], granularity='hours')
-            if duration is None:
-                raise ArgumentError('Invalid ban duration.')
-            unban_date = arrow.get().shift(seconds=duration).datetime
+        duration = args[2]
+        if duration is None:
+            raise ArgumentError('Invalid ban duration.')
+        ban_duration = BanDuration(duration).ban_duration
+
+        unban_date = arrow.get().shift(seconds=ban_duration.seconds, minutes=ban_duration.minutes, hours=ban_duration.hours, days=ban_duration.days).datetime
     else:
         raise ArgumentError(f'Ambiguous input: {arg}\nPlease wrap your arguments '
                              'in quotes.')
 
-    try:
-        raw_ipid = args[0]
-        ipid = int(raw_ipid)
-    except ValueError:
-        raise ClientError(f'{raw_ipid} does not look like a valid IPID.')
-
-    ban_id = database.ban(ipid, reason, ban_type='ipid', banned_by=client,
-        ban_id=ban_id, unban_date=unban_date)
-
-    if ipid != None:
-        targets = client.server.client_manager.get_targets(
-            client, TargetType.IPID, ipid, False)
-        if targets:
-            for c in targets:
-                if ban_hdid:
-                    database.ban(c.hdid, reason, ban_type='hdid', ban_id=ban_id)
-                c.send_command('KB', reason)
-                c.disconnect()
-                database.log_misc('ban', client, target=c, data={'reason': reason})
-            client.send_ooc(f'{len(targets)} clients were kicked.')
-        client.send_ooc(f'{ipid} was banned. Ban ID: {ban_id}')
+    ban_id = database.ban(ipid, reason, ban_type='ipid', banned_by=client, ban_id=ban_id, unban_date=unban_date)
+    
+    targets = client.server.client_manager.get_targets(client, TargetType.IPID, ipid, False)
+    if targets:
+        for c in targets:
+            if ban_hdid:
+                database.ban(c.hdid, reason, ban_type='hdid', ban_id=ban_id)
+            c.send_command('KB', reason)
+            c.disconnect()
+            database.log_misc('ban', client, target=c, data={'reason': reason})
+        client.send_ooc(f'{len(targets)} clients were kicked.')
+    client.send_ooc(f'{ipid} was banned. Ban ID: {ban_id}')
 
 
 @mod_only()
