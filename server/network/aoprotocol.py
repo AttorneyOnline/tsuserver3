@@ -42,6 +42,7 @@ class ProtocolError(Exception):
 
 class AOProtocol(asyncio.Protocol):
     """The main class that deals with the AO protocol."""
+    last_message_char_id: int = -1
 
     class ArgType(Enum):
         """Represents the data type of an argument for a network command."""
@@ -254,7 +255,8 @@ class AOProtocol(asyncio.Protocol):
                                  'flipping', 'fastloading', 'noencryption',
                                  'deskmod', 'evidence', 'modcall_reason',
                                  'cccc_ic_support', 'arup', 'casing_alerts',
-                                 'prezoom', 'looping_sfx', 'additive', 'effects', 'expanded_desk_mods')
+                                 'prezoom', 'looping_sfx', 'additive', 'effects',
+                                 'y_offset', 'expanded_desk_mods')
 
     def net_cmd_ch(self, _):
         """Reset the client drop timeout (keepalive).
@@ -453,7 +455,12 @@ class AOProtocol(asyncio.Protocol):
             if (len(pair_args) > 1):
                 pair_order = pair_args[1]
         else:
-            return
+            return        
+        
+        if additive == 1 and self.client.area.client_can_additive(self.client):
+            additive = 1
+        else:
+            additive = 0
 
         if len(showname) > 0 and not self.client.area.showname_changes_allowed:
             self.client.send_ooc(
@@ -482,7 +489,7 @@ class AOProtocol(asyncio.Protocol):
                     "While that is not a blankpost, it is still pretty spammy. Try forming sentences."
                 )
                 return
-        if text.startswith('/a '):
+        if text.startswith('/a '): # Send a message to a specific area the client is CM in
             part = text.split(' ')
             try:
                 aid = int(part[1])
@@ -497,7 +504,7 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_ooc(
                     "That does not look like a valid area ID!")
                 return
-        elif text.startswith('/s '):
+        elif text.startswith('/s '): # Send a message to all areas client is CM in
             part = text.split(' ')
             for a in self.server.area_manager.areas:
                 if self.client in a.owners:
@@ -506,6 +513,64 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_ooc('You don\'t any areas!')
                 return
             text = ' '.join(part[1:])
+        elif text.startswith('/testify '): # Start a new testimony in this area.
+            part = text.split(' ')
+            text = ' '.join(part[1:]) # remove command
+            if not self.client.area.start_testimony(self.client, text):
+                return
+            text = '~~-- ' + text + ' --'
+            color = 3 # orange
+        elif text.startswith('/examine'): # Start an examination of this area's testimony.
+            if not self.client.area.start_examination(self.client):
+                return
+            text = '~~-- ' + self.client.area.testimony.title + ' --'
+            color = 3
+        if self.client.area.is_testifying or self.client.area.is_examining:
+            if text.startswith('/end'): # End the current testimony or examination.
+                if not self.client.area.end_testimony(self.client):
+                    return
+                text = ''
+            elif text.startswith('/amend '):
+                part = text.split(' ')
+                text = ' '.join(part[2:])
+                args[4] = text
+                color = 1
+                try:
+                    index = int(part[1])
+                    if not self.client.area.amend_testimony(self.client, index, args):
+                        return
+                    if self.client.area.is_testifying:
+                        return # don't send it again or it'll be rerecorded
+                    elif self.client.area.is_examining:
+                        self.client.area.examine_index = index # jump to the amended statement
+                except ValueError:
+                    self.client.send_ooc(
+                        "That does not look like a valid statement number!")
+                    return
+            elif text.startswith('/add ') and self.client.area.is_examining:
+                part = text.split(' ')
+                text = ' '.join(part[1:])
+                args[4] = text
+                self.client.area.testimony.add_statement(tuple(args))
+                color = 1 # green
+                self.client.area.examine_index = len(self.client.area.testimony.statements) - 1 # jump to the new statement
+            elif text.startswith('/remove '):
+                part = text.split(' ')
+                try:
+                    index = int(part[1])
+                    if not self.client.area.remove_statement(self.client, index):
+                        return
+                    text = ''
+                except ValueError:
+                    self.client.send_ooc(
+                        "That does not look like a valid statement number!")
+                    return
+            if self.client.area.is_examining and text != '' and text[0] in ['>', '<', '=']:
+                try:
+                    self.client.area.navigate_testimony(self.client, text[0], int(text[1:]))
+                except ValueError:
+                    self.client.area.navigate_testimony(self.client, text[0])
+                return
         if msg_type not in ('chat', '0', '1', '2', '3', '4', '5'):
             return
         if anim_type == 4:
@@ -632,7 +697,7 @@ class AOProtocol(asyncio.Protocol):
             target_area, 'MS', *send_args)
 
         self.client.area.send_owner_command('MS',
-                                            *send_args[:5],
+                                            *send_args[:4],
                                             '[' + self.client.area.abbreviation + ']' + msg,
                                             *send_args[5:]
                                             )
@@ -640,8 +705,12 @@ class AOProtocol(asyncio.Protocol):
         self.client.area.set_next_msg_delay(len(msg))
         database.log_ic(self.client, self.client.area, showname, msg)
 
-        if (self.client.area.is_recording):
+        if self.client.area.is_recording:
             self.client.area.recorded_messages.append(args)
+
+        if self.client.area.is_testifying:
+            if (not self.client.area.testimony.add_statement(send_args)):
+                self.client.send_ooc("That statement was not recorded because you reached the statement limit.")
 
     def net_cmd_ct(self, args):
         """OOC Message
