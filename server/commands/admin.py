@@ -167,8 +167,10 @@ def kickban(client, arg: str, ban_hdid):
         if duration is None:
             raise ArgumentError('Invalid ban duration.')
         ban_duration = BanDuration(duration).ban_duration
-
-        unban_date = arrow.get().shift(seconds=ban_duration.seconds, minutes=ban_duration.minutes, hours=ban_duration.hours, days=ban_duration.days).datetime
+        if ban_duration is not None:
+            unban_date = arrow.get().shift(seconds=ban_duration.seconds, minutes=ban_duration.minutes, hours=ban_duration.hours, days=ban_duration.days).datetime
+        else:
+            unban_date = None
     else:
         raise ArgumentError(f'Ambiguous input: {arg}\nPlease wrap your arguments '
                              'in quotes.')
