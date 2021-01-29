@@ -606,6 +606,7 @@ class AOProtocol(asyncio.Protocol):
 
         if self.client.area.is_recording:
             self.client.area.recorded_messages.append(args)
+
         if self.client.area.is_testifying:
             if (not self.client.area.testimony.add_statement(send_args)):
                 self.client.send_ooc("That statement was not recorded because you reached the statement limit.")
@@ -703,10 +704,6 @@ class AOProtocol(asyncio.Protocol):
             elif packet.anim_type == 6:
                 packet.anim_type = 5
                 packet.nonint_pre = 1
-
-        if self.client.area.is_testifying:
-            if (not self.client.area.testimony.add_statement(send_args)):
-                self.client.send_ooc("That statement was not recorded because you reached the statement limit.")
 
     def net_cmd_ct(self, args):
         """OOC Message
