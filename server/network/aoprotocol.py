@@ -638,10 +638,9 @@ class AOProtocol(asyncio.Protocol):
         if evidence not in self.client.evi_list:
             evidence = 0
         # Reveal evidence to everyone if hidden
-        elif evidence:
-            if self.client.area.evi_list.evidences[self.client.evi_list[evidence] - 1].pos != 'all':
-                self.client.area.evi_list.evidences[self.client.evi_list[evidence] - 1].pos = 'all'
-                self.client.area.broadcast_evidence_list()
+        elif evidence and self.client.area.evi_list.evidences[self.client.evi_list[evidence] - 1].pos != 'all':
+            self.client.area.evi_list.evidences[self.client.evi_list[evidence] - 1].pos = 'all'
+            self.client.area.broadcast_evidence_list()
 
 
         # Here, we check the pair stuff, and save info about it to the client.
