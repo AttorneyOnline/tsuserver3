@@ -543,8 +543,8 @@ class AOProtocol(asyncio.Protocol):
                 "Your message is a repeat of the last one. Don't spam!")
             return
 
-        if evidence not in self.client.evi_list:
-            evidence = 0
+        if packet_28.evidence not in self.client.evi_list:
+            packet_28.evidence = 0
 
         # Reveal evidence to everyone if hidden
         self._show_evidence_if_hidden(packet_28.evidence)
