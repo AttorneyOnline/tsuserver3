@@ -16,24 +16,25 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import sys
-
 import logging
 import logging.handlers
 import time
 
+from server.client_manager import ClientManager
 
-def setup_logger(debug):
-    """
-    Set up all loggers.
-    :param debug: whether debug mode should be enabled
 
+def setup_logger(debug: bool):
+    """Set up all loggers.
+    Args:
+        debug (bool): whether debug mode should be enabled
     """
     logging.Formatter.converter = time.gmtime
     debug_formatter = logging.Formatter('[%(asctime)s UTC] %(message)s')
 
     stdoutHandler = logging.StreamHandler(sys.stdout)
     stdoutHandler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('[%(name)s] %(module)s@%(lineno)d : %(message)s')
+    formatter = logging.Formatter(
+        '[%(name)s] %(module)s@%(lineno)d : %(message)s')
     stdoutHandler.setFormatter(formatter)
     logging.getLogger().addHandler(stdoutHandler)
 
@@ -41,7 +42,7 @@ def setup_logger(debug):
     debug_log.setLevel(logging.DEBUG)
 
     debug_handler = logging.handlers.RotatingFileHandler('logs/debug.log', encoding='utf-8',
-                                                            maxBytes=1024 * 1024 * 4)
+                                                         maxBytes=1024 * 1024 * 4)
     debug_handler.setLevel(logging.DEBUG)
     debug_handler.setFormatter(debug_formatter)
     debug_log.addHandler(debug_handler)
@@ -51,8 +52,9 @@ def setup_logger(debug):
     info_log = logging.getLogger('events')
     info_log.setLevel(logging.INFO)
     file_handler = logging.handlers.RotatingFileHandler('logs/server.log', encoding='utf-8',
-                                                            maxBytes=1024 * 512)
-    file_handler.setFormatter(logging.Formatter('[%(asctime)s UTC] %(message)s'))
+                                                        maxBytes=1024 * 512)
+    file_handler.setFormatter(logging.Formatter(
+        '[%(asctime)s UTC] %(message)s'))
     info_log.addHandler(file_handler)
 
     if not debug:
@@ -60,8 +62,16 @@ def setup_logger(debug):
     else:
         debug_log.debug('Logger started')
 
-def parse_client_info(client):
-    """Prepend information about a client to a log entry."""
+
+def parse_client_info(client: ClientManager.Client) -> str:
+    """Prepend information about a client to a log entry.
+
+    Args:
+        client (ClientManager.Client): Client you want to convert to log entry
+
+    Returns:
+        str: Information about a client
+    """
     if client is None:
         return ''
     ipid = client.ip
@@ -69,4 +79,3 @@ def parse_client_info(client):
     if client.is_mod:
         prefix += '[MOD]'
     return prefix
-    
