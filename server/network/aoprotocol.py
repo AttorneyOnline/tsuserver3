@@ -543,6 +543,10 @@ class AOProtocol(asyncio.Protocol):
                 "Your message is a repeat of the last one. Don't spam!")
             return
 
+        if evidence not in self.client.evi_list:
+            evidence = 0
+
+        # Reveal evidence to everyone if hidden
         self._show_evidence_if_hidden(packet_28.evidence)
 
         # Here, we check the pair stuff, and save info about it to the client.
@@ -670,10 +674,9 @@ class AOProtocol(asyncio.Protocol):
         return self.server.config.get('max_chars') or 256
 
     def _show_evidence_if_hidden(self, packet_evidence: int):
-        if packet_evidence:
-            if self.client.area.evi_list.evidences[self.client.evi_list[packet_evidence] - 1].pos != 'all':
-                self.client.area.evi_list.evidences[self.client.evi_list[packet_evidence] - 1].pos = 'all'
-                self.client.area.broadcast_evidence_list()
+        if packet_evidence and self.client.area.evi_list.evidences[self.client.evi_list[packet_evidence] - 1].pos != 'all':
+            self.client.area.evi_list.evidences[self.client.evi_list[packet_evidence] - 1].pos = 'all'
+            self.client.area.broadcast_evidence_list()
 
     def _repeat_message(self, msg: str, packet_cid: int) -> bool:
         query_1 = msg.strip() != '' and self.client.area.last_ic_message is not None
