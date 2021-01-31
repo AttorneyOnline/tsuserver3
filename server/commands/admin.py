@@ -172,7 +172,7 @@ def kickban(client, arg: str, ban_hdid):
         if duration is None:
             raise ArgumentError('Invalid ban duration.')
         elif 'perma' in duration.lower():
-            ban_duration = None
+            unban_date = None
         else:
             if ban_duration is not None:
                 unban_date = arrow.get().shift(hours=ban_duration).datetime
