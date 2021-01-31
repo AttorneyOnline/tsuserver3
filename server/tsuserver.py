@@ -231,6 +231,8 @@ class TsuServer3:
             self.config['multiclient_limit'] = 16
         if 'testimony_limit' not in self.config:
             self.config['testimony_limit'] = 30
+        if 'default_ban_duration' not in self.config:
+            self.config['default_ban_duration'] = 6
 
     def load_characters(self):
         """Load the character list from a YAML file."""
