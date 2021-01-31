@@ -127,6 +127,15 @@ class AreaManager:
             if client.char_id != -1:
                 database.log_room('area.leave', client, self)
 
+        def client_can_additive(self, client: ClientManager.Client):
+            if self.last_ic_message is None:
+                return False
+
+            last_char_id = self.last_ic_message[8]
+            if client.char_id == last_char_id:
+                return True
+            return False
+
         def unlock(self):
             """Mark the area as unlocked."""
             self.is_locked = self.Locked.FREE
@@ -612,7 +621,11 @@ class AreaManager:
                 client.send_ooc('You don\'t have permission to end testimonies or examinations in this area!')
                 return False
             elif self.is_testifying:
+<<<<<<< HEAD
                 if len(self.testimony.statements) == 1:
+=======
+                if len(self.testimony.statements) <= 1:
+>>>>>>> 2859f7cf166224bf318a1a4aad66f6270f866d4f
                     client.send_ooc('Please add at least one statement before ending your testimony.')
                     return False
                 self.is_testifying = False
