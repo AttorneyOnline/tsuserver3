@@ -80,6 +80,8 @@ class HubManager:
 
     def save(self, path='config/areas.yaml'):
         try:
+            if not os.is_path_exists_or_creatable(path):
+                raise ArgumentError(f'File path {path} cannot be created!')
             with open(path, 'w', encoding='utf-8') as stream:
                 hubs = []
                 for hub in self.hubs:

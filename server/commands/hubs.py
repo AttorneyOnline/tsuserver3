@@ -95,6 +95,8 @@ def ooc_cmd_save_hub(client, arg):
                 raise AreaError('Server storage full! Please contact the server host to resolve this issue.')
             try:
                 arg = f'{path}/{arg}.yaml'
+                if not os.is_path_exists_or_creatable(arg):
+                    raise ArgumentError(f'File path {arg} cannot be created!')
                 if os.path.isfile(arg):
                     with open(arg, 'r', encoding='utf-8') as stream:
                         hub = yaml.safe_load(stream)
@@ -126,6 +128,8 @@ def ooc_cmd_load_hub(client, arg):
         if arg != '':
             path = 'storage/hubs'
             arg = f'{path}/{arg}.yaml'
+            if not os.path.isfile(arg):
+                raise ArgumentError(f'File not found: {arg}')
             with open(arg, 'r', encoding='utf-8') as stream:
                 hub = yaml.safe_load(stream)
             client.area.area_manager.load(hub, ignore=['can_gm', 'max_areas'])
@@ -149,7 +153,7 @@ def ooc_cmd_load_hub(client, arg):
 
     except Exception as ex:
         msg = f'There is a problem: {ex}'
-        msg += '\nThis is most likely caused by editing the yaml directly. Contact the server owner to resolve this issue.'
+        msg += '\nContact the server owner for support.'
         client.send_ooc(msg)
 
 @mod_only()
