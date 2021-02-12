@@ -95,8 +95,6 @@ def ooc_cmd_save_hub(client, arg):
                 raise AreaError('Server storage full! Please contact the server host to resolve this issue.')
             try:
                 arg = f'{path}/{arg}.yaml'
-                if not os.is_path_exists_or_creatable(arg):
-                    raise ArgumentError(f'File path {arg} cannot be created!')
                 if os.path.isfile(arg):
                     with open(arg, 'r', encoding='utf-8') as stream:
                         hub = yaml.safe_load(stream)

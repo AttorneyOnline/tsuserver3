@@ -257,8 +257,6 @@ class AreaManager:
 
         """
         try:
-            if not os.is_path_exists_or_creatable(path):
-                raise ArgumentError(f'File path {path} cannot be created!')
             with open(path, 'w', encoding='utf-8') as stream:
                 yaml.dump(self.character_data, stream, default_flow_style=False)
         except:
