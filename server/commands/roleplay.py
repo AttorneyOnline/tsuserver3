@@ -435,7 +435,7 @@ def ooc_cmd_timer(client, arg):
     /timer <id> hide
     """
 
-    arg = arg.strip()
+    arg = arg.split()
     if len(arg) < 1:
         raise ArgumentError('Invalid ID. Usage: /timer <id>')
     timer_id = int(arg[0])
@@ -452,7 +452,7 @@ def ooc_cmd_timer(client, arg):
             client.send_ooc(f'Timer {timer_id} is unset.')
         return
 
-    duration = pytimeparse.parse(arg)
+    duration = pytimeparse.parse(''.join(arg[1:]))
     if duration is not None:
         if timer.set:
             if timer.started:
@@ -471,22 +471,25 @@ def ooc_cmd_timer(client, arg):
 
     if not timer.set:
         raise ArgumentError(f'Timer {timer_id} is not set in this area.')
-    elif arg == 'start':
+    elif arg[1] == 'start':
         timer.target = timer.static + arrow.get()
         timer.started = True
-    elif arg in ('pause', 'stop'):
+        client.send_ooc(f'Starting timer {timer_id}.')
+    elif arg[1] in ('pause', 'stop'):
         timer.static = timer.target - arrow.get()
         timer.started = False
-    elif arg == 'hide':
+        client.send_ooc(f'Stopping timer {timer_id}.')
+    elif arg[1] in ('unset', 'hide'):
         timer.set = False
         timer.started = False
         timer.static = None
         timer.target = None
-        client.send_ooc('Timer unset and hidden.')
+        client.send_ooc(f'Timer {timer_id} unset and hidden.')
         client.area.send_command('TI', timer_id, 3)
 
     # Send static time if applicable
     if timer.set:
         s = int(not timer.started)
+        print('TI', timer_id, s, timer.static.total_seconds())
         client.area.send_command('TI', timer_id, s, int(timer.static.total_seconds()) * 1000)
         client.send_ooc(f'Timer is at {timer.static}')
