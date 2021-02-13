@@ -618,13 +618,10 @@ class Area:
                     if msg.startswith('pta'):
                         is_pta = True
                     target = msg[msg.find('@')+1:]
-
+                target = target.lower()
                 try:
                     for t in self.clients:
-                        # I apologize for this monstrosity.
-                        if t.showname.lower().startswith(target) or t.showname.lower().startswith(
-                                target.split()[0]) or (t.name != '' and (t.name.lower().startswith(target) or t.name.lower().startswith(
-                                    target.split()[0]))):
+                        if target in t.showname.lower() or (t.name != '' and target in t.name.lower().startswith()):
                             self.start_debate(client, t, is_pta)
                             break
                 except Exception as ex:
