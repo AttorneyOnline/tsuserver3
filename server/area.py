@@ -1132,7 +1132,9 @@ class Area:
         self.invite_list = self.old_invite_list
         self.red_team.clear()
         self.blue_team.clear()
-
+        # Timer ID 1 is reserved for minigames
+        # 3 stands for unset and hide
+        self.send_command('TI', 1, 3)
         self.send_ic(None, '1', 0, "", "../misc/blank", f"~~{self.minigame} END!", "", "", 0, -1, 0, 0, [0], 0, 0, 0, "System", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
         self.minigame = ''
 
@@ -1203,9 +1205,15 @@ class Area:
                 return
             raise AreaError(f'{self.minigame} is happening! You cannot interrupt it.')
 
+        timer = max(5, int(timer))
+        # Timer ID 1 is reserved for minigames
+        # 1 afterwards is to start timer
+        print('TI', 1, 0, timer * 1000)
+        self.send_command('TI', 1, 2)
+        self.send_command('TI', 1, 0, timer * 1000)
         self.minigame_schedule = asyncio.get_event_loop().call_later(
-            max(5, timer), lambda: self.end_minigame())
-        self.broadcast_ooc(f'{self.minigame}! [{client.id}] {client.showname}(RED) VS [{target.id}] {target.showname}(BLUE). You have {int(timer)} seconds.\n/cs <id> to join the debate against target ID.')
+            timer, lambda: self.end_minigame())
+        self.broadcast_ooc(f'{self.minigame}! [{client.id}] {client.showname}(RED) VS [{target.id}] {target.showname}(BLUE). You have {timer} seconds.\n/cs <id> to join the debate against target ID.')
         # self.send_ic(None, '1', 0, "", "../misc/blank", f"~~}}}}|{self.minigame}!|\n[{client.id}] ~{client.showname}~ VS [{target.id}] √{target.showname}√\\n{int(timer)} seconds left.", "", "", 0, -1, 0, 0, [0], 0, 0, 0, "System", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
 
     class JukeboxVote:

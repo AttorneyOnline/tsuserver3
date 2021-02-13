@@ -755,10 +755,42 @@ class AOProtocol(asyncio.Protocol):
                         text = '_ _'
                     self.server.bridgebot.queue_message(webname, text, self.client.char_name)
             # Minigames
+            opposing_team = None
             if self.client.char_id in self.client.area.red_team:
                 color = 2
+                offset_pair = -25
+                other_offset = 25
+                pos = 'debate'
+                opposing_team = self.client.area.blue_team
             elif self.client.char_id in self.client.area.blue_team:
                 color = 7
+                offset_pair = 25
+                other_offset = -25
+                pos = 'debate'
+                opposing_team = self.client.area.red_team
+            
+            # We're in a minigame w/ team setups
+            if opposing_team != None:
+                charid_pair = -1
+                # Last speaker is us and our message already paired us with someone
+                if self.client.area.last_ic_message != None and self.client.area.last_ic_message[8] == self.client.char_id and self.client.area.last_ic_message[16] != -1:
+                    charid_pair = int(self.client.area.last_ic_message[16].split("^")[0])
+                else:
+                    for other_cid in opposing_team:
+                        charid_pair = other_cid
+                        # If last message's charid matches a member of this team, prioritize theirs
+                        if self.client.area.last_ic_message != None and other_cid == self.client.area.last_ic_message[8]:
+                            break
+
+                if charid_pair != -1:
+                    for target in self.client.area.clients:
+                        if target.char_id == charid_pair:
+                            other_emote = target.last_sprite
+                            other_flip = target.flip
+                            other_folder = target.claimed_folder
+                            break
+                    # Speaker always goes in front
+                    charid_pair = f'{charid_pair}^0'
 
         # Additive only works on same-char messages
         if additive and \
