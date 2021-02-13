@@ -620,10 +620,19 @@ class Area:
                     target = msg[msg.find('@')+1:]
                 target = target.lower()
                 try:
+                    opponent = None
                     for t in self.clients:
-                        if target in t.showname.lower() or (t.name != '' and target in t.name.lower().startswith()):
-                            self.start_debate(client, t, is_pta)
-                            break
+                        # We're @num so we're trying to grab a Client ID, don't do shownames
+                        if target.strip().isnumeric():
+                            if t.id == int(target):
+                                opponent = t
+                                break
+                        # Loop through the shownames if it's @text
+                        elif target in t.showname.lower():
+                            opponent = t
+
+                    if opponent != None:
+                        self.start_debate(client, t, is_pta)
                 except Exception as ex:
                     client.send_ooc(ex)
                     return
