@@ -646,6 +646,7 @@ class Area:
                     if len(scrunched) > 0 and scrunched.lower() == 'end':
                         self.recording = False
                         self.broadcast_ooc(f'[{client.id}] {client.showname} has ended the testimony.')
+                        self.send_command('RT', 'testimony1', 1)
                         return
             self.last_ic_message = args
 
