@@ -331,9 +331,13 @@ class AOProtocol(asyncio.Protocol):
         AC#%
 
         """
-        escaped_char_list = self._change_to_escape_characters(
-            self.server.char_list)
-        self.client.send_command('SC', *escaped_char_list)
+        for i, char in enumerate(self.server.char_list):
+            for esc in ESCAPE_CHARACTERS.keys():
+                if esc in char:
+                    char = char.replace(esc, ESCAPE_CHARACTERS[esc])
+            self.server.char_list[i] = char
+            
+        self.client.send_command('SC', *self.server.char_list)
 
     def net_cmd_rm(self, _):
         """Asks for the whole music list (AO2)
