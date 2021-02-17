@@ -336,7 +336,7 @@ class AOProtocol(asyncio.Protocol):
                 if esc in char:
                     char = char.replace(esc, ESCAPE_CHARACTERS[esc])
             self.server.char_list[i] = char
-            
+
         self.client.send_command('SC', *self.server.char_list)
 
     def net_cmd_rm(self, _):
@@ -1127,29 +1127,6 @@ class AOProtocol(asyncio.Protocol):
 
         """
         self.net_cmd_ct(['opban', '/ban {}'.format(args[0])])
-
-    @classmethod
-    def _change_to_escape_characters(cls, list_to_change: List[str]) -> List[str]:
-        escaped_names = []
-        for not_escaped_string in list_to_change:
-            if cls._contains_escape_character(not_escaped_string):
-                escaped_name = cls._add_escape_characters(not_escaped_string)
-            else:
-                escaped_name = not_escaped_string
-            escaped_names.append(escaped_name)
-        return escaped_names
-
-    @staticmethod
-    def _contains_escape_character(word: str) -> bool:
-        return any(char for char in ESCAPE_CHARACTERS.keys() if char in word)
-
-    @staticmethod
-    def _add_escape_characters(word_to_change: str) -> str:
-        for char in word_to_change:
-            escape_character = ESCAPE_CHARACTERS.get(char)
-            if escape_character:
-                word_to_change = word_to_change.replace(char, escape_character)
-        return word_to_change
 
     net_cmd_dispatcher = {
         'HI': net_cmd_hi,  # handshake
