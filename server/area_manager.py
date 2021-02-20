@@ -33,6 +33,7 @@ class AreaManager:
     """Holds the list of all areas."""
     class Area:
         """Represents a single instance of an area."""
+
         def __init__(self,
                      area_id,
                      server,
@@ -91,14 +92,13 @@ class AreaManager:
             self.owners = []
             self.afkers = []
             self.last_ic_message = None
-            
+
             # Testimony stuff
             self.is_testifying = False
             self.is_examining = False
             self.testimony_limit = self.server.config['testimony_limit'] + 1
             self.testimony = self.Testimony('N/A', self.testimony_limit)
             self.examine_index = 0
-
 
         class Locked(Enum):
             """Lock state of an area."""
@@ -347,7 +347,7 @@ class AreaManager:
             self.music_looper = asyncio.get_event_loop().call_later(
                 vote_picked.length, lambda: self.start_jukebox())
 
-        def play_music(self, name: str, cid: int, loop: int = 0, showname: str ="", effects: int = 0):
+        def play_music(self, name: str, cid: int, loop: int = 0, showname: str = "", effects: int = 0):
             """Play a track.
             Args:
                 name (str): track name
@@ -369,7 +369,7 @@ class AreaManager:
             Returns:
                 bool: True is client can send a message, False if not
             """
-            
+
             if self.cannot_ic_interact(client):
                 client.send_ooc(
                     'This is a locked area - ask the CM to speak.')
@@ -382,7 +382,7 @@ class AreaManager:
                 client (ClientManager.Client): sender
             Returns:
                 bool: True if the client cannot interact, False otherwise
-            """     
+            """
             return self.is_locked != self.Locked.FREE and not client.is_mod and not client.id in self.invite_list
 
         def change_hp(self, side: int, val: int):
@@ -449,7 +449,7 @@ class AreaManager:
                 client (ClientManager.Client): event origin
                 msg (str): event message
             """
-            
+
             if len(self.judgelog) >= 10:
                 self.judgelog = self.judgelog[1:]
             self.judgelog.append(
@@ -493,7 +493,7 @@ class AreaManager:
             Returns:
                 str: String of CM's comma separated
             """
-            
+
             msg = ''
             for i in self.owners:
                 msg += f'[{str(i.id)}] {i.char_name}, '
@@ -503,12 +503,12 @@ class AreaManager:
 
         class Testimony:
             """Represents a complete group of statements to be pressed or objected to."""
-            
+
             def __init__(self, title: str, limit: int):
                 self.title = title
                 self.statements = []
                 self.limit = limit
-            
+
             def add_statement(self, message: tuple) -> bool:
                 """Add a statement.
                 Args:
@@ -521,7 +521,7 @@ class AreaManager:
                     return False
                 self.statements.append(message)
                 return True
-            
+
             def remove_statement(self, index: int) -> bool:
                 """Remove a statement.
                 Args:
@@ -537,8 +537,8 @@ class AreaManager:
                         self.statements.remove(self.statements[i])
                         return True
                     i += 1
-                return False # shouldn't happen
-                        
+                return False  # shouldn't happen
+
             def amend_statement(self, index: int, message: list) -> bool:
                 """Amend a statement.
                 Args:
@@ -549,7 +549,8 @@ class AreaManager:
                 """
                 if index < 1 or index > len(self.statements) + 1:
                     return False
-                message[14] = 1 # message[14] is color, and 1 is (by default) green
+                # message[14] is color, and 1 is (by default) green
+                message[14] = 1
                 message = tuple(message)
                 i = 0
                 while i < len(self.statements):
@@ -558,7 +559,7 @@ class AreaManager:
                         return True
                     i += 1
                 return True
-            
+
         def start_testimony(self, client: ClientManager.Client, title: str) -> bool:
             """
             Start a new testimony in this area.
@@ -570,16 +571,20 @@ class AreaManager:
             """
             if client not in self.owners and (self.evidence_mod == "HiddenCM" or self.evidence_mod == "Mods"):
                 # some servers don't utilise area owners, so we use evidence_mod to determine behavior
-                client.send_ooc('You don\'t have permission to start a new testimony in this area!')
+                client.send_ooc(
+                    'You don\'t have permission to start a new testimony in this area!')
                 return False
             elif self.is_testifying:
-                client.send_ooc('You can\'t start a new testimony until you finish this one!')
+                client.send_ooc(
+                    'You can\'t start a new testimony until you finish this one!')
                 return False
             elif self.is_examining:
-                client.send_ooc('You can\'t start a new testimony during an examination!')
+                client.send_ooc(
+                    'You can\'t start a new testimony during an examination!')
                 return False
             elif title == '':
-                client.send_ooc('You can\'t start a new testimony without a title!')
+                client.send_ooc(
+                    'You can\'t start a new testimony without a title!')
                 return False
             self.testimony = self.Testimony(title, self.testimony_limit)
             self.broadcast_ooc('Began testimony: ' + title)
@@ -596,19 +601,22 @@ class AreaManager:
                 bool: whether the examination was started
             """
             if client not in self.owners and (self.evidence_mod == "HiddenCM" or self.evidence_mod == "Mods"):
-                client.send_ooc('You don\'t have permission to start a new examination in this area!')
+                client.send_ooc(
+                    'You don\'t have permission to start a new examination in this area!')
                 return False
             elif self.is_testifying:
-                client.send_ooc('You can\'t start an examination during a testimony! (Hint: Say \'/end\' to stop recording!)')
+                client.send_ooc(
+                    'You can\'t start an examination during a testimony! (Hint: Say \'/end\' to stop recording!)')
                 return False
             elif self.is_examining:
-                client.send_ooc('You can\'t start an examination until you finish this one!')
+                client.send_ooc(
+                    'You can\'t start an examination until you finish this one!')
                 return False
             self.examine_index = 0
             self.is_examining = True
             self.send_command('RT', 'testimony2')
             return True
-        
+
         def end_testimony(self, client: ClientManager.Client) -> bool:
             """
             End the current testimony or examination.
@@ -618,15 +626,13 @@ class AreaManager:
                 bool: if the current testimony or examination was ended
             """
             if client not in self.owners and (self.evidence_mod == "HiddenCM" or self.evidence_mod == "Mods"):
-                client.send_ooc('You don\'t have permission to end testimonies or examinations in this area!')
+                client.send_ooc(
+                    'You don\'t have permission to end testimonies or examinations in this area!')
                 return False
             elif self.is_testifying:
-<<<<<<< HEAD
-                if len(self.testimony.statements) == 1:
-=======
                 if len(self.testimony.statements) <= 1:
->>>>>>> 2859f7cf166224bf318a1a4aad66f6270f866d4f
-                    client.send_ooc('Please add at least one statement before ending your testimony.')
+                    client.send_ooc(
+                        'Please add at least one statement before ending your testimony.')
                     return False
                 self.is_testifying = False
                 self.broadcast_ooc('Recording stopped.')
@@ -638,8 +644,8 @@ class AreaManager:
             else:
                 client.send_ooc('No testimony or examination in progress.')
                 return False
-            
-        def amend_testimony(self, client: ClientManager.Client, index:int, statement: list) -> bool:
+
+        def amend_testimony(self, client: ClientManager.Client, index: int, statement: list) -> bool:
             """
             Replace the statement at <index> with a new <statement>.
             Args:
@@ -650,15 +656,18 @@ class AreaManager:
                 bool: whether the statement was amended
             """
             if client not in self.owners and (self.evidence_mod == "HiddenCM" or self.evidence_mod == "Mods"):
-                client.send_ooc('You don\'t have permission to amend testimony in this area!')
+                client.send_ooc(
+                    'You don\'t have permission to amend testimony in this area!')
                 return False
             if self.testimony.amend_statement(index, statement):
-                client.send_ooc('Amended statement ' + str(index) + ' successfully.')
+                client.send_ooc('Amended statement ' +
+                                str(index) + ' successfully.')
                 return True
             else:
-                client.send_ooc('Couldn\'t amend statement ' + str(index) + '. Are you sure it exists?')
+                client.send_ooc('Couldn\'t amend statement ' +
+                                str(index) + '. Are you sure it exists?')
                 return False
-            
+
         def remove_statement(self, client: ClientManager.Client, index: int) -> bool:
             """
             Remove the statement at <index>.
@@ -669,15 +678,18 @@ class AreaManager:
                 bool: whether the statement was removed
             """
             if client not in self.owners and (self.evidence_mod == "HiddenCM" or self.evidence_mod == "Mods"):
-                client.send_ooc('You don\'t have permission to amend testimony in this area!')
+                client.send_ooc(
+                    'You don\'t have permission to amend testimony in this area!')
                 return False
             if self.testimony.remove_statement(index):
-                client.send_ooc('Removed statement ' + str(index) + ' successfully.')
+                client.send_ooc('Removed statement ' +
+                                str(index) + ' successfully.')
                 return True
             else:
-                client.send_ooc('Couldn\'t remove statement ' + str(index) + '. Are you sure it exists?')
+                client.send_ooc('Couldn\'t remove statement ' +
+                                str(index) + '. Are you sure it exists?')
                 return True
-            
+
         def navigate_testimony(self, client: ClientManager.Client, command: str, index: int = None) -> bool:
             """
             Navigate the current testimony using the commands >, <, =, and [>|<]<index>.
@@ -689,7 +701,8 @@ class AreaManager:
                 bool: if the navigation was successful
             """
             if len(self.testimony.statements) <= 1:
-                client.send_ooc('Testimony is empty, can\'t navigate!') # should never happen
+                # should never happen
+                client.send_ooc('Testimony is empty, can\'t navigate!')
                 return False
             if index == None:
                 if command == '=':
@@ -697,13 +710,15 @@ class AreaManager:
                         self.examine_index = 1
                 elif command == '>':
                     if len(self.testimony.statements) <= self.examine_index + 1:
-                        self.broadcast_ooc('Reached end of testimony, looping...')
+                        self.broadcast_ooc(
+                            'Reached end of testimony, looping...')
                         self.examine_index = 1
                     else:
                         self.examine_index = self.examine_index + 1
                 elif command == '<':
                     if self.examine_index <= 1:
-                        client.send_ooc('Can\'t go back, already on the first statement!')
+                        client.send_ooc(
+                            'Can\'t go back, already on the first statement!')
                         return False
                     else:
                         self.examine_index = self.examine_index - 1
@@ -711,13 +726,16 @@ class AreaManager:
                 try:
                     self.examine_index = int(index)
                 except ValueError:
-                    client.send_ooc("That does not look like a valid statement number!")
+                    client.send_ooc(
+                        "That does not look like a valid statement number!")
                     return False
-            self.send_command('MS', *self.testimony.statements[self.examine_index])
+            self.send_command(
+                'MS', *self.testimony.statements[self.examine_index])
             return True
-                
+
         class JukeboxVote:
             """Represents a single vote cast for the jukebox."""
+
             def __init__(self, client, name, length, showname):
                 self.client = client
                 self.name = name
@@ -858,5 +876,3 @@ class AreaManager:
         for area in self.areas:
             lock_list.append(area.is_locked.name)
         self.server.send_arup(lock_list)
-        
-    

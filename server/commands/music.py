@@ -1,3 +1,5 @@
+import re
+
 from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, ServerError, ArgumentError
@@ -13,6 +15,8 @@ __all__ = [
     'ooc_cmd_blockdj',
     'ooc_cmd_unblockdj'
 ]
+
+YOUTUBE_RE = re.compile(r'^(https?\:\/\/)?(www\.)?(youtube\.com|youtu\.be)')
 
 
 def ooc_cmd_currentmusic(client, arg):
@@ -49,7 +53,7 @@ def ooc_cmd_jukebox_toggle(client, arg):
     client.area.broadcast_ooc('{} [{}] has set the jukebox to {}.'.format(
         client.char_name, client.id, client.area.jukebox))
     database.log_room('jukebox_toggle', client, client.area,
-        message=client.area.jukebox)
+                      message=client.area.jukebox)
 
 
 @mod_only(area_owners=True)
@@ -138,7 +142,9 @@ def ooc_cmd_play(client, arg):
     """
     if len(arg) == 0:
         raise ArgumentError('You must specify a song.')
-    client.area.play_music(arg, client.char_id, 0) #don't loop it
+    if YOUTUBE_RE.search(arg):
+        raise ArgumentError('You cannot use Youtube links.')
+    client.area.play_music(arg, client.char_id, 0)  # don't loop it
     client.area.add_music_playing(client, arg)
     database.log_room('play', client, client.area, message=arg)
 
