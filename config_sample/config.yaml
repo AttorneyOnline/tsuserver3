@@ -79,3 +79,6 @@ testimony_limit: 30
 
 # Maximum number of characters can a message contain
 max_chars: 256
+
+# How long a ban will last when no duration is given
+default_ban_duration: 6 hours
