@@ -15,19 +15,22 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from .. import commands
-from server.fantacrypt import fanta_decrypt
-from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
-from server.client_manager import ClientManager
-from server import database
-from time import localtime, strftime
-import arrow
-from enum import Enum
-import asyncio
 import re
+import arrow
+import asyncio
+import logging
 import unicodedata
 
-import logging
+from enum import Enum
+from typing import List
+from time import localtime, strftime
+
+from .. import commands
+from server import database
+from server.fantacrypt import fanta_decrypt
+from server.constants import ESCAPE_CHARACTERS
+from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
+
 
 logger_debug = logging.getLogger('debug')
 logger = logging.getLogger('events')
@@ -328,6 +331,11 @@ class AOProtocol(asyncio.Protocol):
         AC#%
 
         """
+        for i, char in enumerate(self.server.char_list):
+            for esc in ESCAPE_CHARACTERS.keys():
+                if esc in char:
+                    char = char.replace(esc, ESCAPE_CHARACTERS[esc])
+            self.server.char_list[i] = char
 
         self.client.send_command('SC', *self.server.char_list)
 
