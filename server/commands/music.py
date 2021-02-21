@@ -142,7 +142,7 @@ def ooc_cmd_play(client, arg):
     if len(arg) == 0:
         raise ArgumentError('You must specify a song.')
     if YOUTUBE_RE.search(arg):
-        raise ArgumentError('You cannot use YouTube links.')
+        raise ArgumentError('You cannot use YouTube links. You may use direct links to MP3, Ogg, or M3U streams.')
     client.area.play_music(arg, client.char_id, 0) #don't loop it
     client.area.add_music_playing(client, arg)
     database.log_room('play', client, client.area, message=arg)
