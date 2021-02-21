@@ -25,8 +25,8 @@ class Emotes:
             char_path = path.join(char_dir, self.name, 'char.ini')
             with open(char_path, encoding='utf-8-sig') as f:
                 char_ini.read_file(f)
+                logger.info(f'Found char.ini for {char_path} that can be used for iniswap restrictions!')
         except FileNotFoundError:
-            logger.warn(f'Character file {char_path} not found')
             return
 
         # cuz people making char.ini's don't care for no case in sections

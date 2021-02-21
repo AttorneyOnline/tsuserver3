@@ -70,7 +70,8 @@ class TsuServer3:
                                    'flipping', 'fastloading', 'noencryption',
                                    'deskmod', 'evidence', 'modcall_reason',
                                    'cccc_ic_support', 'casing_alerts',
-                                   'arup', 'looping_sfx', 'additive', 'effects', 'expanded_desk_mods']
+                                   'arup', 'looping_sfx', 'additive', 'effects',
+                                   'expanded_desk_mods', 'y_offset']
 
         try:
             self.geoIpReader = geoip2.database.Reader('./storage/GeoLite2-ASN.mmdb')
