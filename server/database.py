@@ -3,6 +3,7 @@ import os
 import asyncio
 import sqlite3
 import json
+from typing import Union
 
 import arrow
 
@@ -49,7 +50,7 @@ class Database:
             logger.debug('Initializing database')
             with open('migrations/v1.sql', 'r') as file:
                 conn.executescript(file.read())
-
+            
             if not os.path.exists('storage/ip_ids.json'):
                 logger.debug('ip_ids.json not found. Aborting migration.')
                 return
@@ -119,7 +120,7 @@ class Database:
             logger.debug('Migration to v1 complete')
 
     def migrate(self):
-        for version in [2, 3]:
+        for version in [2, 3, 4]:
             self.migrate_to_version(version)
 
     def migrate_to_version(self, version):
@@ -318,11 +319,20 @@ class Database:
 
             asyncio.get_event_loop().call_later(time_to_unban, auto_unban)
 
+    def get_area_id(self, area_name: str) -> Union[None, int]:
+        with self.db as conn:
+            area_row = conn.execute(dedent('''
+            SELECT id from area where name = ?
+            '''), (area_name,)).fetchone()
+            if area_row is None:
+                return None
+            return area_row['id']
+
     def create_area(self, area_name: str):
         with self.db as conn:
             conn.execute(dedent('''
-            INSERT INTO areas(area) VALUES (?)
-            '''), (area_name))
+            INSERT INTO area(name) VALUES (?)
+            '''), (area_name,))
     
     def log_ic(self, client, room, showname, message):
         """Log an IC message."""
