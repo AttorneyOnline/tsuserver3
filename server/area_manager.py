@@ -727,10 +727,19 @@ class AreaManager:
         self.areas = []
         self.load_areas()
 
+    def add_areas_to_db(self, areas: List[str]):
+        for area in areas:
+            area_id = database.get_area_id(area)
+            if area_id is None:
+                database.create_area(area)
+
     def load_areas(self):
         """Create all areas from a YAML file."""
         with open('config/areas.yaml', 'r') as chars:
             areas = yaml.safe_load(chars)
+
+        self.add_areas_to_db([area['area'] for area in areas])   
+
         for item in areas:
             if 'evidence_mod' not in item:
                 item['evidence_mod'] = 'FFA'
