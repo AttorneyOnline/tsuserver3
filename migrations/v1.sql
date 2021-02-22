@@ -56,13 +56,6 @@ CREATE TABLE IF NOT EXISTS ic_events(
 		ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS areas(
-	id INTEGER PRIMARY KEY,
-	area_name TEXT,
-	FOREIGN KEY (area_name) REFERENCES ic_events(room_name)
-		ON DELETE CASCADE
-)
-
 CREATE TABLE IF NOT EXISTS room_event_types(
 	type_id INTEGER PRIMARY KEY,
 	type_name TEXT NOT NULL UNIQUE

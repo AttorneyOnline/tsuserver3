@@ -7,6 +7,14 @@ CREATE TABLE hdid_bans_new(
 	FOREIGN KEY (ban_id) REFERENCES bans(ban_id)
 		ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS areas(
+	id INTEGER PRIMARY KEY,
+	area_name TEXT,
+	FOREIGN KEY (area_name) REFERENCES ic_events(room_name)
+		ON DELETE CASCADE
+)
+
 INSERT INTO hdid_bans_new SELECT * FROM hdid_bans;
 DROP TABLE hdid_bans;
 ALTER TABLE hdid_bans_new RENAME TO hdid_bans;
