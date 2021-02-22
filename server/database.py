@@ -318,6 +318,12 @@ class Database:
 
             asyncio.get_event_loop().call_later(time_to_unban, auto_unban)
 
+    def create_area(self, area_name: str):
+        with self.db as conn:
+            conn.execute(dedent('''
+            INSERT INTO areas(area) VALUES (?)
+            '''), (area_name))
+    
     def log_ic(self, client, room, showname, message):
         """Log an IC message."""
         event_logger.info(f'[{room.abbreviation}] {showname}/{client.char_name}' +
