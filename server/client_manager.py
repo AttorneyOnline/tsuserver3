@@ -141,7 +141,9 @@ class ClientManager:
             self.send_ooc(f'=== MOTD ===\r\n{motd}\r\n=============')
             datenow = datetime.now()
             if self.server.config['special_message_date'] in str(datenow):
-                self.send_ooc(self.server.config['special_message_title'] + f'\r\n' +self.server.config['special_message_content'] + f'\r\n=============')
+                title = self.server.config['special_message_title']
+                content = self.server.config['special_message_content']
+                self.send_ooc(f'{title}\r\n{content}\r\n=============')
 
         def send_player_count(self):
             """
