@@ -139,8 +139,8 @@ class ClientManager:
             """Send the message of the day to the client."""
             motd = self.server.config['motd']
             self.send_ooc(f'=== MOTD ===\r\n{motd}\r\n=============')
-            datenow = datetime.now()
-            if self.server.config['special_message_date'] in str(datenow):
+            datenow = str(datetime.now())
+            if str(self.server.config['special_message_date']) in datenow:
                 title = self.server.config['special_message_title']
                 content = self.server.config['special_message_content']
                 self.send_ooc(f'{title}\r\n{content}\r\n=============')
