@@ -252,8 +252,8 @@ class TsuServer3:
 
 
     def load_gimps(self):
-        with open('config/gimp.yaml', 'r', encoding='utf-8') as cfg:
-            self.gimp_list = yaml.load(cfg)
+        with open('config/gimp.yaml', 'r', encoding='utf-8') as gimps:
+            self.gimp_list = yaml.safe_load(gimps)
 
     def load_ipranges(self):
         """Load a list of banned IP ranges."""
