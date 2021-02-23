@@ -602,16 +602,12 @@ class Area:
             # Objection used
             if int(args[10]) == 2:
                 msg = args[4].lower()
-                target = None
+                target = ''
                 is_pta = False
-                if self.last_ic_message != None:
-                    # Get char_name from character ID
-                    target = self.server.char_list[int(self.last_ic_message[8])]
                 # contains word "pta" in message
                 if ' pta' in f' {msg} ':
                     # formatting for `PTA @Jack` or `@Jack PTA`
                     is_pta = True
-                
                 # message contains an "at" sign aka we're referring to someone specific
                 if '@' in msg:
                     # formatting for `PTA@Jack`
@@ -621,6 +617,10 @@ class Area:
                 target = target.lower()
                 try:
                     opponent = None
+                    # @ by itself means we're trying to target the last person who spoke
+                    if self.last_ic_message != None and target.strip() == '':
+                        # Get char_name from character ID
+                        target = self.server.char_list[int(self.last_ic_message[8])]
                     for t in self.clients:
                         # We're @num so we're trying to grab a Client ID, don't do shownames
                         if target.strip().isnumeric():
@@ -633,6 +633,8 @@ class Area:
 
                     if opponent != None:
                         self.start_debate(client, t, is_pta)
+                    else:
+                        raise AreaError('Interjection minigame - target not found!')
                 except Exception as ex:
                     client.send_ooc(ex)
                     return
@@ -1178,11 +1180,17 @@ class Area:
                 self.broadcast_ooc(f'[{client.id}] {client.showname} conceded!')
                 self.end_minigame()
                 return
+            if not self.can_scrum_debate:
+                raise AreaError('You may not scrum debate in this area!')
             timeleft = self.minigame_schedule.when() - asyncio.get_event_loop().time()
             self.minigame_schedule.cancel()
             self.minigame = 'Scrum Debate'
             timer = timeleft + self.scrum_debate_added_time
         elif self.minigame == '':
+            if not pta and not self.can_cross_swords:
+                raise AreaError('You may not Cross-Swords in this area!')
+            if pta and not self.can_panic_talk_action:
+                raise AreaError('You may not PTA in this area!')
             if client == target:
                 raise AreaError('You cannot initiate a minigame against yourself!')
             self.old_invite_list = self.invite_list

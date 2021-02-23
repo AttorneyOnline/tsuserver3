@@ -595,6 +595,10 @@ def ooc_cmd_concede(client, arg):
     """
     if client.area.minigame != '':
         try:
+            # CM's end the minigame automatically using /concede
+            if client in client.area.owners:
+                client.area.end_minigame()
+                return
             client.area.start_debate(client, client) # starting a debate against yourself is a concede
         except AreaError as ex:
             raise ex

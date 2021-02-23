@@ -304,6 +304,9 @@ def ooc_cmd_area_pref(client, arg):
         'can_wtce',
         'can_spectate',
         'can_getarea',
+        'can_cross_swords',
+        'can_scrum_debate',
+        'can_panic_talk_action',
         'bg_lock',
     ]
 
