@@ -44,6 +44,10 @@ def ooc_cmd_motd(client, arg):
 
 
 def ooc_cmd_help(client, arg):
+    """
+    Show help for a command, or show general help.
+    Usage: /help
+    """
     import inspect
     msg = inspect.cleandoc('''
     Welcome to tsuserver3! You can use /help <command> on any known
