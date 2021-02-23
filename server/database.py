@@ -342,6 +342,7 @@ class Database:
         area_id = self.get_area_id(room.name)
         if area_id is None:
             self.create_area(room.name)
+            area_id = self.get_area_id(room.name)
 
         with self.db as conn:
             conn.execute(dedent('''
