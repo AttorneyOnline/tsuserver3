@@ -338,11 +338,16 @@ class Database:
         """Log an IC message."""
         event_logger.info(f'[{room.abbreviation}] {showname}/{client.char_name}' +
                           f'/{client.name} ({client.ipid}): {message}')
+
+        area_id = self.get_area_id(room)
+        if area_id is None:
+            self.create_area(room)
+
         with self.db as conn:
             conn.execute(dedent('''
-                INSERT INTO ic_events(ipid, room_name, char_name, ic_name,
+                INSERT INTO ic_events(ipid, area_id, char_name, ic_name,
                     message) VALUES (?, ?, ?, ?, ?)
-                '''), (client.ipid, room.abbreviation, client.char_name,
+                '''), (client.ipid, area_id, client.char_name,
                     showname, message))
 
     def log_room(self, event_subtype, client, room, message=None, target=None):
