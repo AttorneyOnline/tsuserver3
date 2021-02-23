@@ -20,8 +20,7 @@ __all__ = [
     'ooc_cmd_invite',
     'ooc_cmd_uninvite',
     'ooc_cmd_area_kick',
-    'ooc_cmd_getafk',
-    'ooc_cmd_getafks'
+    'ooc_cmd_getafk'
 ]
 
 
@@ -33,7 +32,9 @@ def ooc_cmd_bg(client, arg):
     if len(arg) == 0:
         raise ArgumentError('You must specify a name. Use /bg <background>.')
     if not client.is_mod and client.area.bg_lock == "true":
-        raise AreaError("This area's background is locked")
+        raise AreaError("This area's background is locked!")
+    elif client.area.cannot_ic_interact(client):
+        raise AreaError("You are not permitted to change the background in this area!")
     try:
         client.area.change_background(arg)
     except AreaError:
@@ -127,21 +128,24 @@ def ooc_cmd_status(client, arg):
 def ooc_cmd_area(client, arg):
     """
     List areas, or go to another area/room.
-    Usage: /area [id]
+    Usage: /area [id] or /area [name]
     """
     args = arg.split()
     if len(args) == 0:
         client.send_area_list()
-    elif len(args) == 1:
+        return
+
+    try:
+        area = client.server.area_manager.get_area_by_id(int(args[0]))
+        client.change_area(area)
+    except:
         try:
-            area = client.server.area_manager.get_area_by_id(int(args[0]))
+            area = client.server.area_manager.get_area_by_name(arg)
             client.change_area(area)
         except ValueError:
-            raise ArgumentError('Area ID must be a number.')
+            raise ArgumentError('Area ID must be a name or a number.')
         except (AreaError, ClientError):
             raise
-    else:
-        raise ArgumentError('Too many arguments. Use /area <id>.')
 
 
 def ooc_cmd_getarea(client, arg):
@@ -149,7 +153,7 @@ def ooc_cmd_getarea(client, arg):
     Show information about the current area.
     Usage: /getarea
     """
-    client.send_area_info(client.area.id, False, False)
+    client.send_area_info(client.area.id, False)
 
 
 def ooc_cmd_getareas(client, arg):
@@ -157,24 +161,21 @@ def ooc_cmd_getareas(client, arg):
     Show information about all areas.
     Usage: /getareas
     """
-    client.send_area_info(-1, False, False)
+    client.send_area_info(-1, False)
 
 
 def ooc_cmd_getafk(client, arg):
     """
-    Show currently AFK-ing players in the current area.
-    Usage: /getafk
+    Show currently AFK-ing players in the current area or in all areas.
+    Usage: /getafk [all]
     """
-    #client.area.broadcast_ooc(client.area.afkers)
-    client.send_area_info(client.area.id, False, True)
-
-
-def ooc_cmd_getafks(client, arg):
-    """
-    Show currently AFK-ing players in all areas.
-    Usage: /getafks
-    """
-    client.send_area_info(-1, False, True)
+    if arg == 'all':
+        arg = -1
+    elif len(arg) == 0:
+        arg = client.area.id
+    else:
+        raise ArgumentError('There is only one optional argument [all].')
+    client.send_area_info(arg, False, afk_check=True)
 
 
 def ooc_cmd_area_lock(client, arg):

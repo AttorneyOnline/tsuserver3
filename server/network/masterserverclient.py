@@ -21,7 +21,6 @@ import time
 import logging
 logger = logging.getLogger('debug')
 
-from server import database
 
 
 class MasterServerClient:
@@ -41,7 +40,7 @@ class MasterServerClient:
                     loop=loop)
                 await self.handle_connection()
             except (ConnectionRefusedError, TimeoutError,
-                ConnectionResetError, asyncio.IncompleteReadError):
+                    ConnectionResetError, asyncio.IncompleteReadError):
                 logger.debug('Connection error occurred.')
                 self.writer = None
                 self.reader = None
@@ -70,7 +69,6 @@ class MasterServerClient:
                     if cmd != 'CHECK' and cmd != 'PONG':
                         logger.debug(f'Incoming: {raw_msg}')
                     elif cmd == 'CHECK':
-                        logger.debug('Replying to CHECK#% with ping')
                         await self.send_raw_message('PING#%')
                     elif cmd == 'PONG':
                         ping_timeout = False

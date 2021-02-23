@@ -43,6 +43,7 @@ websocket_port: 50001
 
 # Whether or not the server should be advertised on the server list.
 use_masterserver: true
+# Don't change these unless the master server is no more
 masterserver_ip: master.aceattorneyonline.com
 masterserver_port: 27016
 
@@ -76,8 +77,17 @@ multiclient_limit: 16
 # Enter the date for the special message in the format: YYYY-MM-DD HH:MM:SS.MS (2019-08-20 21:27:27.299378)
 # In order to arrange a certain perdiod you just write it until the point you want.
 # If  you want for a specific hour you do YYYY-MM-DD HH (2020-01-01 01). This will show the msg for 1am - 1:59 am
-special_message_date: 2020-01-01
+special_message_date: 2022-01-01
 #Enter the message title which will be sent First
 special_message_title: === Happy new year! ===
 #Enter the message
-special_message_content: We wish you a happy new you year from the ao dev team!
+special_message_content: We wish you a happy new you year from the AO dev team!
+
+# How many statements a recorded testimony is allowed to contain; recommend this is set reasonably low to prevent using too much memory (default: 30)
+testimony_limit: 30
+
+# Maximum number of characters can a message contain
+max_chars: 256
+
+# How long a ban will last when no duration is given
+default_ban_duration: 6 hours

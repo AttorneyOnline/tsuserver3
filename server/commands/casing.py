@@ -18,6 +18,7 @@ __all__ = [
     'ooc_cmd_blockwtce',
     'ooc_cmd_unblockwtce',
     'ooc_cmd_judgelog',
+    'ooc_cmd_testimony',
     'ooc_cmd_afk'
 ]
 
@@ -94,7 +95,7 @@ def ooc_cmd_cm(client, arg):
     Add a case manager for the current room.
     Usage: /cm <id>
     """
-    if 'CM' not in client.area.evidence_mod:
+    if 'CM' not in client.area.evidence_mod and not client.is_mod:
         raise ClientError('You can\'t become a CM in this area')
     if len(client.area.owners) == 0:
         if len(arg) > 0:
@@ -218,7 +219,7 @@ def ooc_cmd_anncase(client, arg):
             msg = '=== Case Announcement ===\r\n{} [{}] is hosting {}, looking for '.format(
                 client.char_name, client.id, args[0])
 
-            lookingfor = [p for p, q in \
+            lookingfor = [p for p, q in
                 zip(['defense', 'prosecutor', 'judge', 'juror', 'stenographer'], args[1:])
                 if q == '1']
 
@@ -229,7 +230,7 @@ def ooc_cmd_anncase(client, arg):
 
             client.set_case_call_delay()
 
-            log_data = {k: v for k, v in \
+            log_data = {k: v for k, v in
                 zip(('message', 'def', 'pro', 'jud', 'jur', 'steno'), args)}
             database.log_room('case', client, client.area, message=log_data)
     else:
@@ -305,5 +306,26 @@ def ooc_cmd_judgelog(client, arg):
         raise ServerError(
             'There have been no judge actions in this area since start of session.'
         )
+        
 def ooc_cmd_afk(client, arg):
     client.server.client_manager.toggle_afk(client)
+    
+def ooc_cmd_testimony(client, arg):
+    """
+    List the current testimony in this area.
+    Usage: /testimony
+    """
+    if len(arg) != 0:
+        raise ArgumentError('This command does not take any arguments.')
+    testi = list(client.area.testimony.statements)
+    testi.pop(0)
+    if len(testi) > 0:
+        testi_msg = 'Testimony: '+ client.area.testimony.title
+        i = 1
+        for x in testi:
+            testi_msg += f'\r\n{i}: '
+            testi_msg += x[4]
+            i = i + 1
+        client.send_ooc(testi_msg)
+    else:
+        raise ServerError('There is no testimony in this area.')
