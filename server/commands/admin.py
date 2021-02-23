@@ -28,6 +28,7 @@ __all__ = [
     'ooc_cmd_bans',
     'ooc_cmd_baninfo',
     'ooc_cmd_time',
+    'ooc_cmd_whois',
 ]
 
 
@@ -451,3 +452,27 @@ def ooc_cmd_time(client, arg):
     msg += asctime(gmtime(time()))
     msg += ']'
     client.send_ooc(msg)
+
+
+@mod_only()
+def ooc_cmd_whois(client, arg):
+    """
+    Get information about an online user.
+    Usage: /whois <name|id|showname|character>
+    """
+    found_clients = []
+    for c in client.server.client_manager.clients:
+        if arg in c.name or int(arg) == c.id or arg in c.showname or arg in c.char_name:
+            found_clients.append(c) 
+
+    info = f'WHOIS lookup for {arg}:'
+    for c in found_clients:
+        info += f'\n[{c.id}] '
+        if c.showname != c.char_name:
+            info += f'"{c.showname}" ({c.char_name})'
+        else:
+            info += f'{c.showname}'
+        info += f' ({c.ipid})'
+        if c.name != '':
+            info += f': {c.name}'
+    info = f'\nMatched {found_clients.size()} online clients.'
