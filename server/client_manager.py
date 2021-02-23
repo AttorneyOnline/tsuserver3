@@ -137,8 +137,7 @@ class ClientManager:
             motd = self.server.config['motd']
             self.send_ooc(f'=== MOTD ===\r\n{motd}\r\n=============')
             datenow = datetime.now()
-            if self.server.config['special_message_date'] in str(datenow):
-                self.send_ooc(self.server.config['special_message_title'] + f'\r\n' +self.server.config['special_message_content'] + f'\r\n=============')
+
         def send_player_count(self):
             """
             Send a message stating the number of players currently online
