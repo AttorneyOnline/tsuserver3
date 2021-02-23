@@ -458,12 +458,12 @@ def ooc_cmd_time(client, arg):
 def ooc_cmd_whois(client, arg):
     """
     Get information about an online user.
-    Usage: /whois <name|id|showname|character>
+    Usage: /whois <name|id|ipid|showname|character>
     """
-    found_clients = []
+    found_clients = set()
     for c in client.server.client_manager.clients:
-        if arg in c.name or int(arg) == c.id or arg in c.showname or arg in c.char_name:
-            found_clients.append(c) 
+        if arg.lower() in c.name.lower() or arg in c.showname.lower() or arg.lower() in c.char_name.lower() or arg in str(c.id) or arg in str(c.ipid):
+            found_clients.add(c)
 
     info = f'WHOIS lookup for {arg}:'
     for c in found_clients:
@@ -475,4 +475,5 @@ def ooc_cmd_whois(client, arg):
         info += f' ({c.ipid})'
         if c.name != '':
             info += f': {c.name}'
-    info = f'\nMatched {found_clients.size()} online clients.'
+    info += f'\nMatched {len(found_clients)} online clients.'
+    client.send_ooc(info)

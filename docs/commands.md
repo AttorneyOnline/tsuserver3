@@ -47,7 +47,7 @@
     - By default, id identifies a ban_id.
 * **time**
     - Returns the current server time.
-* **whois** \<name|id|showname|character>
+* **whois** \<name|id|ipid|showname|character>
     - Get information about an online user.
 ## Area Access
 * **area_lock**
