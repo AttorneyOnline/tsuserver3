@@ -339,9 +339,9 @@ class Database:
         event_logger.info(f'[{room.abbreviation}] {showname}/{client.char_name}' +
                           f'/{client.name} ({client.ipid}): {message}')
 
-        area_id = self.get_area_id(room)
+        area_id = self.get_area_id(room.name)
         if area_id is None:
-            self.create_area(room)
+            self.create_area(room.name)
 
         with self.db as conn:
             conn.execute(dedent('''
