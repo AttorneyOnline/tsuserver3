@@ -30,7 +30,16 @@ class TargetType(Enum):
     ALL = 6
     AFK = 7
 
+
 class MusicEffect(IntFlag):
     FADE_IN = 1
     FADE_OUT = 2
     SYNC_POS = 4
+
+
+ESCAPE_CHARACTERS = {
+    '%': '<percent>',
+    '#': '<num>',
+    '$': '<dollar>',
+    '&': '<and>'
+}
