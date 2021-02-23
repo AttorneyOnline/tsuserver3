@@ -81,7 +81,7 @@ special_message_date: 2022-01-01
 #Enter the message title which will be sent First
 special_message_title: === Happy new year! ===
 #Enter the message
-special_message_content: We wish you a happy new you year from the AO dev team!
+special_message_content: We wish you a happy new year from the AO dev team!
 
 # How many statements a recorded testimony is allowed to contain; recommend this is set reasonably low to prevent using too much memory (default: 30)
 testimony_limit: 30
