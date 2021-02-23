@@ -43,6 +43,7 @@ websocket_port: 50001
 
 # Whether or not the server should be advertised on the server list.
 use_masterserver: true
+# Don't change these unless the master server is no more
 masterserver_ip: master.aceattorneyonline.com
 masterserver_port: 27016
 
@@ -73,5 +74,11 @@ zalgo_tolerance: 3
 # How many simultaneous connections an IP address can make to the server. (Default: 16)
 multiclient_limit: 16
 
+# How many statements a recorded testimony is allowed to contain; recommend this is set reasonably low to prevent using too much memory (default: 30)
+testimony_limit: 30
+
 # Maximum number of characters can a message contain
 max_chars: 256
+
+# How long a ban will last when no duration is given
+default_ban_duration: 6 hours

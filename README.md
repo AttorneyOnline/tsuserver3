@@ -9,6 +9,7 @@ The server will not work out of the box. **You must follow these instructions.**
 ### Install Python
 
 * Install the [latest version of Python](https://www.python.org/downloads/). **Python 2 will not work**, as tsuserver3 depends on async/await, which can only be found on Python 3.7 and newer.
+  - If you run Windows, make sure to check the "Add Python to PATH" and install pip checkboxes in the installer
   - If you run anything other than Windows, you should read "Advanced setup instructions" below.
   
 ### Download tsuserver3

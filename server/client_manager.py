@@ -16,6 +16,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import re
+import string
 import time
 from heapq import heappop, heappush
 
@@ -40,6 +41,7 @@ class ClientManager:
             self.area = server.area_manager.default_area()
             self.server = server
             self.name = ''
+            self.showname = ''
             self.fake_name = ''
             self.is_mod = False
             self.mod_profile_name = None
@@ -93,6 +95,11 @@ class ClientManager:
             ]
             # security stuff
             self.clientscon = 0
+            self.gm_save_time = 0
+
+            # movement system stuff
+            self.last_move_time = 0
+            self.move_delay = 0
 
         def send_raw_message(self, msg):
             """
@@ -147,8 +154,11 @@ class ClientManager:
             Check if the given string is valid as an OOC name.
             :param name: name to check
             """
+            printset = set(string.ascii_letters + string.digits + "~ -_.',")
             name_ws = name.replace(' ', '')
             if not name_ws or name_ws.isdigit():
+                return False
+            if not set(name_ws).issubset(printset): #illegal chars in ooc name
                 return False
             for client in self.server.client_manager.clients:
                 if client.name == name:
@@ -168,19 +178,21 @@ class ClientManager:
             to another character if the target character is not available
             (Default value = False)
             """
-            if not self.server.is_valid_char_id(char_id):
-                raise ClientError('Invalid character ID.')
-            if len(self.charcurse) > 0:
-                if not char_id in self.charcurse:
-                    raise ClientError('Character not available.')
-                force = True
-            if not self.area.is_char_available(char_id):
-                if force:
-                    for client in self.area.clients:
-                        if client.char_id == char_id:
-                            client.char_select()
-                else:
-                    raise ClientError('Character not available.')
+            # If it's -1, we want to be the spectator character.
+            if char_id != -1:
+                if not self.server.is_valid_char_id(char_id):
+                    raise ClientError('Invalid character ID.')
+                if len(self.charcurse) > 0:
+                    if not char_id in self.charcurse:
+                        raise ClientError('Character not available.')
+                    force = True
+                if not self.area.is_char_available(char_id):
+                    if force:
+                        for client in self.area.clients:
+                            if client.char_id == char_id:
+                                client.char_select()
+                    else:
+                        raise ClientError('Character not available.')
             old_char = self.char_name
             self.char_id = char_id
             self.pos = ''
@@ -242,7 +254,7 @@ class ClientManager:
                 (self.wtce_counter - times_per_interval + 1) %
                     times_per_interval] < interval_length:
                 self.wtce_mute_time = time.time()
-                return self.server.config['music_change_floodguard'][
+                return self.server.config['wtce_floodguard'][
                     'mute_length']
             self.wtce_counter = (self.wtce_counter + 1) % times_per_interval
             self.wtce_time[self.wtce_counter] = time.time()
@@ -254,6 +266,34 @@ class ClientManager:
                 self.change_character(self.char_id, True)
             except ClientError:
                 raise
+
+        def reload_music_list(self, music=[]):
+            """
+            Rebuild the music list with the provided array, or the server music list as a whole.
+            """
+            song_list = []
+
+            if (len(music) > 0):
+                song_list = music
+            else:
+                song_list = self.server.music_list
+
+            song_list = self.server.build_music_list_ao2(song_list)
+            # KEEP THE ASTERISK
+            self.send_command('FM', *song_list)
+
+        def reload_area_list(self, areas=[]):
+            """
+            Rebuild the area list according to provided areas list.
+            """
+            area_list = []
+
+            if (len(areas) > 0):
+                area_list = areas
+
+            # KEEP THE ASTERISK
+            self.send_command('FA', *area_list)
+
 
         def change_area(self, area):
             """
@@ -275,7 +315,7 @@ class ClientManager:
                 self.area.remove_jukebox_vote(self, True)
 
             old_area = self.area
-            if not area.is_char_available(self.char_id):
+            if not self.char_id == -1 and not area.is_char_available(self.char_id):
                 try:
                     new_char_id = area.get_rand_avail_char_id()
                 except AreaError:
@@ -293,9 +333,10 @@ class ClientManager:
                 f'Changed area to {area.name} [{self.area.status}].')
             self.area.send_command('CharsCheck',
                                    *self.get_available_char_list())
+            self.area.send_command('CharsCheck', *self.get_available_char_list())
             self.send_command('HP', 1, self.area.hp_def)
             self.send_command('HP', 2, self.area.hp_pro)
-            self.send_command('BN', self.area.background)
+            self.send_command('BN', self.area.background, self.pos)
             self.send_command('LE', *self.area.get_evidence_list(self))
 
         def send_area_list(self):
@@ -363,6 +404,8 @@ class ClientManager:
                 if c in area.afkers:
                     info += '[AFK]'
                 info += f' [{c.id}] {c.char_name}'
+                if c.showname != "":
+                    info += f' ({c.showname})'
                 if self.is_mod:
                     info += f' ({c.ipid}): {c.name}'
             return info
@@ -423,7 +466,7 @@ class ClientManager:
             self.send_command('CharsCheck', *self.get_available_char_list())
             self.send_command('HP', 1, self.area.hp_def)
             self.send_command('HP', 2, self.area.hp_pro)
-            self.send_command('BN', self.area.background)
+            self.send_command('BN', self.area.background, self.pos)
             self.send_command('LE', *self.area.get_evidence_list(self))
             self.send_command('MM', 1)
 
@@ -489,7 +532,7 @@ class ClientManager:
         def char_name(self):
             """Get the name of the character that the client is using."""
             if self.char_id == -1:
-                return None
+                return 'Spectator'
             return self.server.char_list[self.char_id]
 
         def change_position(self, pos=''):
@@ -497,12 +540,10 @@ class ClientManager:
             Change the character's current position in the area.
             :param pos: position in area (Default value = '')
             """
-            positions = ('def', 'pro', 'hld', 'hlp', 'jud', 'wit', 'jur', 'sea')
-            if pos not in positions and pos != '':
-                raise ClientError(
-                    f'Invalid position. Possible values: {", ".join(positions)}'
-                )
             self.pos = pos
+            self.send_ooc(f'Position set to {pos}.')
+            self.send_command('SP', self.pos) #Send a "Set Position" packet
+            self.send_command('LE', *self.area.get_evidence_list(self))
 
         def set_mod_call_delay(self):
             """Begin the mod call cooldown."""

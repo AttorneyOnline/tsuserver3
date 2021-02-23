@@ -16,20 +16,14 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import sys
-import os
 import importlib
-
 import asyncio
 import websockets
-
 import geoip2.database
-
-import json
 import yaml
-
 import logging
-logger = logging.getLogger('debug')
 
+import server.logger
 from server import database
 from server.area_manager import AreaManager
 from server.client_manager import ClientManager
@@ -38,7 +32,8 @@ from server.exceptions import ClientError,ServerError
 from server.network.aoprotocol import AOProtocol
 from server.network.aoprotocol_ws import new_websocket_client
 from server.network.masterserverclient import MasterServerClient
-import server.logger
+
+logger = logging.getLogger('debug')
 
 class TsuServer3:
     """The main class for tsuserver3 server software."""
@@ -53,9 +48,10 @@ class TsuServer3:
         self.char_list = None
         self.char_emotes = None
         self.char_pages_ao1 = None
-        self.music_list = None
+        self.music_list = []
         self.music_list_ao2 = None
         self.music_pages_ao1 = None
+        self.bglock = False
         self.backgrounds = None
         self.zalgo_tolerance = None
         self.ipRange_bans = []
@@ -84,9 +80,15 @@ class TsuServer3:
             print('There was a syntax error parsing a configuration file:')
             print(exc)
             print('Please revise your syntax and restart the server.')
-            # Truly idiotproof
-            if os.name == 'nt':
-                input('(Press Enter to exit)')
+            sys.exit(1)
+        except OSError as exc:
+            print('There was an error opening or writing to a file:')
+            print(exc)
+            sys.exit(1)
+        except Exception as exc:
+            print('There was a configuration error:')
+            print(exc)
+            print('Please check sample config files for the correct format.')
             sys.exit(1)
 
         self.client_manager = ClientManager(self)
@@ -197,9 +199,16 @@ class TsuServer3:
 
     def load_config(self):
         """Load the main server configuration from a YAML file."""
-        with open('config/config.yaml', 'r', encoding='utf-8') as cfg:
-            self.config = yaml.safe_load(cfg)
-            self.config['motd'] = self.config['motd'].replace('\\n', ' \n')
+        try:
+            with open('config/config.yaml', 'r', encoding='utf-8') as cfg:
+                self.config = yaml.safe_load(cfg)
+                self.config['motd'] = self.config['motd'].replace('\\n', ' \n')
+        except OSError:
+            print('error: config/config.yaml wasn\'t found.')
+            print('You are either running from the wrong directory, or')
+            print('you forgot to rename config_sample (read the instructions).')
+            sys.exit(1)
+
         if 'music_change_floodguard' not in self.config:
             self.config['music_change_floodguard'] = {
                 'times_per_interval': 1,
@@ -220,6 +229,10 @@ class TsuServer3:
             self.config['modpass'] = {'default': {'password': self.config['modpass']}}
         if 'multiclient_limit' not in self.config:
             self.config['multiclient_limit'] = 16
+        if 'testimony_limit' not in self.config:
+            self.config['testimony_limit'] = 30
+        if 'default_ban_duration' not in self.config:
+            self.config['default_ban_duration'] = 6
 
     def load_characters(self):
         """Load the character list from a YAML file."""
@@ -229,11 +242,9 @@ class TsuServer3:
         self.char_emotes = {char: Emotes(char) for char in self.char_list}
 
     def load_music(self):
-        """Load the music list from a YAML file."""
-        with open('config/music.yaml', 'r', encoding='utf-8') as music:
-            self.music_list = yaml.safe_load(music)
-        self.build_music_pages_ao1()
-        self.build_music_list_ao2()
+        self.build_music_list()
+        self.music_pages_ao1 = self.build_music_pages_ao1(self.music_list)
+        self.music_list_ao2 = self.build_music_list_ao2(self.music_list)
 
     def load_backgrounds(self):
         """Load the backgrounds list from a YAML file."""
@@ -270,45 +281,43 @@ class TsuServer3:
             self.char_pages_ao1[i // 10][i % 10] = '{}#{}&&0&&&0&'.format(
                 i, self.char_list[i])
 
-    def build_music_pages_ao1(self):
-        """
-        Cache a list of tracks that can be used for the
-        AO1 connection handshake.
-        """
-        self.music_pages_ao1 = []
-        index = 0
-        # add areas first
-        for area in self.area_manager.areas:
-            self.music_pages_ao1.append(f'{index}#{area.name}')
-            index += 1
-        # then add music
-        for item in self.music_list:
-            self.music_pages_ao1.append('{}#{}'.format(index,
-                                                       item['category']))
-            index += 1
-            for song in item['songs']:
-                self.music_pages_ao1.append('{}#{}'.format(
-                    index, song['name']))
-                index += 1
-        self.music_pages_ao1 = [
-            self.music_pages_ao1[x:x + 10]
-            for x in range(0, len(self.music_pages_ao1), 10)
-        ]
+    def build_music_list(self):
+        with open('config/music.yaml', 'r', encoding='utf-8') as music:
+            self.music_list = yaml.safe_load(music)
 
-    def build_music_list_ao2(self):
-        """
-        Cache a list of tracks that can be used for the
-        AO2 connection handshake.
-        """
-        self.music_list_ao2 = []
-        # add areas first
-        for area in self.area_manager.areas:
-            self.music_list_ao2.append(area.name)
-            # then add music
-        for item in self.music_list:
-            self.music_list_ao2.append(item['category'])
+    def build_music_pages_ao1(self, music_list):
+        song_list = []
+        index = 0
+        for item in music_list:
+            if 'category' not in item:
+                continue
+            song_list.append('{}#{}'.format(index, item['category']))
+            index += 1
             for song in item['songs']:
-                self.music_list_ao2.append(song['name'])
+                if self._is_valid_song_name(song['name']):
+                    song_list.append('{}#{}'.format(index, song['name']))
+                    index += 1
+                else:
+                    logger.debug(f"{song['name']} is not a valid song name")
+        song_list = [song_list[x:x + 10] for x in range(0, len(song_list), 10)]
+        return song_list
+
+    def build_music_list_ao2(self, music_list):
+        song_list = []
+        for item in music_list:
+            if 'category' not in item: #skip settings n stuff
+                continue
+            song_list.append(item['category'])
+            for song in item['songs']:
+                if self._is_valid_song_name(song['name']):
+                    song_list.append(song['name'])
+                else:
+                    logger.debug(f"{song['name']} is not a valid song name")
+        return song_list
+
+    @staticmethod
+    def _is_valid_song_name(song_name: str) -> bool:
+        return '.' in song_name
 
     def is_valid_char_id(self, char_id):
         """
@@ -331,14 +340,17 @@ class TsuServer3:
                 return i
         raise ServerError('Character not found.')
 
-    def get_song_data(self, music):
+    def get_song_data(self, music_list, music):
         """
         Get information about a track, if exists.
+        :param music_list: music list to search
         :param music: track name
         :returns: tuple (name, length or -1)
         :raises: ServerError if track not found
         """
-        for item in self.music_list:
+        for item in music_list:
+            if 'category' not in item: #skip settings n stuff
+                continue
             if item['category'] == music:
                 return item['category'], -1
             for song in item['songs']:
@@ -349,6 +361,20 @@ class TsuServer3:
                         return song['name'], -1
         raise ServerError('Music not found.')
 
+    def get_song_is_category(self, music_list, music):
+        """
+        Get whether a track is a category.
+        :param music_list: music list to search
+        :param music: track name
+        :returns: bool
+        """
+        for item in music_list:
+            if 'category' not in item: #skip settings n stuff
+                continue
+            if item['category'] == music:
+                return True
+        return False
+    
     def send_all_cmd_pred(self, cmd, *args, pred=lambda x: True):
         """
         Broadcast an AO-compatible command to all clients that satisfy

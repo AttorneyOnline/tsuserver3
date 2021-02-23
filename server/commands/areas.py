@@ -32,7 +32,9 @@ def ooc_cmd_bg(client, arg):
     if len(arg) == 0:
         raise ArgumentError('You must specify a name. Use /bg <background>.')
     if not client.is_mod and client.area.bg_lock == "true":
-        raise AreaError("This area's background is locked")
+        raise AreaError("This area's background is locked!")
+    elif client.area.cannot_ic_interact(client):
+        raise AreaError("You are not permitted to change the background in this area!")
     try:
         client.area.change_background(arg)
     except AreaError:
@@ -126,21 +128,24 @@ def ooc_cmd_status(client, arg):
 def ooc_cmd_area(client, arg):
     """
     List areas, or go to another area/room.
-    Usage: /area [id]
+    Usage: /area [id] or /area [name]
     """
     args = arg.split()
     if len(args) == 0:
         client.send_area_list()
-    elif len(args) == 1:
+        return
+
+    try:
+        area = client.server.area_manager.get_area_by_id(int(args[0]))
+        client.change_area(area)
+    except:
         try:
-            area = client.server.area_manager.get_area_by_id(int(args[0]))
+            area = client.server.area_manager.get_area_by_name(arg)
             client.change_area(area)
         except ValueError:
-            raise ArgumentError('Area ID must be a number.')
+            raise ArgumentError('Area ID must be a name or a number.')
         except (AreaError, ClientError):
             raise
-    else:
-        raise ArgumentError('Too many arguments. Use /area <id>.')
 
 
 def ooc_cmd_getarea(client, arg):
