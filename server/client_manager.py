@@ -39,6 +39,7 @@ class ClientManager:
             self.is_checked = False
             self.transport = transport
             self.hdid = ''
+            self.version = ''
             self.id = user_id
             self.char_id = -1
             self.area = server.area_manager.default_area()
@@ -128,6 +129,19 @@ class ClientManager:
                             lst[11] = evi_num
                             args = tuple(lst)
                             break
+                    # <2.9 can't parse Y offset so we strip it out based on version
+                    c_version = self.version.split('.')
+                    if len(c_version) > 1:
+                        if c_version[0] == '2' and int(c_version[1]) <= 8:
+                            lst = list(args)
+                            offset_pair_list = lst[19].split('<and>')
+                            print(offset_pair_list)
+                            lst[19] = offset_pair_list[0]
+                            other_offset_list = lst[20].split('<and>')
+                            print(other_offset_list)
+                            lst[20] = other_offset_list[0]
+                            args = tuple(lst)
+                            
                 self.send_raw_message(
                     f'{command}#{"#".join([str(x) for x in args])}#%')
             else:
