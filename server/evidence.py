@@ -182,7 +182,7 @@ class EvidenceList:
             if 'pos' in evi:
                 pos = evi['pos']
             if 'can_hide_in' in evi:
-                can_hide_in = evi['can_hide_in']
+                can_hide_in = evi['can_hide_in'] == True
             self.evidences.append(self.Evidence(name, desc, image, pos, can_hide_in))
 
     def del_evidence(self, client, id):
@@ -220,7 +220,7 @@ class EvidenceList:
                     lines = arg[1].split('\n')
                     cmd = lines[0].strip(' ')  # remove all whitespace
                     poses = cmd[7:-1]
-                    can_hide_in = lines[1].strip(' ')[13:-1]
+                    can_hide_in = lines[1].strip(' ')[13:-1] == "1"
                     self.evidences[id] = self.Evidence(arg[0], '\n'.join(lines[2:]), arg[2], poses, can_hide_in)
                 else:
                     client.send_ooc('You entered a bad pos.')
