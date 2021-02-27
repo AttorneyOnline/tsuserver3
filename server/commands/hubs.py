@@ -23,6 +23,7 @@ __all__ = [
     'ooc_cmd_area_remove',
     'ooc_cmd_area_rename',
     'ooc_cmd_area_swap',
+    'ooc_cmd_area_switch',
     'ooc_cmd_area_pref',
     'ooc_cmd_area_move_delay',
     'ooc_cmd_hub_move_delay',
@@ -260,7 +261,7 @@ def ooc_cmd_area_rename(client, arg):
 @mod_only(hub_owners=True)
 def ooc_cmd_area_swap(client, arg):
     """
-    Swap areas by Area IDs.
+    Swap areas by Area IDs while correcting links to reference the right areas.
     Usage: /area_swap <id> <id>
     """
     args = arg.split()
@@ -269,9 +270,30 @@ def ooc_cmd_area_swap(client, arg):
     try:
         area1 = client.area.area_manager.get_area_by_id(int(args[0]))
         area2 = client.area.area_manager.get_area_by_id(int(args[1]))
-        client.area.area_manager.swap_area(area1, area2)
+        client.area.area_manager.swap_area(area1, area2, True)
         client.area.area_manager.broadcast_area_list()
         client.send_ooc(f'Area {area1.name} has been swapped with Area {area2.name}!')
+    except ValueError:
+        raise ArgumentError('Area IDs must be a number.')
+    except (AreaError, ClientError):
+        raise
+
+
+@mod_only(hub_owners=True)
+def ooc_cmd_area_switch(client, arg):
+    """
+    Switch areas by Area IDs without correcting links.
+    Usage: /area_switch <id> <id>
+    """
+    args = arg.split()
+    if len(args) != 2:
+        raise ClientError("You must specify 2 numbers.")
+    try:
+        area1 = client.area.area_manager.get_area_by_id(int(args[0]))
+        area2 = client.area.area_manager.get_area_by_id(int(args[1]))
+        client.area.area_manager.swap_area(area1, area2, False)
+        client.area.area_manager.broadcast_area_list()
+        client.send_ooc(f'Area {area1.name} has been switched with Area {area2.name}!')
     except ValueError:
         raise ArgumentError('Area IDs must be a number.')
     except (AreaError, ClientError):

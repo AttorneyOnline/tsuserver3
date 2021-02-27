@@ -318,7 +318,9 @@ needing a certain list of positions to be filled up.
 * **area_rename** \<name>
     - Rename area you are currently in to \<name>.
 * **area_swap** \<id> \<id>
-    - Swap areas by Area IDs.
+    - Swap areas by Area IDs while correcting links to reference the right areas.
+* **area_switch** \<id> \<id>
+    - Switch areas by Area IDs without correcting links.
 * **area_pref** [pref] [on/true/off/false]
     - Toggle a preference on/off for an area.
     - Leave pref out to see available prefs.
