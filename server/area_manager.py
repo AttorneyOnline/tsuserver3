@@ -332,7 +332,7 @@ class AreaManager:
                     del ar.links[link]
         self.areas.remove(area)
 
-    def swap_area(self, area1, area2):
+    def swap_area(self, area1, area2, fix_links=True):
         """
         Swap area instances area1 and area2.
         :param area1: first area to swap.
@@ -347,15 +347,16 @@ class AreaManager:
         # Swap 'em good
         self.areas[b], self.areas[a] = self.areas[a], self.areas[b]
 
-        # Update area links
-        a, b = str(a), str(b)
-        for ar in self.areas:
-            for link in ar.links.copy():
-                # Swap 'em good
-                if link == a:
-                    ar.links[b] = ar.links.pop(a)
-                elif link == b:
-                    ar.links[a] = ar.links.pop(b)
+        if fix_links:
+            # Update area links
+            a, b = str(a), str(b)
+            for ar in self.areas:
+                for link in ar.links.copy():
+                    # Swap 'em good
+                    if link == a:
+                        ar.links[b] = ar.links.pop(a)
+                    elif link == b:
+                        ar.links[a] = ar.links.pop(b)
 
     def add_owner(self, client):
         """
