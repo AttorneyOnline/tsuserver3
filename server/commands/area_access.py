@@ -56,6 +56,9 @@ def ooc_cmd_area_lock(client, arg):
                 if not client.can_access_area(area):
                     client.send_ooc(f'You have the keys to {area.name} but it is not accessible from your area.')
                     continue
+                if str(area.id) in client.area.links and client.area.links[str(area.id)]["locked"]:
+                    client.send_ooc(f'You have the keys to {area.name} but the path is locked.')
+                    continue
             if area.locked:
                 client.send_ooc(f'Area {area.name} is already locked.')
                 continue
@@ -161,6 +164,9 @@ def ooc_cmd_area_unlock(client, arg):
                         continue
                 if not client.can_access_area(area):
                     client.send_ooc(f'You have the keys to {area.name} but it is not accessible from your area.')
+                    continue
+                if str(area.id) in client.area.links and client.area.links[str(area.id)]["locked"]:
+                    client.send_ooc(f'You have the keys to {area.name} but the path is locked.')
                     continue
             if not area.locked:
                 client.send_ooc(f'Area {area.name} is already unlocked.')
@@ -317,7 +323,7 @@ def ooc_cmd_links(client, arg):
 
         locked = ''
         if value["locked"] == True:
-            locked = '🔒'
+            locked = '🚧'
         if value["password"] != '':
             locked = '🔑'
 

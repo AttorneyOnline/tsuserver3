@@ -573,7 +573,6 @@ class ClientManager:
 
         def can_access_area(self, area):
             return self.area == area or len(self.area.links) <= 0 or (str(area.id) in self.area.links and \
-                not self.area.links[str(area.id)]["locked"] and \
                     (len(self.area.links[str(area.id)]["evidence"]) <= 0 or \
                         self.hidden_in in self.area.links[str(area.id)]["evidence"]))
 
@@ -752,6 +751,7 @@ class ClientManager:
                     owner = f'[CM(s): {area.get_owners()}]'
                 hidden = '📦' if area.hidden else ''
                 locked = '🔒' if area.locked else ''
+                pathlocked = '🚧' if str(area.id) in self.area.links and self.area.links[str(area.id)]["locked"] else ''
                 passworded = '🔑' if area.password != '' else ''
                 muted = '🔇' if area.muted else ''
                 msg += '\r\n'
@@ -759,7 +759,7 @@ class ClientManager:
                     msg += '* '
                 if not self.can_access_area(area):
                     msg += '-x- '
-                msg += f'[{area.id}] {area.name} {users}{status}{owner}{hidden}{locked}{passworded}{muted}'
+                msg += f'[{area.id}] {area.name} {users}{status}{owner}{hidden}{locked}{pathlocked}{passworded}{muted}'
             self.send_ooc(msg)
 
         def get_area_info(self, area_id, mods, afk_check):
