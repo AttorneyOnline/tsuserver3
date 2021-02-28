@@ -135,10 +135,8 @@ class ClientManager:
                         if c_version[0] == '2' and int(c_version[1]) <= 8:
                             lst = list(args)
                             offset_pair_list = lst[19].split('<and>')
-                            print(offset_pair_list)
                             lst[19] = offset_pair_list[0]
                             other_offset_list = lst[20].split('<and>')
-                            print(other_offset_list)
                             lst[20] = other_offset_list[0]
                             args = tuple(lst)
                             
