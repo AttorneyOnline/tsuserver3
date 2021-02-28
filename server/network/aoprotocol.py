@@ -251,7 +251,16 @@ class AOProtocol(asyncio.Protocol):
 
         ID#<pv:int>#<software:string>#<version:string>#%
         """
-        self.client.version = args[1]
+        version = args[1].split(".")
+        if len(version) <= 1:
+            self.client.version.major = args[1]
+        elif len(version) >= 2:
+            self.client.version.major = version[0]
+            self.client.version.minor = version[1]
+        if len(version) >= 3:
+            self.client.version.patch = version[2]
+            
+        
         self.client.send_command('FL', 'yellowtext', 'customobjections',
                                  'flipping', 'fastloading', 'noencryption',
                                  'deskmod', 'evidence', 'modcall_reason',

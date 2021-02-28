@@ -35,11 +35,17 @@ class ClientManager:
         Clients may only belong to a single room.
         """
 
+        class ClientVersion:
+            def __init__ (self, major: str, minor: str, patch: str):
+                self.major = major
+                self.minor = minor
+                self.patch = patch
+        
         def __init__(self, server, transport: asyncio.Transport, user_id: int, ipid: int):
             self.is_checked = False
             self.transport = transport
             self.hdid = ''
-            self.version = ''
+            self.version = self.ClientVersion("", "", "")
             self.id = user_id
             self.char_id = -1
             self.area = server.area_manager.default_area()
@@ -129,19 +135,14 @@ class ClientManager:
                             lst[11] = evi_num
                             args = tuple(lst) # then convert back to a tuple when finished
                             break
-                    # <2.9 can't parse Y offset so we strip it out based on version
-                    c_version = self.version.split('.') # i.e. ['2','9','0'] or ['2','8','5']
-                    if len(c_version) > 1: # sanity check, version strings /should/ be in x.x.x format 
-                        try:
-                            if c_version[0] == '2' and int(c_version[1]) <= 8:
-                                lst = list(args) 
-                                offset_pair_list = lst[19].split('<and>') # MS arg 19 is self offset
-                                lst[19] = offset_pair_list[0]
-                                other_offset_list = lst[20].split('<and>') # MS arg 20 is paired offset
-                                lst[20] = other_offset_list[0]
-                                args = tuple(lst)
-                        except ValueError: # we can't figure out this version number, just send both offsets
-                            pass
+                        # <2.9 can't parse Y offset so we strip it out based on version
+                        if self.version.major == '2' and self.version.minor in ['8', '7', '6']:
+                            lst = list(args) 
+                            offset_pair_list = lst[19].split('<and>') # MS arg 19 is self offset
+                            lst[19] = offset_pair_list[0]
+                            other_offset_list = lst[20].split('<and>') # MS arg 20 is paired offset
+                            lst[20] = other_offset_list[0]
+                            args = tuple(lst)
                             
                 self.send_raw_message(
                     f'{command}#{"#".join([str(x) for x in args])}#%')
