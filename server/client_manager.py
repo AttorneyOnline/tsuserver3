@@ -119,7 +119,7 @@ class ClientManager:
 
             Args:
                 command (str): command name
-                *args: tuple containing the MS packet
+                *args: tuple containing the packet arguments
             """
             if args:
                 if command == 'MS':
