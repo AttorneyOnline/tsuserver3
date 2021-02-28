@@ -132,7 +132,7 @@ class ClientManager:
                             args = tuple(lst) # then convert back to a tuple when finished
                             break
                         # <2.9 can't parse Y offset so we strip it out based on version
-                        if self.version.major == '2' and self.version.minor in ['8', '7', '6']:
+                        if self.release == '2' and self.major_version in ['8', '7', '6']:
                             lst = list(args) 
                             offset_pair_list = lst[19].split('<and>') # MS arg 19 is self offset
                             lst[19] = offset_pair_list[0]
