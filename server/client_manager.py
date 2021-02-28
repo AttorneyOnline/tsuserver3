@@ -119,25 +119,25 @@ class ClientManager:
 
             Args:
                 command (str): command name
-                *args: list of arguments
+                *args: tuple containing the MS packet
             """
             if args:
                 if command == 'MS':
                     for evi_num in range(len(self.evi_list)):
                         if self.evi_list[evi_num] == args[11]:
-                            lst = list(args)
+                            lst = list(args) # convert to a list so we can modify it
                             lst[11] = evi_num
-                            args = tuple(lst)
+                            args = tuple(lst) # then convert back to a tuple when finished
                             break
                     # <2.9 can't parse Y offset so we strip it out based on version
-                    c_version = self.version.split('.')
-                    if len(c_version) > 1:
+                    c_version = self.version.split('.') # i.e. ['2','9','0'] or ['2','8','5']
+                    if len(c_version) > 1: # sanity check, version strings /should/ be in x.x.x format 
                         try:
                             if c_version[0] == '2' and int(c_version[1]) <= 8:
-                                lst = list(args)
-                                offset_pair_list = lst[19].split('<and>')
+                                lst = list(args) 
+                                offset_pair_list = lst[19].split('<and>') # MS arg 19 is self offset
                                 lst[19] = offset_pair_list[0]
-                                other_offset_list = lst[20].split('<and>')
+                                other_offset_list = lst[20].split('<and>') # MS arg 20 is paired offset
                                 lst[20] = other_offset_list[0]
                                 args = tuple(lst)
                         except ValueError: # we can't figure out this version number, just send both offsets
