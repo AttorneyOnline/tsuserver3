@@ -253,12 +253,12 @@ class AOProtocol(asyncio.Protocol):
         """
         version = args[1].split(".")
         if len(version) <= 1:
-            self.client.version.major = args[1]
+            self.client.release = args[1]
         elif len(version) >= 2:
-            self.client.version.major = version[0]
-            self.client.version.minor = version[1]
+            self.client.release = version[0]
+            self.client.major_version = version[1]
         if len(version) >= 3:
-            self.client.version.patch = version[2]
+            self.client.minor_version = version[2]
             
         
         self.client.send_command('FL', 'yellowtext', 'customobjections',

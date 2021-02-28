@@ -34,18 +34,14 @@ class ClientManager:
 
         Clients may only belong to a single room.
         """
-
-        class ClientVersion:
-            def __init__ (self, major: str, minor: str, patch: str):
-                self.major = major
-                self.minor = minor
-                self.patch = patch
         
         def __init__(self, server, transport: asyncio.Transport, user_id: int, ipid: int):
             self.is_checked = False
             self.transport = transport
             self.hdid = ''
-            self.version = self.ClientVersion("", "", "")
+            self.release = ''
+            self.major_version = ''
+            self.minor_version = ''
             self.id = user_id
             self.char_id = -1
             self.area = server.area_manager.default_area()
