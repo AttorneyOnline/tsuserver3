@@ -34,11 +34,14 @@ class ClientManager:
 
         Clients may only belong to a single room.
         """
-
+        
         def __init__(self, server, transport: asyncio.Transport, user_id: int, ipid: int):
             self.is_checked = False
             self.transport = transport
             self.hdid = ''
+            self.release = ''
+            self.major_version = ''
+            self.minor_version = ''
             self.id = user_id
             self.char_id = -1
             self.area = server.area_manager.default_area()
@@ -118,16 +121,25 @@ class ClientManager:
 
             Args:
                 command (str): command name
-                *args: list of arguments
+                *args: tuple containing the packet arguments
             """
             if args:
                 if command == 'MS':
                     for evi_num in range(len(self.evi_list)):
                         if self.evi_list[evi_num] == args[11]:
-                            lst = list(args)
+                            lst = list(args) # convert to a list so we can modify it
                             lst[11] = evi_num
-                            args = tuple(lst)
+                            args = tuple(lst) # then convert back to a tuple when finished
                             break
+                        # <2.9 can't parse Y offset so we strip it out based on version
+                        if self.release == '2' and self.major_version in ['8', '7', '6']:
+                            lst = list(args) 
+                            offset_pair_list = lst[19].split('<and>') # MS arg 19 is self offset
+                            lst[19] = offset_pair_list[0]
+                            other_offset_list = lst[20].split('<and>') # MS arg 20 is paired offset
+                            lst[20] = other_offset_list[0]
+                            args = tuple(lst)
+                            
                 self.send_raw_message(
                     f'{command}#{"#".join([str(x) for x in args])}#%')
             else:
