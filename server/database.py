@@ -119,7 +119,7 @@ class Database:
             logger.debug('Migration to v1 complete')
 
     def migrate(self):
-        for version in [2, 3]:
+        for version in [2, 3, 4]:
             self.migrate_to_version(version)
 
     def migrate_to_version(self, version):
@@ -216,6 +216,7 @@ class Database:
         unban_date: datetime
         banned_by: int
         reason: str
+        unbanned: int
 
         def __post_init__(self):
             self.ban_date = arrow.get(self.ban_date).datetime
@@ -269,10 +270,30 @@ class Database:
                     UNION SELECT ban_id FROM hdid_bans WHERE hdid = ?
                     UNION SELECT ban_id FROM bans WHERE ban_id = ?
                 )
-                JOIN bans USING (ban_id)
+                JOIN bans USING (ban_id) WHERE unbanned = 0
                 '''), (ipid, hdid, ban_id)).fetchone()
             if ban is not None:
                 return Database.Ban(**ban)
+            else:
+                return None
+
+    def ban_history(self, ipid=None, hdid=None, ban_id=None):
+        """Check if an IPID and/or HDID has been banned in the past."""
+        with self.db as conn:
+            bans = conn.execute(dedent('''
+                SELECT *
+                FROM (
+                    SELECT ban_id FROM ip_bans WHERE ipid = ?
+                    UNION SELECT ban_id FROM hdid_bans WHERE hdid = ?
+                    UNION SELECT ban_id FROM bans WHERE ban_id = ?
+                )
+                JOIN bans USING (ban_id)
+                '''), (ipid, hdid, ban_id)).fetchall()
+            if bans is not []:
+                history = []
+                for ban in bans:
+                    history.append(Database.Ban(**ban))
+                return history
             else:
                 return None
 
@@ -281,7 +302,7 @@ class Database:
         event_logger.info(f'Unbanning {ban_id}')
         with self.db as conn:
             unbans = conn.execute(dedent('''
-                DELETE FROM bans WHERE ban_id = ?
+                UPDATE bans SET unbanned = 1 WHERE ban_id = ?
                 '''), (ban_id,)).rowcount
             return unbans > 0
 
@@ -298,7 +319,7 @@ class Database:
         with self.db as conn:
             dated_bans = conn.execute(dedent('''
                 SELECT ban_id FROM bans
-                WHERE unban_date IS NOT NULL AND
+                WHERE unban_date IS NOT NULL AND unbanned = 0 AND
                     datetime(unban_date) < datetime(?, '+12 hours')
                 '''), (arrow.utcnow().datetime,)).fetchall()
 
@@ -308,7 +329,7 @@ class Database:
     def _schedule_unban(self, ban_id):
         with self.db as conn:
             ban = conn.execute(dedent('''
-                SELECT unban_date FROM bans WHERE ban_id = ?
+                SELECT unban_date FROM bans WHERE unbanned = 0 AND ban_id = ?
                 '''), (ban_id,)).fetchone()
             time_to_unban = (arrow.get(ban['unban_date']) - arrow.utcnow()).total_seconds()
 
