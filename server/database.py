@@ -120,7 +120,7 @@ class Database:
             logger.debug('Migration to v1 complete')
 
     def migrate(self):
-        for version in [2, 3, 4]:
+        for version in [2, 3, 4, 5]:
             self.migrate_to_version(version)
 
     def migrate_to_version(self, version):
