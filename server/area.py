@@ -654,29 +654,30 @@ class Area:
                         is_pta = True
                     target = msg[msg.find('@')+1:]
                 target = target.lower()
-                try:
-                    opponent = None
-                    # @ by itself means we're trying to target the last person who spoke
-                    if self.last_ic_message != None and target.strip() == '':
-                        # Get char_name from character ID
-                        target = self.server.char_list[int(self.last_ic_message[8])]
-                    for t in self.clients:
-                        # We're @num so we're trying to grab a Client ID, don't do shownames
-                        if target.strip().isnumeric():
-                            if t.id == int(target):
+                if target != '':
+                    try:
+                        opponent = None
+                        # @ by itself means we're trying to target the last person who spoke
+                        if self.last_ic_message != None and target.strip() == '':
+                            # Get char_name from character ID
+                            target = self.server.char_list[int(self.last_ic_message[8])]
+                        for t in self.clients:
+                            # We're @num so we're trying to grab a Client ID, don't do shownames
+                            if target.strip().isnumeric():
+                                if t.id == int(target):
+                                    opponent = t
+                                    break
+                            # Loop through the shownames if it's @text
+                            elif target in t.showname.lower():
                                 opponent = t
-                                break
-                        # Loop through the shownames if it's @text
-                        elif target in t.showname.lower():
-                            opponent = t
 
-                    if opponent != None:
-                        self.start_debate(client, t, is_pta)
-                    else:
-                        raise AreaError('Interjection minigame - target not found!')
-                except Exception as ex:
-                    client.send_ooc(ex)
-                    return
+                        if opponent != None:
+                            self.start_debate(client, t, is_pta)
+                        else:
+                            raise AreaError('Interjection minigame - target not found!')
+                    except Exception as ex:
+                        client.send_ooc(ex)
+                        return
 
             if client:
                 if args[4].strip() != '' or self.last_ic_message == None or args[8] != self.last_ic_message[8] or self.last_ic_message[4].strip() != '':
