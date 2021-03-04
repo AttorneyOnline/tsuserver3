@@ -1,5 +1,6 @@
 import random
 
+import asyncio
 import arrow
 import datetime
 import pytimeparse
@@ -424,7 +425,7 @@ def ooc_cmd_8ball(client, arg):
 
 def ooc_cmd_timer(client, arg):
     """
-    Manage a countdown timer in the current area.
+    Manage a countdown timer in the current area. Note that timer of ID 0 is hub-wide. All other timer ID's are local to area.
     Usage:
     /timer <id> [+/-][time]
         Set the timer's time, optionally adding or subtracting time. If the timer had
@@ -437,11 +438,38 @@ def ooc_cmd_timer(client, arg):
 
     arg = arg.split()
     if len(arg) < 1:
-        raise ArgumentError('Invalid ID. Usage: /timer <id>')
+        msg = 'Currently active timers:'
+        # Hub timer
+        timer = client.area.area_manager.timer
+        if timer.set:
+            if timer.started:
+                msg += f'\nTimer 0 is at {timer.target - arrow.get()}'
+            else:
+                msg += f'\nTimer 0 is at {timer.static}'
+        # Area timers
+        for timer_id, timer in enumerate(client.area.timers):
+            if timer.set:
+                if timer.started:
+                    msg += f'\nTimer {timer_id+1} is at {timer.target - arrow.get()}'
+                else:
+                    msg += f'\nTimer {timer_id+1} is at {timer.static}'
+        client.send_ooc(msg)
+        return
+    # TI packet specification:
+    # TI#TimerID#Type#Value#%
+    # TimerID = from 0 to 4 (5 possible timers total)
+    # Type 0 = start/resume/sync timer at time
+    # Type 1 = pause timer at time
+    # Type 2 = show timer
+    # Type 3 = hide timer
+    # Value = Time to set on the timer
     timer_id = int(arg[0])
     if timer_id < 0 or timer_id > 4:
         raise ArgumentError('Invalid ID. Usage: /timer <id>')
-    timer = client.area.timers[timer_id]
+    if timer_id == 0:
+        timer = client.area.area_manager.timer
+    else:
+        timer = client.area.timers[timer_id-1]
     if len(arg) < 2:
         if timer.set:
             if timer.started:
@@ -451,6 +479,11 @@ def ooc_cmd_timer(client, arg):
         else:
             client.send_ooc(f'Timer {timer_id} is unset.')
         return
+
+    if not (client in client.area.owners) and not client.is_mod:
+        raise ArgumentError('Only CMs or GMs can modify timers. Usage: /timer <id>')
+    if timer_id == 0 and not (client in client.area.area_manager.owners) and not client.is_mod:
+        raise ArgumentError('Only GMs can set hub-wide timer ID 0. Usage: /timer <id>')
 
     duration = pytimeparse.parse(''.join(arg[1:]))
     if duration is not None:
@@ -467,7 +500,10 @@ def ooc_cmd_timer(client, arg):
         else:
             timer.static = datetime.timedelta(seconds=abs(duration))
             timer.set = True
-            client.area.send_command('TI', timer_id, 2)
+            if timer_id == 0:
+                client.area.area_manager.send_command('TI', timer_id, 2)
+            else:
+                client.area.send_command('TI', timer_id, 2)
 
     if not timer.set:
         raise ArgumentError(f'Timer {timer_id} is not set in this area.')
@@ -485,11 +521,39 @@ def ooc_cmd_timer(client, arg):
         timer.static = None
         timer.target = None
         client.send_ooc(f'Timer {timer_id} unset and hidden.')
-        client.area.send_command('TI', timer_id, 3)
+        if timer_id == 0:
+            client.area.area_manager.send_command('TI', timer_id, 3)
+        else:
+            client.area.send_command('TI', timer_id, 3)
 
     # Send static time if applicable
     if timer.set:
         s = int(not timer.started)
-        print('TI', timer_id, s, timer.static.total_seconds())
-        client.area.send_command('TI', timer_id, s, int(timer.static.total_seconds()) * 1000)
-        client.send_ooc(f'Timer is at {timer.static}')
+        static_time = int(timer.static.total_seconds()) * 1000
+        if timer_id == 0:
+            client.area.area_manager.send_command('TI', timer_id, s, static_time)
+        else:
+            client.area.send_command('TI', timer_id, s, static_time)
+        client.send_ooc(f'Timer {timer_id} is at {timer.static}')
+
+        target = client.area
+        if timer_id == 0:
+            target = client.area.area_manager
+        def timer_expired():
+            if timer.schedule:
+                timer.schedule.cancel()
+            # Either the area or the hub was destroyed at some point
+            if target == None or timer == None:
+                return
+            if timer_id == 0:
+                target.broadcast_ooc(f'Timer {timer_id} has expired.')
+            else:
+                target.broadcast_ooc(f'Timer {timer_id} has expired.')
+            timer.static = datetime.timedelta(0)
+            timer.started = False
+
+        if timer.schedule:
+            timer.schedule.cancel()
+        if timer.started:
+            timer.schedule = asyncio.get_event_loop().call_later(
+                int(timer.static.total_seconds()), timer_expired)

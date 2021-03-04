@@ -34,6 +34,14 @@ from collections import OrderedDict
 
 class AreaManager:
     """Holds the list of all areas."""
+    class Timer:
+        """Represents a single instance of a timer in the area."""
+        def __init__(self, Set = False, started = False, static = None, target = None):
+            self.set = Set
+            self.started = started
+            self.static = static
+            self.target = target
+            self.schedule = None
 
     def __init__(self, hub_manager, name):
         self.hub_manager = hub_manager
@@ -68,6 +76,8 @@ class AreaManager:
         # Save character information for character select screen ID's in the hub data
         # ex. {"1": {"keys": [1, 2, 3, 5], "fatigue": 100.0, "hunger": 34.0}, "2": {"keys": [4, 6, 8]}}
         self.character_data = {}
+
+        self.timer = self.Timer()
 
     @property
     def name(self):

@@ -20,6 +20,7 @@
 import asyncio
 import random
 import time
+import arrow
 from enum import Enum
 
 import oyaml as yaml #ordered yaml
@@ -40,6 +41,7 @@ class Area:
             self.started = started
             self.static = static
             self.target = target
+            self.schedule = None
 
     """Represents a single instance of an area."""
     def __init__(self,
@@ -149,8 +151,9 @@ class Area:
         # Dictionary of dictionaries with further info, examine def link for more info
         self.links = {}
 
+        # Timers ID 1 thru 4, (indexes 0 to 3 in area), timer ID 0 is reserved for hubs.
         self.timers = [
-            self.Timer() for x in range(5)
+            self.Timer() for x in range(4)
         ]
 
     @property
@@ -404,6 +407,42 @@ class Area:
 
         if self.music_autoplay:
             client.send_command('MC', self.music, -1, '', self.music_looping, 0, self.music_effects)
+
+        # Update the timers
+        timer = client.area.area_manager.timer
+        if timer.set:
+            s = int(not timer.started)
+            current_time = timer.static
+            if timer.started:
+                current_time = timer.target - arrow.get()
+            int_time = int(current_time.total_seconds()) * 1000
+            # Unhide the timer
+            client.send_command('TI', 0, 2)
+            # Start the timer
+            client.send_command('TI', 0, s, int_time)
+        else:
+            # Stop the timer
+            client.send_command('TI', 0, 3, 0)
+            # Hide the timer
+            client.send_command('TI', 0, 1)
+        for timer_id, timer in enumerate(self.timers):
+            # Send static time if applicable
+            if timer.set:
+                s = int(not timer.started)
+                current_time = timer.static
+                if timer.started:
+                    current_time = timer.target - arrow.get()
+                int_time = int(current_time.total_seconds()) * 1000
+                # Start the timer
+                client.send_command('TI', timer_id+1, s, int_time)
+                # Unhide the timer
+                client.send_command('TI', timer_id+1, 2)
+                client.send_ooc(f'Timer {timer_id+1} is at {current_time}')
+            else:
+                # Stop the timer
+                client.send_command('TI', timer_id+1, 1, 0)
+                # Hide the timer
+                client.send_command('TI', timer_id+1, 3)
 
         # Play the ambience
         client.send_command('MC', self.ambience, -1, "", 1, 1, int(MusicEffect.FADE_OUT | MusicEffect.FADE_IN | MusicEffect.SYNC_POS))
@@ -1175,6 +1214,7 @@ class Area:
                 return
             self.broadcast_ooc(f'[{client.id}] {client.showname} is now part of the {team} team!')
             database.log_area('minigame.sd', client, client.area, target=target, message=f'{self.minigame} is now part of the {team} team!')
+            return
         elif self.minigame == 'Cross Swords':
             if target == client:
                 self.broadcast_ooc(f'[{client.id}] {client.showname} conceded!')
@@ -1182,10 +1222,24 @@ class Area:
                 return
             if not self.can_scrum_debate:
                 raise AreaError('You may not scrum debate in this area!')
+            if target.char_id in self.red_team:
+                self.red_team.discard(client.char_id)
+                self.blue_team.add(client.char_id)
+                self.invite_list.add(client.id)
+                team = 'blue'
+            elif target.char_id in self.blue_team:
+                self.blue_team.discard(client.char_id)
+                self.red_team.add(client.char_id)
+                self.invite_list.add(client.id)
+                team = 'red'
+            else:
+                raise AreaError('Target is not part of the minigame!')
             timeleft = self.minigame_schedule.when() - asyncio.get_event_loop().time()
             self.minigame_schedule.cancel()
             self.minigame = 'Scrum Debate'
             timer = timeleft + self.scrum_debate_added_time
+            self.broadcast_ooc(f'[{client.id}] {client.showname} is now part of the {team} team!')
+            database.log_area('minigame.sd', client, client.area, target=target, message=f'{self.minigame} is now part of the {team} team!')
         elif self.minigame == '':
             if not pta and not self.can_cross_swords:
                 raise AreaError('You may not Cross-Swords in this area!')
