@@ -417,14 +417,14 @@ class Area:
                 current_time = timer.target - arrow.get()
             int_time = int(current_time.total_seconds()) * 1000
             # Unhide the timer
-            client.send_command('TI', 0, 2)
+            client.send_command('TI', 0, 2, int_time)
             # Start the timer
             client.send_command('TI', 0, s, int_time)
         else:
             # Stop the timer
             client.send_command('TI', 0, 3, 0)
             # Hide the timer
-            client.send_command('TI', 0, 1)
+            client.send_command('TI', 0, 1, 0)
         for timer_id, timer in enumerate(self.timers):
             # Send static time if applicable
             if timer.set:
@@ -436,13 +436,13 @@ class Area:
                 # Start the timer
                 client.send_command('TI', timer_id+1, s, int_time)
                 # Unhide the timer
-                client.send_command('TI', timer_id+1, 2)
+                client.send_command('TI', timer_id+1, 2, int_time)
                 client.send_ooc(f'Timer {timer_id+1} is at {current_time}')
             else:
                 # Stop the timer
                 client.send_command('TI', timer_id+1, 1, 0)
                 # Hide the timer
-                client.send_command('TI', timer_id+1, 3)
+                client.send_command('TI', timer_id+1, 3, 0)
 
         # Play the ambience
         client.send_command('MC', self.ambience, -1, "", 1, 1, int(MusicEffect.FADE_OUT | MusicEffect.FADE_IN | MusicEffect.SYNC_POS))
