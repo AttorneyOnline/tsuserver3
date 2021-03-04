@@ -519,7 +519,7 @@ class AreaManager:
             clients = self.clients
         for client in clients:
             for area in client.local_area_list:
-                state = 'FREE'
+                state = ''
                 if area.locked:
                     state = 'LOCKED'
                 elif area.muted:
