@@ -338,6 +338,8 @@ needing a certain list of positions to be filled up.
 * **8ball** <question>
     - Answers a question. The result is shown publicly.
     - The answers depend on the `8ball` preset in `config/dice.yaml`.
+* **timer** \<id> [+/-][time] | \<id> start | \<id> \<pause|stop> | \<id> hide
+    - Manage a countdown timer in the current area. Note that timer of ID 0 is global. All other timer IDs are local to the area.
 
 ## License
 
