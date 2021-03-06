@@ -1,5 +1,10 @@
 import random
 
+import asyncio
+import arrow
+import datetime
+import pytimeparse
+
 from server import database
 from server.exceptions import ClientError, ServerError, ArgumentError
 
@@ -15,7 +20,8 @@ __all__ = [
     'ooc_cmd_rolla_set',
     'ooc_cmd_rolla',
     'ooc_cmd_coinflip',
-    'ooc_cmd_8ball'
+    'ooc_cmd_8ball',
+    'ooc_cmd_timer'
 ]
 
 
@@ -233,4 +239,149 @@ def ooc_cmd_8ball(client, arg):
     ability_dice = client.area.ability_dice['8ball']
     client.area.broadcast_ooc('{} asked a question: {} and the answer is: {}.'.format(
         client.char_name, arg, rolla(ability_dice)[2]))
-        
+
+def ooc_cmd_timer(client, arg):
+    """
+    Manage a countdown timer in the current area. Note that timer of ID 0 is global.
+    All other timer IDs are local to the area (valid IDs are 1 - 4).
+    Usage:
+    /timer <id> [+/-][time]
+        Set the timer's time, optionally adding or subtracting time. If the timer had
+        not been previously set up, it will be shown paused.
+    /timer <id> start
+    /timer <id> <pause|stop>
+    /timer <id> hide
+    """
+
+    arg = arg.split()
+    if len(arg) < 1:
+        msg = 'Currently active timers:'
+        # Global timer
+        timer = client.server.area_manager.timer
+        if timer.set:
+            if timer.started:
+                msg += f'\nTimer 0 is at {timer.target - arrow.get()}'
+            else:
+                msg += f'\nTimer 0 is at {timer.static}'
+        # Area timers
+        for timer_id, timer in enumerate(client.area.timers):
+            if timer.set:
+                if timer.started:
+                    msg += f'\nTimer {timer_id+1} is at {timer.target - arrow.get()}'
+                else:
+                    msg += f'\nTimer {timer_id+1} is at {timer.static}'
+        client.send_ooc(msg)
+        return
+
+    # TI packet specification:
+    # TI#TimerID#Type#Value#%
+    # TimerID = from 0 to 4 (5 possible timers total)
+    # Type 0 = start/resume/sync timer at time
+    # Type 1 = pause timer at time
+    # Type 2 = show timer
+    # Type 3 = hide timer
+    # Value = Time to set on the timer
+
+    try:
+        timer_id = int(arg[0])
+    except:
+        raise ArgumentError('Invalid ID. Usage: /timer <id>')
+
+    if timer_id < 0 or timer_id > 4:
+        raise ArgumentError('Invalid ID. Usage: /timer <id>')
+    if timer_id == 0:
+        timer = client.server.area_manager.timer
+    else:
+        timer = client.area.timers[timer_id-1]
+
+    if len(arg) < 2:
+        if timer.set:
+            if timer.started:
+                client.send_ooc(f'Timer {timer_id} is at {timer.target - arrow.get()}')
+            else:
+                client.send_ooc(f'Timer {timer_id} is at {timer.static}')
+        else:
+            client.send_ooc(f'Timer {timer_id} is unset.')
+        return
+
+    if client not in client.area.owners and not client.is_mod:
+        raise ArgumentError('Only CMs or mods can modify timers. Usage: /timer <id>')
+    if timer_id == 0 and not client.is_mod:
+        raise ArgumentError('Only mods can set the global timer. Usage: /timer <id>')
+
+    duration = pytimeparse.parse(''.join(arg[1:]))
+    if duration is not None:
+        if timer.set:
+            if timer.started:
+                if not (arg[1] == '+' or duration < 0):
+                    timer.target = arrow.get()
+                timer.target = timer.target.shift(seconds=duration)
+                timer.static = timer.target - arrow.get()
+            else:
+                if not (arg[1] == '+' or duration < 0):
+                    timer.static = datetime.timedelta(0)
+                timer.static += datetime.timedelta(seconds=duration)
+        else:
+            timer.static = datetime.timedelta(seconds=abs(duration))
+            timer.set = True
+            if timer_id == 0:
+                client.server.send_all_cmd_pred('TI', timer_id, 2)
+            else:
+                client.area.send_command('TI', timer_id, 2)
+
+    if not timer.set:
+        raise ArgumentError(f'Timer {timer_id} is not set in this area.')
+    elif arg[1] == 'start':
+        timer.target = timer.static + arrow.get()
+        timer.started = True
+        client.send_ooc(f'Starting timer {timer_id}.')
+        database.log_room('timer.start', client, client.area, message=str(timer_id))
+    elif arg[1] in ('pause', 'stop'):
+        timer.static = timer.target - arrow.get()
+        timer.started = False
+        client.send_ooc(f'Stopping timer {timer_id}.')
+        database.log_room('timer.stop', client, client.area, message=str(timer_id))
+    elif arg[1] in ('unset', 'hide'):
+        timer.set = False
+        timer.started = False
+        timer.static = None
+        timer.target = None
+        client.send_ooc(f'Timer {timer_id} unset and hidden.')
+        database.log_room('timer.hide', client, client.area, message=str(timer_id))
+        if timer_id == 0:
+            client.server.send_all_cmd_pred('TI', timer_id, 3)
+        else:
+            client.area.send_command('TI', timer_id, 3)
+
+    # Send static time if applicable
+    if timer.set:
+        s = int(not timer.started)
+        static_time = int(timer.static.total_seconds()) * 1000
+
+        if timer_id == 0:
+            client.server.send_all_cmd_pred('TI', timer_id, s, static_time)
+        else:
+            client.area.send_command('TI', timer_id, s, static_time)
+
+        client.send_ooc(f'Timer {timer_id} is at {timer.static}')
+
+        target = client.area
+        if timer_id == 0:
+            target = client.server.area_manager
+
+        def timer_expired():
+            if timer.schedule:
+                timer.schedule.cancel()
+            # Area was destroyed at some point
+            if target is None or timer is None:
+                return
+            target.broadcast_ooc(f'Timer {timer_id} has expired.')
+            timer.static = datetime.timedelta(0)
+            timer.started = False
+            database.log_room('timer.expired', None, target, message=str(timer_id))
+
+        if timer.schedule:
+            timer.schedule.cancel()
+        if timer.started:
+            timer.schedule = asyncio.get_event_loop().call_later(
+                int(timer.static.total_seconds()), timer_expired)
