@@ -306,11 +306,13 @@ def ooc_cmd_login(client, arg):
     try:
         login_name = client.auth_mod(arg)
     except ClientError:
+        client.send_command('AUTH', '0')
         database.log_misc('login.invalid', client)
         raise
     if client.area.evidence_mod == 'HiddenCM':
         client.area.broadcast_evidence_list()
     client.send_ooc('Logged in as a moderator.')
+    client.send_command('AUTH', '1')
     database.log_misc('login', client, data={'profile': login_name})
 
 
@@ -358,6 +360,7 @@ def ooc_cmd_unmod(client, arg):
     if client.area.evidence_mod == 'HiddenCM':
         client.area.broadcast_evidence_list()
     client.send_ooc('you\'re not a mod now')
+    client.send_command('AUTH', '-1')
 
 
 @mod_only()
