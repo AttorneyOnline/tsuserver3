@@ -266,7 +266,7 @@ class AOProtocol(asyncio.Protocol):
                                  'deskmod', 'evidence', 'modcall_reason',
                                  'cccc_ic_support', 'arup', 'casing_alerts',
                                  'prezoom', 'looping_sfx', 'additive', 'effects',
-                                 'y_offset', 'expanded_desk_mods')
+                                 'y_offset', 'expanded_desk_mods', 'auth_packet')
 
     def net_cmd_ch(self, _):
         """Reset the client drop timeout (keepalive).
