@@ -503,6 +503,7 @@ class TsuServer3:
                         database.log_misc('unmod.modpass', client)
                         client.send_ooc(
                             'Your moderator credentials have been revoked.')
+                        client.send_command('AUTH', '-1')
             self.config['modpass'] = cfg_yaml['modpass']
 
         self.load_characters()
