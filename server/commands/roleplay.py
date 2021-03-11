@@ -545,10 +545,7 @@ def ooc_cmd_timer(client, arg):
             # Either the area or the hub was destroyed at some point
             if target == None or timer == None:
                 return
-            if timer_id == 0:
-                target.broadcast_ooc(f'Timer {timer_id} has expired.')
-            else:
-                target.broadcast_ooc(f'Timer {timer_id} has expired.')
+            target.broadcast_ooc(f'Timer {timer_id} has expired.')
             timer.static = datetime.timedelta(0)
             timer.started = False
 

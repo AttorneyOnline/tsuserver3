@@ -256,6 +256,8 @@ def ooc_cmd_link(client, arg):
             links.append(target_id)
         links = ', '.join(str(l) for l in links)
         client.send_ooc(f'Area {client.area.name} has been linked with {links} (two-way).')
+        client.area.broadcast_area_list()
+        area.broadcast_area_list()
     except ValueError:
         raise ArgumentError('Area ID must be a number or abbreviation.')
     except (AreaError, ClientError):
@@ -289,6 +291,8 @@ def ooc_cmd_unlink(client, arg):
                 continue
         links = ', '.join(str(l) for l in links)
         client.send_ooc(f'Area {client.area.name} has been unlinked with {links} (two-way).')
+        client.area.broadcast_area_list()
+        area.broadcast_area_list()
     except ValueError:
         raise ArgumentError('Area ID must be a number or abbreviation.')
     except (AreaError, ClientError):
@@ -359,6 +363,7 @@ def ooc_cmd_onelink(client, arg):
             links.append(target_id)
         links = ', '.join(str(l) for l in links)
         client.send_ooc(f'Area {client.area.name} has been linked with {links} (one-way).')
+        client.area.broadcast_area_list()
     except ValueError:
         raise ArgumentError('Area ID must be a number or abbreviation.')
     except (AreaError, ClientError):
@@ -389,6 +394,7 @@ def ooc_cmd_oneunlink(client, arg):
                 continue
         links = ', '.join(str(l) for l in links)
         client.send_ooc(f'Area {client.area.name} has been unlinked with {links} (one-way).')
+        client.area.broadcast_area_list()
     except ValueError:
         raise ArgumentError('Area ID must be a number or abbreviation.')
     except (AreaError, ClientError):
