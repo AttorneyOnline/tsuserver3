@@ -27,6 +27,7 @@ __all__ = [
     'ooc_cmd_area_pref',
     'ooc_cmd_area_move_delay',
     'ooc_cmd_hub_move_delay',
+    'ooc_cmd_toggle_replace_music',
     'ooc_cmd_arup_enable',
     'ooc_cmd_arup_disable',
     'ooc_cmd_toggle_getareas',
@@ -299,7 +300,6 @@ def ooc_cmd_area_switch(client, arg):
     except (AreaError, ClientError):
         raise
 
-
 @mod_only(area_owners=True)
 def ooc_cmd_area_pref(client, arg):
     """
@@ -411,6 +411,18 @@ def ooc_cmd_hub_move_delay(client, arg):
         raise ArgumentError('Delay must be an integer between -1800 and 1800.')
     except (AreaError, ClientError):
         raise
+
+
+@mod_only(hub_owners=True)
+def ooc_cmd_toggle_replace_music(client, arg):
+    """
+    Toggle the hub music list to replace the server's music list.
+    Usage: /toggle_replace_music
+    """
+    client.area.area_manager.replace_music = not client.area.area_manager.replace_music
+    toggle = 'now' if client.area.area_manager.replace_music else 'no longer'
+    client.server.client_manager.refresh_music(client.area.area_manager.clients)
+    client.area.area_manager.broadcast_ooc(f'Hub music list will {toggle} replace server music list.')
 
 
 @mod_only(hub_owners=True)

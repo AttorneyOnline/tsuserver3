@@ -492,7 +492,10 @@ class AreaManager:
             clients = self.clients
         for client in clients:
             for area in client.local_area_list:
-                status_list.append(area.status)
+                status = area.status
+                if status == 'IDLE':
+                    status = ''
+                status_list.append(status)
             self.server.send_arup(client, status_list)
 
     def send_arup_cms(self, clients=None):
@@ -504,7 +507,7 @@ class AreaManager:
             clients = self.clients
         for client in clients:
             for area in client.local_area_list:
-                cm = 'FREE'
+                cm = ''
                 if len(area.owners) > 0:
                     cm = area.get_owners()
                 cms_list.append(cm)
