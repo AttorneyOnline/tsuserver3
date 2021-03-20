@@ -875,66 +875,8 @@ class AOProtocol(asyncio.Protocol):
             try:
                 called_function = f'ooc_cmd_{cmd}'
                 if not hasattr(commands, called_function):
-                    lookup_dict = {
-                        'access': 'links',
-                        'akick': 'area_kick',
-                        'area_access': 'links',
-                        'area_add': 'area_create',
-                        'area_link': 'link',
-                        'area_music_list': 'area_musiclist',
-                        'area_spectate': 'area_mute',
-                        'area_unlink': 'unlink',
-                        'areakick': 'area_kick',
-                        'autopass': 'sneak',
-                        'biconnect': 'link',
-                        'bidisconnect': 'unlink',
-                        'broadcast_ic': 'broadcast',
-                        'cleanup': 'clear_hub',
-                        'clear_testimony': 'testimony_clear',
-                        'clearhub': 'clear_hub',
-                        'clearmusiclist': 'musiclist',
-                        'cleartestimony': 'testimony_clear',
-                        'connect': 'onelink',
-                        'connectlist': 'links',
-                        'create': 'area_create',
-                        'currentbg': 'bg',
-                        'destroy': 'area_remove',
-                        'disconnect': 'oneunlink',
-                        'editambience': 'edit_ambience',
-                        'evi_mod': 'evidence_mod',
-                        'evi_swap': 'evidence_swap',
-                        'evidence_swap': 'evi_swap',
-                        'eviswap': 'evi_swap',
-                        'force_pos': 'forcepos',
-                        'hub_music_list': 'hub_musiclist',
-                        'key_add': 'keys_add',
-                        'key_remove': 'keys_remove',
-                        'key_set': 'keys_set',
-                        'key': 'keys',
-                        'kickself': 'kms',
-                        'listenpos': 'listen_pos',
-                        'loadhub': 'load_hub',
-                        'loadmlist': 'musiclist',
-                        'minimap': 'links',
-                        'music_list': 'musiclist',
-                        'music_lists': 'musiclists',
-                        'music': 'currentmusic',
-                        'password': 'pw',
-                        'playrandom': 'random_music',
-                        'poslock': 'pos_lock',
-                        'remotelisten': 'remote_listen',
-                        'rename': 'area_rename',
-                        'savehub': 'save_hub',
-                        'setpassword': 'setpw',
-                        'shuffle': 'random_music',
-                        'spectate': 'switch Spectator',
-                        'start_testimony': 'testimony_start',
-                        'swap_testimony': 'testimony_swap',
-                        'swaptestimony': 'testimony_swap',
-                        'unlistenpos': 'unlisten_pos',
-                    }
-                    if cmd in lookup_dict:
-                        called_function = f'ooc_cmd_{lookup_dict[cmd]}'
+                    if cmd in self.server.command_aliases:
+                        called_function = f'ooc_cmd_{self.server.command_aliases[cmd]}'
                 if not hasattr(commands, called_function):
                     self.client.send_ooc(f'Invalid command: {cmd}. Use /help to find up-to-date commands.')
                     return

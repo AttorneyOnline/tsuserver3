@@ -67,6 +67,8 @@ def ooc_cmd_help(client, arg):
     else:
         arg = arg.lower()
         try:
+            if arg in client.server.command_aliases:
+                arg = client.server.command_aliases[arg]
             client.send_ooc(help(f'ooc_cmd_{arg}'))
         except AttributeError:
             try:
