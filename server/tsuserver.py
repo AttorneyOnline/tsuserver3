@@ -72,62 +72,7 @@ class TsuServer3:
                                    'cccc_ic_support', 'casing_alerts',
                                    'arup', 'looping_sfx', 'additive', 'effects',
                                    'expanded_desk_mods', 'y_offset']
-        self.command_aliases = {'access': 'links',
-                                'akick': 'area_kick',
-                                'area_access': 'links',
-                                'area_add': 'area_create',
-                                'area_link': 'link',
-                                'area_music_list': 'area_musiclist',
-                                'area_spectate': 'area_mute',
-                                'area_unlink': 'unlink',
-                                'areakick': 'area_kick',
-                                'autopass': 'sneak',
-                                'biconnect': 'link',
-                                'bidisconnect': 'unlink',
-                                'broadcast_ic': 'broadcast',
-                                'cleanup': 'clear_hub',
-                                'clear_testimony': 'testimony_clear',
-                                'clearhub': 'clear_hub',
-                                'clearmusiclist': 'musiclist',
-                                'cleartestimony': 'testimony_clear',
-                                'connect': 'onelink',
-                                'connectlist': 'links',
-                                'create': 'area_create',
-                                'currentbg': 'bg',
-                                'destroy': 'area_remove',
-                                'disconnect': 'oneunlink',
-                                'editambience': 'edit_ambience',
-                                'evi_mod': 'evidence_mod',
-                                'evi_swap': 'evidence_swap',
-                                'evidence_swap': 'evi_swap',
-                                'eviswap': 'evi_swap',
-                                'force_pos': 'forcepos',
-                                'hub_music_list': 'hub_musiclist',
-                                'key_add': 'keys_add',
-                                'key_remove': 'keys_remove',
-                                'key_set': 'keys_set',
-                                'key': 'keys',
-                                'kickself': 'kms',
-                                'listenpos': 'listen_pos',
-                                'loadhub': 'load_hub',
-                                'loadmlist': 'musiclist',
-                                'minimap': 'links',
-                                'music_list': 'musiclist',
-                                'music_lists': 'musiclists',
-                                'music': 'currentmusic',
-                                'password': 'pw',
-                                'playrandom': 'random_music',
-                                'poslock': 'pos_lock',
-                                'remotelisten': 'remote_listen',
-                                'rename': 'area_rename',
-                                'savehub': 'save_hub',
-                                'setpassword': 'setpw',
-                                'shuffle': 'random_music',
-                                'spectate': 'switch Spectator',
-                                'start_testimony': 'testimony_start',
-                                'swap_testimony': 'testimony_swap',
-                                'swaptestimony': 'testimony_swap',
-                                'unlistenpos': 'unlisten_pos',}
+        self.command_aliases = {}
 
         try:
             self.geoIpReader = geoip2.database.Reader('./storage/GeoLite2-ASN.mmdb')
@@ -141,6 +86,7 @@ class TsuServer3:
 
         try:
             self.load_config()
+            self.load_command_aliases()
             self.load_censors()
             self.load_iniswaps()
             self.load_characters()
@@ -312,7 +258,16 @@ class TsuServer3:
             self.config['modpass'] = {'default': {'password': self.config['modpass']}}
         if 'multiclient_limit' not in self.config:
             self.config['multiclient_limit'] = 16
-    
+
+    def load_command_aliases(self):
+        """Load a list of banned words to scrub from chats."""
+        try:
+            with open('config/command_aliases.yaml', 'r',
+                      encoding='utf-8') as command_aliases:
+                self.command_aliases = yaml.safe_load(command_aliases)
+        except:
+            logger.debug('Cannot find command_aliases.yaml')
+
     def load_censors(self):
         """Load a list of banned words to scrub from chats."""
         try:
@@ -591,6 +546,7 @@ class TsuServer3:
                             'Your moderator credentials have been revoked.')
             self.config['modpass'] = cfg_yaml['modpass']
 
+        self.load_command_aliases()
         self.load_censors()
         self.load_characters()
         self.load_iniswaps()
