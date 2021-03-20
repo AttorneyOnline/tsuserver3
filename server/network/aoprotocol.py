@@ -875,7 +875,6 @@ class AOProtocol(asyncio.Protocol):
             try:
                 called_function = f'ooc_cmd_{cmd}'
                 if not hasattr(commands, called_function):
-                    lookup = ' Use /help to find up-to-date commands.'
                     lookup_dict = {
                         'access': 'links',
                         'akick': 'area_kick',
@@ -935,10 +934,11 @@ class AOProtocol(asyncio.Protocol):
                         'unlistenpos': 'unlisten_pos',
                     }
                     if cmd in lookup_dict:
-                        lookup = f'Did you mean {lookup_dict[cmd]}?'
-                    self.client.send_ooc(f'Invalid command: {cmd}. {lookup}')
-                else:
-                    getattr(commands, called_function)(self.client, arg)
+                        called_function = f'ooc_cmd_{lookup_dict[cmd]}'
+                if not hasattr(commands, called_function):
+                    self.client.send_ooc(f'Invalid command: {cmd}. Use /help to find up-to-date commands.')
+                    return
+                getattr(commands, called_function)(self.client, arg)
             except (ClientError, AreaError, ArgumentError, ServerError) as ex:
                 self.client.send_ooc(ex)
             except Exception as ex:
