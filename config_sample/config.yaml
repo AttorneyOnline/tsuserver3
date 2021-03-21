@@ -32,6 +32,9 @@ local: false
 # revoked.
 modpass: mod
 
+# Password to use the /restart command
+restartpass: restart
+
 # Sent to joining players.
 motd: Welcome to my server!
 

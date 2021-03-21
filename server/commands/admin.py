@@ -6,6 +6,7 @@ import pytimeparse
 from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, ServerError, ArgumentError
+import asyncio
 
 from . import mod_only, list_commands, list_submodules, help
 
@@ -29,6 +30,7 @@ __all__ = [
     'ooc_cmd_baninfo',
     'ooc_cmd_time',
     'ooc_cmd_whois',
+    'ooc_cmd_restart',
 ]
 
 
@@ -479,3 +481,16 @@ def ooc_cmd_whois(client, arg):
             info += f': {c.name}'
     info += f'\nMatched {len(found_clients)} online clients.'
     client.send_ooc(info)
+
+
+@mod_only()
+def ooc_cmd_restart(client, arg):
+    """
+    Restart the server (WARNING: The server will be *stopped* unless you set up a restart batch/bash file!)
+    Usage: /restart
+    """
+    if arg != client.server.config['restartpass']:
+        raise ArgumentError('no')
+    print(f'!!!{client.name} called /restart!!!')
+    client.server.send_all_cmd_pred('CT', 'WARNING', 'Restarting the server...')
+    asyncio.get_event_loop().stop()
