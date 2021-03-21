@@ -747,7 +747,7 @@ class AOProtocol(asyncio.Protocol):
                     if not text.strip():
                         # Discord blankpost
                         text = '_ _'
-                    self.server.bridgebot.queue_message(webname, text, self.client.char_name)
+                    self.server.bridgebot.queue_message(webname, text, self.client.char_name, anim)
             # Minigames
             opposing_team = None
             if self.client.char_id in self.client.area.red_team:

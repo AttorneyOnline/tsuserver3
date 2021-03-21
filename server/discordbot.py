@@ -26,14 +26,20 @@ class Bridgebot(commands.Bot):
             print(e)
             raise
     
-    def queue_message(self, name, message, charname):
+    def queue_message(self, name, message, charname, anim):
         base = None
         avatar_url = None
+        anim_url = None
+        embed_emotes = False
         if "base_url" in self.server.config["bridgebot"]:
             base = self.server.config["bridgebot"]["base_url"]
+        if "embed_emotes" in self.server.config["bridgebot"]:
+            embed_emotes = self.server.config["bridgebot"]["embed_emotes"]
         if base != None:
             avatar_url = base + parse.quote("characters/" + charname + "/char_icon.png")
-        self.pending_messages.append([name, message, avatar_url])
+            if embed_emotes:
+                anim_url = base + parse.quote("characters/" + charname + "/" + anim + ".png")
+        self.pending_messages.append([name, message, avatar_url, anim_url])
 
     async def on_ready(self):
         print('Discord Bridge Successfully logged in.')
@@ -69,7 +75,7 @@ class Bridgebot(commands.Bot):
 
         # await self.process_commands(message)
     
-    async def send_char_message(self, name, message, avatar=None):
+    async def send_char_message(self, name, message, avatar=None, image=None):
         webhook = None
         try:
             webhooks = await self.channel.webhooks()
@@ -79,7 +85,10 @@ class Bridgebot(commands.Bot):
                     break
             if webhook == None:
                 webhook = await self.channel.create_webhook(name='AO2_Bridgebot')
-            await webhook.send(message, username=name, avatar_url=avatar)
+            embed=discord.Embed(title="Emote")
+            embed.set_image(url=image)
+            print(avatar, image)
+            await webhook.send(message, username=name, avatar_url=avatar, embed=embed)
             print(f'[DiscordBridge] Sending message from "{name}" to "{self.channel.name}"')
         except Forbidden:
             print(f'[DiscordBridge] Insufficient permissions - couldnt send char message "{name}: {message}" with avatar "{avatar}" to "{self.channel.name}"')

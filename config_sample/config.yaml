@@ -91,6 +91,7 @@ bridgebot:
   emote: normal # idle emote for Bridgebot to use
   pos: jur # position Bridgebot will use when talking
   base_url: http://www.example.com/base/ # base folder URL to seek for bridgebot to obtain stuff like character avatar graphics etc.
+  embed_emotes: False # whether or not to embed emotes into the message (only supports .png atm)
   hub_id: 0 # numeric Hub ID where Bridgebot will reside
   area_id: 0 # numeric Area ID where Bridgebot will talk
   prefix: "}}}[√Dis√] {" # prefix to use before in-character message, usually to identify this message as Bridgebot one
