@@ -85,7 +85,7 @@ class Bridgebot(commands.Bot):
                     break
             if webhook == None:
                 webhook = await self.channel.create_webhook(name='AO2_Bridgebot')
-            embed=discord.Embed(title="Emote")
+            embed=discord.Embed()
             embed.set_image(url=image)
             print(avatar, image)
             await webhook.send(message, username=name, avatar_url=avatar, embed=embed)
