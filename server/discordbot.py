@@ -77,6 +77,7 @@ class Bridgebot(commands.Bot):
     
     async def send_char_message(self, name, message, avatar=None, image=None):
         webhook = None
+        embed = None
         try:
             webhooks = await self.channel.webhooks()
             for hook in webhooks:
@@ -85,9 +86,10 @@ class Bridgebot(commands.Bot):
                     break
             if webhook == None:
                 webhook = await self.channel.create_webhook(name='AO2_Bridgebot')
-            embed=discord.Embed()
-            embed.set_image(url=image)
-            print(avatar, image)
+            if image != None:
+                embed=discord.Embed()
+                embed.set_image(url=image)
+                print(avatar, image)
             await webhook.send(message, username=name, avatar_url=avatar, embed=embed)
             print(f'[DiscordBridge] Sending message from "{name}" to "{self.channel.name}"')
         except Forbidden:
