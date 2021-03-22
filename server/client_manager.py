@@ -571,6 +571,10 @@ class ClientManager:
                     desc += "... Use /desc to read the rest."
                 self.send_ooc(f'Description: {desc}')
 
+            # We failed to enter the same area as whoever we've been following, break the follow
+            if self.following != None and not (self.following in self.area.clients):
+                self.unfollow(silent=True)
+
         def can_access_area(self, area):
             return self.area == area or len(self.area.links) <= 0 or (str(area.id) in self.area.links and \
                     (len(self.area.links[str(area.id)]["evidence"]) <= 0 or \
