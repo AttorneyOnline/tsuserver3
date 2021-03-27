@@ -687,8 +687,9 @@ class ClientManager:
                         c.unfollow(silent=True)
 
             if not self.area.force_sneak and not self.sneaking and not self.hidden:
-                old_area.broadcast_ooc(
-                    f'[{self.id}] {self.showname} leaves to [{area.id}] {area.name}.')
+                if not old_area.area.force_sneak:
+                    old_area.broadcast_ooc(
+                        f'[{self.id}] {self.showname} leaves to [{area.id}] {area.name}.')
                 desc = ''
                 if self.desc != '':
                     desc = ': ' + self.desc
