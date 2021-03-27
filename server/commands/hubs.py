@@ -330,6 +330,7 @@ def ooc_cmd_area_pref(client, arg):
         'can_scrum_debate',
         'can_panic_talk_action',
         'bg_lock',
+        'force_sneak',
     ]
 
     if len(arg) == 0:

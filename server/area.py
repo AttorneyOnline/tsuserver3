@@ -92,6 +92,7 @@ class Area:
         self.can_cross_swords = False
         self.can_scrum_debate = False
         self.can_panic_talk_action = False
+        self.force_sneak = False
         # /prefs end
 
         # DR minigames
@@ -311,6 +312,14 @@ class Area:
             self.can_spectate = area['can_spectate']
         if 'can_getarea' in area:
             self.can_getarea = area['can_getarea']
+        if 'can_cross_swords' in area:
+            self.can_cross_swords = area['can_cross_swords']
+        if 'can_scrum_debate' in area:
+            self.can_scrum_debate = area['can_scrum_debate']
+        if 'can_panic_talk_action' in area:
+            self.can_panic_talk_action = area['can_panic_talk_action']
+        if 'force_sneak' in area:
+            self.force_sneak = area['force_sneak']
         if 'password' in area:
             self.password = area['password']
 
@@ -393,6 +402,10 @@ class Area:
         area['use_backgrounds_yaml'] = self.use_backgrounds_yaml
         area['can_spectate'] = self.can_spectate
         area['can_getarea'] = self.can_getarea
+        area['can_cross_swords'] = self.can_cross_swords
+        area['can_scrum_debate'] = self.can_scrum_debate
+        area['can_panic_talk_action'] = self.can_panic_talk_action
+        area['force_sneak'] = self.force_sneak
         area['password'] = self.password
         if len(self.evi_list.evidences) > 0:
             area['evidence'] = [e.to_dict() for e in self.evi_list.evidences]
