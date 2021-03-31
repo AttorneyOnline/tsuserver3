@@ -466,7 +466,7 @@ class Area:
             client.hide(False, hidden=True)
         if self.area_manager.single_cm:
             # Remove their owner status due to single_cm pref. remove_owner will unlock the area if they were the last CM.
-            if client in self.owners:
+            if client in self._owners:
                 self.remove_owner(client)
                 client.send_ooc('You can only be a CM of a single area in this hub.')
         if self.locking_allowed:
