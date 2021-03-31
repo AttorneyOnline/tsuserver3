@@ -874,7 +874,7 @@ class AOProtocol(asyncio.Protocol):
                 arg = spl[1][:1024]
             try:
                 called_function = f'ooc_cmd_{cmd}'
-                if not hasattr(commands, called_function):
+                if len(self.server.command_aliases) > 0 and not hasattr(commands, called_function):
                     if cmd in self.server.command_aliases:
                         called_function = f'ooc_cmd_{self.server.command_aliases[cmd]}'
                 if not hasattr(commands, called_function):

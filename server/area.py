@@ -670,10 +670,6 @@ class Area:
                 if target != '':
                     try:
                         opponent = None
-                        # @ by itself means we're trying to target the last person who spoke
-                        if self.last_ic_message != None and target.strip() == '':
-                            # Get char_name from character ID
-                            target = self.server.char_list[int(self.last_ic_message[8])]
                         for t in self.clients:
                             # We're @num so we're trying to grab a Client ID, don't do shownames
                             if target.strip().isnumeric():
@@ -1194,9 +1190,9 @@ class Area:
         self.invite_list = self.old_invite_list
         self.red_team.clear()
         self.blue_team.clear()
-        # Timer ID 1 is reserved for minigames
+        # Timer ID 3 is reserved for minigames
         # 3 stands for unset and hide
-        self.send_command('TI', 1, 3)
+        self.send_command('TI', 3, 3)
         self.send_ic(None, '1', 0, "", "../misc/blank", f"~~{self.minigame} END!", "", "", 0, -1, 0, 0, [0], 0, 0, 0, "System", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
         self.minigame = ''
 
@@ -1291,9 +1287,9 @@ class Area:
         timer = max(5, int(timer))
         # Timer ID 1 is reserved for minigames
         # 1 afterwards is to start timer
-        print('TI', 1, 0, timer * 1000)
-        self.send_command('TI', 1, 2)
-        self.send_command('TI', 1, 0, timer * 1000)
+        print('TI', 3, 0, timer * 1000)
+        self.send_command('TI', 3, 2)
+        self.send_command('TI', 3, 0, timer * 1000)
         self.minigame_schedule = asyncio.get_event_loop().call_later(
             timer, lambda: self.end_minigame())
         self.broadcast_ooc(f'{self.minigame}! [{client.id}] {client.showname}(RED) VS [{target.id}] {target.showname}(BLUE). You have {timer} seconds.\n/cs <id> to join the debate against target ID.')
