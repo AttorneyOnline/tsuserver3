@@ -565,11 +565,13 @@ class ClientManager:
             # Send the evidence information
             self.send_command('LE', *self.area.get_evidence_list(self))
             self.refresh_music()
+            msg = f'Changed to area: [{area.id}] {area.name}.'
             if self.area.desc != '' and not self.blinded:
                 desc = self.area.desc[:128]
                 if len(self.area.desc) > len(desc):
                     desc += "... Use /desc to read the rest."
-                self.send_ooc(f'Description: {desc}')
+                msg += f'\nDescription: {desc}'
+            self.send_ooc(msg)
 
             # We failed to enter the same area as whoever we've been following, break the follow
             if self.following != None and not (self.following in [c.id for c in self.area.clients]):
@@ -688,8 +690,12 @@ class ClientManager:
 
             if not self.area.force_sneak and not self.sneaking and not self.hidden:
                 if not old_area.force_sneak:
-                    old_area.broadcast_ooc(
-                        f'[{self.id}] {self.showname} leaves to [{area.id}] {area.name}.')
+                    for c in old_area.clients:
+                        # Check if the GMs should really see this msg
+                        if c in old_area.owners or c.remote_listen in [2, 3]:
+                            continue
+                        c.send_command('CT', self.server.config['hostname'],
+                                        f'[{self.id}] {self.showname} leaves to [{area.id}] {area.name}.', '1')
                 desc = ''
                 if self.desc != '':
                     desc = ': ' + self.desc
@@ -700,8 +706,10 @@ class ClientManager:
                     desc = desc[:64]
                     if len(self.desc) > 64:
                         desc += f'... Use /chardesc {self.id} to read the rest.'
-                area.broadcast_ooc(
-                    f'[{self.id}] {self.showname} enters from [{old_area.id}] {old_area.name}.{desc}')
+                area.send_command('CT', self.server.config['hostname'],
+                                  f'[{self.id}] {self.showname} enters from [{old_area.id}] {old_area.name}.{desc}', '1')
+                area.send_owner_command('CT', self.server.config['hostname'],
+                                  f'[{self.id}] {self.showname} moves from [{old_area.id}] {old_area.name}.{desc} to [{area.id}] {area.name}.', '1')
             else:
                 reason = ''
                 if self.sneaking:
@@ -711,7 +719,7 @@ class ClientManager:
                 if self.area.force_sneak:
                     reason = ' (the area forces sneaking)'
                 self.send_ooc(
-                    f'Changed area to {area.name} unannounced{reason}.')
+                    f'Changed area unannounced{reason}.')
 
         def get_area_list(self, hidden=False, unlinked=False):
             area_list = []
