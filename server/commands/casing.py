@@ -337,15 +337,14 @@ def ooc_cmd_remote_listen(client, arg):
         'OOC': 2,
         'ALL': 3,
     }
-    if arg == '':
-        reversed_options = dict(map(reversed, options.items()))
-        opt = reversed_options[client.remote_listen]
-        client.send_ooc(f'Your current option is: {opt}')
-        return
-    try:
-        client.remote_listen = options[arg.upper()]
-    except KeyError:
-        raise ArgumentError('Invalid option! Your options are NONE, IC, OOC or ALL.')
+    if arg != '':
+        try:
+            client.remote_listen = options[arg.upper()]
+        except KeyError:
+            raise ArgumentError('Invalid option! Your options are NONE, IC, OOC or ALL.')
+    reversed_options = dict(map(reversed, options.items()))
+    opt = reversed_options[client.remote_listen]
+    client.send_ooc(f'Your current remote listen option is: {opt}')
 
 
 def ooc_cmd_testimony(client, arg):
