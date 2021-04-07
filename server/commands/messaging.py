@@ -5,12 +5,9 @@ from server.exceptions import ClientError, ArgumentError, AreaError
 from . import mod_only
 
 __all__ = [
-    'ooc_cmd_a',
-    'ooc_cmd_s',
     'ooc_cmd_g',
     'ooc_cmd_h',
     'ooc_cmd_m',
-    'ooc_cmd_lm',
     'ooc_cmd_announce',
     'ooc_cmd_toggleglobal',
     'ooc_cmd_need',
@@ -18,40 +15,6 @@ __all__ = [
     'ooc_cmd_pm',
     'ooc_cmd_mutepm'
 ]
-
-
-def ooc_cmd_a(client, arg):
-    """
-    Send a message to an area that you are a CM in.
-    Usage: /a <area> <message>
-    """
-    if len(arg) == 0:
-        raise ArgumentError('You must specify an area.')
-    arg = arg.split(' ')
-
-    try:
-        area = client.area.area_manager.get_area_by_id(int(arg[0]))
-    except ValueError:
-        raise ArgumentError('The first argument must be an area ID.')
-    except AreaError:
-        raise
-
-    message_areas_cm(client, [area], ' '.join(arg[1:]))
-
-
-def ooc_cmd_s(client, arg):
-    """
-    Send a message to all areas that you are a CM in.
-    Usage: /s <message>
-    """
-    areas = []
-    for a in client.area.area_manager.areas:
-        if client in a.owners:
-            areas.append(a)
-    if not areas:
-        client.send_ooc('You aren\'t a CM in any area!')
-        return
-    message_areas_cm(client, areas, arg)
 
 
 def message_areas_cm(client, areas, message):
@@ -107,19 +70,6 @@ def ooc_cmd_m(client, arg):
         raise ArgumentError("You can't send an empty message.")
     client.server.send_modchat(client, arg)
     database.log_area('chat.mod', client, client.area, message=arg)
-
-
-@mod_only()
-def ooc_cmd_lm(client, arg):
-    """
-    Send a message to everyone in the current area, speaking officially.
-    Usage: /lm <message>
-    """
-    if len(arg) == 0:
-        raise ArgumentError("Can't send an empty message.")
-    client.area.send_command(
-        'CT', f'<dollar>MOD|{client.name}', arg)
-    database.log_area('chat.local-mod', client, client.area, message=arg)
 
 
 @mod_only()
