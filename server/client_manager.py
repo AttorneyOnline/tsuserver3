@@ -616,22 +616,23 @@ class ClientManager:
             :param area: area to switch to
             """
             if self.area == area:
-                raise ClientError('User already in specified area.')
+                raise ClientError(f'Failed to enter [{area.id}] {area.name}: User already in specified area.')
             allowed = self.is_mod or self in area.owners or self.char_id == -1 or area == area.area_manager.default_area()
             if not allowed:
                 try:
                     self.try_access_area(area)
-                except ClientError:
-                    raise
+                except ClientError as ex:
+                    self.send_ooc(f'Failed to enter [{area.id}] {area.name}: {ex}')
+                    return
 
                 if (area.password != '' and password != area.password) or (
                     len(self.area.links) > 0 and str(area.id) in self.area.links and self.area.links[str(area.id)]["password"] != '' and password != self.area.links[str(area.id)]["password"]):
-                    raise ClientError('Incorrect password! Use /pw <id> [password]')
+                    raise ClientError(f'Failed to enter [{area.id}] {area.name}: Incorrect password! Use /pw <id> [password]')
 
             if self.char_id == -1 and not (area.area_manager.can_spectate and area.can_spectate) and not self.is_mod and not self in area.owners:
                 if not area.area_manager.can_spectate:
-                    raise ClientError("Cannot spectate in this hub!")
-                raise ClientError("Cannot spectate that area!")
+                    raise ClientError(f'Failed to enter [{area.id}] {area.name}: Cannot spectate in this hub!')
+                raise ClientError(f'Failed to enter [{area.id}] {area.name}: Cannot spectate that area!')
 
             target_pos = ''
             if len(self.area.links) > 0:
@@ -648,17 +649,12 @@ class ClientManager:
                 # You gotta unhide first lol
                 self.hide(False)
                 self.area.broadcast_area_list(self)
-                raise ClientError('You had to leave your hiding spot - area transfer failed.')
+                raise ClientError(f'Failed to enter [{area.id}] {area.name}: You had to leave your hiding spot!')
 
             delay = self.area.time_until_move(self)
             if not allowed and delay > 0:
                 sec = int(math.ceil(delay * 0.001))
-                raise ClientError(f'You need to wait {sec} seconds until you can move again.')
-
-            if area.cannot_ic_interact(self):
-                self.send_ooc(
-                    'This area is muted - you cannot talk in-character unless invited.'
-                )
+                raise ClientError(f'Failed to enter [{area.id}] {area.name}: You need to wait {sec} seconds until you can move again.')
 
             # Mods and area owners can be any character regardless of availability
             if not (self.is_mod or self in area.owners or self.char_id == -1) and not area.is_char_available(self.char_id):
@@ -677,11 +673,11 @@ class ClientManager:
                         try:
                             c.change_area(area)
                             c.send_ooc(
-                                f'Following [{self.id}] {self.showname} to {area.name}.')
+                                f'Following [{self.id}] {self.showname} to [{area.id}] {area.name}.')
                         # Something obstructed us.
                         except ClientError:
                             c.send_ooc(
-                                f'Cannot follow [{self.id}] {self.showname} to {area.name}!')
+                                f'Cannot follow [{self.id}] {self.showname} to [{area.id}] {area.name}!')
                             c.unfollow(silent=True)
                             raise
                     else:
@@ -720,6 +716,11 @@ class ClientManager:
                     reason = ' (the area forces sneaking)'
                 self.send_ooc(
                     f'Changed area unannounced{reason}.')
+
+            if area.cannot_ic_interact(self):
+                self.send_ooc(
+                    'This area is muted - you cannot talk in-character unless invited.'
+                )
 
         def get_area_list(self, hidden=False, unlinked=False):
             area_list = []

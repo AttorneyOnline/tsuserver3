@@ -349,9 +349,9 @@ def ooc_cmd_knock(client, arg):
     Usage:  /knock <id>
     """
     if arg == '':
-        raise ArgumentError('You need to input an accessible area name or ID to knock!')
+        raise ArgumentError('Failed to knock: you need to input an accessible area name or ID to knock!')
     if client.blinded:
-        raise ClientError('You are blinded!')
+        raise ClientError('Failed to knock: you are blinded!')
     try:
         area = None
         for _area in client.area.area_manager.areas:
@@ -366,12 +366,9 @@ def ooc_cmd_knock(client, arg):
 
         allowed = client.is_mod or client in area.owners or client in client.area.owners
         if not allowed:
-            if client.area.locked and not client.id in client.area.invite_list:
-                raise ClientError('Your current area is locked!')
-
             if len(client.area.links) > 0:
                 if not str(area.id) in client.area.links:
-                    raise ClientError('That area is inaccessible from your area!')
+                    raise ClientError(f'Failed to knock on [{area.id}] {area.name}: That area is inaccessible!')
 
                 if str(area.id) in client.area.links:
                     # Get that link reference
@@ -379,12 +376,14 @@ def ooc_cmd_knock(client, arg):
 
                     # Link requires us to be inside a piece of evidence
                     if len(link["evidence"]) > 0 and not (client.hidden_in in link["evidence"]):
-                        raise ClientError('That area is inaccessible!')
+                        raise ClientError(f'Failed to knock on [{area.id}] {area.name}: That area is inaccessible!')
+            if client.area.locked and not client.id in client.area.invite_list:
+                raise ClientError(f'Failed to knock on [{area.id}] {area.name}: Your current area is locked!')
 
         client.area.broadcast_ooc(f'[{client.id}] {client.showname} knocks on [{area.id}] {area.name}.')
         area.broadcast_ooc(f'!! Someone is knocking from [{client.area.id}] {client.area.name} !!')
     except ValueError:
-        raise ArgumentError('Area ID must be a number or name.')
+        raise ArgumentError('Failed to knock: you need to input an accessible area name or ID to knock!')
     except (AreaError, ClientError):
         raise
 
@@ -417,7 +416,8 @@ def ooc_cmd_peek(client, arg):
                 client.area.broadcast_ooc(f'[{client.id}] {client.showname} tried to peek into [{area.id}] {area.name} but {str(ex).lower()}')
                 # People from within the area have no distinction between peeking and moving inside
                 area.broadcast_ooc(f'Someone tried to enter from [{client.area.id}] {client.area.name} but {str(ex).lower()}')
-            raise
+            client.send_ooc(f'Failed to peek into [{area.id}] {area.name}: {ex}')
+            return
         else:
             sorted_clients = []
             for c in area.clients:
@@ -438,10 +438,13 @@ def ooc_cmd_peek(client, arg):
             if len(sorted_clients) <= 0:
                 sorted_clients = 'nobody'
 
-            client.area.broadcast_ooc(f'[{client.id}] {client.showname} peeks into [{area.id}] {area.name}...')
-            client.send_ooc(f'There\'s {sorted_clients} in [{area.id}] {area.name}.')
+            if not client.sneaking and not client.hidden:
+                client.area.broadcast_ooc(f'[{client.id}] {client.showname} peeks into [{area.id}] {area.name}...')
+            else:
+                client.send_ooc(f'You silently peek into [{area.id}] {area.name}...')
+            client.send_ooc(f'There\'s {sorted_clients}.')
     except ValueError:
-        raise ArgumentError('Area ID must be a number or name.')
+        raise ArgumentError('Failed to peek: you need to input an accessible area name or ID to knock!')
     except (AreaError, ClientError):
         raise
 
