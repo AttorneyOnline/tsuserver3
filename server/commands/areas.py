@@ -378,7 +378,7 @@ def ooc_cmd_knock(client, arg):
                     if len(link["evidence"]) > 0 and not (client.hidden_in in link["evidence"]):
                         raise ClientError(f'Failed to knock on [{area.id}] {area.name}: That area is inaccessible!')
             if client.area.locked and not client.id in client.area.invite_list:
-                raise ClientError(f'Failed to knock on [{area.id}] {area.name}: Your current area is locked!')
+                raise ClientError(f'Failed to knock on [{area.id}] {area.name}: Current area is locked!')
 
         client.area.broadcast_ooc(f'[{client.id}] {client.showname} knocks on [{area.id}] {area.name}.')
         area.broadcast_ooc(f'!! Someone is knocking from [{client.area.id}] {client.area.name} !!')
