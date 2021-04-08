@@ -139,7 +139,7 @@ def ooc_cmd_getareas(client, arg):
     Show information about all areas.
     Usage: /getareas
     """
-    if not client.is_mod and not (client in client.area.area_manager.owners):
+    if not client.is_mod and not (client in client.area.area_manager.owners) and client.char_id != -1:
         if client.blinded:
             raise ClientError('You are blinded!')
         if not client.area.area_manager.can_getareas:
