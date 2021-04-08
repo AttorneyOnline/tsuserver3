@@ -53,12 +53,14 @@ hubclear: clear_hub
 hubload: load_hub
 hubrename: rename_hub
 hubsave: save_hub
+iclock: area_mute
 key_add: keys_add
 key_remove: keys_remove
 key_set: keys_set
 key: keys
 kickself: kms
 listenpos: listen_pos
+listhubs: list_hubs
 loadhub: load_hub
 loadmlist: musiclist
 look: getarea

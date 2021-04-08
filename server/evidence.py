@@ -93,11 +93,6 @@ class EvidenceList:
         lines = desc.split('\n')
         cmd = lines[0].strip(' ') #remove all whitespace
         if cmd[:7] == '<owner=' and cmd.endswith('>'):
-            # poses = cmd[7:-1]
-            #broken with extra shorthands
-            # for pos in poses.strip(' ').split(','):
-            #     if not (pos in self.poses['all']) and pos != 'pos':
-            #         return False
             return True
         return False
 
@@ -120,7 +115,6 @@ class EvidenceList:
             )
             return
         if client in client.area.owners or client.is_mod:
-            #renamed from ambiguous "pos" because it doesn't tell you who can see the evidence
             pos = 'hidden'
             self.evidences.append(self.Evidence(
                 name, description, image, pos))
@@ -218,12 +212,12 @@ class EvidenceList:
             if client.area.evidence_mod == 'HiddenCM':
                 if self.correct_format(client, arg[1]):
                     lines = arg[1].split('\n')
-                    cmd = lines[0].strip(' ')  # remove all whitespace
+                    cmd = lines[0].strip(' ')  # remove whitespace at beginning and end of string
                     poses = cmd[7:-1]
                     can_hide_in = lines[1].strip(' ')[13:-1] == "1"
                     self.evidences[id] = self.Evidence(arg[0], '\n'.join(lines[2:]), arg[2], poses, can_hide_in)
                 else:
-                    client.send_ooc('You entered a bad pos.')
+                    client.send_ooc('You entered a bad pos! Make sure to have <owner=pos> at the top, where "pos" is the /pos this evidence should show up in. Put in "all" if you want it to show up in all pos, or "hidden" for no pos.')
                     return
             else:
                 self.evidences[id] = self.Evidence(arg[0], arg[1], arg[2], arg[3])
