@@ -688,11 +688,11 @@ class ClientManager:
                 if not old_area.force_sneak:
                     for c in old_area.clients:
                         # Check if the GMs should really see this msg
-                        if c in old_area.owners or c.remote_listen in [2, 3]:
+                        if c in old_area.owners and c.remote_listen in [2, 3]:
                             continue
                         c.send_command('CT', self.server.config['hostname'],
                                         f'[{self.id}] {self.showname} leaves to [{area.id}] {area.name}.', '1')
-                desc = ''
+                desc = '.'
                 if self.desc != '':
                     desc = ': ' + self.desc
                     # Find the first sentence (assuming it ends in a period).
@@ -703,9 +703,9 @@ class ClientManager:
                     if len(self.desc) > 64:
                         desc += f'... Use /chardesc {self.id} to read the rest.'
                 area.send_command('CT', self.server.config['hostname'],
-                                  f'[{self.id}] {self.showname} enters from [{old_area.id}] {old_area.name}.{desc}', '1')
+                                  f'[{self.id}] {self.showname} enters from [{old_area.id}] {old_area.name}{desc}', '1')
                 area.send_owner_command('CT', self.server.config['hostname'],
-                                  f'[{self.id}] {self.showname} moves from [{old_area.id}] {old_area.name}.{desc} to [{area.id}] {area.name}.', '1')
+                                  f'[{self.id}] {self.showname} moves from [{old_area.id}] {old_area.name} to [{area.id}] {area.name}.', '1')
             else:
                 reason = ''
                 if self.sneaking:
