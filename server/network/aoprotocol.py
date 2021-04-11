@@ -692,13 +692,18 @@ class AOProtocol(asyncio.Protocol):
             try:
                 for a in target_area:
                     add = additive
+                    tempos = pos
                     # Additive only works on same-char messages
                     if additive and \
                         (a.last_ic_message == None or cid != a.last_ic_message[8] or \
                         (a.last_ic_message[4].strip() == '' and a.last_ic_message[28] != 1) \
                         ):
                         additive = 0
-                    a.send_command('MS', msg_type, pre, folder, anim, msg, pos, sfx,
+                    if len(a.pos_lock) > 0:
+                        tempos = a.pos_lock[0]
+                    if a.last_ic_message != None and (len(a.pos_lock) <= 0 or a.last_ic_message[5] in a.pos_lock):
+                        tempos = a.last_ic_message[5] # Use the same pos
+                    a.send_command('MS', msg_type, pre, folder, anim, msg, tempos, sfx,
                         emote_mod, cid, sfx_delay, button, self.client.evi_list[evidence],
                         flip, ding, color, showname, charid_pair, other_folder,
                         other_emote, offset_pair, other_offset, other_flip, nonint_pre,
