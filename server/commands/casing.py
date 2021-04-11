@@ -67,7 +67,7 @@ def ooc_cmd_cleardoc(client, arg):
     database.log_area('doc.clear', client, client.area)
 
 
-@mod_only(hub_owners=True)
+@mod_only(area_owners=True)
 def ooc_cmd_evidence_mod(client, arg):
     """
     Change the evidence privilege mode. Refer to the documentation
