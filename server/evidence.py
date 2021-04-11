@@ -188,15 +188,21 @@ class EvidenceList:
         """
         if not self.login(client):
             return
+        evi = self.evidences[id]
         if not client in client.area.owners and not client.is_mod:
             id = client.evi_list[id+1]-1
-        c = self.evidences[id].hiding_client
+            evi = self.evidences[id]
+            if client.area.evidence_mod == 'HiddenCM' and evi.pos != 'hidden':
+                evi.name = f'🚮{evi.name}'
+                evi.desc = f'(🚮Deleted by [{client.id}] {client.showname} ({client.name}))\n{evi.desc}'
+                evi.pos = 'hidden'
+        else:
+            self.evidences.pop(id)
+        c = evi.hiding_client
         if c != None:
             c.hide(False)
             c.area.broadcast_area_list(c)
-            c.send_ooc(f'You discover {c.showname} in the {self.evidences[id].name}!')
-
-        self.evidences.pop(id)
+            c.send_ooc(f'You discover {c.showname} in the {evi.name}!')
 
     def edit_evidence(self, client, id, arg):
         """
