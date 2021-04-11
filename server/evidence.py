@@ -192,10 +192,13 @@ class EvidenceList:
         if not client in client.area.owners and not client.is_mod:
             id = client.evi_list[id+1]-1
             evi = self.evidences[id]
-            if client.area.evidence_mod == 'HiddenCM' and evi.pos != 'hidden':
-                evi.name = f'🚮{evi.name}'
-                evi.desc = f'(🚮Deleted by [{client.id}] {client.showname} ({client.name}))\n{evi.desc}'
-                evi.pos = 'hidden'
+            if client.area.evidence_mod == 'HiddenCM':
+                if evi.pos != 'hidden':
+                    evi.name = f'🚮{evi.name}'
+                    evi.desc = f'(🚮Deleted by [{client.id}] {client.showname} ({client.name}))\n{evi.desc}'
+                    evi.pos = 'hidden'
+            else:
+                self.evidences.pop(id)
         else:
             self.evidences.pop(id)
         c = evi.hiding_client
