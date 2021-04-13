@@ -405,9 +405,9 @@ def ooc_cmd_hub_move_delay(client, arg):
         if len(args) > 0:
             move_delay = min(1800, max(-1800, int(args[0]))) # Move delay is limited between -1800 and 1800
             client.area.area_manager.move_delay = move_delay
-            client.send_ooc(f'Set {client.area.name} movement delay to {move_delay}.')
+            client.send_ooc(f'Set {client.area.area_manager.name} movement delay to {move_delay}.')
         else:
-            client.send_ooc(f'Current move delay for {client.area.name} is {client.area.area_manager.move_delay}.')
+            client.send_ooc(f'Current move delay for {client.area.area_manager.name} is {client.area.area_manager.move_delay}.')
     except ValueError:
         raise ArgumentError('Delay must be an integer between -1800 and 1800.')
     except (AreaError, ClientError):
