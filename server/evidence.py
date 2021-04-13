@@ -236,10 +236,10 @@ class EvidenceList:
             # Client sends evidence updates to server using an index starting from 0.
             # This needs a complete overhaul.
             idx = client.evi_list[id+1]-1
-            c = self.evidences[idx].hiding_client
-            if c != None:
-                c.hide(False)
-                c.area.broadcast_area_list(c)
-                client.send_ooc(f'You discover {c.showname} in the {self.evidences[idx].name}!')
+            # c = self.evidences[idx].hiding_client
+            # if c != None:
+            #     c.hide(False)
+            #     c.area.broadcast_area_list(c)
+            #     client.send_ooc(f'You discover {c.showname} in the {self.evidences[idx].name}!')
             self.evidences[idx] = self.Evidence(
                 arg[0], arg[1], arg[2], self.evidences[idx].pos)
