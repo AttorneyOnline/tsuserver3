@@ -652,7 +652,7 @@ class Area:
             self.next_message_time = round(time.time() * 1000.0 + delay)
 
             # Objection used
-            if int(args[10].split('<and>')[0]) == 2:
+            if str(args[10]).split('<and>')[0] == '2':
                 msg = args[4].lower()
                 target = ''
                 is_pta = False
@@ -1218,12 +1218,12 @@ class Area:
                 raise AreaError('Target is not part of the minigame!')
 
             if len(self.blue_team) <= 0:
-                self.broadcast_ooc('Blue team conceded!')
-                self.end_minigame('Blue team conceded!')
+                self.broadcast_ooc('🔵Blue team conceded!')
+                self.end_minigame('√Blue√ team conceded!')
                 return
             elif len(self.red_team) <= 0:
-                self.broadcast_ooc('Red team conceded!')
-                self.end_minigame('Red team conceded!')
+                self.broadcast_ooc('🔴Red team conceded!')
+                self.end_minigame('~Red~ team conceded!')
                 return
             self.broadcast_ooc(f'[{client.id}] {client.showname} is now part of the {team} team!')
             database.log_area('minigame.sd', client, client.area, target=target, message=f'{self.minigame} is now part of the {team} team!')
@@ -1296,21 +1296,14 @@ class Area:
         self.minigame_schedule = asyncio.get_event_loop().call_later(
             timer, lambda: self.end_minigame('Timer expired!'))
 
-        leader_red = ''
-        for cid in self.red_team:
-            leader_red = self.server.char_list[cid]
-            for c in self.clients:
-                if c.char_id == cid:
-                    leader_red = f'[{c.id}] {c.showname}'
-                    break
-        leader_blue = ''
+        us = f'🔴[{client.id}] {client.showname} (Red)'
+        them = f'🔵[{target.id}] {target.showname} (Blue)'
         for cid in self.blue_team:
-            leader_blue = self.server.char_list[cid]
-            for c in self.clients:
-                if c.char_id == cid:
-                    leader_blue = f'[{c.id}] {c.showname}'
-                    break
-        self.broadcast_ooc(f'{self.minigame}!\n🔴{leader_red} ⚔VERSUS⚔ 🔵{leader_blue} (Blue).\n⏲You have {timer} seconds.\n/cs <id> to join the debate against target ID.')
+            if client.char_id == cid:
+                us = f'🔵[{client.id}] {client.showname} (Blue)'
+                them = f'🔴[{target.id}] {target.showname} (Red)'
+                break
+        self.broadcast_ooc(f'❗{self.minigame}❗\n{us} objects to {them}!\n⏲You have {timer} seconds.\n/cs <id> to join the debate against target ID.')
 
     class JukeboxVote:
         """Represents a single vote cast for the jukebox."""
