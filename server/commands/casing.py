@@ -318,8 +318,10 @@ def ooc_cmd_testimony(client, arg):
     if len(arg) != 0:
         raise ArgumentError('This command does not take any arguments.')
     testi = list(client.area.testimony.statements)
-    testi.pop(0)
-    if len(testi) > 0:
+    if len(testi) <= 1:
+        raise ServerError('There is no testimony in this area.')
+    else:
+        testi.pop(0)
         testi_msg = 'Testimony: '+ client.area.testimony.title
         i = 1
         for x in testi:
@@ -327,5 +329,4 @@ def ooc_cmd_testimony(client, arg):
             testi_msg += x[4]
             i = i + 1
         client.send_ooc(testi_msg)
-    else:
-        raise ServerError('There is no testimony in this area.')
+        
