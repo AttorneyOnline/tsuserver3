@@ -671,17 +671,20 @@ class Area:
                     try:
                         opponent = None
                         for t in self.clients:
+                            # Ignore ourselves
+                            if t == client:
+                                continue
                             # We're @num so we're trying to grab a Client ID, don't do shownames
                             if target.strip().isnumeric():
                                 if t.id == int(target):
                                     opponent = t
                                     break
                             # Loop through the shownames if it's @text
-                            elif target in t.showname.lower():
+                            if target in t.showname.lower():
                                 opponent = t
 
                         if opponent != None:
-                            self.start_debate(client, t, is_pta)
+                            self.start_debate(client, opponent, is_pta)
                         else:
                             raise AreaError('Interjection minigame - target not found!')
                     except Exception as ex:
@@ -1182,7 +1185,7 @@ class Area:
             return 0
         return self.minigame_schedule.when() - asyncio.get_event_loop().time()
 
-    def end_minigame(self):
+    def end_minigame(self, reason=''):
         if self.minigame_schedule:
             self.minigame_schedule.cancel()
 
@@ -1193,7 +1196,7 @@ class Area:
         # Timer ID 3 is reserved for minigames
         # 3 stands for unset and hide
         self.send_command('TI', 3, 3)
-        self.send_ic(None, '1', 0, "", "../misc/blank", f"~~{self.minigame} END!", "", "", 0, -1, 0, 0, [0], 0, 0, 0, "System", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
+        self.send_ic(None, '1', 0, "", "../misc/blank", f"~~}}`{self.minigame} END!`\\n{reason}", "", "", 0, -1, 0, 0, [0], 0, 0, 0, "System", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
         self.minigame = ''
 
     def start_debate(self, client, target, pta=False):
@@ -1216,11 +1219,11 @@ class Area:
 
             if len(self.blue_team) <= 0:
                 self.broadcast_ooc('Blue team conceded!')
-                self.end_minigame()
+                self.end_minigame('Blue team conceded!')
                 return
             elif len(self.red_team) <= 0:
                 self.broadcast_ooc('Red team conceded!')
-                self.end_minigame()
+                self.end_minigame('Red team conceded!')
                 return
             self.broadcast_ooc(f'[{client.id}] {client.showname} is now part of the {team} team!')
             database.log_area('minigame.sd', client, client.area, target=target, message=f'{self.minigame} is now part of the {team} team!')
@@ -1228,7 +1231,7 @@ class Area:
         elif self.minigame == 'Cross Swords':
             if target == client:
                 self.broadcast_ooc(f'[{client.id}] {client.showname} conceded!')
-                self.end_minigame()
+                self.end_minigame(f'[{client.id}] {client.showname} conceded!')
                 return
             if not self.can_scrum_debate:
                 raise AreaError('You may not scrum debate in this area!')
@@ -1280,7 +1283,7 @@ class Area:
         else:
             if target == client:
                 self.broadcast_ooc(f'[{client.id}] {client.showname} conceded!')
-                self.end_minigame()
+                self.end_minigame(f'[{client.id}] {client.showname} conceded!')
                 return
             raise AreaError(f'{self.minigame} is happening! You cannot interrupt it.')
 
@@ -1291,8 +1294,8 @@ class Area:
         self.send_command('TI', 3, 2)
         self.send_command('TI', 3, 0, timer * 1000)
         self.minigame_schedule = asyncio.get_event_loop().call_later(
-            timer, lambda: self.end_minigame())
-        self.broadcast_ooc(f'{self.minigame}! [{client.id}] {client.showname}(RED) VS [{target.id}] {target.showname}(BLUE). You have {timer} seconds.\n/cs <id> to join the debate against target ID.')
+            timer, lambda: self.end_minigame('Timer expired!'))
+        self.broadcast_ooc(f'{self.minigame}! 🔴[{client.id}] {client.showname}(Red) ⚔VERSUS⚔ 🔵[{target.id}] {target.showname}(Blue). You have {timer} seconds.\n/cs <id> to join the debate against target ID.')
         # self.send_ic(None, '1', 0, "", "../misc/blank", f"~~}}}}|{self.minigame}!|\n[{client.id}] ~{client.showname}~ VS [{target.id}] √{target.showname}√\\n{int(timer)} seconds left.", "", "", 0, -1, 0, 0, [0], 0, 0, 0, "System", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
 
     class JukeboxVote:

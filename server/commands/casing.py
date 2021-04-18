@@ -506,27 +506,25 @@ def ooc_cmd_cs(client, arg):
     """
     if arg == '':
         if client.area.minigame_schedule and not client.area.minigame_schedule.cancelled():
-            msg = f"It's {client.area.minigame}!"
-            msg += '\nRed Team:'
+            msg = f'Current minigame is {client.area.minigame}!'
             red = []
             for cid in client.area.red_team:
                 name = client.server.char_list[cid]
                 for c in client.area.clients:
                     if c.char_id == cid:
                         name = c.showname
-                red.append(name)
+                red.append(f'🔴{name} (Red)')
             msg += '\n'.join(red)
-
-            msg += '\nBlue Team:'
+            msg += '\n⚔VERSUS⚔\n'
             blue = []
-            for cid in client.area.red_team:
+            for cid in client.area.blue_team:
                 name = client.server.char_list[cid]
                 for c in client.area.clients:
                     if c.char_id == cid:
                         name = c.showname
-                blue.append(name)
+                blue.append(f'🔵{name} (Blue)')
             msg += '\n'.join(blue)
-            msg += f'{int(client.area.minigame_time_left)} seconds left.'
+            msg += f'\n⏲{int(client.area.minigame_time_left)} seconds left.'
             client.send_ooc(msg)
         else:
             client.send_ooc('There is no minigame running right now.')
@@ -537,7 +535,10 @@ def ooc_cmd_cs(client, arg):
         raise ArgumentError('Target not found.')
     else:
         try:
+            prev_mini = client.area.minigame
             client.area.start_debate(client, target)
+            if prev_mini == '':
+                client.area.send_ic(None, '1', 0, "", "../misc/blank", f"~~}}}}|{client.area.minigame}!|\n[{client.id}] ~{client.showname}~ VS [{target.id}] √{target.showname}√", "", "", 0, -1, 0, 0, [0], 0, 0, 0, "System", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
         except AreaError as ex:
             raise ex
 
@@ -550,31 +551,7 @@ def ooc_cmd_pta(client, arg):
     Usage: /pta <id>
     """
     if arg == '':
-        if client.area.minigame_schedule and not client.area.minigame_schedule.cancelled():
-            msg = f"It's {client.area.minigame}!"
-            msg += '\nRed Team:'
-            red = []
-            for cid in client.area.red_team:
-                name = client.server.char_list[cid]
-                for c in client.area.clients:
-                    if c.char_id == cid:
-                        name = c.showname
-                red.append(name)
-            msg += '\n'.join(red)
-
-            msg += '\nBlue Team:'
-            blue = []
-            for cid in client.area.red_team:
-                name = client.server.char_list[cid]
-                for c in client.area.clients:
-                    if c.char_id == cid:
-                        name = c.showname
-                blue.append(name)
-            msg += '\n'.join(blue)
-            msg += f'{int(client.area.minigame_time_left)} seconds left.'
-            client.send_ooc(msg)
-        else:
-            client.send_ooc('There is no minigame running right now.')
+        ooc_cmd_cs(client, arg)
         return
     try:
         target = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), True)[0]
@@ -582,7 +559,10 @@ def ooc_cmd_pta(client, arg):
         raise ArgumentError('Target not found.')
     else:
         try:
+            prev_mini = client.area.minigame
             client.area.start_debate(client, target, pta=True)
+            if prev_mini == '':
+                client.area.send_ic(None, '1', 0, "", "../misc/blank", f"~~}}}}`{client.area.minigame}!`\n[{client.id}] ~{client.showname}~ VS [{target.id}] √{target.showname}√", "", "", 0, -1, 0, 0, [0], 0, 0, 0, "System", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
         except AreaError as ex:
             raise ex
 
@@ -596,8 +576,11 @@ def ooc_cmd_concede(client, arg):
         try:
             # CM's end the minigame automatically using /concede
             if client in client.area.owners:
-                client.area.end_minigame()
+                client.area.end_minigame('Forcibly ended.')
+                client.area.broadcast_ooc('The minigame has been forcibly ended.')
                 return
             client.area.start_debate(client, client) # starting a debate against yourself is a concede
         except AreaError as ex:
             raise ex
+    else:
+        client.send_ooc('There is no minigame running right now.')
