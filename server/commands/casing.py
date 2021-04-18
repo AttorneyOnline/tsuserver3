@@ -512,7 +512,7 @@ def ooc_cmd_cs(client, arg):
                 name = client.server.char_list[cid]
                 for c in client.area.clients:
                     if c.char_id == cid:
-                        name = c.showname
+                        name = f'[{c.id}] {c.showname}'
                 red.append(f'🔴{name} (Red)')
             msg += '\n'.join(red)
             msg += '\n⚔VERSUS⚔\n'
@@ -521,7 +521,7 @@ def ooc_cmd_cs(client, arg):
                 name = client.server.char_list[cid]
                 for c in client.area.clients:
                     if c.char_id == cid:
-                        name = c.showname
+                        name = f'[{c.id}] {c.showname}'
                 blue.append(f'🔵{name} (Blue)')
             msg += '\n'.join(blue)
             msg += f'\n⏲{int(client.area.minigame_time_left)} seconds left.'
@@ -529,16 +529,29 @@ def ooc_cmd_cs(client, arg):
         else:
             client.send_ooc('There is no minigame running right now.')
         return
+    args = arg.split()
     try:
-        target = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), True)[0]
+        target = client.server.client_manager.get_targets(client, TargetType.ID, int(args[0]), True)[0]
     except:
         raise ArgumentError('Target not found.')
     else:
         try:
+            pta = False
+            if len(args) > 1:
+                pta = args[1] == '1'
             prev_mini = client.area.minigame
-            client.area.start_debate(client, target)
-            if prev_mini == '':
-                client.area.send_ic(None, '1', 0, "", "../misc/blank", f"~~}}}}|{client.area.minigame}!|\n[{client.id}] ~{client.showname}~ VS [{target.id}] √{target.showname}√", "", "", 0, -1, 0, 0, [0], 0, 0, 0, "System", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
+            client.area.start_debate(client, target, pta=pta)
+            if prev_mini != client.area.minigame:
+                us = f'[{client.id}] ~{client.showname}~'
+                them = f'[{target.id}] √{target.showname}√'
+                if client.area.minigame == 'Scrum Debate':
+                    for cid in client.area.blue_team:
+                        if client.char_id == cid:
+                            us = f'[{client.id}] √{client.showname}√'
+                            them = f'[{target.id}] ~{target.showname}~'
+                            break
+                msg = f'~~```}}}}{client.area.minigame}!`\\n{us} objects to {them}!'
+                client.area.send_ic(None, '1', 0, "", "../misc/blank", msg, "", "", 0, -1, 0, 0, [0], 0, 0, 0, "System", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
         except AreaError as ex:
             raise ex
 
@@ -550,21 +563,8 @@ def ooc_cmd_pta(client, arg):
     Expires in 5 minutes.
     Usage: /pta <id>
     """
-    if arg == '':
-        ooc_cmd_cs(client, arg)
-        return
-    try:
-        target = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), True)[0]
-    except:
-        raise ArgumentError('Target not found.')
-    else:
-        try:
-            prev_mini = client.area.minigame
-            client.area.start_debate(client, target, pta=True)
-            if prev_mini == '':
-                client.area.send_ic(None, '1', 0, "", "../misc/blank", f"~~}}}}`{client.area.minigame}!`\n[{client.id}] ~{client.showname}~ VS [{target.id}] √{target.showname}√", "", "", 0, -1, 0, 0, [0], 0, 0, 0, "System", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
-        except AreaError as ex:
-            raise ex
+    args = arg.split()
+    ooc_cmd_cs(client, f'{args[0]} 1')
 
 
 def ooc_cmd_concede(client, arg):

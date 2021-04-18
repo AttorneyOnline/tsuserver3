@@ -1196,7 +1196,7 @@ class Area:
         # Timer ID 3 is reserved for minigames
         # 3 stands for unset and hide
         self.send_command('TI', 3, 3)
-        self.send_ic(None, '1', 0, "", "../misc/blank", f"~~}}`{self.minigame} END!`\\n{reason}", "", "", 0, -1, 0, 0, [0], 0, 0, 0, "System", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
+        self.send_ic(None, '1', 0, "", "../misc/blank", f"~~```}}}}{self.minigame} END!`\\n{reason}", "", "", 0, -1, 0, 0, [0], 0, 0, 0, "System", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
         self.minigame = ''
 
     def start_debate(self, client, target, pta=False):
@@ -1208,12 +1208,12 @@ class Area:
                 self.red_team.discard(client.char_id)
                 self.blue_team.add(client.char_id)
                 self.invite_list.add(client.id)
-                team = 'blue'
+                team = '🔵blue'
             elif target.char_id in self.blue_team:
                 self.blue_team.discard(client.char_id)
                 self.red_team.add(client.char_id)
                 self.invite_list.add(client.id)
-                team = 'red'
+                team = '🔴red'
             else:
                 raise AreaError('Target is not part of the minigame!')
 
@@ -1239,12 +1239,12 @@ class Area:
                 self.red_team.discard(client.char_id)
                 self.blue_team.add(client.char_id)
                 self.invite_list.add(client.id)
-                team = 'blue'
+                team = '🔵blue'
             elif target.char_id in self.blue_team:
                 self.blue_team.discard(client.char_id)
                 self.red_team.add(client.char_id)
                 self.invite_list.add(client.id)
-                team = 'red'
+                team = '🔴red'
             else:
                 raise AreaError('Target is not part of the minigame!')
             timeleft = self.minigame_schedule.when() - asyncio.get_event_loop().time()
@@ -1295,8 +1295,22 @@ class Area:
         self.send_command('TI', 3, 0, timer * 1000)
         self.minigame_schedule = asyncio.get_event_loop().call_later(
             timer, lambda: self.end_minigame('Timer expired!'))
-        self.broadcast_ooc(f'{self.minigame}! 🔴[{client.id}] {client.showname}(Red) ⚔VERSUS⚔ 🔵[{target.id}] {target.showname}(Blue). You have {timer} seconds.\n/cs <id> to join the debate against target ID.')
-        # self.send_ic(None, '1', 0, "", "../misc/blank", f"~~}}}}|{self.minigame}!|\n[{client.id}] ~{client.showname}~ VS [{target.id}] √{target.showname}√\\n{int(timer)} seconds left.", "", "", 0, -1, 0, 0, [0], 0, 0, 0, "System", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
+
+        leader_red = ''
+        for cid in self.red_team:
+            leader_red = self.server.char_list[cid]
+            for c in self.clients:
+                if c.char_id == cid:
+                    leader_red = f'[{c.id}] {c.showname}'
+                    break
+        leader_blue = ''
+        for cid in self.blue_team:
+            leader_blue = self.server.char_list[cid]
+            for c in self.clients:
+                if c.char_id == cid:
+                    leader_blue = f'[{c.id}] {c.showname}'
+                    break
+        self.broadcast_ooc(f'{self.minigame}!\n🔴{leader_red} ⚔VERSUS⚔ 🔵{leader_blue} (Blue).\n⏲You have {timer} seconds.\n/cs <id> to join the debate against target ID.')
 
     class JukeboxVote:
         """Represents a single vote cast for the jukebox."""

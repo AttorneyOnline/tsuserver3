@@ -771,8 +771,8 @@ class AOProtocol(asyncio.Protocol):
             # We're in a minigame w/ team setups
             if opposing_team != None:
                 charid_pair = -1
-                # Last speaker is us and our message already paired us with someone
-                if self.client.area.last_ic_message != None and self.client.area.last_ic_message[8] == self.client.char_id and self.client.area.last_ic_message[16] != -1:
+                # Last speaker is us and our message already paired us with someone, and that someone is on the opposing team
+                if self.client.area.last_ic_message != None and self.client.area.last_ic_message[8] == self.client.char_id and self.client.area.last_ic_message[16] != -1 and int(self.client.area.last_ic_message[16].split("^")[0]) in opposing_team:
                     charid_pair = int(self.client.area.last_ic_message[16].split("^")[0])
                 else:
                     for other_cid in opposing_team:
@@ -1035,7 +1035,7 @@ class AOProtocol(asyncio.Protocol):
                     # See if the testimony is supposed to end here.
 
                     # Center it and make it speedy
-                    lst[4] = "~~}}-- " + self.client.area.testimony_title + " --"
+                    lst[4] = "~~````}}-- " + self.client.area.testimony_title + " --"
 
                     # Make it orange
                     lst[14] = 3
