@@ -652,7 +652,7 @@ class Area:
             self.next_message_time = round(time.time() * 1000.0 + delay)
 
             # Objection used
-            if int(args[10]) == 2:
+            if int(args[10].split('<and>')[0]) == 2:
                 msg = args[4].lower()
                 target = ''
                 is_pta = False
