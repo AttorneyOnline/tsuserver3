@@ -821,8 +821,7 @@ def ooc_cmd_narrate(client, arg):
 
 def ooc_cmd_blankpost(client, arg):
     """
-    Speak as a Narrator for your next emote.
-    If using 2.9.1, when you speak IC only the chat box will be affected, making you "narrate" over the current visuals.
+    Use a blank image for your next emote (base/misc/blank.png, will be a missingno if you don't have it)
     tog can be `on`, `off` or empty.
     Usage: /blankpost [tog]
     """
