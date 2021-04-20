@@ -1196,7 +1196,7 @@ class Area:
         # Timer ID 3 is reserved for minigames
         # 3 stands for unset and hide
         self.send_command('TI', 3, 3)
-        self.send_ic(None, '1', 0, "", "../misc/blank", f"~~```}}}}{self.minigame} END!`\\n{reason}", "", "", 0, -1, 0, 0, [0], 0, 0, 0, "System", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
+        self.send_ic(None, '1', 0, "", "../misc/blank", f"~~}}}}`{self.minigame} END!`\\n{reason}", "", "", 0, -1, 0, 0, [0], 0, 0, 0, "System", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, "")
         self.minigame = ''
 
     def start_debate(self, client, target, pta=False):

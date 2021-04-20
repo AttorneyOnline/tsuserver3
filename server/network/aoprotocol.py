@@ -1038,7 +1038,7 @@ class AOProtocol(asyncio.Protocol):
                     # See if the testimony is supposed to end here.
 
                     # Center it and make it speedy
-                    lst[4] = "~~````}}-- " + self.client.area.testimony_title + " --"
+                    lst[4] = "~~}}-- " + self.client.area.testimony_title + " --"
 
                     # Make it orange
                     lst[14] = 3
