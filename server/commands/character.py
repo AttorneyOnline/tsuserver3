@@ -37,6 +37,8 @@ __all__ = [
     'ooc_cmd_chardesc',
     'ooc_cmd_chardesc_set',
     'ooc_cmd_chardesc_get',
+    'ooc_cmd_narrate',
+    'ooc_cmd_blankpost',
 ]
 
 
@@ -788,3 +790,57 @@ def ooc_cmd_chardesc_get(client, arg):
         database.log_area('chardesc.get', client, client.area, message=f'{target}: {desc}')
     except:
         raise ArgumentError('Target not found.')
+
+
+def ooc_cmd_narrate(client, arg):
+    """
+    Speak as a Narrator for your next emote.
+    If using 2.9.1, when you speak IC only the chat box will be affected, making you "narrate" over the current visuals.
+    tog can be `on`, `off` or empty.
+    Usage: /narrate [tog]
+    """
+    if len(arg.split()) > 1:
+        raise ArgumentError("This command can only take one argument ('on' or 'off') or no arguments at all!")
+    if arg:
+        if arg == 'on':
+            client.narrator = True
+        elif arg == 'off':
+            client.narrator = False
+        else:
+            raise ArgumentError("Invalid argument: {}".format(arg))
+    else:
+        client.narrator = not client.narrator
+    if client.blankpost == True:
+        client.blankpost = False
+        client.send_ooc(f'You cannot be a narrator and blankposting at the same time. Blankposting disabled!')
+    stat = 'no longer be narrating'
+    if client.narrator:
+        stat = 'be narrating now'
+    client.send_ooc(f'You will {stat}.')
+
+
+def ooc_cmd_blankpost(client, arg):
+    """
+    Speak as a Narrator for your next emote.
+    If using 2.9.1, when you speak IC only the chat box will be affected, making you "narrate" over the current visuals.
+    tog can be `on`, `off` or empty.
+    Usage: /blankpost [tog]
+    """
+    if len(arg.split()) > 1:
+        raise ArgumentError("This command can only take one argument ('on' or 'off') or no arguments at all!")
+    if arg:
+        if arg == 'on':
+            client.blankpost = True
+        elif arg == 'off':
+            client.blankpost = False
+        else:
+            raise ArgumentError("Invalid argument: {}".format(arg))
+    else:
+        client.blankpost = not client.blankpost
+    if client.narrator == True:
+        client.narrator = False
+        client.send_ooc(f'You cannot be a narrator and blankposting at the same time. Narrating disabled!')
+    stat = 'no longer be blankposting'
+    if client.blankpost:
+        stat = 'be blankposting now'
+    client.send_ooc(f'You will {stat}.')

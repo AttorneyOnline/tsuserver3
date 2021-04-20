@@ -584,6 +584,14 @@ class AOProtocol(asyncio.Protocol):
                 "Your message is a repeat of last one, don't spam!")
             return
 
+        # We're narrating over someone else as this char.
+        if self.client.narrator:
+            anim = ''
+        # We are blankposting as this char.
+        if self.client.blankpost:
+            pre = '-'
+            anim = '../misc/blank'
+
         if pos != '' and self.client.pos != pos:
             try:
                 self.client.change_position(pos)
