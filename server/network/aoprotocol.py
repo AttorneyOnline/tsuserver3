@@ -373,7 +373,7 @@ class AOProtocol(asyncio.Protocol):
         pair_order = 0
         if self.validate_net_cmd(args, self.ArgType.STR, # msg_type
                                  self.ArgType.STR_OR_EMPTY, self.ArgType.STR,   # pre, folder
-                                 self.ArgType.STR, self.ArgType.STR_OR_EMPTY,   # anim, text
+                                 self.ArgType.STR_OR_EMPTY, self.ArgType.STR_OR_EMPTY,   # anim, text
                                  self.ArgType.STR, self.ArgType.STR,            # pos, sfx
                                  self.ArgType.INT, self.ArgType.INT,            # emote_mod, cid
                                  self.ArgType.INT, self.ArgType.INT_OR_STR,     # sfx_delay, button
@@ -384,7 +384,7 @@ class AOProtocol(asyncio.Protocol):
             msg_type, pre, folder, anim, text, pos, sfx, emote_mod, cid, sfx_delay, button, evidence, flip, ding, color = args
         elif self.validate_net_cmd(
                 args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,              # msg_type, pre
-                self.ArgType.STR, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,  # folder, anim, text
+                self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR_OR_EMPTY,  # folder, anim, text
                 self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,           # pos, sfx, emote_mod
                 self.ArgType.INT, self.ArgType.INT, self.ArgType.INT_OR_STR,    # cid, sfx_delay, button
                 self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,           # evidence, flip, ding
@@ -395,7 +395,7 @@ class AOProtocol(asyncio.Protocol):
             msg_type, pre, folder, anim, text, pos, sfx, emote_mod, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre = args
         elif self.validate_net_cmd(
                 args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,              # msg_type, pre
-                self.ArgType.STR, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,  # folder, anim, text
+                self.ArgType.STR, self.ArgType.STR_OR_EMPTY, self.ArgType.STR_OR_EMPTY,  # folder, anim, text
                 self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,           # pos, sfx, emote_mod
                 self.ArgType.INT, self.ArgType.INT, self.ArgType.INT_OR_STR,    # cid, sfx_delay, button
                 self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,           # evidence, flip, ding
@@ -584,13 +584,13 @@ class AOProtocol(asyncio.Protocol):
                 "Your message is a repeat of last one, don't spam!")
             return
 
-        # We're narrating over someone else as this char.
-        if self.client.narrator:
-            anim = ''
-        # We are blankposting as this char.
+        # We are blankposting.
         if self.client.blankpost:
             pre = '-'
             anim = '../misc/blank'
+        # We're narrating, or we're hidden in some evidence.
+        if self.client.narrator or self.client.hidden_in != None:
+            anim = ''
 
         if pos != '' and self.client.pos != pos:
             try:
@@ -734,11 +734,6 @@ class AOProtocol(asyncio.Protocol):
 
         # If we are not whispering...
         if whisper_clients == None:
-            # Reveal ourselves from the evidence we were hiding in if it exists
-            if self.client.hidden_in != None:
-                self.client.hide(False)
-                self.client.area.broadcast_area_list(self.client)
-
             if text.strip() != '' or self.client.area.last_ic_message == None or self.client.area.last_ic_message[4].strip() != '':
                 # Discord Bridgebot
                 if 'bridgebot' in self.server.config and self.server.config['bridgebot']['enabled'] and \
