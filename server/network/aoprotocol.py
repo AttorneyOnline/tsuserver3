@@ -587,7 +587,7 @@ class AOProtocol(asyncio.Protocol):
         # We are blankposting.
         if self.client.blankpost:
             pre = '-'
-            anim = 'base/misc/blank'
+            anim = 'misc/blank'
         # We're narrating, or we're hidden in some evidence.
         if self.client.narrator or self.client.hidden_in != None:
             anim = ''
