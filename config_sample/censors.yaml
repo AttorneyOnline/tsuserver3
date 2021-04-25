@@ -1,12 +1,12 @@
 # These will only be matched if they're self-contained words, e.g. "balderdash" will be caught but "balderdashing" will not.
 whole:
   - badonkerman
-  - balderdash
+  - badonkerman2
 
 # These will be matched even if they're part of a word, for example "butt" would be caught and "butting in" would censor the "butt" part of the word.
 partial:
-  - butt
   - dzibilchaltunchunchucmil
+  - secondzibilchaltunchunchucmil
 
 # What will be used as the censor character, e.g. "butt" -> "****"
 replace: '*'

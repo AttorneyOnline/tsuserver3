@@ -67,6 +67,8 @@ def censor(text, censor_list=[], replace='*', whole_words=True):
     :param replace: what to replace every letter of the word with
     :param whole_word: if true, we'll only match full words instead of partial matches
     """
+    if censor_list == None or len(censor_list) <= 0:
+        return text
     regex = r'%s'
     if whole_words:
         regex = r'\b%s\b'
