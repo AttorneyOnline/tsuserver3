@@ -36,7 +36,7 @@ def ooc_cmd_bg(client, arg):
     if len(arg) == 0:
         pos_lock = ''
         if len(client.area.pos_lock) > 0:
-            pos = ' '.join(str(l) for l in client.area.pos_lock)
+            pos = ', '.join(str(l) for l in client.area.pos_lock)
             pos_lock = f'\nAvailable positions: {pos}.'
         client.send_ooc(f'Current background is {client.area.background}.{pos_lock}')
         return
@@ -302,11 +302,13 @@ def ooc_cmd_pos_lock(client, arg):
     """
     Lock current area's available positions into a list of pos separated by space.
     Use /pos_lock_clear to make the list empty.
+    If your pos have spaces in them, it must be a comma-separated list like /pos_lock pos one, pos two, pos X
+    If you're locking into a single pos with spaces in it, end it with a comma, like /pos_lock this is a pos,
     Usage:  /pos_lock <pos(s)>
     """
-    if not arg:
+    if not arg or arg.strip() == '':
         if len(client.area.pos_lock) > 0:
-            pos = ' '.join(str(l) for l in client.area.pos_lock)
+            pos = ', '.join(str(l) for l in client.area.pos_lock)
             client.send_ooc(f'Pos_lock is currently {pos}.')
         else:
             client.send_ooc('No pos lock set.')
@@ -320,15 +322,18 @@ def ooc_cmd_pos_lock(client, arg):
         raise ClientError('You must be authorized to do that.')
 
     client.area.pos_lock.clear()
-    args = arg.split()
+    if ',' in arg:
+        args = arg.split(',')
+    else:
+        args = arg.split()
     args = sorted(set(args),key=args.index) #remove duplicates while preserving order
     for pos in args:
-        pos = pos.lower()
-        if pos == 'none':
+        pos = pos.strip().lower()
+        if pos == 'none' or pos == '':
             continue
         client.area.pos_lock.append(pos)
 
-    pos = ' '.join(str(l) for l in client.area.pos_lock)
+    pos = ', '.join(str(l) for l in client.area.pos_lock)
     client.area.broadcast_ooc(f'Locked pos into {pos}.')
     client.area.send_command('SD', '*'.join(client.area.pos_lock)) #set that juicy pos dropdown
 

@@ -1152,7 +1152,7 @@ class ClientManager:
             :param pos: position in area (Default value = '')
             """
             if len(self.area.pos_lock) > 0 and not (pos in self.area.pos_lock):
-                poslist = ' '.join(str(l) for l in self.area.pos_lock)
+                poslist = ', '.join(str(l) for l in self.area.pos_lock)
                 raise ClientError(f'Invalid pos! Available pos are {poslist}.')
             if self.hidden_in != None:
                 # YOU DARE MOVE?!

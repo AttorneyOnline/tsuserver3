@@ -143,7 +143,9 @@
     - target_pos is the optional position that everyone should end up in when kicked.
 * **pos_lock** \<pos(s)>
     - Lock current area's available positions into a list of pos separated by space.
-    - Use /pos_lock_clear to make the list empty.
+    - Use /pos_lock none or /pos_lock_clear to make the list empty.
+    - If your pos have spaces in them, it must be a comma-separated list like /pos_lock pos one, pos two, pos X
+    - If you're locking into a single pos with spaces in it, end it with a comma, like /pos_lock this is a pos,
 * **pos_lock_clear**
     - Clear the current area's position lock and make all positions available.
 * **knock** \<id>
