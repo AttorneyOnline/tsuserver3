@@ -564,13 +564,14 @@ class ClientManager:
             self.send_command('HP', 1, self.area.hp_def)
             # Get prosecution HP bar
             self.send_command('HP', 2, self.area.hp_pro)
+
+            # Send the background information
             if self.area.dark:
-                # Send the background information
                 self.send_command('BN', self.area.background_dark, self.pos)
+            else:
+                self.send_command('BN', self.area.background, self.pos)
+
             if len(self.area.pos_lock) > 0:
-                if not self.area.dark:
-                    # Send the background information
-                    self.send_command('BN', self.area.background, self.pos)
                 #set that juicy pos dropdown
                 self.send_command('SD', '*'.join(self.area.pos_lock))
             # Send the evidence information
