@@ -20,6 +20,7 @@ import arrow
 import asyncio
 import logging
 import unicodedata
+import time
 
 from enum import Enum
 from typing import List
@@ -118,6 +119,8 @@ class AOProtocol(asyncio.Protocol):
                 try:
                     cmd, *args = msg.split('#')
                     self.net_cmd_dispatcher[cmd](self, args)
+                    if cmd != 'CH':
+                        self.client.last_pkt_time = time.time()
                 except KeyError:
                     logger_debug.debug(
                         f'Unknown incoming message from {ipid}: {msg}')
