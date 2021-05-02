@@ -147,7 +147,7 @@ class TsuServer3:
     async def idle_loop(self):
         while True:
             self.client_manager.check_idlers()
-            await asyncio.sleep(10)
+            await asyncio.sleep(60)
 
     @property
     def version(self):

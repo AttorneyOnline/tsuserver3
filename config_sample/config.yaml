@@ -85,6 +85,6 @@ default_ban_duration: 6 hours
 
 # Kicks idlers
 idle_timeout:
-  use_idle_timeout: true
+  use_idle_timeout: false
   kick_mods: false
   length: 300
