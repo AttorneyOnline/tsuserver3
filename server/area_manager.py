@@ -621,17 +621,7 @@ class AreaManager:
                     return False
                 message[14] = 1 # message[14] is color, and 1 is (by default) green
                 message = tuple(message)
-                i = 0
-                tempsti = [''] * (len(self.statements) + 1);
-                while i < index + 1:
-                    tempsti[i] = self.statements[i]
-                    i += 1
-                tempsti[index + 1] = message
-                i += 1
-                while i < len(tempsti):
-                    tempsti[i] = self.statements[i-1]
-                    i += 1
-                self.statements = tempsti
+                self.statements.insert(index + 1, message)
                 return True
             
         def start_testimony(self, client: ClientManager.Client, title: str) -> bool:
