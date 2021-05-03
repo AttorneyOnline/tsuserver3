@@ -561,6 +561,23 @@ class AOProtocol(asyncio.Protocol):
                     self.client.send_ooc(
                         "That does not look like a valid statement number!")
                     return
+            elif text.startswith('/insert '):
+                part = text.split(' ')
+                text = ' '.join(part[2:])
+                args[4] = text
+                color = 1
+                try:
+                    index = int(part[1])
+                    if not self.client.area.insert_testimony(self.client, index, args):
+                        return
+                    if self.client.area.is_testifying:
+                        return # don't send it again or it'll be rerecorded
+                    elif self.client.area.is_examining:
+                        self.client.area.examine_index = index + 1 # jump to the amended statement
+                except ValueError:
+                    self.client.send_ooc(
+                        "That does not look like a valid statement number!")
+                    return
             elif text.startswith('/add ') and self.client.area.is_examining:
                 part = text.split(' ')
                 text = ' '.join(part[1:])

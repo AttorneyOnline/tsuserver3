@@ -597,7 +597,7 @@ class AreaManager:
                 Returns:
                     bool: whether the statement was amended
                 """
-                if index < 1 or index > len(self.statements) + 1:
+                if index < 1 or index >= len(self.statements): #changed maximum value of index, otherwise it'd allow you to 'amend' testimony indexes which don't exist, to no avail - tested
                     return False
                 message[14] = 1 # message[14] is color, and 1 is (by default) green
                 message = tuple(message)
@@ -607,6 +607,21 @@ class AreaManager:
                         self.statements[i] = message
                         return True
                     i += 1
+                return True
+
+            def insert_statement(self, index: int, message: list) -> bool:
+                """Insert a statement into the testimony.
+                Args:
+                    index (int): index of the statement to insert the new one AFTER
+                    message (list): the new statement
+                Returns:
+                    bool: whether the statement was inserted
+                """
+                if index < 0 or index >= len(self.statements): #having the index of 0 available makes it possible to insert a statement before the first one, right after title
+                    return False
+                message[14] = 1 # message[14] is color, and 1 is (by default) green
+                message = tuple(message)
+                self.statements.insert(index + 1, message)
                 return True
             
         def start_testimony(self, client: ClientManager.Client, title: str) -> bool:
@@ -703,6 +718,26 @@ class AreaManager:
                 return True
             else:
                 client.send_ooc('Couldn\'t amend statement ' + str(index) + '. Are you sure it exists?')
+                return False
+
+        def insert_testimony(self, client: ClientManager.Client, index:int, statement: list) -> bool:
+            """
+            Insert into the testimony a new <statement> after the statement at <index>.
+            Args:
+                client (ClientManager.Client): requester
+                index (int): index of the statement to insert AFTER
+                statement (list): the affected statement
+            Returns:
+                bool: whether the insert was successful
+            """
+            if client not in self.owners and (self.evidence_mod == "HiddenCM" or self.evidence_mod == "Mods"):
+                client.send_ooc('You don\'t have permission to amend testimony in this area!')
+                return False
+            if self.testimony.insert_statement(index, statement):
+                client.send_ooc('Inserted a new statement after statement ' + str(index) + ' successfully.')
+                return True
+            else:
+                client.send_ooc('Couldn\'t find statement ' + str(index) + '. Are you sure it exists?')
                 return False
             
         def remove_statement(self, client: ClientManager.Client, index: int) -> bool:
