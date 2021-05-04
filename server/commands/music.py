@@ -1,3 +1,4 @@
+from server.jukebox import Jukebox
 from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, ServerError, ArgumentError
@@ -46,6 +47,7 @@ def ooc_cmd_jukebox_toggle(client, arg):
         raise ArgumentError('This command has no arguments.')
     client.area.jukebox = not client.area.jukebox
     client.area.jukebox_votes = []
+    client.area.jukebox_obj = Jukebox(client.area)
     client.area.broadcast_ooc('{} [{}] has set the jukebox to {}.'.format(
         client.char_name, client.id, client.area.jukebox))
     database.log_room('jukebox_toggle', client, client.area,
