@@ -183,8 +183,20 @@ def kickban(client, arg: str, ban_hdid):
         raise ArgumentError(f'Ambiguous input: {arg}\nPlease wrap your arguments '
                             'in quotes.')
 
-    ban_id = database.ban(ipid, reason, ban_type='ipid',
-                          banned_by=client, ban_id=ban_id, unban_date=unban_date)
+    try:
+        raw_ipid = args[0]
+        ipid = int(raw_ipid)
+    except ValueError:
+        raise ClientError(f'{raw_ipid} does not look like a valid IPID.')
+
+    if ban_id != None:
+        existing_ban = database.find_ban(None, None, ban_id)
+        if existing_ban:
+            if bool(existing_ban.unbanned) == True:
+                raise ClientError(f'{ban_id} is already unbanned.')
+
+    ban_id = database.ban(ipid, reason, ban_type='ipid', banned_by=client,
+                          ban_id=ban_id, unban_date=unban_date)
 
     targets = client.server.client_manager.get_targets(
         client, TargetType.IPID, ipid, False)
@@ -420,22 +432,25 @@ def ooc_cmd_baninfo(client, arg):
     if lookup_type not in ('ban_id', 'ipid', 'hdid'):
         raise ArgumentError('Incorrect lookup type.')
 
-    ban = database.find_ban(**{lookup_type: args[0]})
-    if ban is None:
+    bans = database.ban_history(**{lookup_type: args[0]})
+    if bans is None:
         client.send_ooc('No ban found for this ID.')
     else:
-        msg = f'Ban ID: {ban.ban_id}\n'
-        msg += 'Affected IPIDs: ' + \
-            ', '.join([str(ipid) for ipid in ban.ipids]) + '\n'
-        msg += 'Affected HDIDs: ' + ', '.join(ban.hdids) + '\n'
-        msg += f'Reason: "{ban.reason}"\n'
-        msg += f'Banned by: {ban.banned_by_name} ({ban.banned_by})\n'
+        msg = f'Bans for {args[0]}'
+        for ban in bans:
+            msg += f'\nBan ID: {ban.ban_id}\n'
+            msg += 'Affected IPIDs: ' + \
+                ', '.join([str(ipid) for ipid in ban.ipids]) + '\n'
+            msg += 'Affected HDIDs: ' + ', '.join(ban.hdids) + '\n'
+            msg += f'Reason: "{ban.reason}"\n'
+            msg += f'Unbanned: {bool(ban.unbanned)}\n'
+            msg += f'Banned by: {ban.banned_by_name} ({ban.banned_by})\n'
 
-        ban_date = arrow.get(ban.ban_date)
-        msg += f'Banned on: {ban_date.format()} ({ban_date.humanize()})\n'
-        if ban.unban_date is not None:
-            unban_date = arrow.get(ban.unban_date)
-            msg += f'Unban date: {unban_date.format()} ({unban_date.humanize()})'
-        else:
-            msg += 'Unban date: N/A'
+            ban_date = arrow.get(ban.ban_date)
+            msg += f'Banned on: {ban_date.format()} ({ban_date.humanize()})\n'
+            if ban.unban_date is not None:
+                unban_date = arrow.get(ban.unban_date)
+                msg += f'Unban date: {unban_date.format()} ({unban_date.humanize()})'
+            else:
+                msg += 'Unban date: N/A'
         client.send_ooc(msg)
