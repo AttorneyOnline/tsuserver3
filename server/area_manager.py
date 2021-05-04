@@ -27,7 +27,7 @@ from server import database
 from server.exceptions import AreaError
 from server.evidence import EvidenceList
 from server.client_manager import ClientManager
-
+from server.jukebox import Jukebox
 
 class AreaManager:
     """Holds the list of all areas."""
@@ -84,6 +84,10 @@ class AreaManager:
             self.is_locked = self.Locked.FREE
             self.blankposting_allowed = True
             self.non_int_pres_only = non_int_pres_only
+
+            if jukebox is True:
+                self.jukebox_obj = Jukebox(self)
+
             self.jukebox = jukebox
             self.jukebox_votes = []
             self.jukebox_prev_char_id = -1
@@ -247,105 +251,6 @@ class AreaManager:
                     if client.char_name in char_link and char in char_link:
                         return False
             return not self.server.char_emotes[char].validate(preanim, anim, sfx)
-
-        def add_jukebox_vote(self, client: ClientManager.Client, music_name: str, length: int = -1, showname: str = ''):
-            """Cast a vote on the jukebox.
-            Args:
-                client (ClientManager.Client): Client that is requesting
-                music_name (str): track name
-                length (int, optional): length of track. Defaults to -1.
-                showname (str, optional): showname of voter. Defaults to ''.
-            """
-            if not self.jukebox:
-                return
-            if length <= 0:
-                self.remove_jukebox_vote(client, False)
-            else:
-                self.remove_jukebox_vote(client, True)
-                self.jukebox_votes.append(
-                    self.JukeboxVote(client, music_name, length, showname))
-                client.send_ooc('Your song was added to the jukebox.')
-                if len(self.jukebox_votes) == 1:
-                    self.start_jukebox()
-
-        def remove_jukebox_vote(self, client: ClientManager.Client, silent: bool):
-            """Removes a vote on the jukebox.
-            Args:
-                client (ClientManager.Client): client whose vote should be removed
-                silent (bool): do not notify client
-            """
-
-            if not self.jukebox:
-                return
-            for current_vote in self.jukebox_votes:
-                if current_vote.client.id == client.id:
-                    self.jukebox_votes.remove(current_vote)
-            if not silent:
-                client.send_ooc(
-                    'You removed your song from the jukebox.')
-
-        def get_jukebox_picked(self):
-            """Randomly choose a track from the jukebox."""
-            if not self.jukebox:
-                return
-            if len(self.jukebox_votes) == 0:
-                return None
-            elif len(self.jukebox_votes) == 1:
-                return self.jukebox_votes[0]
-            else:
-                weighted_votes = []
-                for current_vote in self.jukebox_votes:
-                    i = 0
-                    while i < current_vote.chance:
-                        weighted_votes.append(current_vote)
-                        i += 1
-                return random.choice(weighted_votes)
-
-        def start_jukebox(self):
-            """Initialize jukebox mode if needed and play the next track."""
-            # There is a probability that the jukebox feature has been turned off since then,
-            # we should check that.
-            # We also do a check if we were the last to play a song, just in case.
-            if not self.jukebox:
-                if self.current_music_player == 'The Jukebox' and self.current_music_player_ipid == 'has no IPID':
-                    self.current_music = ''
-                return
-
-            vote_picked = self.get_jukebox_picked()
-
-            if vote_picked is None:
-                self.current_music = ''
-                return
-
-            if vote_picked.client.char_id != self.jukebox_prev_char_id or vote_picked.name != self.current_music or len(
-                    self.jukebox_votes) > 1:
-                self.jukebox_prev_char_id = vote_picked.client.char_id
-                if vote_picked.showname == '':
-                    self.send_command('MC', vote_picked.name,
-                                      vote_picked.client.char_id)
-                else:
-                    self.send_command('MC', vote_picked.name,
-                                      vote_picked.client.char_id,
-                                      vote_picked.showname)
-            else:
-                self.send_command('MC', vote_picked.name, -1)
-
-            self.current_music_player = 'The Jukebox'
-            self.current_music_player_ipid = 'has no IPID'
-            self.current_music = vote_picked.name
-
-            for current_vote in self.jukebox_votes:
-                # Choosing the same song will get your votes down to 0, too.
-                # Don't want the same song twice in a row!
-                if current_vote.name == vote_picked.name:
-                    current_vote.chance = 0
-                else:
-                    current_vote.chance += 1
-
-            if self.music_looper:
-                self.music_looper.cancel()
-            self.music_looper = asyncio.get_event_loop().call_later(
-                vote_picked.length, lambda: self.start_jukebox())
 
         def play_music(self, name: str, cid: int, loop: int = 0, showname: str ="", effects: int = 0):
             """Play a track.
@@ -711,15 +616,6 @@ class AreaManager:
                     return False
             self.send_command('MS', *self.testimony.statements[self.examine_index])
             return True
-                
-        class JukeboxVote:
-            """Represents a single vote cast for the jukebox."""
-            def __init__(self, client, name, length, showname):
-                self.client = client
-                self.name = name
-                self.length = length
-                self.chance = 1
-                self.showname = showname
 
     def __init__(self, server):
         self.server = server
