@@ -858,10 +858,9 @@ class AOProtocol(asyncio.Protocol):
                 effects = 0
                 if len(args) > 3:
                     effects = int(args[3])
-
                 # Jukebox check
                 if self.client.area.jukebox:
-                    self.client.area.add_jukebox_vote(self.client, name,
+                    self.client.area.jukebox_obj.add_jukebox_vote(self.client, name,
                                                       length, showname)
                     database.log_room('jukebox.vote', self.client,
                                       self.client.area, message=name)
