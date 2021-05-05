@@ -318,7 +318,7 @@ def ooc_cmd_pos_lock(client, arg):
         ooc_cmd_pos_lock_clear(client, arg)
         return
 
-    if not client.is_mod and (client not in client.area.owners):
+    if not client.is_mod and not (client in client.area.owners):
         raise ClientError('You must be authorized to do that.')
 
     client.area.pos_lock.clear()
