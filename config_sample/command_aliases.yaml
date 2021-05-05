@@ -35,9 +35,8 @@ disconnect: oneunlink
 editambience: edit_ambience
 evi_mod: evidence_mod
 evi_swap: evidence_swap
-evidence_swap: evi_swap
 evimod: evidence_mod
-eviswap: evi_swap
+eviswap: evidence_swap
 force_pos: forcepos
 ga: getarea
 gas: getareas

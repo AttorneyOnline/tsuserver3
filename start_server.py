@@ -60,6 +60,8 @@ if __name__ == '__main__':
     try:
         check_deps()
         main()
+    except KeyboardInterrupt:
+        print('Keyboard interrupt detected, closing server...')
     except SystemExit:
         # Truly idiotproof
         if os.name == 'nt':
