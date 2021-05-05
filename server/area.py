@@ -578,6 +578,22 @@ class Area:
                     (cmd == 'MS' and c.remote_listen == 1):
                 c.send_command(cmd, *args)
 
+    def send_owner_ic(self, bg, cmd, *args):
+        """
+        Send an IC message to all owners of the area
+        that are not currently in the area, with the specified bg.
+        """
+        for c in self.owners:
+            if c in self.clients:
+                continue
+            if c.remote_listen == 3 or \
+                    (cmd == 'MS' and c.remote_listen == 1):
+                if c.area.background != bg:
+                    c.send_command('BN', bg)
+                c.send_command(cmd, *args)
+                if c.area.background != bg:
+                    c.send_command('BN', c.area.background)
+
     def broadcast_ooc(self, msg):
         """
         Broadcast an OOC message to all clients in the area.

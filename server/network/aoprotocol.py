@@ -809,8 +809,7 @@ class AOProtocol(asyncio.Protocol):
                                 sfx_looping, screenshake, frames_shake,
                                 frames_realization, frames_sfx,
                                 additive, effect, targets=whisper_clients)
-
-        self.client.area.send_owner_command(
+        self.client.area.send_owner_ic(self.client.area.background,
             'MS', msg_type, pre, folder, anim,
             '}}}[' + str(self.client.area.id) + '] {{{' + msg, pos, sfx,
             emote_mod, cid, sfx_delay, button, self.client.evi_list[evidence],
