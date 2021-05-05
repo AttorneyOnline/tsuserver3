@@ -159,6 +159,11 @@
 * **edit_ambience** [tog]
     - Toggle edit mode for setting ambience. Playing music will set it as the area's ambience.
     - tog can be `on`, `off` or empty.
+* **lights** [tog]
+    - Toggle lights for this area. If lights are off, players will not be able to use /getarea or see evidence.
+    - Players will also be unable to see area movement messages or use /chardesc.
+    - You can change /bg, /desc and /pos_lock of the area when its dark and it will remember it next time you turn the lights off.
+    - tog can be `on`, `off` or empty.
 ## Casing
 * **doc** [url]
     - Show or change the link for the current case document.

@@ -543,9 +543,11 @@ class ClientManager:
                         a.remove_owner(self)
             self.area.remove_client(self)
             self.area = area
-            if len(area.pos_lock) > 0 and not (target_pos in area.pos_lock):
-                target_pos = area.pos_lock[0]
-            area.new_client(self)
+            if len(self.area.pos_lock) > 0 and not (target_pos in self.area.pos_lock):
+                target_pos = self.area.pos_lock[0]
+            if self.area.dark:
+                target_pos = self.area.pos_dark
+            self.area.new_client(self)
             if target_pos != '':
                 self.pos = target_pos
 
@@ -562,9 +564,13 @@ class ClientManager:
             self.send_command('HP', 1, self.area.hp_def)
             # Get prosecution HP bar
             self.send_command('HP', 2, self.area.hp_pro)
-            # Send the background information
-            self.send_command('BN', self.area.background, self.pos)
+            if self.area.dark:
+                # Send the background information
+                self.send_command('BN', self.area.background_dark, self.pos)
             if len(self.area.pos_lock) > 0:
+                if not self.area.dark:
+                    # Send the background information
+                    self.send_command('BN', self.area.background, self.pos)
                 #set that juicy pos dropdown
                 self.send_command('SD', '*'.join(self.area.pos_lock))
             # Send the evidence information
@@ -587,7 +593,7 @@ class ClientManager:
                 jd = 0
             self.send_command('JD', jd)
             self.refresh_music()
-            msg = f'Changed to area: [{area.id}] {area.name}.'
+            msg = f'Changed to area: [{self.area.id}] {self.area.name}.'
             if self.area.desc != '' and not self.blinded:
                 desc = self.area.desc[:128]
                 if len(self.area.desc) > len(desc):
@@ -706,8 +712,8 @@ class ClientManager:
                         # Stop following a ghost.
                         c.unfollow(silent=True)
 
-            if not self.area.force_sneak and not self.sneaking and not self.hidden:
-                if not old_area.force_sneak:
+            if not self.area.dark and not self.area.force_sneak and not self.sneaking and not self.hidden:
+                if not old_area.dark and not old_area.force_sneak:
                     for c in old_area.clients:
                         # Check if the GMs should really see this msg
                         if c in old_area.owners and c.remote_listen in [2, 3]:
@@ -736,6 +742,8 @@ class ClientManager:
                     reason = ' (you are hidden)'
                 if self.area.force_sneak:
                     reason = ' (the area forces sneaking)'
+                if self.area.dark:
+                    reason = ' (the area is dark)'
                 self.send_ooc(
                     f'Changed area unannounced{reason}.')
 
@@ -834,7 +842,8 @@ class ClientManager:
             locked = '🔒' if area.locked else ''
             passworded = '🔑' if area.password != '' else ''
             muted = '🔇' if area.muted else ''
-            info += f'=== [{area.id}] {area.name} (users: {len(player_list)}) {status}{hidden}{locked}{passworded}{muted}==='
+            dark = '🌑' if area.dark else ''
+            info += f'=== [{area.id}] {area.name} (users: {len(player_list)}) {status}{hidden}{locked}{passworded}{muted}{dark}==='
 
             sorted_clients = []
             for client in player_list:
@@ -950,7 +959,10 @@ class ClientManager:
             self.send_command('CharsCheck', *self.get_available_char_list())
             self.send_command('HP', 1, self.area.hp_def)
             self.send_command('HP', 2, self.area.hp_pro)
-            self.send_command('BN', self.area.background, self.pos)
+            if self.area.dark:
+                self.send_command('BN', self.area.background_dark, self.area.pos_dark)
+            else:
+                self.send_command('BN', self.area.background, self.pos)
             self.send_command('LE', *self.area.get_evidence_list(self))
             self.send_command('MM', 1)
 

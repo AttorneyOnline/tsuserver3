@@ -599,6 +599,8 @@ class AOProtocol(asyncio.Protocol):
                 pos = ''
         if len(self.client.area.pos_lock) > 0 and pos not in self.client.area.pos_lock:
             pos = self.client.area.pos_lock[0]
+        if self.client.area.dark:
+            pos = self.client.area.pos_dark
 
         if text.lower().startswith('/w ') or text.lower().startswith('[w] '):
             if not self.client.area.can_whisper and not self.client.is_mod and not self.client in self.client.area.owners:

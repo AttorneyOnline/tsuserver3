@@ -93,6 +93,14 @@ class Area:
         self.can_scrum_debate = False
         self.can_panic_talk_action = False
         self.force_sneak = False
+        # Whether the area is dark or not
+        self.dark = False
+        # The background to set when area's lights are turned off
+        self.background_dark = 'fxdarkness'
+        # The pos to set when the area's lights are turned off
+        self.pos_dark = 'wit'
+        # The desc to set when the area's lights are turned off
+        self.desc_dark = "It's pitch black in here, you can't see a thing!"
         # /prefs end
 
         # DR minigames
@@ -322,6 +330,14 @@ class Area:
             self.force_sneak = area['force_sneak']
         if 'password' in area:
             self.password = area['password']
+        if 'dark' in area:
+            self.dark = area['dark']
+        if 'background_dark' in area:
+            self.background_dark = area['background_dark']
+        if 'pos_dark' in area:
+            self.pos_dark = area['pos_dark']
+        if 'desc_dark' in area:
+            self.desc_dark = area['desc_dark']
 
         if 'evidence' in area and len(area['evidence']) > 0:
             self.evi_list.evidences.clear()
@@ -347,7 +363,10 @@ class Area:
                 self.link(key, locked, hidden, target_pos, can_peek, evidence, password)
 
         # Update the clients in that area
-        self.change_background(self.background)
+        if self.dark:
+            self.change_background(self.background_dark)
+        else:
+            self.change_background(self.background)
         self.change_hp(1, self.hp_def)
         self.change_hp(2, self.hp_pro)
         if self.ambience:
@@ -407,6 +426,10 @@ class Area:
         area['can_panic_talk_action'] = self.can_panic_talk_action
         area['force_sneak'] = self.force_sneak
         area['password'] = self.password
+        area['dark'] = self.dark
+        area['background_dark'] = self.background_dark
+        area['pos_dark'] = self.pos_dark
+        area['desc_dark'] = self.desc_dark
         if len(self.evi_list.evidences) > 0:
             area['evidence'] = [e.to_dict() for e in self.evi_list.evidences]
         if len(self.links) > 0:
@@ -1010,7 +1033,7 @@ class Area:
             self.hp_pro = val
         self.send_command('HP', side, val)
 
-    def change_background(self, bg):
+    def change_background(self, bg, silent=False):
         """
         Set the background.
         :param bg: background name
@@ -1021,12 +1044,18 @@ class Area:
                 raise AreaError('backgrounds.yaml failed to initialize! Please set "use_backgrounds_yaml" to "false" in the config/config.yaml, or create a new "backgrounds.yaml" list in the "config/" folder.')
             if bg.lower() not in (name.lower() for name in self.server.backgrounds):
                 raise AreaError(f'Invalid background name {bg}.\nPlease add it to the "backgrounds.yaml" or change the background name for area [{self.id}] {self.name}.')
-        self.background = bg
+        if self.dark:
+            self.background_dark = bg
+        else:
+            self.background = bg
         for client in self.clients:
             #Update all clients to the pos lock
             if len(self.pos_lock) > 0 and client.pos not in self.pos_lock:
                 client.change_position(self.pos_lock[0])
-            client.send_command('BN', self.background, client.pos)
+            if silent:
+                client.send_command('BN', bg)
+            else:
+                client.send_command('BN', bg, client.pos)
 
     def change_status(self, value):
         """

@@ -109,6 +109,8 @@ class EvidenceList:
         """
         if not self.login(client):
             return
+        if client.area.dark:
+            return
         if len(self.evidences) >= self.limit:
             client.send_ooc(
                 f'You can\'t have more than {self.limit} evidence items at a time.'
@@ -159,7 +161,7 @@ class EvidenceList:
                 evi_list.append(
                     self.Evidence(evi.name, desc,
                                   evi.image, evi.pos).to_string())
-            elif self.can_see(self.evidences[i], client.pos):
+            elif not client.area.dark and self.can_see(self.evidences[i], client.pos):
                 nums_list.append(i+1)
                 evi_list.append(self.evidences[i].to_string())
         return nums_list, evi_list
@@ -187,6 +189,8 @@ class EvidenceList:
 
         """
         if not self.login(client):
+            return
+        if client.area.dark:
             return
         evi = self.evidences[id]
         if not client in client.area.owners and not client.is_mod:
@@ -216,6 +220,8 @@ class EvidenceList:
 
         """
         if not self.login(client):
+            return
+        if client.area.dark:
             return
         if client in client.area.owners or client.is_mod:
             if client.area.evidence_mod == 'HiddenCM':

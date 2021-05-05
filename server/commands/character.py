@@ -713,6 +713,9 @@ def ooc_cmd_chardesc(client, arg):
     if client.blinded:
         raise ClientError('You are blinded!')
 
+    if client.area.dark:
+        raise ClientError('This area is shrouded in darkness!')
+
     if arg.isnumeric():
         try:
             target = client.server.client_manager.get_targets(client, TargetType.ID, int(arg), True)[0].char_id

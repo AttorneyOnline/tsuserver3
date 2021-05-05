@@ -25,6 +25,7 @@ __all__ = [
     'ooc_cmd_max_players',
     'ooc_cmd_desc',
     'ooc_cmd_edit_ambience',
+    'ooc_cmd_lights',
 ]
 
 
@@ -46,6 +47,8 @@ def ooc_cmd_bg(client, arg):
         raise AreaError("You are not on the area's invite list!")
     if not client.is_mod and not (client in client.area.owners) and client.char_id == -1:
         raise ClientError("You may not do that while spectating!")
+    if client.area.dark and not client.is_mod and not (client in client.area.owners):
+        raise ClientError('You must be authorized to do that.')
     try:
         client.area.change_background(arg)
     except AreaError:
@@ -131,6 +134,8 @@ def ooc_cmd_getarea(client, arg):
             raise ClientError('You are blinded!')
         if not client.area.can_getarea:
             raise ClientError('You cannot use /getarea in this area!')
+        if client.area.dark:
+            raise ClientError('This area is shrouded in darkness!')
     client.send_area_info(client.area.id, False)
 
 
@@ -306,6 +311,16 @@ def ooc_cmd_pos_lock(client, arg):
     If you're locking into a single pos with spaces in it, end it with a comma, like /pos_lock this is a pos,
     Usage:  /pos_lock <pos(s)>
     """
+    if client.area.dark:
+        if not arg or arg.strip() == '':
+            pos = client.area.pos_dark
+            client.send_ooc(f'Current darkness pos is {pos}.')
+            return
+        if not client.is_mod and not (client in client.area.owners):
+            raise ClientError('You must be authorized to do that.')
+        client.area.pos_dark = arg
+        client.area.broadcast_ooc(f'Locked darkness pos into {arg}.')
+        return
     if not arg or arg.strip() == '':
         if len(client.area.pos_lock) > 0:
             pos = ', '.join(str(l) for l in client.area.pos_lock)
@@ -416,8 +431,12 @@ def ooc_cmd_peek(client, arg):
 
         try:
             client.try_access_area(area)
+            if not area.can_getarea:
+                raise ClientError("Can't peek in that area!")
+            if area.dark:
+                raise ClientError('Area is dark!')
         except ClientError as ex:
-            if not client.sneaking and not client.hidden and not 'inaccessible' in str(ex).lower():
+            if not client.area.dark and not client.sneaking and not client.hidden and 'locked' in str(ex).lower():
                 client.area.broadcast_ooc(f'[{client.id}] {client.showname} tried to peek into [{area.id}] {area.name} but {str(ex).lower()}')
                 # People from within the area have no distinction between peeking and moving inside
                 area.broadcast_ooc(f'Someone tried to enter from [{client.area.id}] {client.area.name} but {str(ex).lower()}')
@@ -484,14 +503,22 @@ def ooc_cmd_desc(client, arg):
     if client.blinded:
         raise ClientError('You are blinded!')
     if len(arg) == 0:
-        client.send_ooc(f'Description: {client.area.desc}')
+        desc = client.area.desc
+        if client.area.dark:
+            desc = client.area.desc_dark
+        client.send_ooc(f'Description: {desc}')
         database.log_area('desc.request', client, client.area)
     else:
         if client.area.cannot_ic_interact(client):
             raise ClientError("You are not on the area's invite list!")
         if not client.is_mod and not (client in client.area.owners) and client.char_id == -1:
             raise ClientError("You may not do that while spectating!")
-        client.area.desc = arg
+        if client.area.dark:
+            if not client.is_mod and not (client in client.area.owners):
+                raise ClientError('You must be authorized to do that.')
+            client.area.desc_dark = arg.strip()
+        else:
+            client.area.desc = arg.strip()
         desc = arg[:128]
         if len(arg) > len(desc):
             desc += "... Use /desc to read the rest."
@@ -521,3 +548,36 @@ def ooc_cmd_edit_ambience(client, arg):
     if client.edit_ambience:
         stat = 'now'
     client.send_ooc(f'Playing a song will {stat} edit the area\'s ambience.')
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_lights(client, arg):
+    """
+    Toggle lights for this area. If lights are off, players will not be able to use /getarea or see evidence.
+    Players will also be unable to see area movement messages or use /chardesc.
+    You can change /bg, /desc and /pos_lock of the area when its dark and it will remember it next time you turn the lights off.
+    tog can be `on`, `off` or empty.
+    Usage: /lights [tog]
+    """
+    if len(arg.split()) > 1:
+        raise ArgumentError("This command can only take one argument ('on' or 'off') or no arguments at all!")
+    if arg:
+        if arg == 'on':
+            client.area.dark = False
+        elif arg == 'off':
+            client.area.dark = True
+        else:
+            raise ArgumentError("Invalid argument: {}".format(arg))
+    else:
+        client.area.dark = not client.area.dark
+    stat = 'no longer'
+    bg = client.area.background
+    if client.area.dark:
+        stat = 'now'
+        bg = client.area.background_dark
+    for c in client.area.clients:
+        pos = c.pos
+        if c.area.dark:
+            pos = client.area.pos_dark
+        c.send_command('BN', bg, pos)
+    client.send_ooc(f'This area is {stat} dark.')
