@@ -95,7 +95,7 @@ class AreaManager:
             self.blankposting_allowed = True
             self.non_int_pres_only = non_int_pres_only
 
-            if jukebox is True:
+            if jukebox:
                 self.jukebox_obj = Jukebox(self)
 
             self.jukebox = jukebox
