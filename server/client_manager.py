@@ -670,7 +670,7 @@ class ClientManager:
             client (Client): Disconnected client
         """
         if client.area.jukebox:
-            client.area.remove_jukebox_vote(client, True)
+            client.area.jukebox_obj.remove_jukebox_vote(client)
         for a in self.server.area_manager.areas:
             if client in a.owners:
                 a.owners.remove(client)
