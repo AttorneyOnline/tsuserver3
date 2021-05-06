@@ -49,8 +49,9 @@ class Jukebox:
         if self.playing is False:
             self.area.send_command('MC', song_picked, song_length)
             self.playing = True
-            timer_for_next_song = Timer(song_length, self.set_not_playing)
-            timer_for_next_song.start()
+
+            # Set not playing once song is done running
+            asyncio.get_event_loop().call_later(song_length, self.set_not_playing)
 
     def find_length(self, song_name: str) -> int:
         vote: JukeboxVote
@@ -71,7 +72,9 @@ class Jukebox:
 
         if len(highest_occuring) == 0:
             highest_occuring_song = ''
-        highest_occuring_song: str = highest_occuring[0]
+        else:
+            highest_occuring_song: str = highest_occuring[0]
+
         length = self.find_length(highest_occuring_song)
         return highest_occuring_song, length
     
