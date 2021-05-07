@@ -82,3 +82,6 @@ max_chars: 256
 
 # How long a ban will last when no duration is given
 default_ban_duration: 6 hours
+
+# WebAO Asset URL for hosting files
+asset_url: 
