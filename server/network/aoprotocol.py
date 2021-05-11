@@ -28,6 +28,8 @@ logger = logging.getLogger('events')
 
 from enum import Enum
 
+from urllib.parse import quote
+
 import arrow
 from time import gmtime, strftime
 
@@ -216,6 +218,11 @@ class AOProtocol(asyncio.Protocol):
         if not self.client.area.area_manager.arup_enabled and 'arup' in preflist:
             preflist.remove('arup')
         self.client.send_command('FL', *preflist)
+        # Send Asset packet if asset_url is defined
+        if self.server.config['asset_url'] != '':
+            # Convert Spaces for browsers
+            cleaned_url: str = quote(self.server.config['asset_url'])
+            self.client.send_command('ASS', cleaned_url)
 
     def net_cmd_ch(self, _):
         """Reset the client drop timeout (keepalive).

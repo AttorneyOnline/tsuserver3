@@ -258,6 +258,8 @@ class TsuServer3:
             self.config['modpass'] = {'default': {'password': self.config['modpass']}}
         if 'multiclient_limit' not in self.config:
             self.config['multiclient_limit'] = 16
+        if 'asset_url' not in self.config:
+            self.config['asset_url'] = ''
 
     def load_command_aliases(self):
         """Load a list of banned words to scrub from chats."""
