@@ -40,6 +40,8 @@ motd: Welcome to my server!
 # and must also be forwarded.
 use_websockets: true
 websocket_port: 50001
+# WebAO Asset URL for hosting files. Leave blank to use vanilla
+asset_url:
 
 # Whether or not the server should be advertised on the server list.
 use_masterserver: true
