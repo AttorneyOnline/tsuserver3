@@ -24,7 +24,6 @@ import unicodedata
 from enum import Enum
 from typing import List
 from time import localtime, strftime
-from urllib.parse import quote
 
 from .. import commands
 from server import database
@@ -270,9 +269,7 @@ class AOProtocol(asyncio.Protocol):
                                  'y_offset', 'expanded_desk_mods')
         # Send Asset packet if asset_url is defined
         if self.server.config['asset_url'] != '':
-            # Convert Spaces for browsers
-            cleaned_url: str = quote(self.server.config['asset_url'])
-            self.client.send_command('ASS', cleaned_url)
+            self.client.send_command('ASS', self.server.config['asset_url'])
 
     def net_cmd_ch(self, _):
         """Reset the client drop timeout (keepalive).
