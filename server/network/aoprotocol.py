@@ -267,6 +267,9 @@ class AOProtocol(asyncio.Protocol):
                                  'cccc_ic_support', 'arup', 'casing_alerts',
                                  'prezoom', 'looping_sfx', 'additive', 'effects',
                                  'y_offset', 'expanded_desk_mods', 'auth_packet')
+        # Send Asset packet if asset_url is defined
+        if self.server.config['asset_url'] != '':
+            self.client.send_command('ASS', self.server.config['asset_url'])
 
     def net_cmd_ch(self, _):
         """Reset the client drop timeout (keepalive).
@@ -557,6 +560,23 @@ class AOProtocol(asyncio.Protocol):
                         return # don't send it again or it'll be rerecorded
                     elif self.client.area.is_examining:
                         self.client.area.examine_index = index # jump to the amended statement
+                except ValueError:
+                    self.client.send_ooc(
+                        "That does not look like a valid statement number!")
+                    return
+            elif text.startswith('/insert '):
+                part = text.split(' ')
+                text = ' '.join(part[2:])
+                args[4] = text
+                color = 1
+                try:
+                    index = int(part[1])
+                    if not self.client.area.insert_testimony(self.client, index, args):
+                        return
+                    if self.client.area.is_testifying:
+                        return # don't send it again or it'll be rerecorded
+                    elif self.client.area.is_examining:
+                        self.client.area.examine_index = index + 1 # jump to the amended statement
                 except ValueError:
                     self.client.send_ooc(
                         "That does not look like a valid statement number!")

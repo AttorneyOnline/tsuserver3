@@ -160,14 +160,14 @@ def kickban(client, arg: str, ban_hdid):
         ipid = _convert_ipid_to_int(args[0])
         ban_id = args[1]
         reason = None
-        ban_duration = parse(str(default_ban_duration), granularity='hours')
-        unban_date = arrow.get().shift(hours=ban_duration).datetime
+        ban_duration = parse(str(default_ban_duration))
+        unban_date = arrow.get().shift(seconds=ban_duration).datetime
 
     elif len(args) == 3:
         ipid = _convert_ipid_to_int(args[0])
         reason = args[1]
         duration = args[2]
-        ban_duration = parse(str(duration), granularity='hours')
+        ban_duration = parse(str(duration))
 
         if duration is None:
             raise ArgumentError('Invalid ban duration.')
@@ -175,7 +175,7 @@ def kickban(client, arg: str, ban_hdid):
             unban_date = None
         else:
             if ban_duration is not None:
-                unban_date = arrow.get().shift(hours=ban_duration).datetime
+                unban_date = arrow.get().shift(seconds=ban_duration).datetime
             else:
                 raise ArgumentError(f'{duration} is an invalid ban duration')
 
