@@ -267,6 +267,9 @@ class AOProtocol(asyncio.Protocol):
                                  'cccc_ic_support', 'arup', 'casing_alerts',
                                  'prezoom', 'looping_sfx', 'additive', 'effects',
                                  'y_offset', 'expanded_desk_mods')
+        # Send Asset packet if asset_url is defined
+        if self.server.config['asset_url'] != '':
+            self.client.send_command('ASS', self.server.config['asset_url'])
 
     def net_cmd_ch(self, _):
         """Reset the client drop timeout (keepalive).
