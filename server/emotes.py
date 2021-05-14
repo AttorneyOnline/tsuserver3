@@ -97,6 +97,6 @@ class Emotes:
         if len(self.emotes) == 0:
             return True
 
-        if len(sfx) <= 1:
+        if sfx is not None and len(sfx) <= 1:
             sfx = None
         return (preanim, anim, sfx) in self.emotes
