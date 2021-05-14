@@ -79,14 +79,15 @@ class Emotes:
 
     @staticmethod
     def _get_sfx(emote_id: str, char_ini: ConfigParser) -> Union[str, None]:
-        if emote_id in char_ini['SoundN']:
-            sfx = char_ini['SoundN'][emote_id]
-            if len(sfx) == 1:
-                # Often, a one-character SFX is a placeholder for no sfx,
-                # so allow it
-                sfx = None
-        else:
+        if 'SoundN' not in char_ini or emote_id not in char_ini['SoundN']:
+            return None
+
+        sfx = char_ini['SoundN'][emote_id]
+        if len(sfx) == 1:
+            # Often, a one-character SFX is a placeholder for no sfx,
+            # so allow it
             sfx = None
+        return sfx
 
     def validate(self, preanim: str, anim: str, sfx: Union[str, None]) -> bool:
         """
