@@ -11,7 +11,7 @@ class Emotes:
     Represents a list of emotes read in from a character INI file
     used for validating which emotes can be sent by clients.
     """
-    REQUIRED_INI_SECTIONS = ['Options', 'Emotions', 'SoundN']
+    REQUIRED_INI_SECTIONS = ['Options', 'Emotions']
     VALID_EMOTION_SECTIONS = ['number']
 
     def __init__(self, name: str):
@@ -79,14 +79,15 @@ class Emotes:
 
     @staticmethod
     def _get_sfx(emote_id: str, char_ini: ConfigParser) -> Union[str, None]:
-        if emote_id in char_ini['SoundN']:
-            sfx = char_ini['SoundN'][emote_id]
-            if len(sfx) == 1:
-                # Often, a one-character SFX is a placeholder for no sfx,
-                # so allow it
-                sfx = None
-        else:
+        if 'SoundN' not in char_ini or emote_id not in char_ini['SoundN']:
+            return None
+
+        sfx = char_ini['SoundN'][emote_id]
+        if len(sfx) == 1:
+            # Often, a one-character SFX is a placeholder for no sfx,
+            # so allow it
             sfx = None
+        return sfx
 
     def validate(self, preanim: str, anim: str, sfx: Union[str, None]) -> bool:
         """
@@ -97,6 +98,6 @@ class Emotes:
         if len(self.emotes) == 0:
             return True
 
-        if len(sfx) <= 1:
+        if sfx is not None and len(sfx) <= 1:
             sfx = None
         return (preanim, anim, sfx) in self.emotes
