@@ -11,7 +11,7 @@ class Emotes:
     Represents a list of emotes read in from a character INI file
     used for validating which emotes can be sent by clients.
     """
-    REQUIRED_INI_SECTIONS = ['Options', 'Emotions', 'SoundN']
+    REQUIRED_INI_SECTIONS = ['Options', 'Emotions']
     VALID_EMOTION_SECTIONS = ['number']
 
     def __init__(self, name: str):
