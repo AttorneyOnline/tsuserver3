@@ -38,6 +38,8 @@ evi_swap: evidence_swap
 evimod: evidence_mod
 eviswap: evidence_swap
 force_pos: forcepos
+fp: firstperson
+fps: firstperson
 ga: getarea
 gas: getareas
 hmovedelay: hub_move_delay

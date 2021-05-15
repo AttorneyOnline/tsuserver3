@@ -296,6 +296,10 @@ needing a certain list of positions to be filled up.
 * **blankpost** [on|off]
     - Use a blank image for your next emote (base/misc/blank.png, will be a missingno if you don't have it)
     - tog can be `on`, `off` or empty.
+* **firstperson** [on|off]
+    - Speak as a Narrator for your next emote, but only to yourself. Everyone else will see the emote you used.
+    - If using 2.9.1, when you speak IC only the chat box will be affected.
+    - tog can be `on`, `off` or empty.
 ## Fun
 * **disemvowel** \<id>
     - Remove all vowels from a user's IC chat.

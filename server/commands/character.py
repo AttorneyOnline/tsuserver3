@@ -39,6 +39,7 @@ __all__ = [
     'ooc_cmd_chardesc_get',
     'ooc_cmd_narrate',
     'ooc_cmd_blankpost',
+    'ooc_cmd_firstperson',
 ]
 
 
@@ -845,4 +846,31 @@ def ooc_cmd_blankpost(client, arg):
     stat = 'no longer be blankposting'
     if client.blankpost:
         stat = 'be blankposting now'
+    client.send_ooc(f'You will {stat}.')
+
+
+def ooc_cmd_firstperson(client, arg):
+    """
+    Speak as a Narrator for your next emote, but only to yourself. Everyone else will see the emote you used.
+    If using 2.9.1, when you speak IC only the chat box will be affected.
+    tog can be `on`, `off` or empty.
+    Usage: /firstperson [tog]
+    """
+    if len(arg.split()) > 1:
+        raise ArgumentError("This command can only take one argument ('on' or 'off') or no arguments at all!")
+    if arg:
+        if arg == 'on':
+            client.firstperson = True
+        elif arg == 'off':
+            client.firstperson = False
+        else:
+            raise ArgumentError("Invalid argument: {}".format(arg))
+    else:
+        client.firstperson = not client.firstperson
+    if client.narrator == True:
+        client.narrator = False
+        client.send_ooc(f'You cannot be a narrator and firstperson at the same time. Narrating disabled!')
+    stat = 'no longer be firstperson'
+    if client.firstperson:
+        stat = 'be firstperson now'
     client.send_ooc(f'You will {stat}.')

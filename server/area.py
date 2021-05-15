@@ -677,7 +677,13 @@ class Area:
                         # without displaying it in the viewport.
                         c.send_command('CT', f'[pos \'{args[5]}\'] {name}', args[4])
                         continue
-                c.send_command('MS', *args)
+                complete = args
+                # First-person mode support, we see our own msgs as narration
+                if c == client and client.firstperson:
+                    lst = list(args)
+                    lst[3] = '' # Change anim to '' which should start narrator mode
+                    complete = tuple(lst)
+                c.send_command('MS', *complete)
 
             # args[4] = msg
             # args[15] = showname

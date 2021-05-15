@@ -127,6 +127,8 @@ class ClientManager:
             self.narrator = False
             # if True, this char's msg will be replaced with ../misc/blank
             self.blankpost = False
+            # if True, this char's msg will be narrating over current IC visuals without showing a character, but only to yourself (AO2.9.1+)
+            self.firstperson = False
 
             # a list of all areas the client can currently see
             self.local_area_list = []
