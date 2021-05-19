@@ -268,7 +268,7 @@ class AOProtocol(asyncio.Protocol):
                                  'prezoom', 'looping_sfx', 'additive', 'effects',
                                  'y_offset', 'expanded_desk_mods', 'auth_packet')
         # Send Asset packet if asset_url is defined
-        if self.server.config['asset_url'] != '':
+        if self.server.config['asset_url'].startswith("http"):
             self.client.send_command('ASS', self.server.config['asset_url'])
 
     def net_cmd_ch(self, _):
