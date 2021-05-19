@@ -234,7 +234,7 @@ class TsuServer3:
         if 'default_ban_duration' not in self.config:
             self.config['default_ban_duration'] = 6
         if 'asset_url' not in self.config:
-            self.config['asset_url'] = ''
+            self.config['asset_url'] = None
 
     def load_characters(self):
         """Load the character list from a YAML file."""
