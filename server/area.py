@@ -926,7 +926,19 @@ class Area:
         if not self.jukebox:
             return
         if len(self.jukebox_votes) == 0:
-            return None
+            music = self.server.music_list + self.area_manager.music_list + self.music_list
+            songs = []
+            for c in music:
+                if 'category' in c:
+                    # Either play a completely random category, or play a category the last song was in
+                    if 'songs' in c:
+                        if self.music == '' or self.music in [b['name'] for b in c['songs']]:
+                            for s in c['songs']:
+                                if s['length'] == 0 or s['name'] == self.music:
+                                    continue
+                                songs = songs + [s]
+            song = random.choice(songs)
+            return self.JukeboxVote(None, song['name'], song['length'], 'Jukebox')
         elif len(self.jukebox_votes) == 1:
             return self.jukebox_votes[0]
         else:
@@ -961,14 +973,18 @@ class Area:
         if vote_picked.name == self.music:
             return
 
-        self.jukebox_prev_char_id = vote_picked.client.char_id
-        if vote_picked.showname == '':
-            self.send_command('MC', vote_picked.name,
-                                vote_picked.client.char_id, '', 1, 0, int(MusicEffect.FADE_OUT))
+        if vote_picked.client != None:
+            self.jukebox_prev_char_id = vote_picked.client.char_id
+            if vote_picked.showname == '':
+                self.send_command('MC', vote_picked.name,
+                                    vote_picked.client.char_id, '', 1, 0, int(MusicEffect.FADE_OUT))
+            else:
+                self.send_command('MC', vote_picked.name,
+                                    vote_picked.client.char_id,
+                                    vote_picked.showname, 1, 0, int(MusicEffect.FADE_OUT))
         else:
-            self.send_command('MC', vote_picked.name,
-                                vote_picked.client.char_id,
-                                vote_picked.showname, 1, 0, int(MusicEffect.FADE_OUT))
+            self.jukebox_prev_char_id = -1
+            self.send_command('MC', vote_picked.name, 0, 'Jukebox RNG', 1, 0, int(MusicEffect.FADE_OUT))
 
         self.music_player = 'The Jukebox'
         self.music_player_ipid = 'has no IPID'
@@ -982,7 +998,7 @@ class Area:
             else:
                 current_vote.chance += 1
 
-        length = vote_picked.length
+        length = vote_picked.length - 3 # Remove a few seconds to have a smooth fade out
         if length <= 0: # Length not defined
             length = 120.0 # Play each song for at least 2 minutes
 
