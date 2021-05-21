@@ -888,16 +888,16 @@ class Area:
         """
         if not self.jukebox:
             return
+        if client.change_music_cd():
+            client.send_ooc(
+                f'You changed the song too many times. Please try again after {int(client.change_music_cd())} seconds.'
+            )
+            return
         if length == 0:
             self.remove_jukebox_vote(client, False)
             if len(self.jukebox_votes) <= 1 or (not self.music_looper or self.music_looper.cancelled()):
                 self.start_jukebox()
         else:
-            if client.change_music_cd():
-                client.send_ooc(
-                    f'You changed the song too many times. Please try again after {int(client.change_music_cd())} seconds.'
-                )
-                return
             self.remove_jukebox_vote(client, True)
             self.jukebox_votes.append(
                 self.JukeboxVote(client, music_name, length, showname))
