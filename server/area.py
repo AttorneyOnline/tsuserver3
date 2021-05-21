@@ -926,9 +926,25 @@ class Area:
         if not self.jukebox:
             return
         if len(self.jukebox_votes) == 0:
-            music = self.server.music_list + self.area_manager.music_list + self.music_list
+            # Server music list
+            song_list = self.server.music_list
+
+            # Hub music list
+            if self.area_manager.music_ref != '' and len(self.area_manager.music_list) > 0:
+                if self.area_manager.replace_music:
+                    song_list = self.area_manager.music_list
+                else:
+                    song_list = song_list + self.area_manager.music_list
+
+            # Area music list
+            if self.music_ref != '' and self.music_ref != self.area_manager.music_ref and len(self.music_list) > 0:
+                if self.replace_music:
+                    song_list = self.music_list
+                else:
+                    song_list = song_list + self.music_list
+
             songs = []
-            for c in music:
+            for c in song_list:
                 if 'category' in c:
                     # Either play a completely random category, or play a category the last song was in
                     if 'songs' in c:
@@ -940,7 +956,9 @@ class Area:
             song = random.choice(songs)
             return self.JukeboxVote(None, song['name'], song['length'], 'Jukebox')
         elif len(self.jukebox_votes) == 1:
-            return self.jukebox_votes[0]
+            song = self.jukebox_votes[0]
+            self.remove_jukebox_vote(song.client, True)
+            return song
         else:
             weighted_votes = []
             for current_vote in self.jukebox_votes:
@@ -948,7 +966,9 @@ class Area:
                 while i < current_vote.chance:
                     weighted_votes.append(current_vote)
                     i += 1
-            return random.choice(weighted_votes)
+            song = random.choice(weighted_votes)
+            self.remove_jukebox_vote(song.client, True)
+            return song
 
     def start_jukebox(self):
         """Initialize jukebox mode if needed and play the next track."""
@@ -984,7 +1004,7 @@ class Area:
                                     vote_picked.showname, 1, 0, int(MusicEffect.FADE_OUT))
         else:
             self.jukebox_prev_char_id = -1
-            self.send_command('MC', vote_picked.name, 0, 'Jukebox RNG', 1, 0, int(MusicEffect.FADE_OUT))
+            self.send_command('MC', vote_picked.name, 0, 'The Jukebox', 1, 0, int(MusicEffect.FADE_OUT))
 
         self.music_player = 'The Jukebox'
         self.music_player_ipid = 'has no IPID'
