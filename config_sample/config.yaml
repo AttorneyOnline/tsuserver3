@@ -60,6 +60,10 @@ masterserver_description: This is my flashy new server
 # To prevent issues, this value should be greater than 60.
 timeout: 250
 
+# Whether or not to prevent users from repeatedly posting the same message.
+# If True, you will not be able to post the same message as the last one if you posted it.
+block_repeat: true
+
 # Enables additional logging.
 debug: false
 

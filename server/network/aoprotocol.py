@@ -582,9 +582,9 @@ class AOProtocol(asyncio.Protocol):
             return
 
         # Really simple spam protection that functions on the clientside pre-2.8.5, and really should've been serverside from the start
-        if text.strip() != '' and self.client.area.last_ic_message != None and cid == self.client.area.last_ic_message[8] and text == self.client.area.last_ic_message[4]:
+        if self.server.config['block_repeat'] and not self.client.is_mod and text.strip() != '' and self.client.area.last_ic_message != None and cid == self.client.area.last_ic_message[8] and text == self.client.area.last_ic_message[4]:
             self.client.send_ooc(
-                "Your message is a repeat of last one, don't spam!")
+                "Your message is a repeat of the last one, don't spam!")
             return
 
         # We are blankposting.

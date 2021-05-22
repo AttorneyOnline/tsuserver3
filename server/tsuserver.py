@@ -260,6 +260,8 @@ class TsuServer3:
             self.config['multiclient_limit'] = 16
         if 'asset_url' not in self.config:
             self.config['asset_url'] = ''
+        if 'block_repeat' not in self.config:
+            self.config['block_repeat'] = True
 
     def load_command_aliases(self):
         """Load a list of banned words to scrub from chats."""
