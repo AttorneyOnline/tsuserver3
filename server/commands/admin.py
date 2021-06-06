@@ -158,8 +158,12 @@ def kickban(client, arg: str, ban_hdid):
 
     elif len(args) == 2:
         ipid = _convert_ipid_to_int(args[0])
-        ban_id = args[1]
-        reason = None
+        try:
+            ban_id = int(args[1])
+            reason = None
+        except ValueError:
+            ban_id = None
+            reason = args[1]
         ban_duration = parse(str(default_ban_duration))
         unban_date = arrow.get().shift(seconds=ban_duration).datetime
 
@@ -439,7 +443,7 @@ def ooc_cmd_baninfo(client, arg):
     if bans is None:
         client.send_ooc('No ban found for this ID.')
     else:
-        msg = f'Bans for {args[0]}'
+        msg = f'Bans for {lookup_type} {args[0]}:'
         for ban in bans:
             msg += f'\nBan ID: {ban.ban_id}\n'
             msg += 'Affected IPIDs: ' + \

@@ -232,7 +232,7 @@ class TsuServer3:
         if 'testimony_limit' not in self.config:
             self.config['testimony_limit'] = 30
         if 'default_ban_duration' not in self.config:
-            self.config['default_ban_duration'] = 6
+            self.config['default_ban_duration'] = '6 hours'
         if 'asset_url' not in self.config:
             self.config['asset_url'] = None
 

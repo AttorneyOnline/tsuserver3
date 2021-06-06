@@ -119,7 +119,7 @@ class Database:
             logger.debug('Migration to v1 complete')
 
     def migrate(self):
-        for version in [2, 3, 4]:
+        for version in [2, 3, 4, 5]:
             self.migrate_to_version(version)
 
     def migrate_to_version(self, version):
@@ -163,22 +163,36 @@ class Database:
         These should be used sparingly, as they can affect large swaths
         of web users if used incorrectly.
         """
+        if ban_type not in ('ipid', 'hdid'):
+            raise ServerError(f'Unknown ban type {ban_type}')
+
         with self.db as conn:
             if ban_id is None:
+                existing_ban = self.find_ban(**{ ban_type: target_id })
+                if existing_ban is not None:
+                    raise ServerError(f'This ban is already covered by ban ID {existing_ban.ban_id}.')
+
+                ban_date = arrow.get().datetime
+
                 event_logger.info(f'{banned_by.name} ({banned_by.ipid}) ' +
                                   f'banned {target_id}: \'{reason}\'.')
                 ban_id = conn.execute(dedent('''
-                    INSERT INTO bans(reason, banned_by, unban_date)
-                    VALUES (?, ?, ?)
-                    '''), (reason, banned_by.ipid, unban_date)).lastrowid
+                    INSERT INTO bans(reason, banned_by, ban_date, unban_date)
+                    VALUES (?, ?, ?, ?)
+                    '''), (reason, banned_by.ipid, ban_date, unban_date)).lastrowid
             if ban_type == 'ipid':
+                ipid_exists = conn.execute(dedent('''
+                    SELECT ipid FROM ipids WHERE ipid = ?
+                    '''), (target_id, )).fetchone()
+                if ipid_exists is None:
+                    raise ServerError(f'IPID {target_id} does not exist')
+
                 try:
                     conn.execute(dedent('''
                         INSERT INTO ip_bans(ipid, ban_id) VALUES (?, ?)
                         '''), (target_id, ban_id))
                 except sqlite3.IntegrityError as exc:
-                    raise ServerError(f'Error inserting ban: {exc}'
-                                      ' (the IPID may not exist)')
+                    raise ServerError(f'IPID {target_id} is already covered by ban ID {ban_id}.')
             elif ban_type == 'hdid':
                 try:
                     conn.execute(dedent('''
@@ -186,8 +200,6 @@ class Database:
                         '''), (target_id, ban_id))
                 except sqlite3.IntegrityError as exc:
                     raise ServerError(f'Error inserting ban: {exc}')
-            else:
-                raise ServerError(f'unknown ban type {ban_type}')
 
         if unban_date is not None:
             self._schedule_unban(ban_id)
@@ -289,7 +301,7 @@ class Database:
                 )
                 JOIN bans USING (ban_id)
                 '''), (ipid, hdid, ban_id)).fetchall()
-            if bans is not []:
+            if bans != []:
                 history = []
                 for ban in bans:
                     history.append(Database.Ban(**ban))
