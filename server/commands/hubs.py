@@ -309,8 +309,6 @@ def ooc_cmd_area_pref(client, arg):
     Usage:  /area_pref [pref] [on/true/off/false]
     """
     cm_allowed = [
-        'locking_allowed',
-        'iniswap_allowed',
         'showname_changes_allowed',
         'shouts_allowed',
         'jukebox',

@@ -36,7 +36,7 @@ class Emotes:
                 try:
                     emote_id = str(emote_id)
                     _name, preanim, anim, _mod = char_ini['emotions'][str(emote_id)].split('#')[:4]
-                    if emote_id in char_ini['soundn']:
+                    if 'soundn' in char_ini and emote_id in char_ini['soundn']:
                         sfx = char_ini['soundn'][str(emote_id)]
                         if sfx != None and len(sfx) == 1:
                             # Often, a one-character SFX is a placeholder for no sfx,

@@ -842,6 +842,9 @@ class Area:
         if '..' in preanim or '..' in anim or '..' in char:
             # Prohibit relative paths
             return True
+        if preanim.lower().startswith('base/') or anim.lower().startswith('base/') or char.lower().startswith('base/'):
+            # Prohibit absolute base/ paths
+            return True
         if char.lower() != client.char_name.lower():
             for char_link in self.server.allowed_iniswaps:
                 # Only allow if both the original character and the
@@ -1375,7 +1378,7 @@ class Area:
             raise AreaError(f'{self.minigame} is happening! You cannot interrupt it.')
 
         timer = max(5, int(timer))
-        # Timer ID 1 is reserved for minigames
+        # Timer ID 3 is reserved for minigames
         # 1 afterwards is to start timer
         print('TI', 3, 0, timer * 1000)
         self.send_command('TI', 3, 2)
