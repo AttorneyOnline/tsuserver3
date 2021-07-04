@@ -38,6 +38,7 @@ def ooc_cmd_motd(client, arg):
         client.send_motd()
     elif client.is_mod:
         client.server.config['motd'] = arg
+        database.log_misc('motd', client, data={'text': arg})
         client.send_motd()
     else:
         raise ClientError('You must be authorized to do that.')
