@@ -13,6 +13,7 @@ __all__ = [
     'ooc_cmd_evi_swap',
     'ooc_cmd_cm',
     'ooc_cmd_uncm',
+    'ooc_cmd_clear_cm',
     'ooc_cmd_setcase',
     'ooc_cmd_anncase',
     'ooc_cmd_blockwtce',
@@ -172,6 +173,18 @@ def ooc_cmd_uncm(client, arg):
             client.send_ooc(
                 f'{id} does not look like a valid ID.')
 
+@mod_only(area_owners=True)
+def ooc_cmd_clear_cm(client, arg):
+    """
+    Removes all case managers from the current area.
+    Usage: /clear_cm
+    """
+    client.area.owners = []
+    client.server.area_manager.send_arup_cms()
+    client.area.broadcast_ooc(
+                    '{} [{}] is no longer CM in this area.'.format(
+                        client.char_name, client.id))
+    database.log_room('cm.remove', client, client.area, target=client)
 
 # LEGACY
 def ooc_cmd_setcase(client, arg):
