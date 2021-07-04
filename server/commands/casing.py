@@ -98,7 +98,7 @@ def ooc_cmd_cm(client, arg):
     """
     if 'CM' not in client.area.evidence_mod and not client.is_mod:
         raise ClientError('You can\'t become a CM in this area')
-    if len(client.area.owners) == 0:
+    if len(client.area.owners) == 0 or client.is_mod:
         if len(arg) > 0:
             raise ArgumentError(
                 'You cannot \'nominate\' people to be CMs when you are not one.'
