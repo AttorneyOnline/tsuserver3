@@ -118,7 +118,7 @@ Good-to-know commands are marked with a :star:.
 ### Administration
 
 * **motd**
-    - Show the message of the day.
+    - Show or change the message of the day.
 * :star: **help** [command]
     - Show help for a command, or show general help.
 * :star: **kick** <ipid|*|**> [reason]
@@ -224,6 +224,8 @@ Good-to-know commands are marked with a :star:.
     - Add a case manager for the current room.
 * **uncm** <id>
     - Remove a case manager from the current area.
+* **clear_cm** <id>
+    - Remove all case managers from the current area.
 * **setcase**
     - Set the positions you are interested in taking for a case. (This command is used internally by the 2.6 client.)
 * **anncase** <message> <def> <pro> <jud> <jur> <steno>
