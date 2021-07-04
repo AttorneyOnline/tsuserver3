@@ -173,7 +173,7 @@ def ooc_cmd_uncm(client, arg):
             client.send_ooc(
                 f'{id} does not look like a valid ID.')
 
-@mod_only(area_owners=True)
+@mod_only()
 def ooc_cmd_clear_cm(client, arg):
     """
     Removes all case managers from the current area.
