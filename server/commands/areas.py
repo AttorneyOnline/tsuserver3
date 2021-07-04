@@ -187,10 +187,23 @@ def ooc_cmd_area_lock(client, arg):
         client.send_ooc('Area locking is disabled in this area.')
     elif client.area.is_locked == client.area.Locked.LOCKED:
         client.send_ooc('Area is already locked.')
-    elif client in client.area.owners:
+    elif client in client.area.owners or client.is_mod:
         client.area.lock()
     else:
         raise ClientError('Only CM can lock the area.')
+
+def ooc_cmd_area_unlock(client, arg):
+    """
+    Allow anyone to freely join the current area.
+    Usage: /area_unlock
+    """
+    if client.area.is_locked == client.area.Locked.FREE:
+        raise ClientError('Area is already unlocked.')
+    elif client in client.area.owners or client.is_mod:
+        client.area.unlock()
+        client.send_ooc('Area is unlocked.')
+    else:
+        raise ClientError('Only CM can unlock area.')
 
 
 def ooc_cmd_area_spectate(client, arg):
@@ -202,24 +215,10 @@ def ooc_cmd_area_spectate(client, arg):
         client.send_ooc('Area locking is disabled in this area.')
     elif client.area.is_locked == client.area.Locked.SPECTATABLE:
         client.send_ooc('Area is already spectatable.')
-    elif client in client.area.owners:
+    elif client in client.area.owners or client.is_mod:
         client.area.spectator()
     else:
         raise ClientError('Only CM can make the area spectatable.')
-
-
-def ooc_cmd_area_unlock(client, arg):
-    """
-    Allow anyone to freely join the current area.
-    Usage: /area_unlock
-    """
-    if client.area.is_locked == client.area.Locked.FREE:
-        raise ClientError('Area is already unlocked.')
-    elif not client in client.area.owners:
-        raise ClientError('Only CM can unlock area.')
-    client.area.unlock()
-    client.send_ooc('Area is unlocked.')
-
 
 @mod_only(area_owners=True)
 def ooc_cmd_invite(client, arg):
