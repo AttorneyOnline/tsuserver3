@@ -34,9 +34,14 @@ def ooc_cmd_motd(client, arg):
     Show the message of the day.
     Usage: /motd
     """
-    if len(arg) != 0:
-        raise ArgumentError("This command doesn't take any arguments")
-    client.send_motd()
+    if arg == '':
+        client.send_motd()
+    elif client.is_mod:
+        client.server.config['motd'] = arg.replace('\\n','\n')
+        database.log_misc('motd', client, data={'text': arg})
+        client.send_motd()
+    else:
+        raise ClientError('You must be authorized to do that.')
 
 
 def ooc_cmd_help(client, arg):
