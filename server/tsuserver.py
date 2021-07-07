@@ -60,6 +60,7 @@ class TsuServer3:
 
         try:
             self.geoIpReader = geoip2.database.Reader('./storage/GeoLite2-ASN.mmdb')
+            self.load_ipranges()
             self.useGeoIp = True
             # on debian systems you can use /usr/share/GeoIP/GeoIPASNum.dat if the geoip-database-extra package is installed
         except FileNotFoundError:
@@ -75,7 +76,6 @@ class TsuServer3:
             self.load_characters()
             self.load_music()
             self.load_backgrounds()
-            self.load_ipranges()
         except yaml.YAMLError as exc:
             print('There was a syntax error parsing a configuration file:')
             print(exc)
@@ -158,15 +158,15 @@ class TsuServer3:
         if self.useGeoIp:
             try:
                 geoIpResponse = self.geoIpReader.asn(peername)
-                asn = str(geoIpResponse.autonomous_system_number)
+                asn = geoIpResponse.autonomous_system_number
             except geoip2.errors.AddressNotFoundError:
-                asn = "Loopback"
+                asn = 0
                 pass
         else:
-            asn = "Loopback"
+            asn = 0
 
         for line,rangeBan in enumerate(self.ipRange_bans):
-            if rangeBan != "" and peername.startswith(rangeBan) or asn == rangeBan:
+            if rangeBan != "" and peername.startswith(rangeBan) or str(asn) == rangeBan:
                 msg =   'BD#'
                 msg +=  'Abuse\r\n'
                 msg += f'ID: {line}\r\n'
@@ -176,7 +176,7 @@ class TsuServer3:
                 transport.write(msg.encode('utf-8'))
                 raise ClientError
 
-        c = self.client_manager.new_client(transport)
+        c = self.client_manager.new_client(transport,asn)
         c.server = self
         c.area = self.area_manager.default_area()
         c.area.new_client(c)
@@ -512,7 +512,23 @@ class TsuServer3:
         self.load_iniswaps()
         self.load_music()
         self.load_backgrounds()
-        self.load_ipranges()
+
+        try:
+            self.geoIpReader = geoip2.database.Reader('./storage/GeoLite2-ASN.mmdb')
+            self.load_ipranges()
+            self.useGeoIp = True
+        except FileNotFoundError:
+            self.useGeoIp = False
+            pass
+
+        # Kick out clients that had their ASN added to the rangeban list
+        # does not work for IP block strings
+        # because the client struct intentionally does not store the IP
+        if self.useGeoIp:
+            for rangeBan in self.ipRange_bans:
+                for client in self.client_manager.clients:
+                    if rangeBan != "" and str(client.asn) == rangeBan:
+                        client.disconnect()
 
         import server.commands
         importlib.reload(server.commands)

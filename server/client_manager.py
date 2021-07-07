@@ -35,7 +35,7 @@ class ClientManager:
         Clients may only belong to a single room.
         """
         
-        def __init__(self, server, transport: asyncio.Transport, user_id: int, ipid: int):
+        def __init__(self, server, transport: asyncio.Transport, user_id: int, ipid: int, asn: int):
             self.is_checked = False
             self.transport = transport
             self.hdid = ''
@@ -65,6 +65,7 @@ class ClientManager:
             self.pm_mute = False
             self.mod_call_time = 0
             self.ipid = ipid
+            self.asn = asn
 
             # Pairing stuff
             self.charid_pair = -1
@@ -633,7 +634,7 @@ class ClientManager:
                     return False
         return True
 
-    def new_client(self, transport: asyncio.Transport) -> Client:
+    def new_client(self, transport: asyncio.Transport, asn: int) -> Client:
         """Create a new client, add it to the list, and assign it a player ID.
 
         Args:
@@ -655,7 +656,7 @@ class ClientManager:
 
         c = self.Client(
             self.server, transport, user_id,
-            database.ipid(peername))
+            database.ipid(peername), asn)
         self.clients.add(c)
         temp_ipid = c.ipid
         for client in self.server.client_manager.clients:
