@@ -443,7 +443,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_ooc(
                 "You may not iniswap while you are charcursed!")
             return
-        if not self.client.area.blankposting_allowed:
+        if not self.client.area.blankposting_allowed and not self.client.is_mod and not (self.client in self.client.area.owners):
             if text.strip() == '':
                 self.client.send_ooc(
                     "Blankposting is forbidden in this area!")
@@ -553,14 +553,14 @@ class AOProtocol(asyncio.Protocol):
         if not self.client.is_mod and showname.lstrip().lower().startswith('[m'):
             self.client.send_ooc("Nice try! You may not spoof [M] tag in your showname.")
             return
-        if (nonint_pre == 1 and button in range(1, 4)) or self.client.area.non_int_pres_only:
+        if (nonint_pre == 1 and button in range(1, 4)) or (self.client.area.non_int_pres_only and not self.client.is_mod and not (self.client in self.client.area.owners)):
             if emote_mod == 1 or emote_mod == 2:
                 emote_mod = 0
                 nonint_pre = 1
             elif emote_mod == 6:
                 emote_mod = 5
                 nonint_pre = 1
-        if not self.client.area.shouts_allowed:
+        if not self.client.area.shouts_allowed and not self.client.is_mod and not (self.client in self.client.area.owners):
             # Old clients communicate the objecting in emote_mod.
             if emote_mod == 2:
                 emote_mod = 1
@@ -582,7 +582,7 @@ class AOProtocol(asyncio.Protocol):
             return
 
         # Really simple spam protection that functions on the clientside pre-2.8.5, and really should've been serverside from the start
-        if self.server.config['block_repeat'] and not self.client.is_mod and text.strip() != '' and self.client.area.last_ic_message != None and cid == self.client.area.last_ic_message[8] and text == self.client.area.last_ic_message[4]:
+        if self.server.config['block_repeat'] and not self.client.is_mod and not (self.client in self.client.area.owners) and text.strip() != '' and self.client.area.last_ic_message != None and cid == self.client.area.last_ic_message[8] and text == self.client.area.last_ic_message[4]:
             self.client.send_ooc(
                 "Your message is a repeat of the last one, don't spam!")
             return
@@ -958,10 +958,6 @@ class AOProtocol(asyncio.Protocol):
 
         """
         if not self.client.is_checked:
-            return
-        if not self.client.area.shouts_allowed:
-            self.client.send_ooc(
-                "You cannot use the testimony buttons here!")
             return
         if self.client.is_muted:  # Checks to see if the client has been muted by a mod
             self.client.send_ooc('You are muted by a moderator.')
