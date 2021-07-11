@@ -294,7 +294,7 @@ def kickban(client, arg: str, opts: BanOptions):
                           ban_id=opts.ban_id, unban_date=opts.unban_date)
 
     targets = client.server.client_manager.get_targets(
-        client, TargetType.IPID, ipid, False)
+        client, TargetType.IPID, opts.ipid, False)
 
     for c in targets:
         if opts.ban_hdid:
