@@ -191,8 +191,7 @@
 * **setcase**
     - Set the positions you are interested in taking for a case. (This command is used internally by the 2.6 client.)
 * **anncase** \<message> \<def> \<pro> \<jud> \<jur> \<steno>
-    - Announce that a case is currently taking place in this area,
-needing a certain list of positions to be filled up.
+    - Announce that a case is currently taking place in this area, needing a certain list of positions to be filled up.
 * **blockwtce** \<id>
     - Prevent a user from using Witness Testimony/Cross Examination buttons as a judge.
 * **unblockwtce** \<id>
@@ -216,6 +215,16 @@ needing a certain list of positions to be filled up.
     - Edit the spoken message of the statement at idx.
 * **testimony_swap** \<id> \<id>
     - Swap the two statements by id.
+* **cs** \<id>
+    - Start a one-on-one "Cross Swords" debate with targeted player!
+    - Expires in 5 minutes.
+    - If there's an ongoing cross-swords already, it will turn into a Scrum Debate (team vs team debate) with you joining the side *against* the \<id>.
+* **pta** \<id>
+    - Start a one-on-one "Panic Talk Action" debate with targeted player!
+    - Unlike /cs, a Panic Talk Action (PTA) cannot evolve into a Scrum Debate.
+    - Expires in 5 minutes.
+* **concede** \<id>
+    - Concede a trial minigame and withdraw from either team you're part of.
 ## Character
 * **switch** \<name>
     - Switch to another character. If you are a moderator and the specified character is currently being used, the current user of that character will be automatically reassigned a character.
