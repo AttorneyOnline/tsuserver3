@@ -1,5 +1,6 @@
 # Area Prefs
 This doc explains what each area preference is responsible for when you use the /area_pref command. Note this is still WIP!
+If you're looking for the list of commands, it can be found [here](commands.md).
 
 ### Case Makers and above
 * **bg_lock**

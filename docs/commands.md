@@ -351,6 +351,7 @@
     - Toggle a preference on/off for an area.
     - Leave pref out to see available prefs.
     - Leave on/true and off/false to toggle the pref.
+    - The list of preferences is available [here](prefs.md).
 * **area_move_delay** [delay]
     - Set the area's move delay to a value in seconds. Can be negative.
     - Delay must be from -1800 to 1800 in seconds or empty to check.
