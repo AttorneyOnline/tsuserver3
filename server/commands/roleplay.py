@@ -418,8 +418,7 @@ def ooc_cmd_8ball(client, arg):
         raise ArgumentError('You need to ask a question')
     rolla_reload(client.area)
     ability_dice = client.area.ability_dice['8ball']
-    client.area.broadcast_ooc('{} asked a question: "{}" and the answer is: "{}".'.format(
-        client.showname, arg, rolla(ability_dice)[2]))
+    client.area.broadcast_ooc(f'{client.showname} asked the 8ball - "{arg}", and it responded: "{rolla(ability_dice)[2]}".')
 
 def ooc_cmd_timer(client, arg):
     """
