@@ -210,7 +210,7 @@ def ooc_cmd_area_curse(client, arg):
         client, TargetType.IPID, ipid, False)
 
     for c in targets:
-        c.send_ooc(f'You were area cursed by {client.name}.')
+        c.send_ooc('You are now bound to this area.')
         c.area_curse = target_area.id
         c.area_curse_info = database.find_ban(ban_id=ban_id)
         try:
