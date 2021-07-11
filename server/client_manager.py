@@ -20,6 +20,8 @@ import time
 import string
 import asyncio
 
+import arrow
+
 from typing import Any, List, Dict
 from heapq import heappop, heappush
 
@@ -58,6 +60,8 @@ class ClientManager:
             self.disemvowel = False
             self.shaken = False
             self.charcurse = []
+            self.area_curse = None
+            self.area_curse_info = None
             self.muted_global = False
             self.muted_adverts = False
             self.is_muted = False
@@ -157,6 +161,20 @@ class ClientManager:
             """Send the message of the day to the client."""
             motd: str = self.server.config['motd']
             self.send_ooc(f'=== MOTD ===\r\n{motd}\r\n=============')
+
+            ban = self.area_curse_info
+            if ban is not None:
+                if ban.unban_date is not None:
+                    unban_date = arrow.get(ban.unban_date)
+                else:
+                    unban_date = 'N/A'
+
+                msg = f'You have been bound to this area.\r\n'
+                msg += f'Reason: {ban.reason}\r\n'
+                msg += f'ID: {ban.ban_id}\r\n'
+                msg += f'Until: {unban_date.humanize()}'
+
+                self.send_ooc(msg)
 
         def send_player_count(self):
             """
@@ -343,6 +361,8 @@ class ClientManager:
                 self.send_ooc(
                     'This area is spectatable, but not free - you cannot talk in-character unless invited.'
                 )
+            if self.area_curse is not None and self.area_curse != area.id:
+                raise ClientError('You are bound to this area.')
 
             if self in self.area.afkers:
                 self.server.client_manager.toggle_afk(self)

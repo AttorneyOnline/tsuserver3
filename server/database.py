@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from functools import reduce
 from textwrap import dedent
+from typing import List
 
 from .exceptions import ServerError
 
@@ -119,7 +120,7 @@ class Database:
             logger.debug('Migration to v1 complete')
 
     def migrate(self):
-        for version in [2, 3, 4, 5]:
+        for version in [2, 3, 4, 5, 6]:
             self.migrate_to_version(version)
 
     def migrate_to_version(self, version):
@@ -157,7 +158,9 @@ class Database:
             ban_type='ipid',
             banned_by=None,
             unban_date=None,
-            ban_id=None):
+            ban_id=None,
+            special_ban_data=None
+            ):
         """
         Ban an IPID or HDID.
         These should be used sparingly, as they can affect large swaths
@@ -177,9 +180,17 @@ class Database:
                 event_logger.info(f'{banned_by.name} ({banned_by.ipid}) ' +
                                   f'banned {target_id}: \'{reason}\'.')
                 ban_id = conn.execute(dedent('''
-                    INSERT INTO bans(reason, banned_by, ban_date, unban_date)
-                    VALUES (?, ?, ?, ?)
-                    '''), (reason, banned_by.ipid, ban_date, unban_date)).lastrowid
+                    INSERT INTO bans(reason, banned_by, ban_date, unban_date, ban_data)
+                    VALUES (?, ?, ?, ?, ?)
+                    '''), (reason, banned_by.ipid, ban_date, unban_date, special_ban_data)).lastrowid
+            else:
+                ban_exists = conn.execute(dedent('''
+                    SELECT ban_id, unbanned FROM bans WHERE ban_id = ?
+                    '''), (target_id, )).fetchone()
+                if ban_exists is None:
+                    raise ServerError(f'Ban ID {target_id} does not exist.')
+                if bool(ban_exists.unbanned):
+                    raise ServerError(f'Ban ID {target_id} is already unbanned.')
             if ban_type == 'ipid':
                 ipid_exists = conn.execute(dedent('''
                     SELECT ipid FROM ipids WHERE ipid = ?
@@ -229,6 +240,7 @@ class Database:
         banned_by: int
         reason: str
         unbanned: int
+        ban_data: str # JSON
 
         def __post_init__(self):
             self.ban_date = arrow.get(self.ban_date).datetime
@@ -238,7 +250,7 @@ class Database:
         def ipids(self):
             """Find IPIDs affected by this ban."""
             with _database_singleton.db as conn:
-                return [row['ipid'] for row in
+                return [int(row['ipid']) for row in
                     conn.execute(dedent('''
                         SELECT ipid FROM ip_bans WHERE ban_id = ?
                         '''), (self.ban_id,)).fetchall()
