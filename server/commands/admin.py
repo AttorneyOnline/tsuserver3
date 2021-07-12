@@ -1,5 +1,8 @@
+from dataclasses import dataclass
+from datetime import datetime
 import shlex
 import arrow
+import json
 
 from pytimeparse import parse
 
@@ -14,6 +17,7 @@ __all__ = [
     'ooc_cmd_kick',
     'ooc_cmd_ban',
     'ooc_cmd_banhdid',
+    'ooc_cmd_area_curse',
     'ooc_cmd_unban',
     'ooc_cmd_mute',
     'ooc_cmd_unmute',
@@ -124,7 +128,7 @@ def ooc_cmd_kick(client, arg):
         client.send_ooc(
             f'No targets with the IPID {ipid} were found.')
 
-
+@mod_only()
 def ooc_cmd_ban(client, arg):
     """
     Ban a user. If a ban ID is specified instead of a reason,
@@ -133,16 +137,90 @@ def ooc_cmd_ban(client, arg):
     Usage: /ban <ipid> "reason" ["<N> <minute|hour|day|week|month>(s)|perma"]
     Usage 2: /ban <ipid> <ban_id>
     """
-    kickban(client, arg, False)
+    kickban(client, arg, BanOptions(include_hdid=False))
 
-
+@mod_only()
 def ooc_cmd_banhdid(client, arg):
     """
     Ban both a user's HDID and IPID.
-    DANGER: Banning webAO users by HDID has unintended consequences.
     Usage: See /ban.
     """
-    kickban(client, arg, True)
+    kickban(client, arg, BanOptions(include_hdid=True))
+
+def _find_area(client, area_name):
+    try:
+        return client.server.area_manager.get_area_by_id(int(area_name))
+    except:
+        try:
+            return client.server.area_manager.get_area_by_name(area_name)
+        except ValueError:
+            raise ArgumentError('Area ID must be a name or a number.')
+
+def ooc_cmd_area_curse(client, arg):
+    """
+    Ban a player from all areas except one, such that when they connect, they
+    will be placed in a specified area and can't switch areas unless forcefully done
+    by a moderator.
+
+    To unban, use the /unban command.
+    To add more IPIDs/HDIDs, use the /ban command as usual.
+
+    Usage: /area_curse <ipid> <area_name> "reason" ["<N> <minute|hour|day|week|month>(s)|perma"]
+    """
+    args = shlex.split(arg)
+    default_ban_duration = client.server.config['default_ban_duration']
+
+    if len(args) < 3:
+        raise ArgumentError('Not enough arguments.')
+    else:
+        ipid = _convert_ipid_to_int(args[0])
+        target_area = _find_area(client, args[1])
+        reason = args[2]
+
+    if len(args) == 3:
+        ban_duration = parse(str(default_ban_duration))
+        unban_date = arrow.get().shift(seconds=ban_duration).datetime
+    elif len(args) == 4:
+        duration = args[3]
+        ban_duration = parse(str(duration))
+
+        if duration is None:
+            raise ArgumentError('Invalid ban duration.')
+        elif 'perma' in duration.lower():
+            unban_date = None
+        else:
+            if ban_duration is not None:
+                unban_date = arrow.get().shift(seconds=ban_duration).datetime
+            else:
+                raise ArgumentError(f'{duration} is an invalid ban duration')
+
+    else:
+        raise ArgumentError(f'Ambiguous input: {arg}\nPlease wrap your arguments '
+                            'in quotes.')
+
+    special_ban_data = json.dumps({
+        'ban_type': 'area_curse',
+        'target_area': target_area.id
+    })
+
+    ban_id = database.ban(ipid, reason, ban_type='ipid', banned_by=client,
+                          unban_date=unban_date, special_ban_data=special_ban_data)
+
+    targets = client.server.client_manager.get_targets(
+        client, TargetType.IPID, ipid, False)
+
+    for c in targets:
+        c.send_ooc('You are now bound to this area.')
+        c.area_curse = target_area.id
+        c.area_curse_info = database.find_ban(ban_id=ban_id)
+        try:
+            c.change_area(target_area)
+        except ClientError:
+            pass
+        database.log_misc('area_curse', client, target=c, data={'ban_id': ban_id, 'reason': reason})
+    if targets:
+        client.send_ooc(f'{len(targets)} clients were area cursed.')
+    client.send_ooc(f'{ipid} was area cursed. Ban ID: {ban_id}')
 
 
 def _convert_ipid_to_int(value):
@@ -151,9 +229,15 @@ def _convert_ipid_to_int(value):
     except ValueError:
         raise ClientError(f'{value} does not look like a valid IPID.')
 
+@dataclass
+class BanOptions:
+    ipid: int
+    ban_id: int
+    include_hdid: bool
+    reason: str
+    unban_date: datetime
 
-@mod_only()
-def kickban(client, arg: str, ban_hdid):
+def _parse_ban_args(client, arg: str):
     args = shlex.split(arg)
     ban_id = None
     default_ban_duration = client.server.config['default_ban_duration']
@@ -164,15 +248,18 @@ def kickban(client, arg: str, ban_hdid):
     elif len(args) == 2:
         ipid = _convert_ipid_to_int(args[0])
         try:
+            # /ban <ipid> <ban_id> (add ipid to existing ban)
             ban_id = int(args[1])
             reason = None
         except ValueError:
+            # /ban <ipid> <reason>
             ban_id = None
             reason = args[1]
         ban_duration = parse(str(default_ban_duration))
         unban_date = arrow.get().shift(seconds=ban_duration).datetime
 
     elif len(args) == 3:
+        # /ban <ipid> <reason> <duration>
         ipid = _convert_ipid_to_int(args[0])
         reason = args[1]
         duration = args[2]
@@ -198,27 +285,35 @@ def kickban(client, arg: str, ban_hdid):
     except ValueError:
         raise ClientError(f'{raw_ipid} does not look like a valid IPID.')
 
-    if ban_id != None:
-        existing_ban = database.find_ban(None, None, ban_id)
-        if existing_ban:
-            if bool(existing_ban.unbanned) == True:
-                raise ClientError(f'{ban_id} is already unbanned.')
+    return BanOptions(ipid=ipid, ban_id=ban_id, reason=reason, unban_date=unban_date)
 
-    ban_id = database.ban(ipid, reason, ban_type='ipid', banned_by=client,
-                          ban_id=ban_id, unban_date=unban_date)
+def kickban(client, arg: str, opts: BanOptions):
+    opts = BanOptions(**opts, **_parse_ban_args(arg))
+
+    ban_id = database.ban(opts.ipid, opts.reason, ban_type='ipid', banned_by=client,
+                          ban_id=opts.ban_id, unban_date=opts.unban_date)
 
     targets = client.server.client_manager.get_targets(
-        client, TargetType.IPID, ipid, False)
-    if targets:
-        for c in targets:
-            if ban_hdid:
-                database.ban(c.hdid, reason, ban_type='hdid', ban_id=ban_id)
-            c.send_command('KB', reason)
-            c.disconnect()
-            database.log_misc('ban', client, target=c, data={'reason': reason})
-        client.send_ooc(f'{len(targets)} clients were kicked.')
-    client.send_ooc(f'{ipid} was banned. Ban ID: {ban_id}')
+        client, TargetType.IPID, opts.ipid, False)
 
+    for c in targets:
+        if opts.ban_hdid:
+            database.ban(c.hdid, opts.reason, ban_type='hdid', ban_id=ban_id)
+        c.send_command('KB', opts.reason)
+        c.disconnect()
+        database.log_misc('ban', client, target=c, data={'reason': opts.reason})
+    if targets:
+        client.send_ooc(f'{len(targets)} clients were kicked.')
+    client.send_ooc(f'{opts.ipid} was banned. Ban ID: {ban_id}')
+
+def _area_uncurse(client, ban_info):
+    for ipid in ban_info.ipids:
+        targets = client.server.client_manager.get_targets(client, TargetType.IPID, ipid, False)
+        for c in targets:
+            database.log_misc('uncurse', c, data={'id': ban_info.ban_id})
+            c.area_curse = None
+            c.area_curse_info = None
+            c.send_ooc('You were uncursed from your area. Be free!')
 
 @mod_only()
 def ooc_cmd_unban(client, arg):
@@ -232,12 +327,20 @@ def ooc_cmd_unban(client, arg):
     args = list(arg.split(' '))
     client.send_ooc(f'Attempting to lift {len(args)} ban(s)...')
     for ban_id in args:
-        if database.unban(ban_id):
+        ban_info = database.find_ban(ban_id=ban_id)
+        if ban_info is not None:
+            try:
+                special_ban_data = json.loads(ban_info.ban_data)
+                if special_ban_data['ban_type'] == 'area_curse':
+                    _area_uncurse(client, ban_info)
+            except (KeyError, ValueError):
+                pass
+
+            database.unban(ban_id=ban_id)
             client.send_ooc(f'Removed ban ID {ban_id}.')
+            database.log_misc('unban', client, data={'id': ban_id})
         else:
             client.send_ooc(f'{ban_id} is not on the ban list.')
-        database.log_misc('unban', client, data={'id': ban_id})
-
 
 @mod_only()
 def ooc_cmd_mute(client, arg):
