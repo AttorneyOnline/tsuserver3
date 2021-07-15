@@ -449,13 +449,14 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_ooc(
                     "Blankposting is forbidden in this area!")
                 return
+            # Regex is slow as hell, need to change this to be more performant
             if len(re.sub(r'[{}\\`|(~~)]', '', text).replace(
                     ' ', '')) < 3 and not text.startswith('<') and not text.startswith('>'):
                 self.client.send_ooc(
                     "While that is not a blankpost, it is still pretty spammy. Try forming sentences."
                 )
                 return
-        if text.lstrip().startswith('(('):
+        if text.replace(' ', '').startswith('(('):
             self.client.send_ooc("Please, *please* use the OOC chat instead of polluting IC. Normal OOC is local to area. You can use /g to talk across the entire server.")
             return
         # Scrub text and showname for bad words
