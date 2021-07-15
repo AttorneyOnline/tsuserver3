@@ -427,8 +427,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_ooc(
                 'This is a muted area - ask the CM to be included in the invite list.')
             return False
-        # CMs and above can send messages with no regard for message delaying system
-        if button == '0' and not self.client.is_mod and not (self.client in self.client.area.owners) and not self.client.area.can_send_message(self.client):
+        if button == '0' and not self.client.area.can_send_message(self.client):
             return
 
         if len(showname) > 0 and not self.client.area.showname_changes_allowed and not self.client.is_mod and not (self.client in self.client.area.owners):
