@@ -167,6 +167,8 @@ class AreaManager:
                 self.afkers.remove(client)
             if len(self.clients) == 0:
                 self.change_status('IDLE')
+                self.unlock()
+                client.area.owners = []
             if client.char_id != -1:
                 database.log_room('area.leave', client, self)
 
