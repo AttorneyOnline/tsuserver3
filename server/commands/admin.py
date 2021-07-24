@@ -137,7 +137,7 @@ def ooc_cmd_ban(client, arg):
     Usage: /ban <ipid> "reason" ["<N> <minute|hour|day|week|month>(s)|perma"]
     Usage 2: /ban <ipid> <ban_id>
     """
-    kickban(client, arg, BanOptions(include_hdid=False))
+    kickban(client, arg, include_hdid=False)
 
 @mod_only()
 def ooc_cmd_banhdid(client, arg):
@@ -145,7 +145,7 @@ def ooc_cmd_banhdid(client, arg):
     Ban both a user's HDID and IPID.
     Usage: See /ban.
     """
-    kickban(client, arg, BanOptions(include_hdid=True))
+    kickban(client, arg, include_hdid=True)
 
 def _find_area(client, area_name):
     try:
@@ -229,14 +229,6 @@ def _convert_ipid_to_int(value):
     except ValueError:
         raise ClientError(f'{value} does not look like a valid IPID.')
 
-@dataclass
-class BanOptions:
-    ipid: int
-    ban_id: int
-    include_hdid: bool
-    reason: str
-    unban_date: datetime
-
 def _parse_ban_args(client, arg: str):
     args = shlex.split(arg)
     ban_id = None
@@ -285,26 +277,26 @@ def _parse_ban_args(client, arg: str):
     except ValueError:
         raise ClientError(f'{raw_ipid} does not look like a valid IPID.')
 
-    return BanOptions(ipid=ipid, ban_id=ban_id, reason=reason, unban_date=unban_date)
+    return ipid, ban_id, reason, unban_date
 
-def kickban(client, arg: str, opts: BanOptions):
-    opts = BanOptions(**opts, **_parse_ban_args(arg))
+def kickban(client, arg: str, include_hdid=False):
+    ipid, ban_id, reason, unban_date = _parse_ban_args(client, arg)
 
-    ban_id = database.ban(opts.ipid, opts.reason, ban_type='ipid', banned_by=client,
-                          ban_id=opts.ban_id, unban_date=opts.unban_date)
+    ban_id = database.ban(ipid, reason, ban_type='ipid', banned_by=client,
+                          ban_id=ban_id, unban_date=unban_date)
 
     targets = client.server.client_manager.get_targets(
-        client, TargetType.IPID, opts.ipid, False)
+        client, TargetType.IPID, ipid, False)
 
     for c in targets:
-        if opts.ban_hdid:
-            database.ban(c.hdid, opts.reason, ban_type='hdid', ban_id=ban_id)
-        c.send_command('KB', opts.reason)
+        if include_hdid:
+            database.ban(c.hdid, reason, ban_type='hdid', ban_id=ban_id)
+        c.send_command('KB', reason)
         c.disconnect()
-        database.log_misc('ban', client, target=c, data={'reason': opts.reason})
+        database.log_misc('ban', client, target=c, data={'reason': reason})
     if targets:
         client.send_ooc(f'{len(targets)} clients were kicked.')
-    client.send_ooc(f'{opts.ipid} was banned. Ban ID: {ban_id}')
+    client.send_ooc(f'{ipid} was banned. Ban ID: {ban_id}')
 
 def _area_uncurse(client, ban_info):
     for ipid in ban_info.ipids:
