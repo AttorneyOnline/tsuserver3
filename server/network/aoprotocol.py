@@ -227,7 +227,7 @@ class AOProtocol(asyncio.Protocol):
         if ban is not None:
             try:
                 special_ban_data = json.loads(ban.ban_data)
-            except ValueError:
+            except (ValueError, TypeError):
                 special_ban_data = None
 
             if special_ban_data is not None:
