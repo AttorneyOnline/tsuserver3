@@ -325,7 +325,7 @@ def ooc_cmd_unban(client, arg):
                 special_ban_data = json.loads(ban_info.ban_data)
                 if special_ban_data['ban_type'] == 'area_curse':
                     _area_uncurse(client, ban_info)
-            except (KeyError, ValueError):
+            except (KeyError, ValueError, TypeError):
                 pass
 
             database.unban(ban_id=ban_id)
