@@ -156,6 +156,8 @@ def _find_area(client, area_name):
         except ValueError:
             raise ArgumentError('Area ID must be a name or a number.')
 
+
+@mod_only()
 def ooc_cmd_area_curse(client, arg):
     """
     Ban a player from all areas except one, such that when they connect, they
