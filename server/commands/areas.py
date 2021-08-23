@@ -284,13 +284,14 @@ def ooc_cmd_area_kick(client, arg):
                     if not client.is_mod and not client in client.area.area_manager.owners and not client in area.owners:
                         raise ArgumentError("You can't kick someone to an area you don't own as a CM!")
                 target_pos = ''
+                old_area = c.area
                 if len(args) >= 3:
                     target_pos = args[2]
                 client.send_ooc(
-                    f'Attempting to kick {c.showname} to area {output}.')
+                    f'Attempting to kick [{c.id}] {c.showname} from [{old_area.id}] {old_area.name} to [{area.id}] {area.name}.')
                 c.set_area(area, target_pos)
                 c.send_ooc(
-                    f"You were kicked from the area to area {output}.")
+                    f"You were kicked from [{old_area.id}] {old_area.name} to [{area.id}] {area.name}.")
                 database.log_area('area_kick', client, client.area, target=c, message=output)
                 client.area.invite_list.discard(c.id)
         except ValueError:
