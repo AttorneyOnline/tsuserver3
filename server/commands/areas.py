@@ -104,7 +104,9 @@ def ooc_cmd_area(client, arg):
 
     try:
         for area in client.area.area_manager.areas:
-            if area.name.lower() == arg.lower() or area.abbreviation == arg or (arg.isdigit() and area.id == int(arg)):
+            a = arg.split(' ')[0]
+            aid = a.strip('[]')
+            if (a.startswith('[') and a.endswith(']') and aid.isdigit() and area.id == int(aid)) or area.name.lower() == arg.lower() or area.abbreviation == arg or (arg.isdigit() and area.id == int(arg)):
                 client.change_area(area)
                 return
         raise AreaError('Targeted area not found!')

@@ -513,14 +513,7 @@ class ClientManager:
             if (len(areas) > 0):
                 # This is where we can handle all the 'rendering', such as extra info etc.
                 for area in areas:
-                    #^B=1 is 'locked' color
-                    #^B=2 is 'looking for players' color
-                    #^B=3 is 'casing' color
-                    #^B=4 is 'recess' color
-                    #^B=5 is 'rp' color
-                    #^B=6 is 'gaming' color
-                    brush = ''
-                    area = f'{brush}{area.name}'
+                    area = f'[{area.id}] {area.name}'
                     area_list.append(area)
 
             self.local_area_list = areas
