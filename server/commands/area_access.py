@@ -90,9 +90,12 @@ def ooc_cmd_area_mute(client, arg):
             except:
                 target_id = int(aid)
             area = client.area.area_manager.get_area_by_id(target_id)
+            if not client.is_mod and not client in area.owners:
+                client.send_ooc(f'You don\'t own area [{area.id}] {area.name}.')
+                continue
 
             if area.muted:
-                client.send_ooc(f'Area {area.name} is already muted.')
+                client.send_ooc(f'Area [{area.id}] {area.name} is already muted.')
                 continue
             area.mute()
             area_list.append(area.id)
@@ -122,9 +125,12 @@ def ooc_cmd_area_unmute(client, arg):
             except:
                 target_id = int(aid)
             area = client.area.area_manager.get_area_by_id(target_id)
+            if not client.is_mod and not client in area.owners:
+                client.send_ooc(f'You don\'t own area [{area.id}] {area.name}.')
+                continue
 
             if not area.muted:
-                client.send_ooc(f'Area {area.name} is already unmuted.')
+                client.send_ooc(f'Area [{area.id}] {area.name} is already unmuted.')
                 continue
             area.unmute()
             area_list.append(area.id)
@@ -250,6 +256,10 @@ def ooc_cmd_link(client, arg):
                 area = client.area.area_manager.get_area_by_id(int(aid))
                 target_id = area.id
 
+            if not client.is_mod and not client in area.owners:
+                client.send_ooc(f'You don\'t own area [{area.id}] {area.name}.')
+                continue
+
             client.area.link(target_id)
             # Connect the target area to us
             area.link(client.area.id)
@@ -281,6 +291,10 @@ def ooc_cmd_unlink(client, arg):
             except:
                 area = client.area.area_manager.get_area_by_id(int(aid))
                 target_id = area.id
+
+            if not client.is_mod and not client in area.owners:
+                client.send_ooc(f'You don\'t own area [{area.id}] {area.name}.')
+                continue
 
             try:
                 client.area.unlink(target_id)
@@ -359,6 +373,10 @@ def ooc_cmd_onelink(client, arg):
                 area = client.area.area_manager.get_area_by_id(int(aid))
                 target_id = area.id
 
+            if not client.is_mod and not client in area.owners:
+                client.send_ooc(f'You don\'t own area [{area.id}] {area.name}.')
+                continue
+
             client.area.link(target_id)
             links.append(target_id)
         links = ', '.join(str(l) for l in links)
@@ -386,6 +404,10 @@ def ooc_cmd_oneunlink(client, arg):
                 target_id = client.area.area_manager.get_area_by_abbreviation(aid).id
             except:
                 target_id = int(aid)
+
+            if not client.is_mod and not client in area.owners:
+                client.send_ooc(f'You don\'t own area [{area.id}] {area.name}.')
+                continue
 
             try:
                 client.area.unlink(target_id)
