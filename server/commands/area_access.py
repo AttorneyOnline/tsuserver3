@@ -405,10 +405,6 @@ def ooc_cmd_oneunlink(client, arg):
             except:
                 target_id = int(aid)
 
-            if not client.is_mod and not client in area.owners:
-                client.send_ooc(f'You don\'t own area [{area.id}] {area.name}.')
-                continue
-
             try:
                 client.area.unlink(target_id)
                 links.append(target_id)
