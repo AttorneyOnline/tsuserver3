@@ -6,7 +6,7 @@
     - Show the message of the day.
 * **help**
     - Show help for a command, or show general help.
-* **kick** \<ipid|*|**> [reason]
+* **kick** \<ipid|\*|\*\*> [reason]
     - Kick a player.
     - Special cases:
         - "*" kicks everyone in the current area.
