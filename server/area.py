@@ -1214,6 +1214,7 @@ class Area:
                 self.password = ''
             if self.muted:
                 self.unmute()
+                self.broadcast_ooc('This area is no longer muted.')
             self.name = self.o_name
             self.doc = self.o_doc
             self.desc = self.o_desc

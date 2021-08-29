@@ -98,6 +98,7 @@ def ooc_cmd_area_mute(client, arg):
                 client.send_ooc(f'Area [{area.id}] {area.name} is already muted.')
                 continue
             area.mute()
+            area.broadcast_ooc('This area is now muted.')
             area_list.append(area.id)
         if len(area_list) > 0:
             client.send_ooc(f'Made areas {area_list} muted.')
@@ -133,6 +134,7 @@ def ooc_cmd_area_unmute(client, arg):
                 client.send_ooc(f'Area [{area.id}] {area.name} is already unmuted.')
                 continue
             area.unmute()
+            area.broadcast_ooc('This area is no longer muted.')
             area_list.append(area.id)
         if len(area_list) > 0:
             client.send_ooc(f'Made areas {area_list} unmuted.')
