@@ -15,12 +15,12 @@
     - Ban a user. If a ban ID is specified instead of a reason,
     - then the IPID is added to an existing ban record.
     - Ban durations are 6 hours by default.
-    - Usage 2: /ban <ipid> <ban_id>
+    - Usage 2: /ban <ipid> <ban\_id>
 * **banhdid**
     - Ban both a user's HDID and IPID.
-* **unban** \<ban_id...>
+* **unban** \<ban\_id...>
     - Unban a list of users.
-    - You need a ban ID to unban a user. Ban IDs are automatically included in ban reasons. Use `/baninfo \<ban_id>` for more information about a ban.
+    - You need a ban ID to unban a user. Ban IDs are automatically included in ban reasons. Use `/baninfo \<ban\_id>` for more information about a ban.
 * **mute** \<ipid>
     - Prevent a user from speaking in-character.
 * **unmute** \<ipid|"all">
@@ -35,29 +35,29 @@
     - Show a list of moderators online.
 * **unmod**
     - Log out as a moderator.
-* **ooc_mute** \<ooc-name>
+* **ooc\_mute** \<ooc-name>
     - Prevent a user from talking out-of-character.
-* **ooc_unmute** \<ooc-name>
+* **ooc\_unmute** \<ooc-name>
     - Allow an OOC-muted user to talk out-of-character.
 * **bans**
     - Get the 5 most recent bans.
     - This can lag the server depending on the size of the database, so be judicious in its use.
-* **baninfo** \<id> ['ban_id'|'ipid'|'hdid']
+* **baninfo** \<id> ['ban\_id'|'ipid'|'hdid']
     - Get information about a ban.
-    - By default, id identifies a ban_id.
+    - By default, id identifies a ban\_id.
 * **time**
     - Returns the current server time.
 * **whois** \<name|id|ipid|showname|character>
     - Get information about an online user.
 ## Area Access
-* **area_lock**
+* **area\_lock**
     - Prevent users from joining the current area.
-* **area_unlock**
+* **area\_unlock**
     - Allow anyone to freely join the current area.
-* **area_mute**
+* **area\_mute**
     - Makes this area impossible to speak for normal users unlesss /invite is used.
-* **area_unmute**
-    - Undo the effects of /area_mute.
+* **area\_unmute**
+    - Undo the effects of /area\_mute.
 * **lock** \<area(s)> or \<!link(s)>
     - Context-sensitive function to lock area(s) and/or area link(s).
     - Multiple targets may be passed.
@@ -84,24 +84,24 @@
     - Set up a one-way link from your current area with targeted area(s).
 * **oneunlink** \<id(s)>
     - Remove a one-way link from your current area with targeted area(s).
-* **link_lock** \<id(s)>
+* **link\_lock** \<id(s)>
     - Lock the path leading to target area(s)
-* **link_unlock** \<id(s)>
+* **link\_unlock** \<id(s)>
     - Unlock the path leading to target area(s).
-* **link_hide**
+* **link\_hide**
     - Hide the path leading to target area(s).
-* **link_unhide**
+* **link\_unhide**
     - Unhide the path leading to target area(s).
-* **link_pos** \<id> [pos]
+* **link\_pos** \<id> [pos]
     - Set the link's targeted pos when using it. Leave blank to reset.
-* **link_peekable** \<id(s)>
+* **link\_peekable** \<id(s)>
     - Make the path(s) leading to target area(s) /peek-able.
-* **link_unpeekable** \<id(s)>
+* **link\_unpeekable** \<id(s)>
     - Make the path(s) leading to target area(s) no longer /peek-able.
-* **link_evidence** \<id> [evi_id(s)]
+* **link\_evidence** \<id> [evi\_id(s)]
     - Make specific link only accessible from evidence ID(s).
     - Pass evidence ID's which you can see by mousing over evidence, or blank to see current evidences.
-* **unlink_evidence**
+* **unlink\_evidence**
     - Unlink evidence from links.
     - Pass evidence ID's which you can see by mousing over evidence.
 * **pw** \<id> [password]
@@ -121,7 +121,7 @@
     - Show or modify the current status of an area.
 * **area** [id]
     - List areas, or go to another area.
-* **ooc_cmd_area_visible**
+* **area\_visible**
     - Display only linked and non-hidden areas. Useful to GMs.
 * **getarea**
     - Show information about the current area.
@@ -135,41 +135,41 @@
 * **uninvite** \<id>
     - Revoke an invitation for a particular user.
     - ID can be * to uninvite everyone in the current area.
-* **area_kick** \<id> [destination] [target_pos]
+* **area\_kick** \<id> [destination] [target\_pos]
     - Remove a user from the current area and move them to another area.
     - If id is a * char, it will kick everyone but you and CMs from current area to destination.
     - If id is `afk`, it will only kicl all the afk people.
     - If the destination is not specified, the destination defaults to area 0.
-    - target_pos is the optional position that everyone should end up in when kicked.
-* **pos_lock** \<pos(s)>
+    - target\_pos is the optional position that everyone should end up in when kicked.
+* **pos\_lock** \<pos(s)>
     - Lock current area's available positions into a list of pos separated by space.
-    - Use /pos_lock none or /pos_lock_clear to make the list empty.
-    - If your pos have spaces in them, it must be a comma-separated list like /pos_lock pos one, pos two, pos X
-    - If you're locking into a single pos with spaces in it, end it with a comma, like /pos_lock this is a pos,
-* **pos_lock_clear**
+    - Use /pos\_lock none or /pos\_lock\_clear to make the list empty.
+    - If your pos have spaces in them, it must be a comma-separated list like /pos\_lock pos one, pos two, pos X
+    - If you're locking into a single pos with spaces in it, end it with a comma, like /pos\_lock this is a pos,
+* **pos\_lock\_clear**
     - Clear the current area's position lock and make all positions available.
 * **knock** \<id>
     - Knock on the target area ID to call on their attention to your area.
 * **peek** \<id>
     - Peek into an area to see if there's people in it.
-* **max_players** [num]
+* **max\_players** [num]
     - Set a max amount of players for current area between -1 and 99.
 * **desc** [desc]
     - Set an area description that appears to the user any time they enter the area.
-* **edit_ambience** [tog]
+* **edit\_ambience** [tog]
     - Toggle edit mode for setting ambience. Playing music will set it as the area's ambience.
     - tog can be `on`, `off` or empty.
 * **lights** [tog]
     - Toggle lights for this area. If lights are off, players will not be able to use /getarea or see evidence.
     - Players will also be unable to see area movement messages or use /chardesc.
-    - You can change /bg, /desc and /pos_lock of the area when its dark and it will remember it next time you turn the lights off.
+    - You can change /bg, /desc and /pos\_lock of the area when its dark and it will remember it next time you turn the lights off.
     - tog can be `on`, `off` or empty.
 ## Casing
 * **doc** [url]
     - Show or change the link for the current case document.
 * **cleardoc**
     - Clear the link for the current case document.
-* **evidence_mod** \<FFA|Mods|CM|HiddenCM>
+* **evidence\_mod** \<FFA|Mods|CM|HiddenCM>
     - Change the evidence privilege mode.
     * **FFA**
         - Everyone can add, edit and remove evidence.
@@ -179,7 +179,7 @@
         - Only the CM (case-maker, look at /cm for more info) or moderators can add, edit or remove evidence.
     * **HiddenCM**
         - Same as CM, but every evidence has a preset "owner's position" which can be set by a CM or moderator, such that only one side/position of the court may see the evidence. After presenting the evidence, the position of the evidence changes to "all" (visible to everyone).
-* **evi_swap**  \<id> \<id>
+* **evi\_swap**  \<id> \<id>
     - Swap the positions of two evidence items on the evidence list.
     - The ID of each evidence can be displayed by mousing over it in 2.8 client, or simply its number starting from 1.
 * **cm** \<id>
@@ -200,20 +200,20 @@
     - List the last 10 uses of judge controls in the current area.
 * **afk**
     - Sets your player as AFK in player listings.
-* **remote_listen** [option]
+* **remote\_listen** [option]
     - Change the remote listen logs to either NONE, IC, OOC or ALL.
     - It will send you those messages from the areas you are an owner of.
     - Leave blank to see your current option.
 * **testimony** [id]
     - Display the currently recorded testimony.
     - Optionally, id can be passed to move to that statement.
-* **testimony_clear**
+* **testimony\_clear**
     - Clear the current testimony.
-* **testimony_remove** \<id>
+* **testimony\_remove** \<id>
     - Remove the statement at index.
-* **testimony_amend** \<id> \<msg>
+* **testimony\_amend** \<id> \<msg>
     - Edit the spoken message of the statement at idx.
-* **testimony_swap** \<id> \<id>
+* **testimony\_swap** \<id> \<id>
     - Swap the two statements by id.
 * **cs** \<id>
     - Start a one-on-one "Cross Swords" debate with targeted player!
@@ -249,17 +249,17 @@
     - Blind the targeted player(s) from being able to see or talk IC.
 * **unblind**
     - Undo effects of the /blind command.
-* **player_move_delay** \<id> [delay]
+* **player\_move\_delay** \<id> [delay]
     - Set the player's move delay to a value in seconds. Can be negative.
     - Delay must be from -1800 to 1800 in seconds or empty to check.
-    - If only delay is provided, you will be setting your own move_delay.
-* **player_hide** \<id(s)>
+    - If only delay is provided, you will be setting your own move\_delay.
+* **player\_hide** \<id(s)>
     - Hide player(s) from /getarea and playercounts.
     - If <id> is *, it will hide everyone in the area excluding yourself and CMs.
-* **player_unhide** \<id(s)>
+* **player\_unhide** \<id(s)>
     - Unhide player(s) from /getarea and playercounts.
     - If <id> is *, it will unhide everyone in the area excluding yourself and CMs.
-* **hide** \<evi_name/id>
+* **hide** \<evi\_name/id>
     - Try to hide in the targeted evidence name or ID.
 * **unhide**
     - Stop hiding.
@@ -267,23 +267,23 @@
     - Begin sneaking a.k.a. hide your area moving messages from the OOC.
 * **unsneak**
     - Stop sneaking a.k.a. show your area moving messages in the OOC.
-* **listen_pos** [pos(s)]
+* **listen\_pos** [pos(s)]
     - Start only listening to your currently occupied pos.
     - All messages outside of that pos will be reflected in the OOC.
     - Optional argument(s) is a list of positions you want to listen to.
-* **unlisten_pos**
-    - Undo the effects of /listen_pos command so you stop listening to the position(s).
-* **save_character_data** \<path>
-    - Save the move_delay, keys, etc. for characters into a file in the storage/character_data/ folder.
-* **load_character_data** \<path>
-    - Load the move_delay, keys, etc. for characters from a file in the storage/character_data/ folder.
-* **keys_set** \<char> [key(s)]
+* **unlisten\_pos**
+    - Undo the effects of /listen\_pos command so you stop listening to the position(s).
+* **save\_character\_data** \<path>
+    - Save the move\_delay, keys, etc. for characters into a file in the storage/character\_data/ folder.
+* **load\_character\_data** \<path>
+    - Load the move\_delay, keys, etc. for characters from a file in the storage/character\_data/ folder.
+* **keys\_set** \<char> [key(s)]
     - Sets the keys of the target client/character folder/character id to the key(s). Keys must be a number like 5 or a link eg. 1-5.
-* **keys_add** \<char> [key(s)]
+* **keys\_add** \<char> [key(s)]
     - Adds the keys of the target client/character folder/character id to the key(s). Keys must be a number like 5 or a link eg. 1-5.
-* **keys_remove** \<char> [key(s)]
+* **keys\_remove** \<char> [key(s)]
     - Remvove the keys of the target client/character folder/character id from the key(s). Keys must be a number like 5 or a link eg. 1-5.
-* **keys** [target_id]
+* **keys** [target\_id]
     - Check your own keys, or someone else's (if admin).
     - Keys allow you to /lock or /unlock specific areas, OR area links if it's formatted like 1-5
 * **kms**
@@ -294,10 +294,10 @@
     - Look at another person's character description if only ID is provided.
     - Set your own character description if description is provided instead of ID.
         - Do note that the first sentence of your chardesc is displayed during area transfer messages!
-    - To set someone else's char desc as an admin/GM, or look at their desc, use /chardesc_set or /chardesc_get.
-* **chardesc_set** \<id> [desc]
+    - To set someone else's char desc as an admin/GM, or look at their desc, use /chardesc\_set or /chardesc\_get.
+* **chardesc\_set** \<id> [desc]
     - Set someone else's character description to desc or clear it.
-* **chardesc_get** \<id>
+* **chardesc\_get** \<id>
     - Get someone else's character description.
 * **narrate** [on|off]
     - Speak as a Narrator for your next emote.
@@ -322,52 +322,52 @@
 * **hub** [id/name]
     - List hubs, or go to another hub.
 ### Saving/loading
-* **save_hub** \<name>
+* **save\_hub** \<name>
     - Save the current Hub in the server's storage/hubs/\<name>.yaml file.
-    - If blank and you're a mod, it will save to server's config/areas_new.yaml for the server owner to approve.
-* **load_hub** \<name>
+    - If blank and you're a mod, it will save to server's config/areas\_new.yaml for the server owner to approve.
+* **load\_hub** \<name>
     - Load Hub data from the server's storage/hubs/\<name>.yaml file.
     - If blank and you're a mod, it will reload the server's config/areas.yaml.
-* **list_hubs**
+* **list\_hubs**
     - Show all the available hubs for loading in the storage/hubs/ folder.
-* **clear_hub**
+* **clear\_hub**
     - Clear the current hub and reset it to its default state.
-* **rename_hub** \<name>
+* **rename\_hub** \<name>
     - Rename the hub you are currently in to \<name>.
 ### Area Creation system
-* **area_create** [name]
+* **area\_create** [name]
     - Create a new area.
     - Newly created area's evidence mod will be HiddenCM.
     - Optional name will rename it to that as soon as its created.
-* **area_remove** \<id>
+* **area\_remove** \<id>
     - Remove specified area by Area ID.
-* **area_rename** \<name>
+* **area\_rename** \<name>
     - Rename area you are currently in to \<name>.
-* **area_swap** \<id> \<id>
+* **area\_swap** \<id> \<id>
     - Swap areas by Area IDs while correcting links to reference the right areas.
-* **area_switch** \<id> \<id>
+* **area\_switch** \<id> \<id>
     - Switch areas by Area IDs without correcting links.
-* **area_pref** [pref] [on/true/off/false]
+* **area\_pref** [pref] [on/true/off/false]
     - Toggle a preference on/off for an area.
     - Leave pref out to see available prefs.
     - Leave on/true and off/false to toggle the pref.
     - The list of preferences is available [here](prefs.md).
-* **area_move_delay** [delay]
+* **area\_move\_delay** [delay]
     - Set the area's move delay to a value in seconds. Can be negative.
     - Delay must be from -1800 to 1800 in seconds or empty to check.
-* **hub_move_delay** [delay]
+* **hub\_move\_delay** [delay]
     - Set the hub's move delay to a value in seconds. Can be negative.
     - Delay must be from -1800 to 1800 in seconds or empty to check.
-* **toggle_replace_music**
+* **toggle\_replace\_music**
     - Toggle the hub music list to replace the server's music list.
-* **arup_enable**
+* **arup\_enable**
     - Enable the ARea UPdate system for this hub.
     - ARUP system is the extra information displayed in the A/M area list, as well as being able to set /status.
-* **arup_disable**
+* **arup\_disable**
     - Disable the ARea UPdate system for this hub.
-* **hide_clients**
+* **hide\_clients**
     - Hide the playercounts for this Hub's areas.
-* **unhide_clients**
+* **unhide\_clients**
     - Unhide the playercounts for this Hub's areas.
 ### General
 * **follow**
@@ -385,8 +385,8 @@
 * **broadcast** \<id(s)>
     - Start broadcasting your IC, Music and Judge buttons to specified area ID's.
     - To include all areas, use /broadcast all.
-    - /clear_broadcast to stop broadcasting.
-* **clear_broadcast**
+    - /clear\_broadcast to stop broadcasting.
+* **clear\_broadcast**
     - Stop broadcasting your IC, Music and Judge buttons.
 ## Messaging
 * **a**  \<area> \<message>
@@ -418,15 +418,15 @@
     - Show the current music playing.
 * **getmusic**
     - Grab the last played track in this area.
-* **jukebox_toggle**
+* **jukebox\_toggle**
     - Toggle jukebox mode. While jukebox mode is on, all music changes become votes for the next track, rather than changing the track immediately.
-* **jukebox_skip**
+* **jukebox\_skip**
     - Skip the current track.
 * **jukebox**
     - Show information about the jukebox's queue and votes.
 * **play** \<name>
-    - Play a track and loop it. See /play_once for this command without looping.
-* **play_once** \<name>
+    - Play a track and loop it. See /play\_once for this command without looping.
+* **play\_once** \<name>
     - Play a track without looping it. See /play for this command with looping.
 * **blockdj** \<id>
     - Prevent a user from changing music.
@@ -437,15 +437,15 @@
 * **musiclist** [path]
     - Load a client-side music list. Pass no arguments to reset. /musiclists to see available lists.
     - Note: if there is a set area/hub music list, their music lists will take priority.
-* **area_musiclist** [path]
+* **area\_musiclist** [path]
     - Load an area-wide music list. Pass no arguments to reset. /musiclists to see available lists.
     - Area list takes priority over client lists.
-* **hub_musiclist** [path]
+* **hub\_musiclist** [path]
     - Load a hub-wide music list. Pass no arguments to reset. /musiclists to see available lists.
     - Hub list takes priority over client lists.
-* **random_music** [category]
+* **random\_music** [category]
     - Play a random track from your current muisc list. If supplied, [category] will pick the song from that category.
-    - Usage: /random_music [category]
+    - Usage: /random\_music [category]
 ## Roleplay
 * **roll** [value/XdY] ["+5"/"-5"/"*5"/"/5"]
     - Roll a die. The result is shown publicly.
@@ -459,25 +459,25 @@
     - X is the number of dice, Y is the maximum value on the die.
 * **notecard** \<message>
     - Write a notecard that can only be revealed by a CM.
-* **notecard_clear**
+* **notecard\_clear**
     - Clear all notecards as a CM.
-* **notecard_reveal**
+* **notecard\_reveal**
     - Reveal all notecards and their owners.
-* **notecard_check**
+* **notecard\_check**
     - Check all notecards and their owners privately with a message telling others you've done so.
 * **vote** \<id>
     - Cast a vote for a particular user that can only be revealed by a CM.
-* **vote_clear** [char_folder]
+* **vote\_clear** [char\_folder]
     - Clear all votes as a CM.
-    - Include [char_folder] (case-sensitive) to only clear a specific voter.
-* **vote_reveal**
+    - Include [char\_folder] (case-sensitive) to only clear a specific voter.
+* **vote\_reveal**
     - Reveal the number of votes, the voters and those with the highest amount of votes.
-* **vote_check**
+* **vote\_check**
     - Check the number of votes, the voters and those with the highest amount of votes privately with a message telling others you've done so.
-* **rolla_reload**
+* **rolla\_reload**
     - Reload ability dice sets from a configuration file.
     - The configuration file is located in `config/dice.yaml`.
-* **rolla_set** \<name>
+* **rolla\_set** \<name>
     - Choose the set of ability dice to roll.
 * **rolla**
     - Roll a specially labeled set of dice (ability dice).
