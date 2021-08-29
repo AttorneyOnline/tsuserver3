@@ -1,5 +1,5 @@
 # Commands
-`<brackets>` mean "required arguments", `[]` mean "optional arguments". Actual commands do not need these brackets.
+`<>` mean "required arguments", `[]` mean "optional arguments". Actual commands do not need these brackets.
 
 ## Admin
 * **motd**
@@ -11,7 +11,7 @@
     - Special cases:
         - `*` kicks everyone in the current area.
         - `**` kicks everyone in the server.
-* **ban** `<ipid> "reason" [<minute|hour|day|week|month>(s)|"perma"]`
+* **ban** `<ipid> "reason" [# <minute|hour|day|week|month>(s)|"perma"]`
     - Ban a user. If a ban ID is specified instead of a reason,
     - then the IPID is added to an existing ban record.
     - Ban durations are 6 hours by default.
