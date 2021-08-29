@@ -1,5 +1,5 @@
 # Commands
-`<>` mean "required arguments", `[]` mean "optional arguments". Actual commands do not need these brackets.
+`<>` mean "required arguments", `[]` mean "optional arguments". Actual commands do not need these brackets. There's also short-hands, or "aliases" for all commands you can read about [here](https://github.com/Crystalwarrior/KFO-Server/blob/master/config_sample/command_aliases.yaml) - formatted left: alias, right: called command, note that servers may include additional aliases or choose to remove existing ones.
 
 ## Admin
 * **motd**
@@ -495,3 +495,22 @@
     - `start` starts the previously set timer, so `/timer 0 start`.
     - `pause` OR `stop` pauses the timer that's currently running, so `/timer 0 pause`.
     - `unset` OR `hide` hides the timer for it to no longer show up, so `/timer 0 hide`.
+
+## In-Character Commands
+These are special commands designed for use in the In-Character chat, instead of the Out-Of-Character.
+* **/a** `[id(s)]` `[msg]`
+    - This command can only be used by CMs and above.
+    - `[id(s)]` are optional. If ID(s) are not provided (`/a msg`), the message will be broadcast across all owned areas.
+    - `[id(s)]` stand for Area ID's that can be viewed using `/area`, or in the A/M area list, so `/a 1 msg` to send message "msg" to area ID 1. If multiple ID's, they must be comma-separated, like so: `/a 1,2,3,4 msg` - send message "msg" to area ID's 1, 2, 3 and 4.
+* **/w** `[id(s)]` `[msg]`
+    - This command can be used by anyone, unless `/area_pref can_whisper` is `false`.
+    - `[id(s)]` are optional. If ID(s) are not provided (`/w msg`), the message will be broadcast to clients in the current `/pos` only.
+    - `[id(s)]` stand for Client ID's that can be viewed using `/getarea`, so `/w 1 msg` to send message "msg" to client with ID 1. The client must be present in the same area. If multiple ID's, they must be comma-separated, like so: `/aw 1,2,3,4 msg` - send message "msg" to Client ID's 1, 2, 3 and 4.
+* **Testimony**
+    - Begin with a title, like `--title--`, `==title==`, etc.
+    - The CM has to press the "Witness Testimony" woosh button. Any message spoken from this point on will be recorded.
+        - If anyone that isn't a CM tries to do this, it will not start recording.
+    - Once everyone has testified, last one to testify or the CM has to say a single word - `end`.
+    - Afterwards, next time the CM uses "Cross-Examination" button, the testimony title will be replayed, and the defense can use `>` to progress a statement, `<` to precede a statement, `>5` to go to specific statement 5.
+    - You can use `**msg` to amend the current statement.
+    - You can use `++msg` to add a new statement after the current one.
