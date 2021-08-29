@@ -487,6 +487,11 @@
 * **8ball** `<question>`
     - Answers a question. The result is shown publicly.
     - The answers depend on the `8ball` preset in `config/dice.yaml`.
-* **timer** `<id>` `[+/-][time]` | `<id>` start | `<id>` `<pause|stop>` | `<id>` hide
+* **timer** `<id> [+/-][time]` OR `<id> start` OR `<id> <pause|stop>` OR `<id> <unset|hide>`
     - Manage a countdown timer in the current area. Note that timer of ID `0` is hub-wide. All other timer ID's are local to area.
-    - the `[time]` can be formated as `10m5s` for 10 minutes 5 seconds, `1h30m` for 1 hour 30 minutes, etc.
+    - Anyone can check ongoing timers, their status and time left using `/timer <id>`, so `/timer 0`.
+    - `[time]` can be formated as `10m5s` for 10 minutes 5 seconds, `1h30m` for 1 hour 30 minutes, etc.
+    - You can optionally add or subtract time, like so: `/timer 0 +5s` to add `5` seconds to timer id `0`.
+    - `start` starts the previously set timer, so `/timer 0 start`.
+    - `pause` OR `stop` pauses the timer that's currently running, so `/timer 0 pause`.
+    - `unset` OR `hide` hides the timer for it to no longer show up, so `/timer 0 hide`.
