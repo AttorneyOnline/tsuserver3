@@ -84,5 +84,3 @@ coverage.xml
 
 ### VSCode
 .vscode/
-*.bat
-*.sh
