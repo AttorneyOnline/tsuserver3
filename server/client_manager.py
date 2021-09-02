@@ -708,6 +708,7 @@ class ClientManager:
                         # Stop following a ghost.
                         c.unfollow(silent=True)
 
+            reason = ''
             if not self.area.dark and not self.area.force_sneak and not self.sneaking and not self.hidden:
                 if not old_area.dark and not old_area.force_sneak:
                     for c in old_area.clients:
@@ -715,7 +716,7 @@ class ClientManager:
                         if c in old_area.owners and c.remote_listen in [2, 3]:
                             continue
                         c.send_command('CT', self.server.config['hostname'],
-                                        f'[{self.id}] {self.showname} leaves to [{area.id}] {area.name}.', '1')
+                                        f'[{self.id}] {self.showname} leaves to [{self.area.id}] {self.area.name}.', '1')
                 desc = '.'
                 if self.desc != '':
                     desc = ': ' + self.desc
@@ -728,20 +729,21 @@ class ClientManager:
                         desc += f'... Use /chardesc {self.id} to read the rest.'
                 area.send_command('CT', self.server.config['hostname'],
                                   f'[{self.id}] {self.showname} enters from [{old_area.id}] {old_area.name}{desc}', '1')
-                area.send_owner_command('CT', self.server.config['hostname'],
-                                  f'[{self.id}] {self.showname} moves from [{old_area.id}] {old_area.name} to [{area.id}] {area.name}.', '1')
             else:
-                reason = ''
                 if self.sneaking:
-                    reason = ' (you are sneaking)'
+                    reason = ' (sneaking)'
                 if self.hidden:
-                    reason = ' (you are hidden)'
+                    reason = ' (hidden)'
                 if self.area.force_sneak:
-                    reason = ' (the area forces sneaking)'
+                    reason = ' (new area forces sneaking)'
                 if self.area.dark:
-                    reason = ' (the area is dark)'
+                    reason = ' (new area is dark)'
                 self.send_ooc(
                     f'Changed area unannounced{reason}.')
+                for c in self.area.owners:
+                    c.send_ooc(f'[{self.id}] {self.showname} enters unannounced from [{old_area.id}] {old_area.name}{reason}')
+            area.send_owner_command('CT', self.server.config['hostname'],
+                                f'[{self.id}] {self.showname} moves from [{old_area.id}] {old_area.name} to [{self.area.id}] {self.area.name}.{reason}', '1')
 
             if area.cannot_ic_interact(self):
                 self.send_ooc(

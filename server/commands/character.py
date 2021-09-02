@@ -349,31 +349,29 @@ def ooc_cmd_unblind(client, arg):
         raise ArgumentError('No targets found.')
 
 
-@mod_only(hub_owners=True)
 def ooc_cmd_player_move_delay(client, arg):
     """
     Set the player's move delay to a value in seconds. Can be negative.
     Delay must be from -1800 to 1800 in seconds or empty to check.
-    Usage: /player_move_delay <id> [delay] OR /player_move_delay <delay>
+    Usage: /player_move_delay <id> [delay]
     """
     args = arg.split()
     try:
-        c = client
-        if len(args) > 0:
-            move_delay = int(args[0])
+        if len(args) > 0 and client in client.area_manager.owners:
+            c = client.server.client_manager.get_targets(client, TargetType.ID,
+                                                        int(args[0]), False)[0]
             if len(args) > 1:
-                c = client.server.client_manager.get_targets(client, TargetType.ID,
-                                                            int(args[0]), False)[0]
-                move_delay = int(args[1])
-            move_delay = min(1800, max(-1800, move_delay)) # Move delay is limited between -1800 and 1800
-            c.move_delay = move_delay
-            client.send_ooc(f'Set move delay for {c.char_name} to {move_delay}.')
+                move_delay = min(1800, max(-1800, int(args[1]))) # Move delay is limited between -1800 and 1800
+                c.move_delay = move_delay
+                client.send_ooc(f'Set move delay for {c.char_name} to {c.move_delay}.')
+            else:
+                client.send_ooc(f'Move delay for {c.char_name} is {c.move_delay}.')
         else:
-            client.send_ooc(f'Current move delay for {c.char_name} is {c.move_delay}.')
+            client.send_ooc(f'Your current move delay is {client.move_delay}.')
     except ValueError:
         raise ArgumentError('Delay must be an integer between -1800 and 1800.')
     except IndexError:
-        raise ArgumentError('Target client not found. Use /player_move_delay <id> [delay], or /player_move_delay <delay>.')
+        raise ArgumentError('Target client not found. Use /player_move_delay <id> [delay].')
     except (AreaError, ClientError):
         raise
 
