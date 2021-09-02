@@ -743,7 +743,8 @@ class ClientManager:
                 self.send_ooc(
                     f'Changed area unannounced{reason}.')
                 for c in self.area.owners:
-                    c.send_ooc(f'[{self.id}] {self.showname} enters unannounced from [{old_area.id}] {old_area.name}{reason}')
+                    if c in self.area.clients:
+                        c.send_ooc(f'[{self.id}] {self.showname} enters unannounced from [{old_area.id}] {old_area.name}{reason}')
             area.send_owner_command('CT', self.server.config['hostname'],
                                 f'[{self.id}] {self.showname} moves from [{old_area.id}] {old_area.name} to [{self.area.id}] {self.area.name}.{reason}', '1')
 

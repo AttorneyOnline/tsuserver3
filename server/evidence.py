@@ -133,7 +133,7 @@ class EvidenceList:
                 f'[{client.id}] {client.showname} added evidence "{name}" in area [{client.area.id}] {client.area.name}.', '1')
         # send_owner_command does not tell CMs present in the area about evidence manipulation, so let's do that manually
         for c in client.area.owners:
-            if c.remote_listen == 2:
+            if c in client.area.clients and c.remote_listen == 2:
                 c.send_command('CT', client.server.config['hostname'], 
                         f'[{client.id}] {client.showname} added evidence "{name}" in this area.', '1')
 
@@ -156,7 +156,7 @@ class EvidenceList:
                 f'[{client.id}] {client.showname} swapped evidence "{self.evidences[id1].name}" with "{self.evidences[id2].name}" in area [{client.area.id}] {client.area.name}.', '1')
         # send_owner_command does not tell CMs present in the area about evidence manipulation, so let's do that manually
         for c in client.area.owners:
-            if c.remote_listen == 2:
+            if c in client.area.clients and c.remote_listen == 2:
                 c.send_command('CT', client.server.config['hostname'], 
                         f'[{client.id}] {client.showname} swapped evidence "{self.evidences[id1].name}" with "{self.evidences[id2].name}" in this area.', '1')
 
@@ -217,7 +217,7 @@ class EvidenceList:
                 f'[{client.id}] {client.showname} deleted evidence "{evi.name}" in area [{client.area.id}] {client.area.name}.', '1')
         # send_owner_command does not tell CMs present in the area about evidence manipulation, so let's do that manually
         for c in client.area.owners:
-            if c.remote_listen == 2:
+            if c in client.area.clients and c.remote_listen == 2:
                 c.send_command('CT', client.server.config['hostname'], 
                         f'[{client.id}] {client.showname} deleted evidence "{evi.name}" in this area.', '1')
 
@@ -286,6 +286,6 @@ class EvidenceList:
                 f'[{client.id}] {client.showname} edited evidence "{old_name}" in area [{client.area.id}] {client.area.name}.', '1')
         # send_owner_command does not tell CMs present in the area about evidence manipulation, so let's do that manually
         for c in client.area.owners:
-            if c.remote_listen == 2:
+            if c in client.area.clients and c.remote_listen == 2:
                 c.send_command('CT', client.server.config['hostname'], 
                         f'[{client.id}] {client.showname} edited evidence "{old_name}" in this area.', '1')
