@@ -308,7 +308,10 @@ class AOProtocol(asyncio.Protocol):
         allowed = self.client.is_mod or self.client in self.client.area.owners
         area_list = self.client.get_area_list(allowed, allowed)
         self.client.local_area_list = area_list
-        song_list += [a.name for a in area_list]
+        if not self.client.area.area_manager.arup_enabled:
+            song_list += [f'[{a.id}] {a.name}' for a in area_list]
+        else:
+            song_list += [a.name for a in area_list]
         self.client.local_music_list = self.server.music_list
         song_list += self.server.music_list_ao2
 

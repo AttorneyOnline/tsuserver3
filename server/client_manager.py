@@ -513,8 +513,10 @@ class ClientManager:
             if (len(areas) > 0):
                 # This is where we can handle all the 'rendering', such as extra info etc.
                 for area in areas:
-                    area = f'[{area.id}] {area.name}'
-                    area_list.append(area)
+                    a = area.name
+                    if not self.area.area_manager.arup_enabled:
+                        a = f'[{area.id}] {area.name}'
+                    area_list.append(a)
 
             self.local_area_list = areas
             # KEEP THE ASTERISK
