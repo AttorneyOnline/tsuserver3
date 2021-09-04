@@ -497,12 +497,13 @@
     - `unset` OR `hide` hides the timer for it to no longer show up, so `/timer 0 hide`.
 
 ## In-Character Commands
-These are special commands designed for use in the In-Character chat, instead of the Out-Of-Character.
 * **/a** `[id(s)]` `[msg]`
+    - Put this in the In-Character chat.
     - This command can only be used by CMs and above.
     - `[id(s)]` are optional. If ID(s) are not provided (`/a msg`), the message will be broadcast across all owned areas.
     - `[id(s)]` stand for Area ID's that can be viewed using `/area`, or in the A/M area list, so `/a 1 msg` to send message "msg" to area ID 1. If multiple ID's, they must be comma-separated, like so: `/a 1,2,3,4 msg` - send message "msg" to area ID's 1, 2, 3 and 4.
 * **/w** `[id(s)]` `[msg]`
+    - Put this in the In-Character chat.
     - This command can be used by anyone, unless `/area_pref can_whisper` is `false`.
     - `[id(s)]` are optional. If ID(s) are not provided (`/w msg`), the message will be broadcast to clients in the current `/pos` only.
     - `[id(s)]` stand for Client ID's that can be viewed using `/getarea`, so `/w 1 msg` to send message "msg" to client with ID 1. The client must be present in the same area. If multiple ID's, they must be comma-separated, like so: `/aw 1,2,3,4 msg` - send message "msg" to Client ID's 1, 2, 3 and 4.
