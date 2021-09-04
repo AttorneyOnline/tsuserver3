@@ -510,9 +510,9 @@ class ClientManager:
             Rebuild the area list according to provided areas list.
             """
             if not self.area.area_manager.arup_enabled:
-                area_list = ['=== Areas ===\n Double-Click me to see Hubs\n===']
+                area_list = ['{ Areas }\n Double-Click me to see Hubs\n_______']
             else:
-                area_list = ['=== Areas ===']
+                area_list = ['{ Areas }']
             if (len(areas) > 0):
                 # This is where we can handle all the 'rendering', such as extra info etc.
                 for area in areas:
