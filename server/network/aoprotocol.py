@@ -284,7 +284,6 @@ class AOProtocol(asyncio.Protocol):
                                      *self.server.music_pages_ao1[args[0]])
         else:
             self.client.send_done()
-            self.client.send_area_list()
             self.client.send_motd()
             self.client.send_hub_info()
 
@@ -329,7 +328,6 @@ class AOProtocol(asyncio.Protocol):
         """
 
         self.client.send_done()
-        self.client.send_area_list()
         self.client.send_motd()
         self.client.send_hub_info()
         # TODO: move this code to the area itself so it can handle whatever it needs to later
