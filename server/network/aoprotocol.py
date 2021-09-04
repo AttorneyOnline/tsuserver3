@@ -305,7 +305,7 @@ class AOProtocol(asyncio.Protocol):
 
         song_list = []
         if not self.client.area.area_manager.arup_enabled:
-            song_list = ['{ Areas }\n Double-Click me to see Hubs\n_______']
+            song_list = ['{ Areas }\n Double-Click me to see Hubs\n  _______']
         else:
             song_list = ['{ Areas }']
         allowed = self.client.is_mod or self.client in self.client.area.owners
@@ -951,7 +951,7 @@ class AOProtocol(asyncio.Protocol):
             preflist = self.client.server.supported_features.copy()
             preflist.remove('arup')
             self.client.send_command('FL', *preflist)
-            self.client.send_command('FA', *['{ Hubs }\n Double-Click me to see Areas\n_______', *[f'[{hub.id}] {hub.name}' for hub in self.client.server.hub_manager.hubs]])
+            self.client.send_command('FA', *['{ Hubs }\n Double-Click me to see Areas\n  _______', *[f'[{hub.id}] {hub.name}' for hub in self.client.server.hub_manager.hubs]])
             return
         if args[0].split('\n')[0] == "{ Hubs }":
             # self.client.send_ooc('Switching to the list of Areas...')

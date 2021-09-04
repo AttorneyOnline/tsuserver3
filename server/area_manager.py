@@ -517,7 +517,7 @@ class AreaManager:
         """Broadcast ARUP packet containing the lock status of each area."""
         if not self.arup_enabled:
             return        
-        lock_list = [3, '']
+        lock_list = [3, '_______']
         if clients==None:
             clients = self.clients
         for client in clients:
