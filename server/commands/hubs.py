@@ -56,14 +56,21 @@ def ooc_cmd_hub(client, arg):
 
     try:
         for hub in client.server.hub_manager.hubs:
-            if hub.name.lower() == arg.lower() or hub.abbreviation == arg or (arg.isdigit() and hub.id == int(arg)):
+            h = arg.split(' ')[0]
+            hid = h.strip('[]')
+            if (h.startswith('[') and h.endswith(']') and \
+                    hid.isdigit() and hub.id == int(hid)) or \
+                    hub.name.lower() == arg.lower() or hub.abbreviation == arg or \
+                        (arg.isdigit() and hub.id == int(arg)):
                 if hub == client.area.area_manager:
-                    raise AreaError('User already in specified hub.')
+                    raise ClientError('User already in specified hub.')
                 preflist = client.server.supported_features.copy()
-                if not hub.arup_enabled:
+                if not hub.arup_enabled or client.viewing_hub_list:
                     preflist.remove('arup')
                 client.send_command('FL', *preflist)
+                client.send_ooc(f'Changed to hub [{hub.id}] {hub.name}.')
                 client.change_area(hub.default_area())
+                client.area.area_manager.send_arup_players([client])
                 client.area.area_manager.send_arup_status([client])
                 client.area.area_manager.send_arup_cms([client])
                 client.area.area_manager.send_arup_lock([client])

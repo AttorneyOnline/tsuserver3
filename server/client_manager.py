@@ -142,6 +142,8 @@ class ClientManager:
             self.replace_music = False
             # list of areas to broadcast the message, music and judge buttons to
             self.broadcast_list = []
+            # Whether we're viewing hub list or not in the A/M area list
+            self.viewing_hub_list = False
 
         def send_raw_message(self, msg):
             """
@@ -187,7 +189,7 @@ class ClientManager:
             """Send the hub info to the client."""
             info = self.area.area_manager.info
             if info != '':
-                self.send_ooc(f'=== HUB INFO ===\r\n{info}\r\n=============')
+                self.send_ooc(f'=== HUB [{self.area.area_manager.id}] {self.area.area_manager.name} INFO ===\r\n{info}\r\n=============')
 
         def send_player_count(self):
             """
@@ -307,7 +309,6 @@ class ClientManager:
                 self.send_ooc(
                     'You were blockdj\'d by a moderator.')
                 return
-
             if args[1] != self.char_id:
                 return
 
@@ -508,8 +509,10 @@ class ClientManager:
             """
             Rebuild the area list according to provided areas list.
             """
-            area_list = []
-
+            if not self.area.area_manager.arup_enabled:
+                area_list = ['=== Areas ===\n Double-Click me to see Hubs\n===']
+            else:
+                area_list = ['=== Areas ===']
             if (len(areas) > 0):
                 # This is where we can handle all the 'rendering', such as extra info etc.
                 for area in areas:
@@ -519,6 +522,9 @@ class ClientManager:
                     area_list.append(a)
 
             self.local_area_list = areas
+            # If we're currently viewing hub list, just update our local area list
+            if self.viewing_hub_list:
+                return
             # KEEP THE ASTERISK
             self.send_command('FA', *area_list)
 
