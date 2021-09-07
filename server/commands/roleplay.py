@@ -510,11 +510,11 @@ def ooc_cmd_timer(client, arg):
     if not timer.set:
         raise ArgumentError(f'Timer {timer_id} is not set in this area.')
 
-    if arg[1] == 'start':
+    if arg[1] == 'start' and not timer.started:
         timer.target = timer.static + arrow.get()
         timer.started = True
         client.send_ooc(f'Starting timer {timer_id}.')
-    elif arg[1] in ('pause', 'stop'):
+    elif arg[1] in ('pause', 'stop') and timer.started:
         timer.static = timer.target - arrow.get()
         timer.started = False
         client.send_ooc(f'Stopping timer {timer_id}.')
@@ -529,19 +529,20 @@ def ooc_cmd_timer(client, arg):
         else:
             client.area.send_command('TI', timer_id, 3)
     elif arg[1][0] == '/':
-        cmd = ' '.join(arg[1:])[1:]
-        if cmd == '':
+        full = ' '.join(arg[1:])[1:]
+        if full == '':
             txt = f'Timer {timer_id} commands:'
             for command in timer.commands:
                 txt += f'  \n/{command}'
             txt += '\nThey will be called once the timer expires.'
             client.send_ooc(txt)
             return
-        if cmd.lower() == 'clear':
+        if full.lower() == 'clear':
             timer.commands.clear()
             client.send_ooc(f'Clearing all commands for Timer {timer_id}.')
             return
 
+        cmd = full.split(' ')[0]
         called_function = f'ooc_cmd_{cmd}'
         if len(client.server.command_aliases) > 0 and not hasattr(commands, called_function):
             if cmd in client.server.command_aliases:
@@ -549,8 +550,8 @@ def ooc_cmd_timer(client, arg):
         if not hasattr(commands, called_function):
             client.send_ooc(f'[Timer {timer_id}] Invalid command: {cmd}. Use /help to find up-to-date commands.')
             return
-        timer.commands.append(cmd)
-        client.send_ooc(f'Adding command to Timer {timer_id}: /{cmd}')
+        timer.commands.append(full)
+        client.send_ooc(f'Adding command to Timer {timer_id}: /{full}')
         return
 
     # Send static time if applicable
@@ -563,9 +564,10 @@ def ooc_cmd_timer(client, arg):
             client.area.send_command('TI', timer_id, s, static_time)
         client.send_ooc(f'Timer {timer_id} is at {timer.static}')
 
-        timer.area = client.area
         if timer_id == 0:
-            timer.area = client.area.area_manager
+            timer.hub = client.area.area_manager
+        else:
+            timer.area = client.area
 
         timer.caller = client
         if timer.schedule:

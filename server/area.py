@@ -30,10 +30,10 @@ import logging
 logger = logging.getLogger('events')
 
 from server import database
+from server import commands
 from server.evidence import EvidenceList
 from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
 from server.constants import MusicEffect
-from server import commands
 
 from collections import OrderedDict
 
@@ -77,6 +77,8 @@ class Area:
             dummy_client.area = self.area
             dummy_client.area._owners.add(dummy_client)
             dummy_client.name = f'[Timer] {self.caller.name}'
+            dummy_client.showname = f'[Timer] {self.caller.name}'
+            dummy_client.remote_listen = 0
             for cmd in self.commands:
                 spl = cmd.split(' ', 1)
                 cmd = spl[0].lower()
