@@ -149,6 +149,11 @@ class AreaManager:
         for entry in list(set(load_list) - set(ignore)):
             if entry in hub:
                 setattr(self, entry, hub[entry])
+                if entry == 'music_ref':
+                    if hub[entry] == '':
+                        self.clear_music()
+                    else:
+                        self.load_music(f'storage/musiclists/{self.music_ref}.yaml')
 
         if not ('character_data' in ignore) and 'character_data' in hub:
             try:

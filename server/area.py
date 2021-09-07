@@ -293,8 +293,9 @@ class Area:
             self.desc = area['desc']
             self.o_desc = self.desc
         if 'music_ref' in area:
-            self.clear_music()
             self.music_ref = area['music_ref']
+            if self.music_ref == '':
+                self.clear_music()
         if self.music_ref != '':
             self.load_music(f'storage/musiclists/{self.music_ref}.yaml')
             
