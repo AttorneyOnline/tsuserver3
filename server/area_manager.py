@@ -380,6 +380,7 @@ class AreaManager:
 
         self.broadcast_ooc(
             f'[{client.id}] {client.showname} ({client.name}) is GM in this hub now.')
+        client.hide(True)
 
     def remove_owner(self, client):
         """
@@ -401,6 +402,7 @@ class AreaManager:
 
         self.broadcast_ooc(
             f'[{client.id}] {client.showname} ({client.name}) is no longer GM in this hub.')
+        client.hide(False)
 
     def get_gms(self):
         """
