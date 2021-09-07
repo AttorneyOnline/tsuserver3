@@ -10,6 +10,7 @@ from server.constants import TargetType
 from server.exceptions import ClientError, ServerError, ArgumentError
 
 from . import mod_only
+from .. import commands
 
 __all__ = [
     'ooc_cmd_roll',
@@ -539,6 +540,14 @@ def ooc_cmd_timer(client, arg):
         if cmd.lower() == 'clear':
             timer.commands.clear()
             client.send_ooc(f'Clearing all commands for Timer {timer_id}.')
+            return
+
+        called_function = f'ooc_cmd_{cmd}'
+        if len(client.server.command_aliases) > 0 and not hasattr(commands, called_function):
+            if cmd in client.server.command_aliases:
+                called_function = f'ooc_cmd_{client.server.command_aliases[cmd]}'
+        if not hasattr(commands, called_function):
+            client.send_ooc(f'[Timer {timer_id}] Invalid command: {cmd}. Use /help to find up-to-date commands.')
             return
         timer.commands.append(cmd)
         client.send_ooc(f'Adding command to Timer {timer_id}: /{cmd}')
