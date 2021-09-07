@@ -300,7 +300,7 @@ class ClientManager:
             self.mus_change_time[self.mus_counter] = time.time()
             return 0
 
-        def change_music(self, args):
+        def change_music(self, song, cid, showname='', effects=0, loop=True):
             if self.is_muted:  # Checks to see if the client has been muted by a mod
                 self.send_ooc(
                     'You are muted by a moderator.')
@@ -309,15 +309,24 @@ class ClientManager:
                 self.send_ooc(
                     'You were blockdj\'d by a moderator.')
                 return
-            if args[1] != self.char_id:
+            if cid != self.char_id:
                 return
 
             try:
-                if args[0] == "~stop.mp3" or self.server.get_song_is_category(self.construct_music_list(), args[0]):
+                if song == "~stop.mp3" or self.server.get_song_is_category(self.construct_music_list(), song):
                     name, length = "~stop.mp3", 0
                 else:
-                    name, length = self.server.get_song_data(
-                        self.construct_music_list(), args[0])
+                    try:
+                        name, length = self.server.get_song_data(
+                            self.construct_music_list(), song)
+                    except ServerError:
+                        if self.is_mod or self in self.area.owners:
+                            name = song
+                            length = -1
+                        else:
+                            raise
+                if not loop:
+                    length = 0
 
                 target_areas = [self.area]
                 if len(self.broadcast_list) > 0 and (self.is_mod or self in self.area.owners):
@@ -350,9 +359,7 @@ class ClientManager:
                             self.edit_ambinece = False
 
                     # Showname info
-                    showname = ''
-                    if len(args) > 2:
-                        showname = args[2]
+                    if showname != '':
                         if len(showname) > 0 and not area.showname_changes_allowed and not self.is_mod and not self in area.owners:
                             self.send_ooc(
                                 f'Showname changes are forbidden in area [{area.id}] {area.name}!'
@@ -360,9 +367,7 @@ class ClientManager:
                             continue
 
                     # Effects info
-                    effects = 0
-                    if len(args) > 3:
-                        effects = int(args[3])
+                    effects = int(effects)
                     
                     # Jukebox check
                     if area.jukebox and not self.is_mod and not self in area.owners:
@@ -382,9 +387,9 @@ class ClientManager:
                 database.log_area('music', self, self.area, message=name)
             except ServerError:
                 if self.music_ref != '':
-                    self.send_ooc(f'Error: song {args[0]} was not accepted! View acceptable music by resetting your client\'s using /musiclist.')
+                    self.send_ooc(f'Error: song {song} was not accepted! View acceptable music by resetting your client\'s using /musiclist.')
                 else:
-                    self.send_ooc(f'Error: song {args[0]} isn\'t recognized by server!')
+                    self.send_ooc(f'Error: song {song} isn\'t recognized by server!')
 
         def wtce_mute(self):
             """

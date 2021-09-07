@@ -159,8 +159,7 @@ def ooc_cmd_play(client, arg):
     """
     if len(arg) == 0:
         raise ArgumentError('You must specify a song.')
-    client.area.play_music(arg, client.char_id, 1) #loop it
-    client.area.add_music_playing(client, arg)
+    client.change_music(arg, client.char_id, '', 2, True) #looped change music
     database.log_area('play', client, client.area, message=arg)
 
 
@@ -172,8 +171,7 @@ def ooc_cmd_play_once(client, arg):
     """
     if len(arg) == 0:
         raise ArgumentError('You must specify a song.')
-    client.area.play_music(arg, client.char_id, 0) #don't loop it
-    client.area.add_music_playing(client, arg)
+    client.change_music(arg, client.char_id, '', 2, False) #non-looped change music
     database.log_area('play', client, client.area, message=arg)
 
 
@@ -317,4 +315,4 @@ def ooc_cmd_random_music(client, arg):
     if len(songs) <= 0:
         raise ArgumentError('Could not find a single song that fit the criteria!')
     song_name = songs[random.randint(0, len(songs)-1)]['name']
-    client.change_music([song_name, client.char_id, '', 2])
+    client.change_music(song_name, client.char_id, '', 2)

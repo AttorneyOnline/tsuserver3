@@ -978,7 +978,7 @@ class AOProtocol(asyncio.Protocol):
                 if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT, self.ArgType.STR_OR_EMPTY):
                     if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.INT):
                         return
-            self.client.change_music(args)
+            self.client.change_music(*args)
         except ClientError as ex:
             self.client.send_ooc(ex)
 
