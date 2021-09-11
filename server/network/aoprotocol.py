@@ -24,7 +24,7 @@ import json
 
 from enum import Enum
 from typing import List
-from time import localtime, strftime
+from time import localtime, strftime, time
 
 from .. import commands
 from server import database
@@ -119,6 +119,8 @@ class AOProtocol(asyncio.Protocol):
                 try:
                     cmd, *args = msg.split('#')
                     self.net_cmd_dispatcher[cmd](self, args)
+                    if cmd != 'CH':
+                        self.client.last_pkt_time = time()
                 except KeyError:
                     logger_debug.debug(
                         f'Unknown incoming message from {ipid}: {msg}')

@@ -84,3 +84,9 @@ max_chars: 256
 
 # How long a ban will last when no duration is given
 default_ban_duration: 6 hours
+
+# Kicks idlers
+idle_timeout:
+  use_idle_timeout: false
+  kick_mods: false
+  length: 300
