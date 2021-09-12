@@ -147,7 +147,7 @@ def ooc_cmd_roll(client, arg):
     X is the number of dice, Y is the maximum value on the die.
     Usage: /rollp [value/XdY] ["+5"/"-5"/"*5"/"/5"]
     """
-    roll, num_dice, chosen_max, modifiers, Sum = rtd(arg)
+    roll, num_dice, chosen_max, _modifiers, Sum = rtd(arg)
 
     client.area.broadcast_ooc(f'{client.showname} rolled {roll} out of {chosen_max}.' + (f'\nThe total sum is {Sum}.' if num_dice > 1 else ''))
     database.log_area('roll', client, client.area, message=f'{roll} out of {chosen_max}')
@@ -161,7 +161,7 @@ def ooc_cmd_rollp(client, arg):
     X is the number of dice, Y is the maximum value on the die.
     Usage: /rollp [value/XdY] ["+5"/"-5"/"*5"/"/5"]
     """
-    roll, num_dice, chosen_max, modifiers, Sum = rtd(arg)
+    roll, num_dice, chosen_max, _modifiers, Sum = rtd(arg)
 
     client.send_ooc(f'[Hidden] You rolled {roll} out of {chosen_max}.' + (f'\nThe total sum is {Sum}.' if num_dice > 1 else ''))
     for c in client.area.owners:

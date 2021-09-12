@@ -76,6 +76,8 @@ class Area:
             dummy_client.server = server
             dummy_client.area = self.area
             dummy_client.area._owners.add(dummy_client)
+            if self.caller in self.area.area_manager.owners:
+                dummy_client.area.area_manager.owners.add(dummy_client)
             dummy_client.name = f'[Timer] {self.caller.name}'
             dummy_client.showname = f'[Timer] {self.caller.name}'
             dummy_client.remote_listen = 0
@@ -102,6 +104,8 @@ class Area:
             self.caller.transport = dummy_client.transport
             dummy_client.transport = None
             dummy_client.area._owners.remove(dummy_client)
+            if dummy_client in dummy_client.area.area_manager.owners:
+                dummy_client.area.area_manager.owners.remove(dummy_client)
             del dummy_client
 
     """Represents a single instance of an area."""
