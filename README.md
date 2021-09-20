@@ -1,6 +1,8 @@
-# tsuserver3
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/I2I51SHXD)
 
-tsuserver3 is the official Python-based server for Attorney Online.
+# KFO-Server
+
+KFO-Server is the official Python-based server for Attorney Online, forked from tsuserver3.
 
 ## Commands
 
@@ -16,7 +18,7 @@ The server will not work out of the box. **You must follow these instructions.**
   - If you run Windows, make sure to check the "Add Python to PATH" and install pip checkboxes in the installer
   - If you run anything other than Windows, you should read "Advanced setup instructions" below.
   
-### Download tsuserver3
+### Download KFO-Server
 
 We recommend [Git](https://git-scm.com/downloads/guis) - it makes it very easy to update tsuserver. But we are power users and therefore inherently biased. You can instead download the latest zip of tsuserver with [this link](https://github.com/AttorneyOnline/tsuserver3/archive/master.zip). Extract it and put it wherever you want.
 
@@ -120,3 +122,5 @@ To keep the server running even after closing the terminal:
 This server is licensed under the AGPLv3 license. In short, if you use a modified version of tsuserver3, you *must* distribute its source licensed under the AGPLv3 as well, and notify your users where the modified source may be found. The main difference between the AGPL and the GPL is that for the AGPL, network use counts as distribution. If you do not accept these terms, you should use [serverD](https://github.com/Attorney-Online-Engineering-Task-Force/serverD), which uses GPL rather than AGPL.
 
 See the [LICENSE](LICENSE.md) file for more information.
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/I2I51SHXD)
