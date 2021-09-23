@@ -917,6 +917,7 @@ class Area:
                 # target character are in the allowed INI swap list
                 if client.char_name in char_link and char in char_link:
                     return False
+            return True
         return not self.server.char_emotes[char].validate(preanim, anim, "")# sfx)
 
     def clear_music(self):

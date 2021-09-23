@@ -37,17 +37,14 @@ class Emotes:
                     emote_id = str(emote_id)
                     _name, preanim, anim, _mod = char_ini['emotions'][str(emote_id)].split('#')[:4]
                     if 'soundn' in char_ini and emote_id in char_ini['soundn']:
-                        sfx = char_ini['soundn'][str(emote_id)]
-                        if sfx != None and len(sfx) == 1:
+                        sfx = char_ini['soundn'][str(emote_id)] or ''
+                        if sfx != '' and len(sfx) == 1:
                             # Often, a one-character SFX is a placeholder for no sfx,
                             # so allow it
-                            sfx = None
+                            sfx = ''
                     else:
-                        sfx = None
-                    self.emotes.add((preanim, anim, sfx))
-
-                    # No SFX should always be allowed
-                    self.emotes.add((preanim, anim, None))
+                        sfx = ''
+                    self.emotes.add((preanim.lower(), anim.lower(), sfx.lower()))
                 except KeyError as e:
                     logger.warn(f'Broken key {e.args[0]} in character file {char_path}. '
                                 'This indicates a malformed character INI file.')
@@ -70,5 +67,5 @@ class Emotes:
             return True
 
         if len(sfx) <= 1:
-            sfx = None
-        return (preanim, anim, sfx) in self.emotes
+            sfx = ''
+        return (preanim.lower(), anim.lower(), sfx.lower()) in self.emotes
