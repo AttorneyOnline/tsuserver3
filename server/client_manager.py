@@ -611,7 +611,7 @@ class ClientManager:
             self.send_ooc(msg)
 
             # We failed to enter the same area as whoever we've been following, break the follow
-            if self.following != None and not (self.following in [c.id for c in self.area.clients]):
+            if self.following != None and not (self.following in self.area.clients):
                 self.unfollow()
 
         def can_access_area(self, area):
@@ -703,33 +703,40 @@ class ClientManager:
 
             for c in self.server.client_manager.clients:
                 # If target c is following us
-                if c.following == self.id:
-                    # If we're not hidden/sneaking or they're a mod, gm or cm
-                    if not (self.hidden or self.sneaking) or allowed:
-                        # Attempt to transfer to their area
-                        try:
-                            c.change_area(area)
-                            c.send_ooc(
-                                f'Following [{self.id}] {self.showname} to [{area.id}] {area.name}.')
-                        # Something obstructed us.
-                        except ClientError:
-                            c.send_ooc(
-                                f'Cannot follow [{self.id}] {self.showname} to [{area.id}] {area.name}!')
-                            c.unfollow(silent=True)
-                            raise
-                    else:
-                        # Stop following a ghost.
+                if c.following == self:
+                    if self.area.area_manager != c.area.area_manager:
+                        # The person we're following may be trying to sneak away from us.
+                        c.unfollow(silent = not allowed and (self.hidden or self.sneaking))
+                        continue
+                    # If they're still in the same hub, we're not hidden/sneaking or they're a mod, gm or cm
+                    # Attempt to transfer to their area
+                    try:
+                        c.change_area(area)
+                        c.send_ooc(
+                            f'Following [{self.id}] {self.showname} to [{area.id}] {area.name}.')
+                    # Something obstructed us.
+                    except ClientError:
+                        c.send_ooc(
+                            f'Cannot follow [{self.id}] {self.showname} to [{area.id}] {area.name}!')
                         c.unfollow(silent=True)
+                        raise
 
             reason = ''
             if not self.area.dark and not self.area.force_sneak and not self.sneaking and not self.hidden:
                 if not old_area.dark and not old_area.force_sneak:
-                    for c in old_area.clients:
-                        # Check if the GMs should really see this msg
-                        if c in old_area.owners and c.remote_listen in [2, 3]:
-                            continue
-                        c.send_command('CT', self.server.config['hostname'],
-                                        f'[{self.id}] {self.showname} leaves to [{self.area.id}] {self.area.name}.', '1')
+                    if old_area.area_manager == self.area.area_manager:
+                        for c in old_area.clients:
+                            # Check if the GMs should really see this msg
+                            if c in old_area.owners and c.remote_listen in [2, 3]:
+                                continue
+                            c.send_command('CT', self.server.config['hostname'],
+                                            f'[{self.id}] {self.showname} leaves to [{self.area.id}] {self.area.name}.', '1')
+                    else:
+                        old_area.send_command('CT', self.server.config['hostname'],
+                                                f'[{self.id}] {self.showname} leaves to Hub [{self.area.area_manager.id}] {self.area.area_manager.name}.', '1')
+                        old_area.send_owner_command('CT', self.server.config['hostname'],
+                                                f'[{self.id}] {self.showname} leaves to Hub [{self.area.area_manager.id}] {self.area.area_manager.name}', '1')
+
                 desc = '.'
                 if self.desc != '':
                     desc = ': ' + self.desc
@@ -740,8 +747,14 @@ class ClientManager:
                     desc = desc[:64]
                     if len(self.desc) > 64:
                         desc += f'... Use /chardesc {self.id} to read the rest.'
-                area.send_command('CT', self.server.config['hostname'],
-                                  f'[{self.id}] {self.showname} enters from [{old_area.id}] {old_area.name}{desc}', '1')
+                if old_area.area_manager == self.area.area_manager:
+                    self.area.send_command('CT', self.server.config['hostname'],
+                                    f'[{self.id}] {self.showname} enters from [{old_area.id}] {old_area.name}{desc}', '1')
+                else:
+                    self.area.send_command('CT', self.server.config['hostname'],
+                                    f'[{self.id}] {self.showname} enters from Hub [{old_area.area_manager.id}] {old_area.area_manager.name}{desc}', '1')
+                    self.area.send_owner_command('CT', self.server.config['hostname'],
+                                    f'[{self.id}] {self.showname} enters from Hub [{old_area.area_manager.id}] {old_area.area_manager.name}', '1')
             else:
                 if self.sneaking:
                     reason = ' (sneaking)'
@@ -754,12 +767,21 @@ class ClientManager:
                 self.send_ooc(
                     f'Changed area unannounced{reason}.')
                 for c in self.area.owners:
-                    if c in self.area.clients:
-                        c.send_ooc(f'[{self.id}] {self.showname} enters unannounced from [{old_area.id}] {old_area.name}{reason}')
-            area.send_owner_command('CT', self.server.config['hostname'],
-                                f'[{self.id}] {self.showname} moves from [{old_area.id}] {old_area.name} to [{self.area.id}] {self.area.name}.{reason}', '1')
+                    if old_area.area_manager == self.area.area_manager:
+                        if c in self.area.clients:
+                            c.send_ooc(f'[{self.id}] {self.showname} enters unannounced from [{old_area.id}] {old_area.name}{reason}')
+                    else:
+                        c.send_ooc(f'[{self.id}] {self.showname} enters unannounced from Hub [{old_area.area_manager.id}] {old_area.area_manager.name}{reason}')
 
-            if area.cannot_ic_interact(self):
+                if old_area.area_manager != self.area.area_manager:
+                    for c in old_area.owners:
+                        c.send_ooc(f'[{self.id}] {self.showname} leaves unannounced to Hub [{self.area.area_manager.id}] {self.area.area_manager.name}{reason}')
+
+            if old_area.area_manager == self.area.area_manager:
+                self.area.send_owner_command('CT', self.server.config['hostname'],
+                                    f'[{self.id}] {self.showname} moves from [{old_area.id}] {old_area.name} to [{self.area.id}] {self.area.name}.{reason}', '1')
+
+            if self.area.cannot_ic_interact(self):
                 self.send_ooc(
                     'This area is muted - you cannot talk in-character unless invited.'
                 )
@@ -1150,9 +1172,9 @@ class ClientManager:
         def follow(self, target):
             try:
                 self.change_area(target.area)
-                self.following = target.id
+                self.following = target
                 self.send_ooc(
-                    'You are now following [{}] {}.'.format(target.id, target.showname))
+                    f'You are now following [{target.id}] {target.showname}.')
             except ValueError:
                 raise
             except (AreaError, ClientError):
@@ -1161,11 +1183,9 @@ class ClientManager:
         def unfollow(self, silent=False):
             if self.following != None:
                 try:
-                    c = self.server.client_manager.get_targets(
-                        self, TargetType.ID, int(self.following), False)[0]
                     if not silent:
                         self.send_ooc(
-                            'You are no longer following [{}] {}.'.format(c.id, c.showname))
+                            f'You are no longer following [{self.following.id}] {self.following.showname}.')
                     self.following = None
                 except:
                     self.following = None
@@ -1273,6 +1293,8 @@ class ClientManager:
         for c in self.server.client_manager.clients:
             if c.ipid == temp_ipid:
                 c.clientscon -= 1
+            if c.following == client:
+                c.unfollow()
         self.clients.remove(client)
 
     def get_targets(self, client, key, value, local=False, single=False):

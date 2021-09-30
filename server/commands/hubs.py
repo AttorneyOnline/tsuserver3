@@ -518,9 +518,8 @@ def ooc_cmd_follow(client, arg):
     """
     if len(arg) == 0:
         try:
-            c = client.server.client_manager.get_targets(client, TargetType.ID, int(client.following), False)[0]
             client.send_ooc(
-                f'You are currently following [{c.id}] {c.showname}.')
+                f'You are currently following [{client.following.id}] {client.following.showname}.')
         except:
             raise ArgumentError('Not following anybody. Use /follow <id>.')
         return
@@ -540,7 +539,7 @@ def ooc_cmd_follow(client, arg):
                 f'Already following [{c.id}] {c.showname}!')
         if client.area != c.area:
             client.change_area(c.area)
-        client.following = c.id
+        client.following = c
         client.send_ooc(
             f'You are now following [{c.id}] {c.showname}.')
     else:
@@ -553,10 +552,8 @@ def ooc_cmd_unfollow(client, arg):
     Usage: /unfollow
     """
     try:
-        c = client.server.client_manager.get_targets(
-            client, TargetType.ID, int(client.following), False)[0]
         client.send_ooc(
-            f'You are no longer following [{c.id}] {c.showname}.')
+            f'You are no longer following [{client.following.id}] {client.following.showname}.')
         client.following = None
     except:
         client.following = None
