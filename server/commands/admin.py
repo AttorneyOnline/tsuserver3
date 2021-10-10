@@ -31,6 +31,7 @@ __all__ = [
     'ooc_cmd_time',
     'ooc_cmd_whois',
     'ooc_cmd_restart',
+    'ooc_cmd_myid',
 ]
 
 
@@ -494,3 +495,21 @@ def ooc_cmd_restart(client, arg):
     print(f'!!!{client.name} called /restart!!!')
     client.server.send_all_cmd_pred('CT', 'WARNING', 'Restarting the server...')
     asyncio.get_event_loop().stop()
+
+def ooc_cmd_myid(client, arg):
+    """
+    Get information for your current client, such as client ID.
+    Usage: /myid
+    """
+    if len(arg) > 0:
+        raise ArgumentError('This command takes no arguments')
+    info = f'You are: [{client.id}] '
+    if client.showname != client.char_name:
+        info += f'"{client.showname}" ({client.char_name})'
+    else:
+        info += f'{client.showname}'
+    if client.is_mod:
+        info += f' ({client.ipid})'
+    if client.name != '':
+        info += f': {client.name}'
+    client.send_ooc(info)

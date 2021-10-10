@@ -590,7 +590,7 @@ def mod_keys(client, arg, mod=0):
             args = []
         keys = []
 
-        if mod == 1:
+        if mod in (1, 2):
             keys = client.area.area_manager.get_character_data(target, 'keys', [])
         for a in args:
             for key in a.split('-'):
