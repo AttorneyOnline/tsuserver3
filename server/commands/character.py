@@ -357,7 +357,7 @@ def ooc_cmd_player_move_delay(client, arg):
     """
     args = arg.split()
     try:
-        if len(args) > 0 and client in client.area.area_manager.owners:
+        if len(args) > 0 and (client.is_mod or client in client.area.area_manager.owners):
             c = client.server.client_manager.get_targets(client, TargetType.ID,
                                                         int(args[0]), False)[0]
             if len(args) > 1:
