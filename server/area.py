@@ -230,6 +230,9 @@ class Area:
             self.Timer(x) for x in range(20)
         ]
 
+        self.demo = []
+        self.demo_schedule = None
+
     @property
     def name(self):
         """Area's name string. Abbreviation is also updated according to this."""
@@ -1462,6 +1465,47 @@ class Area:
                 them = f'🔴[{target.id}] {target.showname} (Red)'
                 break
         self.broadcast_ooc(f'❗{self.minigame}❗\n{us} objects to {them}!\n⏲You have {timer} seconds.\n/cs <id> to join the debate against target ID.')
+
+    def play_demo(self):
+        if self.demo_schedule:
+            self.demo_schedule.cancel()
+
+        if len(self.demo) <= 0:
+            self.stop_demo()
+            return
+
+        packet = self.demo.pop(0)
+        header = packet[0]
+        args = packet[1:]
+        if header == 'wait':
+            secs = float(args[0]) / 1000
+            self.demo_schedule = asyncio.get_event_loop().call_later(
+                secs, lambda: self.play_demo())
+            return
+        self.send_command(header, *args)
+        self.play_demo()
+
+    def stop_demo(self):
+        for c in self.clients:
+            if c in self.owners:
+                c.send_ooc('Demo playback finished!')
+
+        if self.demo_schedule:
+            self.demo_schedule.cancel()
+        self.demo.clear()
+
+        # reset the packets the demo could have modified
+
+        # Get defense HP bar
+        self.send_command('HP', 1, self.area.hp_def)
+        # Get prosecution HP bar
+        self.send_command('HP', 2, self.area.hp_pro)
+
+        # Send the background information
+        if self.area.dark:
+            self.send_command('BN', self.area.background_dark, self.pos)
+        else:
+            self.send_command('BN', self.area.background, self.pos)
 
     class JukeboxVote:
         """Represents a single vote cast for the jukebox."""

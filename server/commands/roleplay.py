@@ -28,7 +28,8 @@ __all__ = [
     'ooc_cmd_rolla',
     'ooc_cmd_coinflip',
     'ooc_cmd_8ball',
-    'ooc_cmd_timer'
+    'ooc_cmd_timer',
+    'ooc_cmd_demo',
 ]
 
 
@@ -575,3 +576,39 @@ def ooc_cmd_timer(client, arg):
         if timer.started:
             timer.schedule = asyncio.get_event_loop().call_later(
                 int(timer.static.total_seconds()), timer.timer_expired)
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_demo(client, arg):
+    """
+    Usage:
+    /demo <evidence_id> or /demo <evidence_name>
+    """
+    if arg == '':
+        client.area.stop_demo()
+        return
+
+    evidence = None
+    if arg.isnumeric():
+        arg = str(int(arg)-1)
+    for i, evi in enumerate(client.area.evi_list.evidences):
+        if (arg.lower() == evi.name.lower() or arg == str(i)):
+            evidence = evi
+            break
+    if not evidence:
+        raise ArgumentError('Target evidence not found!')
+
+    client.area.demo.clear()
+
+    desc = evidence.desc.replace('<num>', '#').replace('<and>', '&').replace('<percent>', '%').replace('<dollar>', '$')
+    packets = desc.split('%')
+    for packet in packets:
+        p_args = packet.split('#')
+        p_args[0] = p_args[0].strip()
+        if p_args[0] in ['MS', 'CT', 'MC', 'BN', 'HP', 'wait']:
+            client.area.demo += [p_args]
+    for c in client.area.clients:
+        if c in client.area.owners:
+            c.send_ooc(f'Starting demo playback using evidence \'{evidence.name}\'...')
+
+    client.area.play_demo()
