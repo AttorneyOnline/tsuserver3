@@ -78,7 +78,11 @@ class AOProtocol(asyncio.Protocol):
 
         self.buffer = self.buffer.translate({ord(c): None for c in '\0'})
 
-        if len(self.buffer) > 8192:
+        packet_size = 1024 # in bits
+        if 'packet_size' in self.server.config:
+            packet_size = self.server.config['packet_size']
+
+        if len(self.buffer) > packet_size*8: # convert bits to bytes
             self.client.disconnect()
         for msg in self.get_messages():
             if len(msg) < 2:
