@@ -70,38 +70,32 @@ class AreaManager:
             if self.caller not in self.hub.owners:
                 return
             server = self.caller.server
-            # Prepare for disgusting hacks
-            dummy_client = server.client_manager.Client(server, self.caller.transport, -1, self.caller.ipid)
-            dummy_client.server = server
-            dummy_client.area = self.hub.default_area()
-            dummy_client.area._owners.add(dummy_client)
-            dummy_client.name = f'[Timer] {self.caller.name}'
-            dummy_client.showname = f'[Timer] {self.caller.name}'
-            dummy_client.remote_listen = 0
             for cmd in self.commands:
-                spl = cmd.split(' ', 1)
-                cmd = spl[0].lower()
+                args = cmd.split(' ')
+                cmd = args.pop(0).lower()
                 arg = ''
-                if len(spl) == 2:
-                    arg = spl[1][:1024]
+                if len(cmd) > 0:
+                    arg = ' '.join(args)[:1024]
                 try:
                     called_function = f'ooc_cmd_{cmd}'
                     if len(server.command_aliases) > 0 and not hasattr(commands, called_function):
                         if cmd in server.command_aliases:
                             called_function = f'ooc_cmd_{server.command_aliases[cmd]}'
                     if not hasattr(commands, called_function):
-                        dummy_client.send_ooc(f'[Timer 0] Invalid command: {cmd}. Use /help to find up-to-date commands.')
+                        self.caller.send_ooc(f'[Timer 0] Invalid command: {cmd}. Use /help to find up-to-date commands.')
                         return
-                    getattr(commands, called_function)(dummy_client, arg)
+                    # Remember the old area.
+                    old_area = self.caller.area
+                    self.caller.area = self.hub.default_area()
+                    getattr(commands, called_function)(self.caller, arg)
+                    if old_area and old_area in self.hub.areas:
+                        self.caller.area = old_area
+                    # There is no else clause, cause any function that removes the client's area would properly adjust them anyway.
                 except (ClientError, AreaError, ArgumentError, ServerError) as ex:
-                    dummy_client.send_ooc(f'[Timer 0] {ex}')
+                    self.caller.send_ooc(f'[Timer 0] {ex}')
                 except Exception as ex:
-                    dummy_client.send_ooc(f'[Timer 0] An internal error occurred: {ex}. Please inform the staff of the server about the issue.')
+                    self.caller.send_ooc(f'[Timer 0] An internal error occurred: {ex}. Please inform the staff of the server about the issue.')
                     logger.exception('Exception while running a command')
-            self.caller.transport = dummy_client.transport
-            dummy_client.transport = None
-            dummy_client.area._owners.remove(dummy_client)
-            del dummy_client
 
     def __init__(self, hub_manager, name):
         self.hub_manager = hub_manager

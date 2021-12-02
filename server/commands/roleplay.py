@@ -524,6 +524,8 @@ def ooc_cmd_timer(client, arg):
         timer.started = False
         timer.static = None
         timer.target = None
+        if timer.schedule:
+            timer.schedule.cancel()
         client.send_ooc(f'Timer {timer_id} unset and hidden.')
         if timer_id == 0:
             client.area.area_manager.send_command('TI', timer_id, 3)

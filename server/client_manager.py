@@ -549,13 +549,15 @@ class ClientManager:
                 for a in self.area.area_manager.areas:
                     if self in a.owners:
                         a.remove_owner(self)
-            self.area.remove_client(self)
+            if self in self.area.clients:
+                self.area.remove_client(self)
             self.area = area
             if len(self.area.pos_lock) > 0 and not (target_pos in self.area.pos_lock):
                 target_pos = self.area.pos_lock[0]
             if self.area.dark:
                 target_pos = self.area.pos_dark
-            self.area.new_client(self)
+            if self not in self.area.clients:
+                self.area.new_client(self)
             if target_pos != '':
                 self.pos = target_pos
 
