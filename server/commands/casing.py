@@ -574,6 +574,9 @@ def ooc_cmd_concede(client, arg):
     """
     if client.area.minigame != '':
         try:
+            if arg.lower() == 'not-pta' and client.area.minigame == 'Panic Talk Action':
+                client.send_ooc('Current minigame is Panic Talk Action - not conceding this one.')
+                return
             # CM's end the minigame automatically using /concede
             if client in client.area.owners:
                 client.area.end_minigame('Forcibly ended.')
