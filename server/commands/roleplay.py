@@ -585,6 +585,7 @@ def ooc_cmd_demo(client, arg):
     """
     Usage:
     /demo <evidence_id> or /demo <evidence_name>
+    Use /demo to stop demo
     """
     if arg == '':
         client.area.stop_demo()
@@ -613,4 +614,4 @@ def ooc_cmd_demo(client, arg):
         if c in client.area.owners:
             c.send_ooc(f'Starting demo playback using evidence \'{evidence.name}\'...')
 
-    client.area.play_demo()
+    client.area.play_demo(client)
