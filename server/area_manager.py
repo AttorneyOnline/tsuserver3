@@ -74,7 +74,7 @@ class AreaManager:
                 args = cmd.split(' ')
                 cmd = args.pop(0).lower()
                 arg = ''
-                if len(cmd) > 0:
+                if len(args) > 0:
                     arg = ' '.join(args)[:1024]
                 try:
                     called_function = f'ooc_cmd_{cmd}'

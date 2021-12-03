@@ -75,7 +75,7 @@ class Area:
                 args = cmd.split(' ')
                 cmd = args.pop(0).lower()
                 arg = ''
-                if len(cmd) > 0:
+                if len(args) > 0:
                     arg = ' '.join(args)[:1024]
                 try:
                     called_function = f'ooc_cmd_{cmd}'
@@ -1461,7 +1461,6 @@ class Area:
     def play_demo(self, client):
         if self.demo_schedule:
             self.demo_schedule.cancel()
-
         if len(self.demo) <= 0:
             self.stop_demo()
             return
@@ -1469,12 +1468,37 @@ class Area:
         packet = self.demo.pop(0)
         header = packet[0]
         args = packet[1:]
-        if header == 'wait':
+        if header.startswith('/'): # It's a command call
+            # TODO: make this into a global function so commands can be called from anywhere in code...
+            cmd = header[1:].lower()
+            arg = ''
+            if len(args) > 0:
+                arg = ' '.join(args)[:1024]
+            try:
+                called_function = f'ooc_cmd_{cmd}'
+                if len(client.server.command_aliases) > 0 and not hasattr(commands, called_function):
+                    if cmd in client.server.command_aliases:
+                        called_function = f'ooc_cmd_{client.server.command_aliases[cmd]}'
+                if not hasattr(commands, called_function):
+                    client.send_ooc(f'[Demo] Invalid command: {cmd}. Use /help to find up-to-date commands.')
+                    self.stop_demo()
+                    return
+                getattr(commands, called_function)(client, arg)
+            except (ClientError, AreaError, ArgumentError, ServerError) as ex:
+                client.send_ooc(f'[Demo] {ex}')
+                self.stop_demo()
+                return
+            except Exception as ex:
+                client.send_ooc(f'[Demo] An internal error occurred: {ex}. Please inform the staff of the server about the issue.')
+                logger.exception('Exception while running a command')
+                self.stop_demo()
+                return
+        elif header == 'wait':
             secs = float(args[0]) / 1000
             self.demo_schedule = asyncio.get_event_loop().call_later(
                 secs, lambda: self.play_demo(client))
             return
-        if len(client.broadcast_list) > 0:
+        elif len(client.broadcast_list) > 0:
             for area in client.broadcast_list:
                 area.send_command(header, *args)
         else:
@@ -1482,10 +1506,6 @@ class Area:
         self.play_demo(client)
 
     def stop_demo(self):
-        for c in self.clients:
-            if c in self.owners:
-                c.send_ooc('Demo playback finished!')
-
         if self.demo_schedule:
             self.demo_schedule.cancel()
         self.demo.clear()
@@ -1499,9 +1519,9 @@ class Area:
 
         # Send the background information
         if self.dark:
-            self.send_command('BN', self.background_dark, self.pos)
+            self.send_command('BN', self.background_dark)
         else:
-            self.send_command('BN', self.background, self.pos)
+            self.send_command('BN', self.background)
 
     class JukeboxVote:
         """Represents a single vote cast for the jukebox."""

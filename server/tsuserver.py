@@ -80,10 +80,9 @@ class TsuServer3:
             # on debian systems you can use /usr/share/GeoIP/GeoIPASNum.dat if the geoip-database-extra package is installed
         except FileNotFoundError:
             self.useGeoIp = False
-            pass
 
         self.ms_client = None
-
+        sys.setrecursionlimit(50)
         try:
             self.load_config()
             self.load_command_aliases()

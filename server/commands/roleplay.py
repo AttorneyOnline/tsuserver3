@@ -603,12 +603,17 @@ def ooc_cmd_demo(client, arg):
 
     client.area.demo.clear()
 
-    desc = evidence.desc.replace('<num>', '#').replace('<and>', '&').replace('<percent>', '%').replace('<dollar>', '$')
+    desc = evidence.desc.replace('<num>', '#').replace(
+        '<and>', '&').replace('<percent>', '%').replace('<dollar>', '$')
     packets = desc.split('%')
     for packet in packets:
         p_args = packet.split('#')
         p_args[0] = p_args[0].strip()
         if p_args[0] in ['MS', 'CT', 'MC', 'BN', 'HP', 'wait']:
+            client.area.demo += [p_args]
+        elif p_args[0].startswith('/'): # It's a command!
+            p_args = packet.split(' ')
+            p_args[0] = p_args[0].strip()
             client.area.demo += [p_args]
     for c in client.area.clients:
         if c in client.area.owners:
