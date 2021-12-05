@@ -596,4 +596,4 @@ def ooc_cmd_subtheme(client, arg):
     Change the subtheme for everyone in the area.
     Usage: /subtheme <subtheme_name>
     """
-    client.area.send_command('ST', arg)
+    client.area.send_command('ST', arg, '1')
