@@ -72,18 +72,19 @@ class AOProtocol(asyncio.Protocol):
 
         if not isinstance(buf, str):
             # try to decode as utf-8, ignore any erroneous characters
-            self.buffer += buf.decode('utf-8', 'ignore')
-        else:
-            self.buffer = buf
+            buf = self.buffer + buf.decode('utf-8', 'ignore')
 
-        self.buffer = self.buffer.translate({ord(c): None for c in '\0'})
+        buf = buf.translate({ord(c): None for c in '\0'})
 
         packet_size = 1024 # in bits
         if 'packet_size' in self.server.config:
             packet_size = self.server.config['packet_size']
 
-        if len(self.buffer) > packet_size*8: # convert bits to bytes
-            self.client.disconnect()
+        if len(buf) > packet_size*8: # convert bits to bytes
+            self.client.send_ooc('Your last action was dropped because it was too big! Contact the server administrator for more information.')
+            logger_debug.debug(f'Buffer overflow from {ipid} with {len(buf)}')
+            return
+        self.buffer = buf
         for msg in self.get_messages():
             if len(msg) < 2:
                 continue
