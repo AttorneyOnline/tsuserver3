@@ -29,6 +29,7 @@ __all__ = [
     'ooc_cmd_cs',
     'ooc_cmd_pta',
     'ooc_cmd_concede',
+    'ooc_cmd_subtheme',
 ]
 
 
@@ -587,3 +588,12 @@ def ooc_cmd_concede(client, arg):
             raise ex
     else:
         client.send_ooc('There is no minigame running right now.')
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_subtheme(client, arg):
+    """
+    Change the subtheme for everyone in the area.
+    Usage: /subtheme <subtheme_name>
+    """
+    client.area.send_command('ST', arg)

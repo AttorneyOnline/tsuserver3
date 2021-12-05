@@ -589,6 +589,7 @@ def ooc_cmd_demo(client, arg):
     """
     if arg == '':
         client.area.stop_demo()
+        client.send_ooc('Stopping demo playback...')
         return
 
     evidence = None
