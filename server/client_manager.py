@@ -515,9 +515,9 @@ class ClientManager:
             Rebuild the area list according to provided areas list.
             """
             if not self.area.area_manager.arup_enabled:
-                area_list = ['{ Areas }\n Double-Click me to see Hubs\n  _______']
+                area_list = [f'[HUB: {self.server.hub_manager.default_hub().id}] {self.server.hub_manager.default_hub().name}\n Double-Click me to see Hubs\n  _______']
             else:
-                area_list = ['{ Areas }']
+                area_list = [f'[HUB: {self.server.hub_manager.default_hub().id}] {self.server.hub_manager.default_hub().name}']
             if (len(areas) > 0):
                 # This is where we can handle all the 'rendering', such as extra info etc.
                 for area in areas:
@@ -565,6 +565,16 @@ class ClientManager:
             self.area.broadcast_area_list(self)
 
             self.area.area_manager.send_arup_players()
+
+            if self.viewing_hub_list:
+              for hub in self.server.hub_manager.hubs:
+                count = 0
+                for a in hub.areas:
+                    for c in a.clients:
+                        if not a.hide_clients and not c.hidden:
+                           count = count + 1
+                hub.count = count
+              self.send_command('FA', *['{ Hubs }\n Double-Click me to see Areas\n  _______', *[f'[{hub.id}] {hub.name} (users: {hub.count})' for hub in self.server.hub_manager.hubs]])
             
             # Update everyone's available characters list
             # Commented out due to potentially causing clientside lag...
