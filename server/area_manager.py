@@ -562,7 +562,7 @@ class AreaManager:
         """Broadcast ARUP packet containing area CMs."""
         if not self.arup_enabled:
             return        
-        cms_list = [2, 'Double-Click me']
+        cms_list = [2, 'Double-Click for Hubs']
         if clients==None:
             clients = self.clients
         for client in clients:
@@ -577,7 +577,7 @@ class AreaManager:
         """Broadcast ARUP packet containing the lock status of each area."""
         if not self.arup_enabled:
             return        
-        lock_list = [3, '_______']
+        lock_list = [3, '']
         if clients==None:
             clients = self.clients
         for client in clients:
