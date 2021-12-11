@@ -515,9 +515,9 @@ class ClientManager:
             Rebuild the area list according to provided areas list.
             """
             if not self.area.area_manager.arup_enabled:
-                area_list = [f'[HUB: {self.server.hub_manager.default_hub().id}] {self.server.hub_manager.default_hub().name}\n Double-Click me to see Hubs\n  _______']
+                area_list = [f'[HUB: {self.area.area_manager.id}] {self.area.area_manager.name}\n Double-Click me to see Hubs\n  _______']
             else:
-                area_list = [f'[HUB: {self.server.hub_manager.default_hub().id}] {self.server.hub_manager.default_hub().name}']
+                area_list = [f'[HUB: {self.area.area_manager.id}] {self.area.area_manager.name}']
             if (len(areas) > 0):
                 # This is where we can handle all the 'rendering', such as extra info etc.
                 for area in areas:

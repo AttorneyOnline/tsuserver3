@@ -310,9 +310,9 @@ class AOProtocol(asyncio.Protocol):
 
         song_list = []
         if not self.client.area.area_manager.arup_enabled:
-            song_list = [f'[HUB: {self.client.server.hub_manager.default_hub().id}] {self.client.server.hub_manager.default_hub().name}\n Double-Click me to see Hubs\n  _______']
+            song_list = [f'[HUB: {self.client.area.area_manager.id}] {self.client.area.area_manager.name}\n Double-Click me to see Hubs\n  _______']
         else:
-            song_list = [f'[HUB: {self.client.server.hub_manager.default_hub().id}] {self.client.server.hub_manager.default_hub().name}']
+            song_list = [f'[HUB: {self.client.area.area_manager.id}] {self.client.area.area_manager.name}']
         allowed = self.client.is_mod or self.client in self.client.area.owners
         area_list = self.client.get_area_list(allowed, allowed)
         self.client.local_area_list = area_list
