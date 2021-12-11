@@ -310,9 +310,9 @@ class AOProtocol(asyncio.Protocol):
 
         song_list = []
         if not self.client.area.area_manager.arup_enabled:
-            song_list = ['{ Areas }\n Double-Click me to see Hubs\n  _______']
+            song_list = [f'[HUB: {self.client.area.area_manager.id}] {self.client.area.area_manager.name}\n Double-Click me to see Hubs\n  _______']
         else:
-            song_list = ['{ Areas }']
+            song_list = [f'[HUB: {self.client.area.area_manager.id}] {self.client.area.area_manager.name}']
         allowed = self.client.is_mod or self.client in self.client.area.owners
         area_list = self.client.get_area_list(allowed, allowed)
         self.client.local_area_list = area_list
@@ -946,13 +946,20 @@ class AOProtocol(asyncio.Protocol):
         if not self.client.is_checked:
             return
 
-        if args[0].split('\n')[0] == "{ Areas }":
+        if args[0].split(':')[0] == "[HUB":
             # self.client.send_ooc('Switching to the list of Hubs...')
             self.client.viewing_hub_list = True
             preflist = self.client.server.supported_features.copy()
             preflist.remove('arup')
             self.client.send_command('FL', *preflist)
-            self.client.send_command('FA', *['{ Hubs }\n Double-Click me to see Areas\n  _______', *[f'[{hub.id}] {hub.name}' for hub in self.client.server.hub_manager.hubs]])
+            for hub in self.client.server.hub_manager.hubs:
+                count = 0
+                for area in hub.areas:
+                    for c in area.clients:
+                        if not area.hide_clients and not c.hidden:
+                           count = count + 1
+                hub.count = count
+            self.client.send_command('FA', *['{ Hubs }\n Double-Click me to see Areas\n  _______', *[f'[{hub.id}] {hub.name} (users: {hub.count})' for hub in self.client.server.hub_manager.hubs]])
             return
         if args[0].split('\n')[0] == "{ Hubs }":
             # self.client.send_ooc('Switching to the list of Areas...')
