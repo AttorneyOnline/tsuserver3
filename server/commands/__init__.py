@@ -17,6 +17,18 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+def call(client, cmd, arg):
+    import sys
+    me = sys.modules[__name__]
+    called_function = f'ooc_cmd_{cmd}'
+    if len(client.server.command_aliases) > 0 and not hasattr(me, called_function):
+        if cmd in client.server.command_aliases:
+            called_function = f'ooc_cmd_{client.server.command_aliases[cmd]}'
+    if not hasattr(me, called_function):
+        client.send_ooc(f'Invalid command: {cmd}. Use /help to find up-to-date commands.')
+        return
+    getattr(me, called_function)(client, arg)
+
 def submodules():
     """Get all command-related submodules."""
     import sys, inspect

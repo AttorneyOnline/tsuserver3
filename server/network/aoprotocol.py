@@ -896,14 +896,7 @@ class AOProtocol(asyncio.Protocol):
             if len(spl) == 2:
                 arg = spl[1][:1024]
             try:
-                called_function = f'ooc_cmd_{cmd}'
-                if len(self.server.command_aliases) > 0 and not hasattr(commands, called_function):
-                    if cmd in self.server.command_aliases:
-                        called_function = f'ooc_cmd_{self.server.command_aliases[cmd]}'
-                if not hasattr(commands, called_function):
-                    self.client.send_ooc(f'Invalid command: {cmd}. Use /help to find up-to-date commands.')
-                    return
-                getattr(commands, called_function)(self.client, arg)
+                commands.call(self.client, cmd, arg)
             except (ClientError, AreaError, ArgumentError, ServerError) as ex:
                 self.client.send_ooc(ex)
             except Exception as ex:

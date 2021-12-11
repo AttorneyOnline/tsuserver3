@@ -77,17 +77,10 @@ class AreaManager:
                 if len(args) > 0:
                     arg = ' '.join(args)[:1024]
                 try:
-                    called_function = f'ooc_cmd_{cmd}'
-                    if len(server.command_aliases) > 0 and not hasattr(commands, called_function):
-                        if cmd in server.command_aliases:
-                            called_function = f'ooc_cmd_{server.command_aliases[cmd]}'
-                    if not hasattr(commands, called_function):
-                        self.caller.send_ooc(f'[Timer 0] Invalid command: {cmd}. Use /help to find up-to-date commands.')
-                        return
                     # Remember the old area.
                     old_area = self.caller.area
                     self.caller.area = self.hub.default_area()
-                    getattr(commands, called_function)(self.caller, arg)
+                    commands.call(self.caller, cmd, arg)
                     if old_area and old_area in self.hub.areas:
                         self.caller.area = old_area
                     # There is no else clause, cause any function that removes the client's area would properly adjust them anyway.
