@@ -668,6 +668,9 @@ class AOProtocol(asyncio.Protocol):
                 evi.desc = f'(👀Discovered in pos: {evi.pos})\n{evi.desc}'
                 evi.pos = 'all'
                 self.client.area.broadcast_evidence_list()
+
+            asyncio.get_event_loop().call_soon(evi.trigger, self.client.area, 'present', self.client)
+            # self.client.area.trigger('present')
         # Update the showname ref for the client
         self.client.showname = showname
 

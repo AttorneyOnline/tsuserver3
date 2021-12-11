@@ -214,8 +214,16 @@ class Area:
             self.Timer(x) for x in range(20)
         ]
 
+        # Demo stuff
         self.demo = []
         self.demo_schedule = None
+
+        # Commands to call when certain triggers are fulfilled.
+        # #Requires at least 1 area owner to exist to determine permission.
+        self.triggers = {
+            'join': '', # User joins the area.
+            'leave': '', # User leaves the area.
+        }
 
     @property
     def name(self):
@@ -241,6 +249,43 @@ class Area:
     def owners(self):
         """Area's owners. Also appends Game Masters (Hub Managers)."""
         return self.area_manager.owners | self._owners
+
+    def trigger(self, trig, target):
+        """Call the trigger's associated command."""
+        if target.hidden:
+            return
+
+        if len(self.owners) <= 0:
+            return
+
+        arg = self.triggers[trig]
+        if arg == '':
+            return
+
+        # Sort through all the owners, with GMs coming first and CMs coming second
+        sorted_owners = sorted(self.owners,
+                                key=lambda x: 0 if (x in self.area_manager.owners) else 1 if (x in self._owners) else 2)
+        # Pick the owner with highest permission - game master, if one exists.
+        # This permission system may be out of wack, but it *should* be good for now
+        owner = sorted_owners[0]
+
+        arg = arg.replace('<cid>', str(target.id)).replace('<showname>', target.showname).replace('<char>', target.char_name)
+        args = arg.split(' ')
+        cmd = args.pop(0).lower()
+        if len(args) > 0:
+            arg = ' '.join(args)[:1024]
+        try:
+            old_area = owner.area
+            old_hub = owner.area.area_manager
+            owner.area = self
+            commands.call(owner, cmd, arg)
+            if old_area and old_area in old_hub.areas:
+                owner.area = old_area
+        except (ClientError, AreaError, ArgumentError, ServerError) as ex:
+            owner.send_ooc(f'[Area {self.id}] {ex}')
+        except Exception as ex:
+            owner.send_ooc(f'[Area {self.id}] An internal error occurred: {ex}. Please inform the staff of the server about the issue.')
+            logger.exception('Exception while running a command')
 
     def abbreviate(self):
         """Abbreviate our name."""
@@ -550,6 +595,7 @@ class Area:
             if len(self.clients) - 1 <= 0:
                 if self.locked:
                     self.unlock()
+        self.trigger('leave', client)
         self.clients.remove(client)
         if client in self.afkers:
             self.afkers.remove(client)

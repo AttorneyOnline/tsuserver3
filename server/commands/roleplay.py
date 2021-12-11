@@ -30,6 +30,7 @@ __all__ = [
     'ooc_cmd_8ball',
     'ooc_cmd_timer',
     'ooc_cmd_demo',
+    'ooc_cmd_trigger',
 ]
 
 
@@ -621,3 +622,52 @@ def ooc_cmd_demo(client, arg):
             c.send_ooc(f'Starting demo playback using evidence \'{evidence.name}\'...')
 
     client.area.play_demo(client)
+
+def ooc_cmd_trigger(client, arg):
+    """
+    Set up a trigger for this area which, when fulfilled, will call the command.
+    `trig` is the trigger keyword. Available keywords are 'join', 'leave' and 'present id' where id is the evidence ID.
+    `cmd` is the standard command name, such as 'lock' to call the `lock` command when trigger is fulfilled.
+    `arg(s)` are the arguments of the command, so in `bg default`, `default` is the argument
+    CM's, GM's and Mods are ignored by triggers.
+    Usage:
+    /trigger trig cmd arg(s)
+    """
+    if arg == '':
+        msg = 'This area\'s triggers are:'
+        for key, value in client.area.triggers.items():
+            msg += f'\nCall "{value}" on {key}'
+        client.send_ooc(msg)
+        return
+    if arg.lower().startswith('present '):
+        args = arg.split(' ', 2)
+        trig = args[0].lower()
+        if len(args) <= 1:
+            raise ArgumentError('Please provide target evidence!')
+        _id = args[1]
+        evidence = None
+        if _id.isnumeric():
+            _id = str(int(_id)-1)
+        for i, evi in enumerate(client.area.evi_list.evidences):
+            if (_id.lower() == evi.name.lower() or _id == str(i)):
+                evidence = evi
+                break
+        if not evidence:
+            raise ArgumentError('Target evidence not found!')
+        if len(args) <= 2:
+            client.send_ooc(f'Call "{evidence.triggers[trig]}" on trigger "{trig}"')
+            return
+        val = args[2]
+        evidence.triggers[trig] = val
+        client.send_ooc(f'Changed to Call "{val}" on trigger "{trig}"')
+    else:
+        args = arg.split(' ', 1)
+        trig = args[0].lower()
+        if trig not in client.area.triggers:
+            raise ArgumentError(f'Invalid trigger: {trig}')
+        if len(args) <= 1:
+            client.send_ooc(f'Call "{client.area.triggers[trig]}" on trigger "{trig}"')
+            return
+        val = args[1]
+        client.area.triggers[trig] = val
+        client.send_ooc(f'Changed to Call "{val}" on trigger "{trig}"')

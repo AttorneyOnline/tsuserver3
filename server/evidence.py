@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from server import commands
+from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
 
 class EvidenceList:
     """Contains a list of evidence items."""
@@ -32,6 +34,7 @@ class EvidenceList:
             self.pos = pos
             self.can_hide_in = can_hide_in
             self.hiding_client = None
+            self.triggers = {'present': ''}
 
         def set_name(self, name):
             self.name = name
@@ -49,6 +52,42 @@ class EvidenceList:
 
         def to_dict(self):
             return {'name': self.name, 'desc': self.desc, 'image': self.image, 'pos': self.pos, 'can_hide_in': self.can_hide_in}
+
+        def trigger(self, area, trig, target):
+            """Call the trigger's associated command."""
+            if target.hidden:
+                return
+
+            if len(area.owners) <= 0:
+                return
+
+            arg = self.triggers[trig]
+            if arg == '':
+                return
+
+            # Sort through all the owners, with GMs coming first and CMs coming second
+            sorted_owners = sorted(area.owners,
+                                    key=lambda x: 0 if (x in area.area_manager.owners) else 1 if (x in area._owners) else 2)
+            # Pick the owner with highest permission - game master, if one exists.
+            # This permission system may be out of wack, but it *should* be good for now
+            owner = sorted_owners[0]
+
+            arg = arg.replace('<cid>', str(target.id)).replace('<showname>', target.showname).replace('<char>', target.char_name)
+            args = arg.split(' ')
+            cmd = args.pop(0).lower()
+            if len(args) > 0:
+                arg = ' '.join(args)[:1024]
+            try:
+                old_area = owner.area
+                old_hub = owner.area.area_manager
+                owner.area = area
+                commands.call(owner, cmd, arg)
+                if old_area and old_area in old_hub.areas:
+                    owner.area = old_area
+            except (ClientError, AreaError, ArgumentError, ServerError) as ex:
+                owner.send_ooc(f'[Area {area.id}] {ex}')
+            except Exception as ex:
+                owner.send_ooc(f'[Area {area.id}] An internal error occurred: {ex}. Please inform the staff of the server about the issue.')
 
     def __init__(self):
         self.evidences = []
