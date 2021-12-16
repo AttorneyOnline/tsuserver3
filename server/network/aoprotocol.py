@@ -235,6 +235,9 @@ class AOProtocol(asyncio.Protocol):
         self.ping_timeout = asyncio.get_event_loop().call_later(
             self.server.config['timeout'], self.client.disconnect)
 
+        # Update the timers thru handshake as well to make sure they're always in sync
+        self.client.area.update_timers(self.client)
+
     def net_cmd_askchaa(self, _):
         """Ask for the counts of characters/evidence/music
 

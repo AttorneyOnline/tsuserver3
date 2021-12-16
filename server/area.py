@@ -542,7 +542,15 @@ class Area:
         if self.music_autoplay:
             client.send_command('MC', self.music, -1, '', self.music_looping, 0, self.music_effects)
 
-        # Update the timers
+        # Update the timers for the client
+        self.update_timers(client)
+
+        # Play the ambience
+        client.send_command('MC', self.ambience, -1, "", 1, 1, int(MusicEffect.FADE_OUT | MusicEffect.FADE_IN | MusicEffect.SYNC_POS))
+
+    def update_timers(self, client):
+        """Update the timers for the target client"""
+        # Hub timers
         timer = client.area.area_manager.timer
         if timer.set:
             s = int(not timer.started)
@@ -559,6 +567,8 @@ class Area:
             client.send_command('TI', 0, 3, 0)
             # Hide the timer
             client.send_command('TI', 0, 1, 0)
+
+        # Area timers
         for timer_id, timer in enumerate(self.timers):
             # Send static time if applicable
             if timer.set:
@@ -577,9 +587,6 @@ class Area:
                 client.send_command('TI', timer_id+1, 1, 0)
                 # Hide the timer
                 client.send_command('TI', timer_id+1, 3, 0)
-
-        # Play the ambience
-        client.send_command('MC', self.ambience, -1, "", 1, 1, int(MusicEffect.FADE_OUT | MusicEffect.FADE_IN | MusicEffect.SYNC_POS))
 
     def remove_client(self, client):
         """Remove a disconnected client from the area."""
