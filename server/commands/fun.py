@@ -5,10 +5,10 @@ from server.exceptions import ClientError, ArgumentError
 from . import mod_only
 
 __all__ = [
-    'ooc_cmd_disemvowel',
-    'ooc_cmd_undisemvowel',
-    'ooc_cmd_shake',
-    'ooc_cmd_unshake'
+    "ooc_cmd_disemvowel",
+    "ooc_cmd_undisemvowel",
+    "ooc_cmd_shake",
+    "ooc_cmd_unshake",
 ]
 
 
@@ -19,19 +19,20 @@ def ooc_cmd_disemvowel(client, arg):
     Usage: /disemvowel <id>
     """
     if len(arg) == 0:
-        raise ArgumentError('You must specify a target.')
+        raise ArgumentError("You must specify a target.")
     try:
         targets = client.server.client_manager.get_targets(
-            client, TargetType.ID, int(arg), False)
+            client, TargetType.ID, int(arg), False
+        )
     except:
-        raise ArgumentError('You must specify a target. Use /disemvowel <id>.')
+        raise ArgumentError("You must specify a target. Use /disemvowel <id>.")
     if targets:
         for c in targets:
-            database.log_area('disemvowel', client, client.area, target=c)
+            database.log_area("disemvowel", client, client.area, target=c)
             c.disemvowel = True
-        client.send_ooc(f'Disemvowelled {len(targets)} existing client(s).')
+        client.send_ooc(f"Disemvowelled {len(targets)} existing client(s).")
     else:
-        client.send_ooc('No targets found.')
+        client.send_ooc("No targets found.")
 
 
 @mod_only()
@@ -41,20 +42,20 @@ def ooc_cmd_undisemvowel(client, arg):
     Usage: /undisemvowel <id>
     """
     if len(arg) == 0:
-        raise ArgumentError('You must specify a target.')
+        raise ArgumentError("You must specify a target.")
     try:
         targets = client.server.client_manager.get_targets(
-            client, TargetType.ID, int(arg), False)
+            client, TargetType.ID, int(arg), False
+        )
     except:
-        raise ArgumentError(
-            'You must specify a target. Use /undisemvowel <id>.')
+        raise ArgumentError("You must specify a target. Use /undisemvowel <id>.")
     if targets:
         for c in targets:
-            database.log_area('undisemvowel', client, client.area, target=c)
+            database.log_area("undisemvowel", client, client.area, target=c)
             c.disemvowel = False
-        client.send_ooc(f'Undisemvowelled {len(targets)} existing client(s).')
+        client.send_ooc(f"Undisemvowelled {len(targets)} existing client(s).")
     else:
-        client.send_ooc('No targets found.')
+        client.send_ooc("No targets found.")
 
 
 @mod_only()
@@ -64,19 +65,20 @@ def ooc_cmd_shake(client, arg):
     Usage: /shake <id>
     """
     if len(arg) == 0:
-        raise ArgumentError('You must specify a target.')
+        raise ArgumentError("You must specify a target.")
     try:
         targets = client.server.client_manager.get_targets(
-            client, TargetType.ID, int(arg), False)
+            client, TargetType.ID, int(arg), False
+        )
     except:
-        raise ArgumentError('You must specify a target. Use /shake <id>.')
+        raise ArgumentError("You must specify a target. Use /shake <id>.")
     if targets:
         for c in targets:
-            database.log_area('shake', client, client.area, target=c)
+            database.log_area("shake", client, client.area, target=c)
             c.shaken = True
-        client.send_ooc(f'Shook {len(targets)} existing client(s).')
+        client.send_ooc(f"Shook {len(targets)} existing client(s).")
     else:
-        client.send_ooc('No targets found.')
+        client.send_ooc("No targets found.")
 
 
 @mod_only()
@@ -86,16 +88,17 @@ def ooc_cmd_unshake(client, arg):
     Usage: /unshake <id>
     """
     if len(arg) == 0:
-        raise ArgumentError('You must specify a target.')
+        raise ArgumentError("You must specify a target.")
     try:
         targets = client.server.client_manager.get_targets(
-            client, TargetType.ID, int(arg), False)
+            client, TargetType.ID, int(arg), False
+        )
     except:
-        raise ArgumentError('You must specify a target. Use /unshake <id>.')
+        raise ArgumentError("You must specify a target. Use /unshake <id>.")
     if targets:
         for c in targets:
-            database.log_area('unshake', client, client.area, target=c)
+            database.log_area("unshake", client, client.area, target=c)
             c.shaken = False
-        client.send_ooc(f'Unshook {len(targets)} existing client(s).')
+        client.send_ooc(f"Unshook {len(targets)} existing client(s).")
     else:
-        client.send_ooc('No targets found.')
+        client.send_ooc("No targets found.")

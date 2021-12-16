@@ -38,7 +38,7 @@ class AOProtocolWS(AOProtocol):
             :param key: requested key
 
             """
-            info = {'peername': self.ws.remote_address}
+            info = {"peername": self.ws.remote_address}
             return info[key]
 
         def write(self, message):
@@ -47,7 +47,7 @@ class AOProtocolWS(AOProtocol):
             :param message: message in bytes
 
             """
-            message = message.decode('utf-8')
+            message = message.decode("utf-8")
             asyncio.ensure_future(self.ws_try_writing_message(message))
 
         def close(self):
@@ -91,6 +91,7 @@ def new_websocket_client(server):
     :param server: server object
 
     """
+
     async def func(websocket, _):
         client = AOProtocolWS(server, websocket)
         while client.ws_connected:

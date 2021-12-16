@@ -2,28 +2,28 @@ from server.exceptions import ClientError, ArgumentError, AreaError
 from . import mod_only
 
 __all__ = [
-    'ooc_cmd_area_lock',
-    'ooc_cmd_area_unlock',
-    'ooc_cmd_area_mute',
-    'ooc_cmd_area_unmute',
-    'ooc_cmd_lock',
-    'ooc_cmd_unlock',
-    'ooc_cmd_link',
-    'ooc_cmd_unlink',
-    'ooc_cmd_links',
-    'ooc_cmd_onelink',
-    'ooc_cmd_oneunlink',
-    'ooc_cmd_link_lock',
-    'ooc_cmd_link_unlock',
-    'ooc_cmd_link_hide',
-    'ooc_cmd_link_unhide',
-    'ooc_cmd_link_pos',
-    'ooc_cmd_link_peekable',
-    'ooc_cmd_link_unpeekable',
-    'ooc_cmd_link_evidence',
-    'ooc_cmd_unlink_evidence',
-    'ooc_cmd_pw',
-    'ooc_cmd_setpw',
+    "ooc_cmd_area_lock",
+    "ooc_cmd_area_unlock",
+    "ooc_cmd_area_mute",
+    "ooc_cmd_area_unmute",
+    "ooc_cmd_lock",
+    "ooc_cmd_unlock",
+    "ooc_cmd_link",
+    "ooc_cmd_unlink",
+    "ooc_cmd_links",
+    "ooc_cmd_onelink",
+    "ooc_cmd_oneunlink",
+    "ooc_cmd_link_lock",
+    "ooc_cmd_link_unlock",
+    "ooc_cmd_link_hide",
+    "ooc_cmd_link_unhide",
+    "ooc_cmd_link_pos",
+    "ooc_cmd_link_peekable",
+    "ooc_cmd_link_unpeekable",
+    "ooc_cmd_link_evidence",
+    "ooc_cmd_unlink_evidence",
+    "ooc_cmd_pw",
+    "ooc_cmd_setpw",
 ]
 
 
@@ -48,26 +48,33 @@ def ooc_cmd_area_lock(client, arg):
             if not client.is_mod and not client in area.owners:
                 if not str(target_id) in client.keys:
                     if area.locking_allowed and area != client.area:
-                        client.send_ooc(f'You can only lock that area from within!')
+                        client.send_ooc(f"You can only lock that area from within!")
                         continue
                     if not area.locking_allowed:
-                        client.send_ooc(f'You don\'t have the keys to {area.name}.')
+                        client.send_ooc(f"You don't have the keys to {area.name}.")
                         continue
                 if not client.can_access_area(area):
-                    client.send_ooc(f'You have the keys to {area.name} but it is not accessible from your area.')
+                    client.send_ooc(
+                        f"You have the keys to {area.name} but it is not accessible from your area."
+                    )
                     continue
-                if str(area.id) in client.area.links and client.area.links[str(area.id)]["locked"]:
-                    client.send_ooc(f'You have the keys to {area.name} but the path is locked.')
+                if (
+                    str(area.id) in client.area.links
+                    and client.area.links[str(area.id)]["locked"]
+                ):
+                    client.send_ooc(
+                        f"You have the keys to {area.name} but the path is locked."
+                    )
                     continue
             if area.locked:
-                client.send_ooc(f'Area {area.name} is already locked.')
+                client.send_ooc(f"Area {area.name} is already locked.")
                 continue
             area.lock()
             area_list.append(area.id)
         if len(area_list) > 0:
-            client.send_ooc(f'Locked areas {area_list}.')
+            client.send_ooc(f"Locked areas {area_list}.")
     except ValueError:
-        raise ArgumentError('Target must be an abbreviation or number.')
+        raise ArgumentError("Target must be an abbreviation or number.")
     except (ClientError, AreaError):
         raise
 
@@ -91,19 +98,19 @@ def ooc_cmd_area_mute(client, arg):
                 target_id = int(aid)
             area = client.area.area_manager.get_area_by_id(target_id)
             if not client.is_mod and not client in area.owners:
-                client.send_ooc(f'You don\'t own area [{area.id}] {area.name}.')
+                client.send_ooc(f"You don't own area [{area.id}] {area.name}.")
                 continue
 
             if area.muted:
-                client.send_ooc(f'Area [{area.id}] {area.name} is already muted.')
+                client.send_ooc(f"Area [{area.id}] {area.name} is already muted.")
                 continue
             area.mute()
-            area.broadcast_ooc('This area is now muted.')
+            area.broadcast_ooc("This area is now muted.")
             area_list.append(area.id)
         if len(area_list) > 0:
-            client.send_ooc(f'Made areas {area_list} muted.')
+            client.send_ooc(f"Made areas {area_list} muted.")
     except ValueError:
-        raise ArgumentError('Target must be an abbreviation or number.')
+        raise ArgumentError("Target must be an abbreviation or number.")
     except (ClientError, AreaError):
         raise
 
@@ -127,19 +134,19 @@ def ooc_cmd_area_unmute(client, arg):
                 target_id = int(aid)
             area = client.area.area_manager.get_area_by_id(target_id)
             if not client.is_mod and not client in area.owners:
-                client.send_ooc(f'You don\'t own area [{area.id}] {area.name}.')
+                client.send_ooc(f"You don't own area [{area.id}] {area.name}.")
                 continue
 
             if not area.muted:
-                client.send_ooc(f'Area [{area.id}] {area.name} is already unmuted.')
+                client.send_ooc(f"Area [{area.id}] {area.name} is already unmuted.")
                 continue
             area.unmute()
-            area.broadcast_ooc('This area is no longer muted.')
+            area.broadcast_ooc("This area is no longer muted.")
             area_list.append(area.id)
         if len(area_list) > 0:
-            client.send_ooc(f'Made areas {area_list} unmuted.')
+            client.send_ooc(f"Made areas {area_list} unmuted.")
     except ValueError:
-        raise ArgumentError('Target must be an abbreviation or number.')
+        raise ArgumentError("Target must be an abbreviation or number.")
     except (ClientError, AreaError):
         raise
 
@@ -165,26 +172,33 @@ def ooc_cmd_area_unlock(client, arg):
             if not client.is_mod and not client in area.owners:
                 if not str(target_id) in client.keys:
                     if area.locking_allowed and area != client.area:
-                        client.send_ooc(f'You can only unlock that area from within!')
+                        client.send_ooc(f"You can only unlock that area from within!")
                         continue
                     if not area.locking_allowed:
-                        client.send_ooc(f'You don\'t have the keys to {area.name}.')
+                        client.send_ooc(f"You don't have the keys to {area.name}.")
                         continue
                 if not client.can_access_area(area):
-                    client.send_ooc(f'You have the keys to {area.name} but it is not accessible from your area.')
+                    client.send_ooc(
+                        f"You have the keys to {area.name} but it is not accessible from your area."
+                    )
                     continue
-                if str(area.id) in client.area.links and client.area.links[str(area.id)]["locked"]:
-                    client.send_ooc(f'You have the keys to {area.name} but the path is locked.')
+                if (
+                    str(area.id) in client.area.links
+                    and client.area.links[str(area.id)]["locked"]
+                ):
+                    client.send_ooc(
+                        f"You have the keys to {area.name} but the path is locked."
+                    )
                     continue
             if not area.locked:
-                client.send_ooc(f'Area {area.name} is already unlocked.')
+                client.send_ooc(f"Area {area.name} is already unlocked.")
                 continue
             area.unlock()
             area_list.append(area.id)
         if len(area_list) > 0:
-            client.send_ooc(f'Unlocked areas {area_list}.')
+            client.send_ooc(f"Unlocked areas {area_list}.")
     except ValueError:
-        raise ArgumentError('Target must be an abbreviation or number.')
+        raise ArgumentError("Target must be an abbreviation or number.")
     except (ClientError, AreaError):
         raise
 
@@ -195,21 +209,21 @@ def ooc_cmd_lock(client, arg):
     Usage: /lock - lock current area. /lock [id] - lock target area. /lock !5 - lock the link from current area to area 5.
     Multiple targets may be passed.
     """
-    if arg == '':
+    if arg == "":
         arg = str(client.area.id)
     args = arg.split()
     areas = args.copy()
     links = []
     for a in args:
-        if not a.startswith('!'):
+        if not a.startswith("!"):
             continue
         areas.remove(a)
         links.append(a[1:])
     if len(areas) > 0:
-        areas = ' '.join(areas)
+        areas = " ".join(areas)
         ooc_cmd_area_lock(client, areas)
     if len(links) > 0:
-        links = ' '.join(links)
+        links = " ".join(links)
         print(links)
         ooc_cmd_link_lock(client, links)
 
@@ -220,21 +234,21 @@ def ooc_cmd_unlock(client, arg):
     Usage: /unlock - unlock current area. /unlock [id] - unlock target area. /unlock !5 - unlock the link from current area to area 5.
     Multiple targets may be passed.
     """
-    if arg == '':
+    if arg == "":
         arg = str(client.area.id)
     args = arg.split()
     areas = args.copy()
     links = []
     for a in args:
-        if not a.startswith('!'):
+        if not a.startswith("!"):
             continue
         areas.remove(a)
         links.append(a[1:])
     if len(areas) > 0:
-        areas = ' '.join(areas)
+        areas = " ".join(areas)
         ooc_cmd_area_unlock(client, areas)
     if len(links) > 0:
-        links = ' '.join(links)
+        links = " ".join(links)
         ooc_cmd_link_unlock(client, links)
 
 
@@ -259,21 +273,24 @@ def ooc_cmd_link(client, arg):
                 target_id = area.id
 
             if not client.is_mod and not client in area.owners:
-                client.send_ooc(f'You don\'t own area [{area.id}] {area.name}.')
+                client.send_ooc(f"You don't own area [{area.id}] {area.name}.")
                 continue
 
             client.area.link(target_id)
             # Connect the target area to us
             area.link(client.area.id)
             links.append(target_id)
-        links = ', '.join(str(l) for l in links)
-        client.send_ooc(f'Area {client.area.name} has been linked with {links} (two-way).')
+        links = ", ".join(str(l) for l in links)
+        client.send_ooc(
+            f"Area {client.area.name} has been linked with {links} (two-way)."
+        )
         client.area.broadcast_area_list()
         area.broadcast_area_list()
     except ValueError:
-        raise ArgumentError('Area ID must be a number or abbreviation.')
+        raise ArgumentError("Area ID must be a number or abbreviation.")
     except (AreaError, ClientError):
         raise
+
 
 @mod_only(area_owners=True)
 def ooc_cmd_unlink(client, arg):
@@ -283,7 +300,7 @@ def ooc_cmd_unlink(client, arg):
     """
     args = arg.split()
     if len(args) <= 0:
-        raise ArgumentError('Invalid number of arguments. Use /unlink <aid>')
+        raise ArgumentError("Invalid number of arguments. Use /unlink <aid>")
     try:
         links = []
         for aid in args:
@@ -295,7 +312,7 @@ def ooc_cmd_unlink(client, arg):
                 target_id = area.id
 
             if not client.is_mod and not client in area.owners:
-                client.send_ooc(f'You don\'t own area [{area.id}] {area.name}.')
+                client.send_ooc(f"You don't own area [{area.id}] {area.name}.")
                 continue
 
             try:
@@ -305,12 +322,14 @@ def ooc_cmd_unlink(client, arg):
                 links.append(target_id)
             except:
                 continue
-        links = ', '.join(str(l) for l in links)
-        client.send_ooc(f'Area {client.area.name} has been unlinked with {links} (two-way).')
+        links = ", ".join(str(l) for l in links)
+        client.send_ooc(
+            f"Area {client.area.name} has been unlinked with {links} (two-way)."
+        )
         client.area.broadcast_area_list()
         area.broadcast_area_list()
     except ValueError:
-        raise ArgumentError('Area ID must be a number or abbreviation.')
+        raise ArgumentError("Area ID must be a number or abbreviation.")
     except (AreaError, ClientError):
         raise
 
@@ -320,39 +339,39 @@ def ooc_cmd_links(client, arg):
     Display this area's information about area links.
     Usage:  /links
     """
-    links = ''
+    links = ""
     for key, value in sorted(client.area.links.items(), key=lambda x: int(x[0])):
-        hidden = ''
+        hidden = ""
         if value["hidden"] == True:
             # Can't see hidden links
             if not client.is_mod and not client in client.area.owners:
                 continue
-            hidden = '📦'
-        
+            hidden = "📦"
+
         if len(value["evidence"]) > 0 and not (client.hidden_in in value["evidence"]):
             # Can't see hidden links
             if not client.is_mod and not client in client.area.owners:
                 continue
-            evi_list = ', '.join(str(l+1) for l in value["evidence"])
-            hidden = f'📦:{evi_list}'
+            evi_list = ", ".join(str(l + 1) for l in value["evidence"])
+            hidden = f"📦:{evi_list}"
 
         try:
             area_name = f' - "{client.area.area_manager.get_area_by_id(int(key)).name}"'
         except:
-            area_name = ''
+            area_name = ""
 
-        locked = ''
+        locked = ""
         if value["locked"] == True:
-            locked = '🚧'
-        if value["password"] != '':
-            locked = '🔑'
+            locked = "🚧"
+        if value["password"] != "":
+            locked = "🔑"
 
         target_pos = value["target_pos"]
-        if target_pos != '':
-            target_pos = f', pos: {target_pos}'
-        links += f'\n!{key}{area_name}{locked}{hidden}{target_pos}'
+        if target_pos != "":
+            target_pos = f", pos: {target_pos}"
+        links += f"\n!{key}{area_name}{locked}{hidden}{target_pos}"
 
-    client.send_ooc(f'Current area links are: {links}')
+    client.send_ooc(f"Current area links are: {links}")
 
 
 @mod_only(area_owners=True)
@@ -376,16 +395,18 @@ def ooc_cmd_onelink(client, arg):
                 target_id = area.id
 
             if not client.is_mod and not client in area.owners:
-                client.send_ooc(f'You don\'t own area [{area.id}] {area.name}.')
+                client.send_ooc(f"You don't own area [{area.id}] {area.name}.")
                 continue
 
             client.area.link(target_id)
             links.append(target_id)
-        links = ', '.join(str(l) for l in links)
-        client.send_ooc(f'Area {client.area.name} has been linked with {links} (one-way).')
+        links = ", ".join(str(l) for l in links)
+        client.send_ooc(
+            f"Area {client.area.name} has been linked with {links} (one-way)."
+        )
         client.area.broadcast_area_list()
     except ValueError:
-        raise ArgumentError('Area ID must be a number or abbreviation.')
+        raise ArgumentError("Area ID must be a number or abbreviation.")
     except (AreaError, ClientError):
         raise
 
@@ -398,7 +419,7 @@ def ooc_cmd_oneunlink(client, arg):
     """
     args = arg.split()
     if len(args) <= 0:
-        raise ArgumentError('Invalid number of arguments. Use /oneunlink <aid>')
+        raise ArgumentError("Invalid number of arguments. Use /oneunlink <aid>")
     try:
         links = []
         for aid in args:
@@ -412,13 +433,16 @@ def ooc_cmd_oneunlink(client, arg):
                 links.append(target_id)
             except:
                 continue
-        links = ', '.join(str(l) for l in links)
-        client.send_ooc(f'Area {client.area.name} has been unlinked with {links} (one-way).')
+        links = ", ".join(str(l) for l in links)
+        client.send_ooc(
+            f"Area {client.area.name} has been unlinked with {links} (one-way)."
+        )
         client.area.broadcast_area_list()
     except ValueError:
-        raise ArgumentError('Area ID must be a number or abbreviation.')
+        raise ArgumentError("Area ID must be a number or abbreviation.")
     except (AreaError, ClientError):
         raise
+
 
 def ooc_cmd_link_lock(client, arg):
     """
@@ -427,7 +451,7 @@ def ooc_cmd_link_lock(client, arg):
     """
     args = arg.split()
     if len(args) <= 0:
-        raise ArgumentError('Invalid number of arguments. Use /link_lock <aid>')
+        raise ArgumentError("Invalid number of arguments. Use /link_lock <aid>")
     try:
         links = []
         for aid in args:
@@ -436,20 +460,27 @@ def ooc_cmd_link_lock(client, arg):
             except:
                 target_id = int(aid)
             if not client.is_mod and not client in client.area.owners:
-                if not f'{client.area.id}-{target_id}' in client.keys:
-                    client.send_ooc(f'You don\'t have the keys to the link {client.area.id}-{target_id}.')
+                if not f"{client.area.id}-{target_id}" in client.keys:
+                    client.send_ooc(
+                        f"You don't have the keys to the link {client.area.id}-{target_id}."
+                    )
                     continue
                 target_area = client.area.area_manager.get_area_by_id(target_id)
-                if f'{target_id}-{client.area.id}' in client.keys and str(client.area.id) in target_area.links: # Treat it as a single door/path if we have the keys both ways
+                if (
+                    f"{target_id}-{client.area.id}" in client.keys
+                    and str(client.area.id) in target_area.links
+                ):  # Treat it as a single door/path if we have the keys both ways
                     target_area.links[str(client.area.id)]["locked"] = True
-                    client.send_ooc(f'Locked {client.area.id}-{target_id} both ways.')
+                    client.send_ooc(f"Locked {client.area.id}-{target_id} both ways.")
             client.area.links[str(target_id)]["locked"] = True
             links.append(target_id)
         if len(links) > 0:
-            links = ', '.join(str(l) for l in links)
-            client.send_ooc(f'Area {client.area.name} links {links} locked.')
+            links = ", ".join(str(l) for l in links)
+            client.send_ooc(f"Area {client.area.name} links {links} locked.")
     except (ValueError, KeyError):
-        raise ArgumentError('Area ID must be a number or abbreviation and the link must exist.')
+        raise ArgumentError(
+            "Area ID must be a number or abbreviation and the link must exist."
+        )
     except (AreaError, ClientError):
         raise
 
@@ -461,7 +492,7 @@ def ooc_cmd_link_unlock(client, arg):
     """
     args = arg.split()
     if len(args) <= 0:
-        raise ArgumentError('Invalid number of arguments. Use /link_unlock <aid>')
+        raise ArgumentError("Invalid number of arguments. Use /link_unlock <aid>")
     try:
         links = []
         for aid in args:
@@ -470,20 +501,27 @@ def ooc_cmd_link_unlock(client, arg):
             except:
                 target_id = int(aid)
             if not client.is_mod and not client in client.area.owners:
-                if not f'{client.area.id}-{target_id}' in client.keys:
-                    client.send_ooc(f'You don\'t have the keys to the link {client.area.id}-{target_id}.')
+                if not f"{client.area.id}-{target_id}" in client.keys:
+                    client.send_ooc(
+                        f"You don't have the keys to the link {client.area.id}-{target_id}."
+                    )
                     continue
                 target_area = client.area.area_manager.get_area_by_id(target_id)
-                if f'{target_id}-{client.area.id}' in client.keys and str(client.area.id) in target_area.links: # Treat it as a single door/path if we have the keys both ways
+                if (
+                    f"{target_id}-{client.area.id}" in client.keys
+                    and str(client.area.id) in target_area.links
+                ):  # Treat it as a single door/path if we have the keys both ways
                     target_area.links[str(client.area.id)]["locked"] = False
-                    client.send_ooc(f'Unlocked {client.area.id}-{target_id} both ways.')
+                    client.send_ooc(f"Unlocked {client.area.id}-{target_id} both ways.")
             client.area.links[str(target_id)]["locked"] = False
             links.append(target_id)
         if len(links) > 0:
-            links = ', '.join(str(l) for l in links)
-            client.send_ooc(f'Area {client.area.name} links {links} unlocked.')
+            links = ", ".join(str(l) for l in links)
+            client.send_ooc(f"Area {client.area.name} links {links} unlocked.")
     except (ValueError, KeyError):
-        raise ArgumentError('Area ID must be a number or abbreviation and the link must exist.')
+        raise ArgumentError(
+            "Area ID must be a number or abbreviation and the link must exist."
+        )
     except (AreaError, ClientError):
         raise
 
@@ -496,7 +534,7 @@ def ooc_cmd_link_hide(client, arg):
     """
     args = arg.split()
     if len(args) <= 0:
-        raise ArgumentError('Invalid number of arguments. Use /link_hide <aid>')
+        raise ArgumentError("Invalid number of arguments. Use /link_hide <aid>")
     try:
         links = []
         for aid in args:
@@ -508,10 +546,10 @@ def ooc_cmd_link_hide(client, arg):
             client.area.links[str(target_id)]["hidden"] = True
             links.append(target_id)
         if len(links) > 0:
-            links = ', '.join(str(l) for l in links)
-            client.send_ooc(f'Area {client.area.name} links {links} hidden.')
+            links = ", ".join(str(l) for l in links)
+            client.send_ooc(f"Area {client.area.name} links {links} hidden.")
     except (ValueError, KeyError):
-        raise ArgumentError('Area ID must be a number or abbreviation.')
+        raise ArgumentError("Area ID must be a number or abbreviation.")
     except (AreaError, ClientError):
         raise
 
@@ -524,7 +562,7 @@ def ooc_cmd_link_unhide(client, arg):
     """
     args = arg.split()
     if len(args) <= 0:
-        raise ArgumentError('Invalid number of arguments. Use /link_unhide <aid>')
+        raise ArgumentError("Invalid number of arguments. Use /link_unhide <aid>")
     try:
         links = []
         for aid in args:
@@ -536,10 +574,10 @@ def ooc_cmd_link_unhide(client, arg):
             client.area.links[str(target_id)]["hidden"] = False
             links.append(target_id)
         if len(links) > 0:
-            links = ', '.join(str(l) for l in links)
-            client.send_ooc(f'Area {client.area.name} links {links} revealed.')
+            links = ", ".join(str(l) for l in links)
+            client.send_ooc(f"Area {client.area.name} links {links} revealed.")
     except (ValueError, KeyError):
-        raise ArgumentError('Area ID must be a number or abbreviation.')
+        raise ArgumentError("Area ID must be a number or abbreviation.")
     except (AreaError, ClientError):
         raise
 
@@ -552,7 +590,7 @@ def ooc_cmd_link_pos(client, arg):
     """
     args = arg.split()
     if len(args) <= 0:
-        raise ArgumentError('Invalid number of arguments. Use /link_unhide <aid>')
+        raise ArgumentError("Invalid number of arguments. Use /link_unhide <aid>")
     try:
         try:
             target_id = client.area.area_manager.get_area_by_abbreviation(args[0]).id
@@ -561,9 +599,11 @@ def ooc_cmd_link_pos(client, arg):
 
         pos = args[1:]
         client.area.links[str(target_id)]["target_pos"] = pos
-        client.send_ooc(f'Area {client.area.name} link {target_id}\'s target pos set to "{pos}".')
+        client.send_ooc(
+            f'Area {client.area.name} link {target_id}\'s target pos set to "{pos}".'
+        )
     except (ValueError, KeyError):
-        raise ArgumentError('Area ID must be a number or abbreviation.')
+        raise ArgumentError("Area ID must be a number or abbreviation.")
     except (AreaError, ClientError):
         raise
 
@@ -576,7 +616,7 @@ def ooc_cmd_link_peekable(client, arg):
     """
     args = arg.split()
     if len(args) <= 0:
-        raise ArgumentError('Invalid number of arguments. Use /link_peekable <aid>')
+        raise ArgumentError("Invalid number of arguments. Use /link_peekable <aid>")
     try:
         links = []
         for aid in args:
@@ -588,10 +628,10 @@ def ooc_cmd_link_peekable(client, arg):
             client.area.links[str(target_id)]["can_peek"] = True
             links.append(target_id)
         if len(links) > 0:
-            links = ', '.join(str(l) for l in links)
-            client.send_ooc(f'Area {client.area.name} links {links} are now peekable.')
+            links = ", ".join(str(l) for l in links)
+            client.send_ooc(f"Area {client.area.name} links {links} are now peekable.")
     except (ValueError, KeyError):
-        raise ArgumentError('Area ID must be a number or abbreviation.')
+        raise ArgumentError("Area ID must be a number or abbreviation.")
     except (AreaError, ClientError):
         raise
 
@@ -604,7 +644,7 @@ def ooc_cmd_link_unpeekable(client, arg):
     """
     args = arg.split()
     if len(args) <= 0:
-        raise ArgumentError('Invalid number of arguments. Use /link_unpeekable <aid>')
+        raise ArgumentError("Invalid number of arguments. Use /link_unpeekable <aid>")
     try:
         links = []
         for aid in args:
@@ -616,10 +656,12 @@ def ooc_cmd_link_unpeekable(client, arg):
             client.area.links[str(target_id)]["can_peek"] = False
             links.append(target_id)
         if len(links) > 0:
-            links = ', '.join(str(l) for l in links)
-            client.send_ooc(f'Area {client.area.name} links {links} are no longer peekable.')
+            links = ", ".join(str(l) for l in links)
+            client.send_ooc(
+                f"Area {client.area.name} links {links} are no longer peekable."
+            )
     except (ValueError, KeyError):
-        raise ArgumentError('Area ID must be a number or abbreviation.')
+        raise ArgumentError("Area ID must be a number or abbreviation.")
     except (AreaError, ClientError):
         raise
 
@@ -633,20 +675,24 @@ def ooc_cmd_link_evidence(client, arg):
     """
     args = arg.split()
     if len(args) <= 0:
-        raise ArgumentError('Invalid number of arguments. Use /link_evidence <id> [evi_id(s)]')
+        raise ArgumentError(
+            "Invalid number of arguments. Use /link_evidence <id> [evi_id(s)]"
+        )
     link = None
     evidences = []
     try:
         link = client.area.links[args[0]]
         if len(args) > 1:
             for evi_id in args[1:]:
-                evi_id = int(evi_id)-1
-                client.area.evi_list.evidences[evi_id] # Test if we can access target evidence
+                evi_id = int(evi_id) - 1
+                client.area.evi_list.evidences[
+                    evi_id
+                ]  # Test if we can access target evidence
                 evidences.append(evi_id)
     except IndexError:
-        raise ArgumentError('Evidence not found.')
+        raise ArgumentError("Evidence not found.")
     except (ValueError, KeyError):
-        raise ArgumentError('Area ID must be a number.')
+        raise ArgumentError("Area ID must be a number.")
     except (AreaError, ClientError):
         raise
     else:
@@ -654,11 +700,14 @@ def ooc_cmd_link_evidence(client, arg):
             link["evidence"] = evidences
 
         if len(link["evidence"]) > 0:
-            evi_list = ', '.join(str(l+1) for l in link["evidence"])
-            client.send_ooc(f'Area {client.area.name} link {args[0]} associated evidence IDs: {evi_list}.')
+            evi_list = ", ".join(str(l + 1) for l in link["evidence"])
+            client.send_ooc(
+                f"Area {client.area.name} link {args[0]} associated evidence IDs: {evi_list}."
+            )
         else:
-            client.send_ooc(f'Area {client.area.name} link {args[0]} has no associated evidence.')
-
+            client.send_ooc(
+                f"Area {client.area.name} link {args[0]} has no associated evidence."
+            )
 
 
 @mod_only(area_owners=True)
@@ -670,27 +719,33 @@ def ooc_cmd_unlink_evidence(client, arg):
     """
     args = arg.split()
     if len(args) <= 0:
-        raise ArgumentError('Invalid number of arguments. Use /unlink_evidence <aid> [evi_id(s)]')
+        raise ArgumentError(
+            "Invalid number of arguments. Use /unlink_evidence <aid> [evi_id(s)]"
+        )
     link = None
     evidences = []
     try:
         link = client.area.links[args[0]]
         if len(args) > 1:
             for evi_id in args[1:]:
-                evi_id = int(evi_id)-1
+                evi_id = int(evi_id) - 1
                 evidences.append(evi_id)
     except (ValueError, KeyError):
-        raise ArgumentError('Area ID must be a number.')
+        raise ArgumentError("Area ID must be a number.")
     except (AreaError, ClientError):
         raise
     else:
         if len(evidences) > 0:
             link["evidence"] = link["evidence"] - evidences
-            evi_list = ', '.join(str(l+1) for l in evidences)
-            client.send_ooc(f'Area {client.area.name} link {args[0]} is now unlinked from evidence IDs: {evi_list}.')
+            evi_list = ", ".join(str(l + 1) for l in evidences)
+            client.send_ooc(
+                f"Area {client.area.name} link {args[0]} is now unlinked from evidence IDs: {evi_list}."
+            )
         else:
             link["evidence"] = []
-            client.send_ooc(f'Area {client.area.name} link {args[0]} associated evidences cleared.')
+            client.send_ooc(
+                f"Area {client.area.name} link {args[0]} associated evidences cleared."
+            )
 
 
 def ooc_cmd_pw(client, arg):
@@ -701,10 +756,12 @@ def ooc_cmd_pw(client, arg):
     Usage:  /pw <id> [password]
     """
     link = None
-    password = ''
-    if arg == '':
+    password = ""
+    if arg == "":
         if not client.is_mod and not (client in client.area.owners):
-            raise ArgumentError("You are not allowed to see this area's password. Use /pw <id> [password]")
+            raise ArgumentError(
+                "You are not allowed to see this area's password. Use /pw <id> [password]"
+            )
         aid = client.area.id
     else:
         args = arg.split()
@@ -716,18 +773,24 @@ def ooc_cmd_pw(client, arg):
 
     try:
         area = client.area.area_manager.get_area_by_id(int(aid))
-        if password == '':
+        if password == "":
             if client.is_mod or client in client.area.owners:
-                if link != None and link["password"] != '':
-                    client.send_ooc(f'Link {client.area.id}-{area.id} password is: {link["password"]}')
+                if link != None and link["password"] != "":
+                    client.send_ooc(
+                        f'Link {client.area.id}-{area.id} password is: {link["password"]}'
+                    )
                 else:
-                    client.send_ooc(f'Area [{area.id}] {area.name} password is: {area.password}')
+                    client.send_ooc(
+                        f"Area [{area.id}] {area.name} password is: {area.password}"
+                    )
             else:
-                raise ClientError("You must provide a password. Use /pw <id> [password]")
+                raise ClientError(
+                    "You must provide a password. Use /pw <id> [password]"
+                )
         else:
             client.change_area(area, password=password)
     except ValueError:
-        raise ArgumentError('Area ID must be a number.')
+        raise ArgumentError("Area ID must be a number.")
     except (AreaError, ClientError):
         raise
 
@@ -738,36 +801,40 @@ def ooc_cmd_setpw(client, arg):
     Context-sensitive function to set a password area(s) and/or area link(s).
     Pass area id, or link id from current area using !, e.g. 5 vs !5.
     Leave [password] blank to clear the password.
-    Usage:  /setpw <id> [password]  
+    Usage:  /setpw <id> [password]
     """
     args = arg.split()
     if len(args) == 0:
-        raise ArgumentError('Invalid number of arguments. Use /setpw <id> [password]')
+        raise ArgumentError("Invalid number of arguments. Use /setpw <id> [password]")
 
     try:
-        password = ''
+        password = ""
         link = None
         area = client.area
-        if args[0].startswith('!'):
+        if args[0].startswith("!"):
             num = args[0][1:]
             if num in client.area.links:
                 link = client.area.links[num]
                 area = client.area.area_manager.get_area_by_id(int(num))
             else:
-                raise ArgumentError('Targeted link does not exist in current area.')
+                raise ArgumentError("Targeted link does not exist in current area.")
         else:
             area = client.area.area_manager.get_area_by_id(int(args[0]))
         if len(args) > 1:
             password = args[1]
         if not client.is_mod and not (client in area.owners):
-            raise ClientError('You do not own that area!')
+            raise ClientError("You do not own that area!")
         if link != None:
             link["password"] = password
-            client.send_ooc(f'Link {client.area.id}-{area.id} password set to: {password}')
+            client.send_ooc(
+                f"Link {client.area.id}-{area.id} password set to: {password}"
+            )
         else:
             area.password = password
-            client.send_ooc(f'Area [{area.id}] {area.name} password set to: {password}')
+            client.send_ooc(f"Area [{area.id}] {area.name} password set to: {password}")
     except ValueError:
-        raise ArgumentError('Area ID must be a number, or a link ID must start with ! e.g. 5 vs !5.')
+        raise ArgumentError(
+            "Area ID must be a number, or a link ID must start with ! e.g. 5 vs !5."
+        )
     except (AreaError, ClientError):
         raise

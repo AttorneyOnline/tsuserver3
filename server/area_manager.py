@@ -22,11 +22,12 @@ import random
 import time
 from enum import Enum
 
-import oyaml as yaml #ordered yaml
+import oyaml as yaml  # ordered yaml
 import os
 import datetime
 import logging
-logger = logging.getLogger('events')
+
+logger = logging.getLogger("events")
 
 from server import database
 from server import commands
@@ -36,11 +37,22 @@ from server.area import Area
 
 from collections import OrderedDict
 
+
 class AreaManager:
     """Holds the list of all areas."""
+
     class Timer:
         """Represents a single instance of a timer in the area."""
-        def __init__(self, Set = False, started = False, static = None, target = None, hub = None, caller = None):
+
+        def __init__(
+            self,
+            Set=False,
+            started=False,
+            static=None,
+            target=None,
+            hub=None,
+            caller=None,
+        ):
             self.set = Set
             self.started = started
             self.static = static
@@ -49,14 +61,14 @@ class AreaManager:
             self.caller = caller
             self.schedule = None
             self.commands = []
-        
+
         def timer_expired(self):
             if self.schedule:
                 self.schedule.cancel()
             # the hub was destroyed at some point
             if self.hub == None or self == None:
                 return
-            self.hub.broadcast_ooc('Timer 0 has expired.')
+            self.hub.broadcast_ooc("Timer 0 has expired.")
             self.call_commands()
             self.commands.clear()
             self.static = datetime.timedelta(0)
@@ -71,11 +83,11 @@ class AreaManager:
                 return
             server = self.caller.server
             for cmd in self.commands:
-                args = cmd.split(' ')
+                args = cmd.split(" ")
                 cmd = args.pop(0).lower()
-                arg = ''
+                arg = ""
                 if len(args) > 0:
-                    arg = ' '.join(args)[:1024]
+                    arg = " ".join(args)[:1024]
                 try:
                     # Remember the old area.
                     old_area = self.caller.area
@@ -85,10 +97,12 @@ class AreaManager:
                         self.caller.area = old_area
                     # There is no else clause, cause any function that removes the client's area would properly adjust them anyway.
                 except (ClientError, AreaError, ArgumentError, ServerError) as ex:
-                    self.caller.send_ooc(f'[Timer 0] {ex}')
+                    self.caller.send_ooc(f"[Timer 0] {ex}")
                 except Exception as ex:
-                    self.caller.send_ooc(f'[Timer 0] An internal error occurred: {ex}. Please inform the staff of the server about the issue.')
-                    logger.exception('Exception while running a command')
+                    self.caller.send_ooc(
+                        f"[Timer 0] An internal error occurred: {ex}. Please inform the staff of the server about the issue."
+                    )
+                    logger.exception("Exception while running a command")
 
     def __init__(self, hub_manager, name):
         self.hub_manager = hub_manager
@@ -101,9 +115,9 @@ class AreaManager:
         self.move_delay = 0
         self.arup_enabled = True
         self.hide_clients = False
-        self.info = ''
+        self.info = ""
         self.can_gm = False
-        self.music_ref = ''
+        self.music_ref = ""
         self.replace_music = False
         self.client_music = True
         self.max_areas = -1
@@ -170,50 +184,50 @@ class AreaManager:
         :param destructive: if we should wipe the old areas before loading the new ones in
 
         """
-        if 'doc' in hub:
-            hub['info'] = hub['doc']
-        if 'hub' in hub:
-            hub['name'] = hub['hub']
+        if "doc" in hub:
+            hub["info"] = hub["doc"]
+        if "hub" in hub:
+            hub["name"] = hub["hub"]
 
         load_list = [
-            'name',
-            'abbreviation',
-            'move_delay',
-            'arup_enabled',
-            'hide_clients',
-            'info',
-            'can_gm',
-            'music_ref',
-            'replace_music',
-            'client_music',
-            'max_areas',
-            'single_cm',
-            'censor_ic',
-            'censor_ooc',
-            'can_spectate',
-            'can_getareas',
+            "name",
+            "abbreviation",
+            "move_delay",
+            "arup_enabled",
+            "hide_clients",
+            "info",
+            "can_gm",
+            "music_ref",
+            "replace_music",
+            "client_music",
+            "max_areas",
+            "single_cm",
+            "censor_ic",
+            "censor_ooc",
+            "can_spectate",
+            "can_getareas",
         ]
         for entry in list(set(load_list) - set(ignore)):
             if entry in hub:
                 setattr(self, entry, hub[entry])
-                if entry == 'music_ref':
-                    if hub[entry] == '':
+                if entry == "music_ref":
+                    if hub[entry] == "":
                         self.clear_music()
                     else:
-                        self.load_music(f'storage/musiclists/{self.music_ref}.yaml')
+                        self.load_music(f"storage/musiclists/{self.music_ref}.yaml")
 
-        if not ('character_data' in ignore) and 'character_data' in hub:
+        if not ("character_data" in ignore) and "character_data" in hub:
             try:
-                self.load_character_data(hub['character_data'])
+                self.load_character_data(hub["character_data"])
             except:
-                print('Character data reference path invalid!')
+                print("Character data reference path invalid!")
         if destructive:
             for area in self.areas.copy():
-                if area == self.default_area(): # Do not remove the default area
+                if area == self.default_area():  # Do not remove the default area
                     continue
                 self.remove_area(area)
-        if not ('areas' in ignore) and 'areas' in hub:
-            self.load_areas(hub['areas'])
+        if not ("areas" in ignore) and "areas" in hub:
+            self.load_areas(hub["areas"])
 
         self.broadcast_area_list()
 
@@ -223,73 +237,73 @@ class AreaManager:
             self.create_area()
         i = 0
         for area in areas:
-            if 'area' in area:
+            if "area" in area:
                 self.areas[i].load(area)
                 i += 1
 
     def save(self, ignore=[]):
         hub = OrderedDict()
         save_list = [
-            'name',
-            'abbreviation',
-            'move_delay',
-            'arup_enabled',
-            'hide_clients',
-            'info',
-            'can_gm',
-            'music_ref',
-            'replace_music',
-            'client_music',
-            'max_areas',
-            'single_cm',
-            'censor_ic',
-            'censor_ooc',
-            'can_spectate',
-            'can_getareas',
+            "name",
+            "abbreviation",
+            "move_delay",
+            "arup_enabled",
+            "hide_clients",
+            "info",
+            "can_gm",
+            "music_ref",
+            "replace_music",
+            "client_music",
+            "max_areas",
+            "single_cm",
+            "censor_ic",
+            "censor_ooc",
+            "can_spectate",
+            "can_getareas",
         ]
         for entry in list(set(save_list) - set(ignore)):
             hub[entry] = getattr(self, entry)
 
-        if not 'areas' in ignore:
+        if not "areas" in ignore:
             areas = []
             for area in self.areas:
                 areas.append(area.save())
-            hub['areas'] = areas
+            hub["areas"] = areas
         return hub
 
     def clear_music(self):
         self.music_list.clear()
-        self.music_ref = ''
+        self.music_ref = ""
         self.replace_music = False
 
     def load_music(self, path):
         try:
             if not os.path.isfile(path):
-                raise AreaError(f'File path {path} is invalid!')
-            with open(path, 'r', encoding='utf-8') as stream:
+                raise AreaError(f"File path {path} is invalid!")
+            with open(path, "r", encoding="utf-8") as stream:
                 music_list = yaml.safe_load(stream)
 
-            prepath = ''
+            prepath = ""
             for item in music_list:
                 # deprecated, use 'replace_music' hub pref instead
                 # if 'replace' in item:
                 #    self.replace_music = item['replace'] == True
-                if 'use_unique_folder' in item and item['use_unique_folder'] == True:
-                    prepath = os.path.splitext(os.path.basename(path))[0] + '/'
+                if "use_unique_folder" in item and item["use_unique_folder"] == True:
+                    prepath = os.path.splitext(os.path.basename(path))[0] + "/"
 
-                if 'category' not in item:
+                if "category" not in item:
                     continue
-                
-                if 'songs' in item:
-                    for song in item['songs']:
-                        song['name'] = prepath + song['name']
+
+                if "songs" in item:
+                    for song in item["songs"]:
+                        song["name"] = prepath + song["name"]
             self.music_list = music_list
         except ValueError:
             raise
         except AreaError:
             raise
 
-    def load_character_data(self, path='config/character_data.yaml'):
+    def load_character_data(self, path="config/character_data.yaml"):
         """
         Load all the character-specific information such as movement delay, keys, etc.
         :param path: filepath to the YAML file.
@@ -298,10 +312,10 @@ class AreaManager:
         try:
             if not os.path.isfile(path):
                 raise
-            with open(path, 'r') as chars:
+            with open(path, "r") as chars:
                 data = yaml.safe_load(chars)
         except:
-            raise AreaError(f'File path {path} is invalid!')
+            raise AreaError(f"File path {path} is invalid!")
 
         try:
             for char in data.copy():
@@ -310,21 +324,21 @@ class AreaManager:
                     data[self.server.char_list[char]] = data.pop(char)
             self.character_data = data
         except:
-            raise AreaError(f'Something went wrong while loading the character data!')
+            raise AreaError(f"Something went wrong while loading the character data!")
 
-    def save_character_data(self, path='config/character_data.yaml'):
+    def save_character_data(self, path="config/character_data.yaml"):
         """
         Save all the character-specific information such as movement delay, keys, etc.
         :param path: filepath to the YAML file.
 
         """
         try:
-            with open(path, 'w', encoding='utf-8') as stream:
+            with open(path, "w", encoding="utf-8") as stream:
                 yaml.dump(self.character_data, stream, default_flow_style=False)
         except:
-            raise AreaError(f'File path {path} is invalid!')
+            raise AreaError(f"File path {path} is invalid!")
 
-    def get_character_data(self, char, key, default_value = None):
+    def get_character_data(self, char, key, default_value=None):
         """
         Obtain the character data from the Hub data.
         :param char: The Character Folder or ID
@@ -358,8 +372,8 @@ class AreaManager:
         """Create a new area instance and return it."""
         idx = len(self.areas)
         if self.max_areas != -1 and idx >= self.max_areas:
-            raise AreaError(f'Area limit reached! ({self.max_areas})')
-        area = Area(self, f'Area {idx}')
+            raise AreaError(f"Area limit reached! ({self.max_areas})")
+        area = Area(self, f"Area {idx}")
         self.areas.append(area)
         return area
 
@@ -367,10 +381,10 @@ class AreaManager:
         """
         Remove an area instance.
         :param area: target area instance.
-        
+
         """
         if not (area in self.areas):
-            raise AreaError('Area not found.')
+            raise AreaError("Area not found.")
         # Make a copy because it can change size during iteration
         # (causes runtime error otherwise)
         if self.default_area() != area:
@@ -379,7 +393,7 @@ class AreaManager:
             try:
                 target_area = self.get_area_by_id(1)
             except:
-                raise AreaError('May not remove last existing area!')
+                raise AreaError("May not remove last existing area!")
         clients = area.clients.copy()
         for client in clients:
             client.set_area(target_area)
@@ -389,7 +403,7 @@ class AreaManager:
             for link in ar.links.copy():
                 # Shift it down as one area was removed
                 if int(link) > area.id:
-                    ar.links[str(int(link)-1)] = ar.links.pop(link)
+                    ar.links[str(int(link) - 1)] = ar.links.pop(link)
                 elif link == str(area.id):
                     del ar.links[link]
         self.areas.remove(area)
@@ -399,12 +413,12 @@ class AreaManager:
         Swap area instances area1 and area2.
         :param area1: first area to swap.
         :param area2: second area to swap.
-        
+
         """
         if not (area1 in self.areas):
-            raise AreaError('First area not found.')
+            raise AreaError("First area not found.")
         if not (area2 in self.areas):
-            raise AreaError('Second area not found.')
+            raise AreaError("Second area not found.")
         a, b = self.areas.index(area1), self.areas.index(area2)
         # Swap 'em good
         self.areas[b], self.areas[a] = self.areas[a], self.areas[b]
@@ -431,7 +445,8 @@ class AreaManager:
         client.area.broadcast_evidence_list()
 
         self.broadcast_ooc(
-            f'[{client.id}] {client.showname} ({client.name}) is GM in this hub now.')
+            f"[{client.id}] {client.showname} ({client.name}) is GM in this hub now."
+        )
         client.hide(True)
 
     def remove_owner(self, client):
@@ -441,8 +456,8 @@ class AreaManager:
         self.owners.remove(client)
         if len(client.broadcast_list) > 0:
             client.broadcast_list.clear()
-            client.send_ooc('Your broadcast list has been cleared.')
-        
+            client.send_ooc("Your broadcast list has been cleared.")
+
         if len(self.owners) == 0:
             # To prevent people egging on the hub list by making epic meme names and bailing
             self.name = self.o_name
@@ -453,7 +468,8 @@ class AreaManager:
         client.area.broadcast_evidence_list()
 
         self.broadcast_ooc(
-            f'[{client.id}] {client.showname} ({client.name}) is no longer GM in this hub.')
+            f"[{client.id}] {client.showname} ({client.name}) is no longer GM in this hub."
+        )
         client.hide(False)
 
     def get_gms(self):
@@ -464,7 +480,7 @@ class AreaManager:
         gms = set()
         for gm in self.owners:
             gms.add(gm.name)
-        return ', '.join(gms)
+        return ", ".join(gms)
 
     def default_area(self):
         """Get the default area."""
@@ -477,21 +493,21 @@ class AreaManager:
             name = name.lower() if case_sensitive else name
             if a_name == name:
                 return area
-        raise AreaError('Area not found.')
+        raise AreaError("Area not found.")
 
     def get_area_by_id(self, num):
         """Get an area by ID."""
         for area in self.areas:
             if area.id == num:
                 return area
-        raise AreaError('Area not found.')
+        raise AreaError("Area not found.")
 
     def get_area_by_abbreviation(self, abbr):
         """Get an area by abbreviation."""
         for area in self.areas:
             if area.abbreviation == abbr:
                 return area
-        raise AreaError('Area not found.')
+        raise AreaError("Area not found.")
 
     def send_command(self, cmd, *args):
         """
@@ -520,14 +536,14 @@ class AreaManager:
     def broadcast_ooc(self, msg):
         """Broadcast an OOC message to all areas in this hub."""
         for area in self.areas:
-            area.send_command('CT', area.server.config['hostname'], msg, '1')
+            area.send_command("CT", area.server.config["hostname"], msg, "1")
 
     def send_arup_players(self, clients=None):
         """Broadcast ARUP packet containing player counts."""
         if not self.arup_enabled:
             return
         players_list = [0, -1]
-        if clients==None:
+        if clients == None:
             clients = self.clients
         for client in clients:
             for area in client.local_area_list:
@@ -537,37 +553,41 @@ class AreaManager:
                 players_list.append(playercount)
                 playerhubcount = 0
                 for area in client.local_area_list:
-                  for c in area.clients:
-                       if not self.hide_clients and not area.hide_clients and not c.hidden:
-                          playerhubcount = playerhubcount + 1
+                    for c in area.clients:
+                        if (
+                            not self.hide_clients
+                            and not area.hide_clients
+                            and not c.hidden
+                        ):
+                            playerhubcount = playerhubcount + 1
                 players_list[1] = playerhubcount
             self.server.send_arup(client, players_list)
 
     def send_arup_status(self, clients=None):
-        """Broadcast ARUP packet containing area statuses."""        
+        """Broadcast ARUP packet containing area statuses."""
         if not self.arup_enabled:
             return
-        status_list = [1, 'GAMING']
-        if clients==None:
+        status_list = [1, "GAMING"]
+        if clients == None:
             clients = self.clients
         for client in clients:
             for area in client.local_area_list:
                 status = area.status
-                if status == 'IDLE':
-                    status = ''
+                if status == "IDLE":
+                    status = ""
                 status_list.append(status)
             self.server.send_arup(client, status_list)
 
     def send_arup_cms(self, clients=None):
         """Broadcast ARUP packet containing area CMs."""
         if not self.arup_enabled:
-            return        
-        cms_list = [2, 'Double-Click for Hubs']
-        if clients==None:
+            return
+        cms_list = [2, "Double-Click for Hubs"]
+        if clients == None:
             clients = self.clients
         for client in clients:
             for area in client.local_area_list:
-                cm = ''
+                cm = ""
                 if len(area.owners) > 0:
                     cm = area.get_owners()
                 cms_list.append(cm)
@@ -576,16 +596,16 @@ class AreaManager:
     def send_arup_lock(self, clients=None):
         """Broadcast ARUP packet containing the lock status of each area."""
         if not self.arup_enabled:
-            return        
-        lock_list = [3, '']
-        if clients==None:
+            return
+        lock_list = [3, ""]
+        if clients == None:
             clients = self.clients
         for client in clients:
             for area in client.local_area_list:
-                state = ''
+                state = ""
                 if area.locked:
-                    state = 'LOCKED'
+                    state = "LOCKED"
                 elif area.muted:
-                    state = 'SPECTATABLE'
+                    state = "SPECTATABLE"
                 lock_list.append(state)
             self.server.send_arup(client, lock_list)

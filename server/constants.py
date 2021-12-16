@@ -33,10 +33,12 @@ class TargetType(Enum):
     ALL = 6
     AFK = 7
 
+
 class MusicEffect(IntFlag):
     FADE_IN = 1
     FADE_OUT = 2
     SYNC_POS = 4
+
 
 def dezalgo(input, tolerance=3):
     """
@@ -53,13 +55,19 @@ def dezalgo(input, tolerance=3):
     U+3164          - HANGUL FILLER
     """
 
-    filtered = re.sub('([\u0300-\u036f\u1ab0-\u1aff\u1dc0-\u1dff\u20d0-\u20ff\ufe20-\ufe2f' +
-                        '\u115f\u1160\u3164]' +
-                        '{' + re.escape(str(tolerance)) + ',})',
-                        '', input)
+    filtered = re.sub(
+        "([\u0300-\u036f\u1ab0-\u1aff\u1dc0-\u1dff\u20d0-\u20ff\ufe20-\ufe2f"
+        + "\u115f\u1160\u3164]"
+        + "{"
+        + re.escape(str(tolerance))
+        + ",})",
+        "",
+        input,
+    )
     return filtered
 
-def censor(text, censor_list=[], replace='*', whole_words=True):
+
+def censor(text, censor_list=[], replace="*", whole_words=True):
     """
     Checks if the string contains any of the passed restricted words and replaces them with the replace char.
     Returns a parsed string.
@@ -69,16 +77,18 @@ def censor(text, censor_list=[], replace='*', whole_words=True):
     """
     if censor_list == None or len(censor_list) <= 0:
         return text
-    regex = r'%s'
+    regex = r"%s"
     if whole_words:
-        regex = r'\b%s\b'
+        regex = r"\b%s\b"
     for word in censor_list:
-        text = re.sub(regex % word, len(word)*replace, text, flags=re.IGNORECASE)
+        text = re.sub(regex % word, len(word) * replace, text, flags=re.IGNORECASE)
     return text
+
 
 def remove_URL(sample):
     """Remove URLs from a sample string"""
     return re.sub(r"http\S+", "", sample)
+
 
 def contains_URL(sample):
     """Determine if string contains a URL in sample string."""

@@ -21,12 +21,13 @@ import asyncio
 import time
 
 import logging
-logger = logging.getLogger('debug')
 
+logger = logging.getLogger("debug")
 
 
 class MasterServerClient:
     """Advertises information about this server to the master server."""
+
     def __init__(self, server):
         self.server = server
         self.reader = None
@@ -37,45 +38,53 @@ class MasterServerClient:
         while True:
             try:
                 self.reader, self.writer = await asyncio.open_connection(
-                    self.server.config['masterserver_ip'],
-                    self.server.config['masterserver_port'],
-                    loop=loop)
+                    self.server.config["masterserver_ip"],
+                    self.server.config["masterserver_port"],
+                    loop=loop,
+                )
                 await self.handle_connection()
-            except (ConnectionRefusedError, TimeoutError,
-                    ConnectionResetError, asyncio.IncompleteReadError):
-                logger.debug('Connection error occurred.')
+            except (
+                ConnectionRefusedError,
+                TimeoutError,
+                ConnectionResetError,
+                asyncio.IncompleteReadError,
+            ):
+                logger.debug("Connection error occurred.")
                 self.writer = None
                 self.reader = None
             finally:
-                logger.debug('Retrying MS connection in 30 seconds.')
+                logger.debug("Retrying MS connection in 30 seconds.")
                 await asyncio.sleep(30)
 
     async def handle_connection(self):
-        logger.debug('Master server connected.')
-        print('Master server connected ({}:{})'.format(
-            self.server.config['masterserver_ip'],
-            self.server.config['masterserver_port']))
+        logger.debug("Master server connected.")
+        print(
+            "Master server connected ({}:{})".format(
+                self.server.config["masterserver_ip"],
+                self.server.config["masterserver_port"],
+            )
+        )
 
         await self.send_server_info()
         ping_timeout = False
         last_ping = time.time() - 20
         while True:
-            self.reader.feed_data(b'END')
-            full_data = await self.reader.readuntil(b'END')
+            self.reader.feed_data(b"END")
+            full_data = await self.reader.readuntil(b"END")
             full_data = full_data[:-3]
             if len(full_data) > 0:
-                data_list = list(full_data.split(b'#%'))[:-1]
+                data_list = list(full_data.split(b"#%"))[:-1]
                 for data in data_list:
                     raw_msg = data.decode()
-                    cmd, *args = raw_msg.split('#')
-                    if cmd != 'CHECK' and cmd != 'PONG':
-                        logger.debug(f'Incoming: {raw_msg}')
-                    elif cmd == 'CHECK':
-                        await self.send_raw_message('PING#%')
-                    elif cmd == 'PONG':
+                    cmd, *args = raw_msg.split("#")
+                    if cmd != "CHECK" and cmd != "PONG":
+                        logger.debug(f"Incoming: {raw_msg}")
+                    elif cmd == "CHECK":
+                        await self.send_raw_message("PING#%")
+                    elif cmd == "PONG":
                         ping_timeout = False
-                    elif cmd == 'NOSERV':
-                        logger.debug('MS does not have our server. Readvertising.')
+                    elif cmd == "NOSERV":
+                        logger.debug("MS does not have our server. Readvertising.")
                         await self.send_server_info()
             if time.time() - last_ping > 10:
                 if ping_timeout:
@@ -83,18 +92,21 @@ class MasterServerClient:
                     return
                 last_ping = time.time()
                 ping_timeout = True
-                await self.send_raw_message('PING#%')
+                await self.send_raw_message("PING#%")
             await asyncio.sleep(1)
 
     async def send_server_info(self):
-        logger.debug('Advertising to MS')
+        logger.debug("Advertising to MS")
         cfg = self.server.config
-        port = str(cfg['port'])
-        if cfg['use_websockets']:
-            port += '&{}'.format(cfg['websocket_port'])
-        msg = 'SCC#{}#{}#{}#{}#%'.format(port, cfg['masterserver_name'],
-                                         cfg['masterserver_description'],
-                                         self.server.software)
+        port = str(cfg["port"])
+        if cfg["use_websockets"]:
+            port += "&{}".format(cfg["websocket_port"])
+        msg = "SCC#{}#{}#{}#{}#%".format(
+            port,
+            cfg["masterserver_name"],
+            cfg["masterserver_description"],
+            self.server.software,
+        )
         await self.send_raw_message(msg)
 
     async def send_raw_message(self, msg):
