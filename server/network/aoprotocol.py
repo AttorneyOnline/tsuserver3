@@ -845,8 +845,8 @@ class AOProtocol(asyncio.Protocol):
         if self.client.disemvowel:
             msg = self.client.disemvowel_message(msg)
         if evidence:
-            target_area = self.client.area
-            evi = target_area.evi_list.evidences[self.client.evi_list[evidence] - 1]
+            area = self.client.area
+            evi = area.evi_list.evidences[self.client.evi_list[evidence] - 1]
 
             if evi.hiding_client != None:
                 c = evi.hiding_client
@@ -857,9 +857,9 @@ class AOProtocol(asyncio.Protocol):
             if evi.pos != "all":
                 evi.desc = f"(👀Discovered in pos: {evi.pos})\n{evi.desc}"
                 evi.pos = "all"
-                target_area.broadcast_evidence_list()
+                area.broadcast_evidence_list()
             asyncio.get_event_loop().call_soon(
-                evi.trigger, target_area, "present", self.client
+                evi.trigger, area, "present", self.client
             )
             # target_area.trigger('present')
         # Update the showname ref for the client
