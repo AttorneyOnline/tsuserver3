@@ -623,7 +623,7 @@ class Area:
                 client.send_command("TI", timer_id + 1, s, int_time)
                 # Unhide the timer
                 client.send_command("TI", timer_id + 1, 2, int_time)
-                client.send_ooc(f"Timer {timer_id+1} is at {current_time}")
+                # client.send_ooc(f"Timer {timer_id+1} is at {current_time}")
             else:
                 # Stop the timer
                 client.send_command("TI", timer_id + 1, 1, 0)
