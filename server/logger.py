@@ -75,7 +75,7 @@ def parse_client_info(client: ClientManager.Client) -> str:
     if client is None:
         return ''
     ipid = client.ip
-    prefix = f'[{ipid:<15}][{client.id:<3}][{client.name}]'
+    prefix = f'ipid={ipid} uid={client.id} cid={client.char_id} ooc_name="{client.name}" showname="{client.showname}" area={client.area.abbreviation}'
     if client.is_mod:
         prefix += '[MOD]'
     return prefix
