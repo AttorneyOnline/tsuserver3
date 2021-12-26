@@ -51,9 +51,8 @@ class MasterServerClient:
         for stun_ip, stun_port in stun_servers:
             nat_type, external_ip, _external_port = \
                 stun.get_ip_info(stun_host=stun_ip, stun_port=stun_port)
-            if nat_type == stun.Blocked:
-                continue
-            return external_ip
+            if nat_type != stun.Blocked:
+                return external_ip
 
     async def send_server_info(self, http: aiohttp.ClientSession):
         loop = asyncio.get_event_loop()
