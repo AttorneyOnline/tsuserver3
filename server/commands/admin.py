@@ -293,7 +293,10 @@ def kickban(client, arg: str, include_hdid=False):
     for c in targets:
         if include_hdid:
             database.ban(c.hdid, reason, ban_type='hdid', ban_id=ban_id)
-        c.send_command('KB', reason)
+        msg = f'{reason}\r\n'
+        msg += f'ID: {ban_id}\r\n'
+        msg += f'Until: {unban_date.humanize()}'
+        c.send_command('KB', msg)
         c.disconnect()
         database.log_misc('ban', client, target=c, data={'reason': reason})
     if targets:
