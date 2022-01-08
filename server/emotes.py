@@ -45,14 +45,17 @@ class Emotes:
                     _name, preanim, anim, _mod = char_ini["emotions"][
                         str(emote_id)
                     ].split("#")[:4]
-                    if "soundn" in char_ini and emote_id in char_ini["soundn"]:
-                        sfx = char_ini["soundn"][str(emote_id)] or ""
-                        if sfx != "" and len(sfx) == 1:
-                            # Often, a one-character SFX is a placeholder for no sfx,
-                            # so allow it
-                            sfx = ""
-                    else:
-                        sfx = ""
+                    # if "soundn" in char_ini and emote_id in char_ini["soundn"]:
+                    #     sfx = char_ini["soundn"][str(emote_id)] or ""
+                    #     if sfx != "" and len(sfx) == 1:
+                    #         # Often, a one-character SFX is a placeholder for no sfx,
+                    #         # so allow it
+                    #         sfx = ""
+                    # else:
+                    #     sfx = ""
+
+                    # sfx checking is not performed due to custom sfx being possible, so don't bother for now
+                    sfx = ""
                     self.emotes.add((preanim.lower(), anim.lower(), sfx.lower()))
                 except KeyError as e:
                     logger.warn(
@@ -81,6 +84,9 @@ class Emotes:
         if len(self.emotes) == 0:
             return True
 
-        if len(sfx) <= 1:
-            sfx = ""
+        # if len(sfx) <= 1:
+        #     sfx = ""
+
+        # sfx checking is skipped due to custom sound list
+        sfx = ""
         return (preanim.lower(), anim.lower(), sfx.lower()) in self.emotes
