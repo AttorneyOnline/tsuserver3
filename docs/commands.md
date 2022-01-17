@@ -207,6 +207,10 @@
 * **testimony** `[id]`
     - Display the currently recorded testimony, including statement IDs.
     - Optionally, `id` is a nubmer that can be passed to move to that statement ID.
+* **testimony\_start** `<title>`
+    - Manually start a testimony with the given title.
+* **testimony\_continue**
+    - Manually start a testimony with the given title.
 * **testimony\_clear**
     - Clear the current testimony.
 * **testimony\_remove** `<id>`
@@ -215,6 +219,8 @@
     - Edit the spoken message of the statement at idx.
 * **testimony\_swap** `<id>` `<id>`
     - Swap the two statements by id.
+* **testimony\_insert** `<id>` `<id>`
+    - Insert the targeted statement at idx.
 * **cs** `<id>`
     - Start a one-on-one "Cross Swords" debate with targeted player!
     - Expires in 5 minutes.

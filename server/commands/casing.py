@@ -22,10 +22,12 @@ __all__ = [
     "ooc_cmd_remote_listen",  # Not strictly casing - to be reorganized
     "ooc_cmd_testimony",
     "ooc_cmd_testimony_start",
+    "ooc_cmd_testimony_continue",
     "ooc_cmd_testimony_clear",
     "ooc_cmd_testimony_remove",
     "ooc_cmd_testimony_amend",
     "ooc_cmd_testimony_swap",
+    "ooc_cmd_testimony_insert",
     "ooc_cmd_cs",
     "ooc_cmd_pta",
     "ooc_cmd_concede",
@@ -437,6 +439,20 @@ def ooc_cmd_testimony_start(client, arg):
 
 
 @mod_only(area_owners=True)
+def ooc_cmd_testimony_continue(client, arg):
+    """
+    Continue an existing testimony, restarting the recording so new statements may be added.
+    Usage: /testimony_continue
+    """
+    if client.area.testimony_title == "":
+        raise ArgumentError("No testimony to continue!")
+    client.area.recording = True
+    client.area.broadcast_ooc(
+        f'-- {client.area.testimony_title} --\nTestimony recording restarted! All new messages will be recorded as testimony lines. Say "End" to stop recording.'
+    )
+
+
+@mod_only(area_owners=True)
 def ooc_cmd_testimony_clear(client, arg):
     """
     Clear the current testimony.
@@ -493,7 +509,7 @@ def ooc_cmd_testimony_amend(client, arg):
     try:
         idx = int(args[0]) - 1
         lst = list(client.area.testimony[idx])
-        lst[4] = "}}}" + args[1:]
+        lst[4] = "}}}" + " ".join(args[1:])
         client.area.testimony[idx] = tuple(lst)
         client.area.broadcast_ooc(f"{client.showname} has amended Statement {idx+1}.")
     except ValueError:
@@ -525,6 +541,35 @@ def ooc_cmd_testimony_swap(client, arg):
         )
         client.area.broadcast_ooc(
             f"{client.showname} has swapped Statements {idx1+1} and {idx2+1}."
+        )
+    except ValueError:
+        raise ArgumentError("Index must be a number!")
+    except IndexError:
+        raise ArgumentError("Index out of bounds!")
+    except ClientError:
+        raise
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_testimony_insert(client, arg):
+    """
+    Insert the targeted statement at idx.
+    Usage: /testimony_insert <id> <id>
+    """
+    if len(client.area.testimony) <= 0:
+        client.send_ooc("There is no testimony recorded!")
+        return
+    args = arg.split()
+    if len(args) < 2:
+        raise ArgumentError("Usage: /testimony_insert <id> <id>.")
+    try:
+        idx1 = int(args[0]) - 1
+        idx2 = int(args[1]) - 1
+        statement = client.area.testimony.pop(idx1)
+        client.area.testimony.insert(idx2, statement)
+
+        client.area.broadcast_ooc(
+            f"{client.showname} has inserted Statement {idx1+1} into {idx2+1}."
         )
     except ValueError:
         raise ArgumentError("Index must be a number!")
