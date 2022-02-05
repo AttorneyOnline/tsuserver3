@@ -245,7 +245,7 @@ class AOProtocol(asyncio.Protocol):
         )
 
         # Update the timers thru handshake as well to make sure they're always in sync
-        self.client.area.update_timers(self.client)
+        self.client.area.update_timers(self.client, running_only=True)
 
     def net_cmd_askchaa(self, _):
         """Ask for the counts of characters/evidence/music

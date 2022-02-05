@@ -590,7 +590,7 @@ class Area:
             int(MusicEffect.FADE_OUT | MusicEffect.FADE_IN | MusicEffect.SYNC_POS),
         )
 
-    def update_timers(self, client):
+    def update_timers(self, client, running_only=False):
         """Update the timers for the target client"""
         # Hub timers
         timer = client.area.area_manager.timer
@@ -604,7 +604,7 @@ class Area:
             client.send_command("TI", 0, 2, int_time)
             # Start the timer
             client.send_command("TI", 0, s, int_time)
-        else:
+        elif not running_only:
             # Stop the timer
             client.send_command("TI", 0, 3, 0)
             # Hide the timer
@@ -624,7 +624,7 @@ class Area:
                 # Unhide the timer
                 client.send_command("TI", timer_id + 1, 2, int_time)
                 # client.send_ooc(f"Timer {timer_id+1} is at {current_time}")
-            else:
+            elif not running_only:
                 # Stop the timer
                 client.send_command("TI", timer_id + 1, 1, 0)
                 # Hide the timer
