@@ -37,6 +37,7 @@ evi_mod: evidence_mod
 evi_swap: evidence_swap
 evimod: evidence_mod
 eviswap: evidence_swap
+force_follow: follow_me
 force_pos: forcepos
 fp: firstperson
 fps: firstperson
