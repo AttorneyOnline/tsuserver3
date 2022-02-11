@@ -32,6 +32,7 @@ __all__ = [
     "ooc_cmd_arup_disable",
     "ooc_cmd_toggle_getareas",
     "ooc_cmd_toggle_spectate",
+    "ooc_cmd_toggle_passing_ic",
     "ooc_cmd_hide_clients",
     "ooc_cmd_unhide_clients",
     # General
@@ -478,6 +479,17 @@ def ooc_cmd_toggle_replace_music(client, arg):
         f"Hub music list will {toggle} replace server music list."
     )
 
+@mod_only(hub_owners=True)
+def ooc_cmd_toggle_passing_ic(client, arg):
+    """
+    Toggle an IC message when changing areas for this hub.
+    Usage: /toggle_passing_ic
+    """
+    client.area.area_manager.passing_msg = not client.area.area_manager.passing_msg
+    toggle = 'enabled' if client.area.area_manager.passing_msg else 'disabled'
+    client.area.area_manager.broadcast_ooc(
+        f'IC area passing messages are now {toggle} for this hub.'
+    )
 
 @mod_only(hub_owners=True)
 def ooc_cmd_arup_enable(client, arg):
