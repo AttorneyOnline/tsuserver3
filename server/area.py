@@ -69,11 +69,12 @@ class Area:
             # Either the area or the hub was destroyed at some point
             if self.area == None or self == None:
                 return
-            self.area.broadcast_ooc(f"Timer {self.id+1} has expired.")
-            self.call_commands()
-            self.commands.clear()
+
             self.static = datetime.timedelta(0)
             self.started = False
+
+            self.area.broadcast_ooc(f"Timer {self.id+1} has expired.")
+            self.call_commands()
 
         def call_commands(self):
             if self.caller == None:
@@ -1713,7 +1714,7 @@ class Area:
         if len(self.demo) <= 0:
             self.stop_demo()
             return
-
+    
         packet = self.demo.pop(0)
         header = packet[0]
         args = packet[1:]

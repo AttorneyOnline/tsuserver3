@@ -68,11 +68,12 @@ class AreaManager:
             # the hub was destroyed at some point
             if self.hub == None or self == None:
                 return
-            self.hub.broadcast_ooc("Timer 0 has expired.")
-            self.call_commands()
-            self.commands.clear()
+
             self.static = datetime.timedelta(0)
             self.started = False
+
+            self.hub.broadcast_ooc("Timer 0 has expired.")
+            self.call_commands()
 
         def call_commands(self):
             if self.caller == None:
@@ -81,7 +82,6 @@ class AreaManager:
                 return
             if self.caller not in self.hub.owners:
                 return
-            server = self.caller.server
             for cmd in self.commands:
                 args = cmd.split(" ")
                 cmd = args.pop(0).lower()

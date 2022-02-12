@@ -107,6 +107,7 @@ class ClientManager:
             # security stuff
             self.clientscon = 0
             self.gm_save_time = 0
+            self.last_demo_call = 0
 
             # movement system stuff
             self.last_move_time = 0

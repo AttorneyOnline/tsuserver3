@@ -2,6 +2,7 @@ import random
 
 import asyncio
 import arrow
+import time
 import datetime
 import pytimeparse
 
@@ -597,6 +598,7 @@ def ooc_cmd_timer(client, arg):
         timer.started = False
         timer.static = None
         timer.target = None
+        timer.commands.clear()
         if timer.schedule:
             timer.schedule.cancel()
         client.send_ooc(f"Timer {timer_id} unset and hidden.")
@@ -669,7 +671,9 @@ def ooc_cmd_demo(client, arg):
         client.area.stop_demo()
         client.send_ooc("Stopping demo playback...")
         return
-
+    if (time.time() * 1000 - client.last_demo_call) < 1000:
+        client.send_ooc("Please wait a bit before calling /demo again!")
+        return
     evidence = None
     if arg.isnumeric():
         arg = str(int(arg) - 1)
@@ -680,6 +684,7 @@ def ooc_cmd_demo(client, arg):
     if not evidence:
         raise ArgumentError("Target evidence not found!")
 
+    client.last_demo_call = time.time() * 1000
     client.area.demo.clear()
 
     desc = (
