@@ -235,7 +235,7 @@ class TsuServer3:
         :param client: client object
 
         """
-        if area:
+        if client.area:
             area = client.area
             if (
                 not area.dark
