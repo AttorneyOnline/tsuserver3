@@ -216,8 +216,6 @@ class EvidenceList:
         """
         if not self.login(client):
             return
-        if id1 not in self.evidences.size() or id2 not in self.evidences.size():
-            return
 
         self.evidences[id1], self.evidences[id2] = (
             self.evidences[id2],
@@ -291,9 +289,6 @@ class EvidenceList:
             return
         if client.area.dark:
             return
-        if id not in self.evidences.size():
-            return
-        evi = self.evidences[id]
         if not client in client.area.owners and not client.is_mod:
             id = client.evi_list[id + 1] - 1
             evi = self.evidences[id]
@@ -305,6 +300,7 @@ class EvidenceList:
             else:
                 self.evidences.pop(id)
         else:
+            evi = self.evidences[id]
             self.evidences.pop(id)
 
         # Inform the CMs of evidence manupulation
@@ -344,8 +340,6 @@ class EvidenceList:
             return
 
         if client in client.area.owners or client.is_mod:
-            if id not in self.evidences.size():
-                return
             old_name = self.evidences[id].name
             if client.area.evidence_mod == "HiddenCM":
                 if self.correct_format(client, arg[1]):
@@ -371,8 +365,6 @@ class EvidenceList:
             # Client sends evidence updates to server using an index starting from 0.
             # This needs a complete overhaul.
             id = client.evi_list[id + 1] - 1
-            if id not in self.evidences.size():
-                return
             old_name = self.evidences[id].name
             # c = self.evidences[idx].hiding_client
             # if c != None:
