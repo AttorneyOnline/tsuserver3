@@ -235,15 +235,16 @@ class TsuServer3:
         :param client: client object
 
         """
-        area = client.area
-        if (
-            not area.dark
-            and not area.force_sneak
-            and not client.sneaking
-            and not client.hidden
-        ):
-            area.broadcast_ooc(f"[{client.id}] {client.showname} has disconnected.")
-        area.remove_client(client)
+        if area:
+            area = client.area
+            if (
+                not area.dark
+                and not area.force_sneak
+                and not client.sneaking
+                and not client.hidden
+            ):
+                area.broadcast_ooc(f"[{client.id}] {client.showname} has disconnected.")
+            area.remove_client(client)
         self.client_manager.remove_client(client)
 
     @property

@@ -102,6 +102,8 @@ class AOProtocol(asyncio.Protocol):
                 self.net_cmd_dispatcher[cmd](self, args)
             except KeyError:
                 logger_debug.debug(f"Unknown incoming message from {ipid}: {msg}")
+            except:
+                self.client.disconnect()
 
     def connection_made(self, transport):
         """Called upon a new client connecting
