@@ -89,13 +89,7 @@ class AreaManager:
                 if len(args) > 0:
                     arg = " ".join(args)[:1024]
                 try:
-                    # Remember the old area.
-                    old_area = self.caller.area
-                    self.caller.area = self.hub.default_area()
                     commands.call(self.caller, cmd, arg)
-                    if old_area and old_area in self.hub.areas:
-                        self.caller.area = old_area
-                    # There is no else clause, cause any function that removes the client's area would properly adjust them anyway.
                 except (ClientError, AreaError, ArgumentError, ServerError) as ex:
                     self.caller.send_ooc(f"[Timer 0] {ex}")
                 except Exception as ex:

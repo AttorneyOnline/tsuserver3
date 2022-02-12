@@ -650,7 +650,8 @@ class Area:
                 if self.locked:
                     self.unlock()
         self.trigger("leave", client)
-        self.clients.remove(client)
+        if client in self.clients:
+            self.clients.remove(client)
         if client in self.afkers:
             self.afkers.remove(client)
             self.server.client_manager.toggle_afk(client)
