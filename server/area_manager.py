@@ -126,6 +126,7 @@ class AreaManager:
         self.censor_ooc = True
         self.can_spectate = True
         self.can_getareas = True
+        self.passing_msg = False
         # /prefs
 
         # optimization memes
@@ -206,6 +207,7 @@ class AreaManager:
             "censor_ooc",
             "can_spectate",
             "can_getareas",
+            "passing_msg",
         ]
         for entry in list(set(load_list) - set(ignore)):
             if entry in hub:
@@ -260,6 +262,7 @@ class AreaManager:
             "censor_ooc",
             "can_spectate",
             "can_getareas",
+            "passing_msg",
         ]
         for entry in list(set(save_list) - set(ignore)):
             hub[entry] = getattr(self, entry)

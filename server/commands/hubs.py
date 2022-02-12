@@ -32,9 +32,11 @@ __all__ = [
     "ooc_cmd_arup_disable",
     "ooc_cmd_toggle_getareas",
     "ooc_cmd_toggle_spectate",
+    "ooc_cmd_toggle_passing_ic",
     "ooc_cmd_hide_clients",
     "ooc_cmd_unhide_clients",
     # General
+    "ooc_cmd_force_follow",
     "ooc_cmd_follow",
     "ooc_cmd_unfollow",
     "ooc_cmd_info",
@@ -477,6 +479,17 @@ def ooc_cmd_toggle_replace_music(client, arg):
         f"Hub music list will {toggle} replace server music list."
     )
 
+@mod_only(hub_owners=True)
+def ooc_cmd_toggle_passing_ic(client, arg):
+    """
+    Toggle an IC message when changing areas for this hub.
+    Usage: /toggle_passing_ic
+    """
+    client.area.area_manager.passing_msg = not client.area.area_manager.passing_msg
+    toggle = 'enabled' if client.area.area_manager.passing_msg else 'disabled'
+    client.area.area_manager.broadcast_ooc(
+        f'IC area passing messages are now {toggle} for this hub.'
+    )
 
 @mod_only(hub_owners=True)
 def ooc_cmd_arup_enable(client, arg):
@@ -575,6 +588,34 @@ def ooc_cmd_unhide_clients(client, arg):
     )
 
 
+@mod_only(hub_owners=True)
+def ooc_cmd_force_follow(client, arg):
+    """
+    Force someone to follow you. Follow me!
+    Usage: /force_follow <id>
+    """
+    if len(arg) == 0:
+        raise ArgumentError("You must specify a target. Use /force_follow <id>.")
+    try:
+        targets = client.server.client_manager.get_targets(
+            client, TargetType.ID, int(arg), False
+        )
+    except:
+        raise ArgumentError("You must specify a target. Use /force_follow <id>.")
+    if targets:
+        for c in targets:
+            if client == c:
+                raise ClientError("You are already forced to follow yourself because you are yourself!")
+            c.following = client
+            c.forced_to_follow = True
+            c.send_ooc(f"You've been forced to follow {client.showname}!")
+            if c.area != client.area:
+                c.set_area(client.area)
+        client.send_ooc(f"Forced {len(targets)} existing client(s) to follow you.")
+    else:
+        client.send_ooc("No targets found.")
+
+
 def ooc_cmd_follow(client, arg):
     """
     Follow targeted character ID.
@@ -588,6 +629,11 @@ def ooc_cmd_follow(client, arg):
         except:
             raise ArgumentError("Not following anybody. Use /follow <id>.")
         return
+    if (client.forced_to_follow
+            and not client.is_mod
+            and client not in client.area.area_manager.owners
+            and client.following is not None):
+        raise ClientError(f"You can't change follow targets while being forced to follow!")
     try:
         targets = client.server.client_manager.get_targets(
             client, TargetType.ID, int(arg), False
@@ -611,6 +657,7 @@ def ooc_cmd_follow(client, arg):
         if client.area != c.area:
             client.change_area(c.area)
         client.following = c
+        client.forced_to_follow = False
         client.send_ooc(f"You are now following [{c.id}] {c.showname}.")
     else:
         client.send_ooc("No targets found.")
@@ -618,17 +665,49 @@ def ooc_cmd_follow(client, arg):
 
 def ooc_cmd_unfollow(client, arg):
     """
-    Stop following whoever you are following.
-    Usage: /unfollow
+    Stop following whoever you are following, or free someone from being forced to follow.
+    Usage: /unfollow or /unfollow <id>
     """
-    try:
-        client.send_ooc(
-            f"You are no longer following [{client.following.id}] {client.following.showname}."
-        )
-        client.following = None
-    except:
-        client.following = None
-        raise ClientError("You're not following anyone!")
+    if len(arg) == 0:
+        if (client.forced_to_follow
+                and not client.is_mod
+                and client not in client.area.area_manager.owners
+                and client.following is not None):
+            raise ClientError(f"You can't escape being forced to follow!")
+        else:
+            try:
+                client.send_ooc(
+                    f"You are no longer following [{client.following.id}] {client.following.showname}."
+                )
+                client.following = None
+                client.forced_to_follow = False
+            except:
+                client.following = None
+                raise ClientError("You're not following anyone!")
+    else:
+        if client.is_mod or client in client.area.area_manager.owners:
+            try:
+                targets = client.server.client_manager.get_targets(
+                    client, TargetType.ID, int(arg), False
+                )
+            except:
+                raise ArgumentError("You must specify a target. Use /follow_me <id>.")
+            if targets:
+                count = 0
+                for c in targets:
+                    if c.forced_to_follow:
+                        c.following = None
+                        c.forced_to_follow = False
+                        c.send_ooc("You've been freed from having to follow someone.")
+                        count += 1
+                if count == 0:
+                    client.send_ooc("No valid targets found.")
+                else:
+                    client.send_ooc(f"Freed {count} existing client(s) from having to follow someone.")
+            else:
+                client.send_ooc("No targets found.")
+        else:
+            ooc_cmd_unfollow(client, "")
 
 
 def ooc_cmd_info(client, arg):
