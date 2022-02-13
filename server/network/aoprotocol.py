@@ -821,7 +821,7 @@ class AOProtocol(asyncio.Protocol):
                 else:
                     part = part[1:]
                     whisper_clients = [
-                        c for c in self.client.area.clients if c.pos == self.client.pos
+                        c for c in self.client.area.clients if c.pos == self.client.pos and not c == self.client
                     ]
                     clients = ""
                 text = " ".join(part)
