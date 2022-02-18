@@ -150,6 +150,8 @@ class ClientManager:
             self.broadcast_list = []
             # Whether we're viewing hub list or not in the A/M area list
             self.viewing_hub_list = False
+            # Whether or not the client used the /showname command
+            self.used_showname_command = False
 
         def send_raw_message(self, msg):
             """

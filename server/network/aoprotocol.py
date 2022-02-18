@@ -720,7 +720,7 @@ class AOProtocol(asyncio.Protocol):
             return
         if color >= 12:
             return
-        if len(showname) > 15:
+        if len(showname) > 20:
             self.client.send_ooc("Your IC showname is way too long!")
             return
         if not self.client.is_mod and showname.lstrip().lower().startswith("[m"):
@@ -868,6 +868,8 @@ class AOProtocol(asyncio.Protocol):
             )
             # target_area.trigger('present')
         # Update the showname ref for the client
+        if self.client.used_showname_command:
+            showname = self.client.showname
         self.client.showname = showname
 
         # Here, we check the pair stuff, and save info about it to the client.
