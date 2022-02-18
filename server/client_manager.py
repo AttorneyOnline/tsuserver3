@@ -629,24 +629,24 @@ class ClientManager:
 
             self.area.area_manager.send_arup_players()
 
-            if self.viewing_hub_list:
-                for hub in self.server.hub_manager.hubs:
-                    count = 0
-                    for a in hub.areas:
-                        for c in a.clients:
-                            if not a.hide_clients and not c.hidden:
-                                count = count + 1
-                    hub.count = count
-                self.send_command(
-                    "FA",
-                    *[
-                        "{ Hubs }\n Double-Click me to see Areas\n  _______",
+            for hub in self.server.hub_manager.hubs:
+                count = 0
+                for c in hub.clients:
+                    if not c.area.hide_clients and not c.hidden:
+                        count = count + 1
+                hub.count = count
+            for c in self.server.client_manager.clients:
+                if c.viewing_hub_list:
+                    c.send_command(
+                        "FA",
                         *[
-                            f"[{hub.id}] {hub.name} (users: {hub.count})"
-                            for hub in self.server.hub_manager.hubs
+                            "{ Hubs }\n Double-Click me to see Areas\n  _______",
+                            *[
+                                f"[{hub.id}] {hub.name} (users: {hub.count})"
+                                for hub in self.server.hub_manager.hubs
+                            ],
                         ],
-                    ],
-                )
+                    )
 
             # Update everyone's available characters list
             # Commented out due to potentially causing clientside lag...
@@ -1520,6 +1520,24 @@ class ClientManager:
             if c.following == client:
                 c.unfollow()
         self.clients.remove(client)
+        for hub in self.server.hub_manager.hubs:
+            count = 0
+            for c in hub.clients:
+                if not c.area.hide_clients and not c.hidden:
+                    count = count + 1
+            hub.count = count
+        for c in self.server.client_manager.clients:
+            if c.viewing_hub_list:
+                c.send_command(
+                    "FA",
+                    *[
+                        "{ Hubs }\n Double-Click me to see Areas\n  _______",
+                        *[
+                            f"[{hub.id}] {hub.name} (users: {hub.count})"
+                            for hub in self.server.hub_manager.hubs
+                        ],
+                    ],
+                )
 
     def get_targets(self, client, key, value, local=False, single=False):
         """

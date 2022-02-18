@@ -1338,10 +1338,9 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_command("FL", *preflist)
             for hub in self.client.server.hub_manager.hubs:
                 count = 0
-                for area in hub.areas:
-                    for c in area.clients:
-                        if not area.hide_clients and not c.hidden:
-                            count = count + 1
+                for c in hub.clients:
+                    if not c.area.hide_clients and not c.hidden:
+                        count = count + 1
                 hub.count = count
             self.client.send_command(
                 "FA",
