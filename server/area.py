@@ -169,10 +169,28 @@ class Area:
         # /prefs end
 
         # DR minigames
+        
+        ## CROSS SWORDS
+        # The name of the song to play when minigame starts
+        self.cross_swords_song_start = ""
+        # The name of the song to play when minigame ends
+        self.cross_swords_song_end = ""
         # in seconds, 300s = 5m
         self.cross_swords_timer = 300
+        
+        ## SCRUM DEBATE
+        # The name of the song to play when minigame starts
+        self.scrum_debate_song_start = ""
+        # The name of the song to play when minigame ends
+        self.scrum_debate_song_end = ""
         # in seconds, 300s = 5m. How much time is added on top of cross swords.
         self.scrum_debate_added_time = 300
+
+        ## PANIC TALK ACTION
+        # The name of the song to play when minigame starts
+        self.panic_talk_action_song_start = ""
+        # The name of the song to play when minigame ends
+        self.panic_talk_action_song_end = ""
         # in seconds, 300s = 5m
         self.panic_talk_action_timer = 300
         # Cooldown in seconds, 300s = 5m
@@ -450,6 +468,18 @@ class Area:
             self.can_scrum_debate = area["can_scrum_debate"]
         if "can_panic_talk_action" in area:
             self.can_panic_talk_action = area["can_panic_talk_action"]
+        if "cross_swords_song_start" in area:
+            self.cross_swords_song_start = area["cross_swords_song_start"]
+        if "cross_swords_song_end" in area:
+            self.cross_swords_song_end = area["cross_swords_song_end"]
+        if "scrum_debate_song_start" in area:
+            self.scrum_debate_song_start = area["scrum_debate_song_start"]
+        if "scrum_debate_song_end" in area:
+            self.scrum_debate_song_end = area["scrum_debate_song_end"]
+        if "panic_talk_action_song_start" in area:
+            self.panic_talk_action_song_start = area["panic_talk_action_song_start"]
+        if "panic_talk_action_song_end" in area:
+            self.panic_talk_action_song_end = area["panic_talk_action_song_end"]
         if "force_sneak" in area:
             self.force_sneak = area["force_sneak"]
         if "password" in area:
@@ -559,6 +589,12 @@ class Area:
         area["can_cross_swords"] = self.can_cross_swords
         area["can_scrum_debate"] = self.can_scrum_debate
         area["can_panic_talk_action"] = self.can_panic_talk_action
+        area["cross_swords_song_start"] = self.cross_swords_song_start
+        area["cross_swords_song_end"] = self.cross_swords_song_end
+        area["scrum_debate_song_start"] = self.scrum_debate_song_start
+        area["scrum_debate_song_end"] = self.scrum_debate_song_end
+        area["panic_talk_action_song_start"] = self.panic_talk_action_song_start
+        area["panic_talk_action_song_end"] = self.panic_talk_action_song_end
         area["force_sneak"] = self.force_sneak
         area["password"] = self.password
         area["dark"] = self.dark
@@ -866,25 +902,18 @@ class Area:
             delay = 200 + self.parse_msg_delay(args[4])
             self.next_message_time = round(time.time() * 1000.0 + delay)
 
-            # Objection used
-            if str(args[10]).split("<and>")[0] == "2":
+            # Shout used
+            shout = str(args[10]).split("<and>")[0]
+            if shout in ["1", "2", "3"]:
                 msg = args[4].lower()
                 target = ""
-                is_pta = False
-                # contains word "pta" in message
-                if " pta" in f" {msg} ":
-                    # formatting for `PTA @Jack` or `@Jack PTA`
-                    is_pta = True
                 # message contains an "at" sign aka we're referring to someone specific
                 if "@" in msg:
-                    # formatting for `PTA@Jack`
-                    if msg.startswith("pta"):
-                        is_pta = True
                     target = msg[msg.find("@") + 1 :]
-                target = target.lower()
-                if target != "":
-                    try:
-                        opponent = None
+                try:
+                    opponent = None
+                    target = target.lower()
+                    if target != "":
                         for t in self.clients:
                             # Ignore ourselves
                             if t == client:
@@ -894,17 +923,25 @@ class Area:
                                 if t.id == int(target):
                                     opponent = t
                                     break
-                            # Loop through the shownames if it's @text
+                            # Loop through the charnames if it's @text
+                            if target in t.char_name.lower():
+                                opponent = t
+                            # Loop through the shownames next, shownames take priority over charnames
                             if target in t.showname.lower():
                                 opponent = t
 
-                        if opponent != None:
-                            self.start_debate(client, opponent, is_pta)
-                        else:
-                            raise AreaError("Interjection minigame - target not found!")
-                    except Exception as ex:
-                        client.send_ooc(ex)
-                        return
+                    # Minigame with an opponent
+                    if opponent != None and shout in ["1", "2"]:
+                        self.start_debate(client, opponent, shout == "1")
+                    # Concede
+                    elif shout == "3":
+                        commands.ooc_cmd_concede(client, "")
+                    # Wtf
+                    else:
+                        raise AreaError("Interjection minigame - target not found!")
+                except Exception as ex:
+                    client.send_ooc(ex)
+                    return
 
             if client:
                 if (
@@ -1567,6 +1604,27 @@ class Area:
             0,
             "",
         )
+        song = ""
+        if self.minigame == "Scrum Debate":
+            song = self.scrum_debate_song_end
+        elif self.minigame == "Cross Swords":
+            song = self.cross_swords_song_end
+        elif self.minigame == "Panic Talk Action":
+            song = self.panic_talk_action_song_end
+        # Play the song if it's not blank
+        if song != "":
+            self.music_player = "The Jukebox"
+            self.music_player_ipid = "has no IPID"
+            self.music = song
+            self.send_command(
+                "MC",
+                song,
+                0,
+                "The Jukebox",
+                1,
+                0,
+                0,
+            )
         self.minigame = ""
 
     def start_debate(self, client, target, pta=False):
@@ -1575,6 +1633,7 @@ class Area:
         ):
             raise AreaError("Target is already on the opposing team!")
 
+        song = ""
         if self.minigame == "Scrum Debate":
             if target.char_id in self.red_team:
                 self.red_team.discard(client.char_id)
@@ -1641,6 +1700,7 @@ class Area:
                 target=target,
                 message=f"{self.minigame} is now part of the {team} team!",
             )
+            song = self.scrum_debate_song_start
         elif self.minigame == "":
             if not pta and not self.can_cross_swords:
                 raise AreaError("You may not Cross-Swords in this area!")
@@ -1670,6 +1730,7 @@ class Area:
                     target=target,
                     message=f"{self.minigame} {client.showname} VS {target.showname}",
                 )
+                song = self.panic_talk_action_song_start
             else:
                 self.minigame = "Cross Swords"
                 timer = self.cross_swords_timer
@@ -1680,6 +1741,7 @@ class Area:
                     target=target,
                     message=f"{self.minigame} {client.showname} VS {target.showname}",
                 )
+                song = self.cross_swords_song_start
         else:
             if target == client:
                 self.broadcast_ooc(f"[{client.id}] {client.showname} conceded!")
@@ -1690,7 +1752,6 @@ class Area:
         timer = max(5, int(timer))
         # Timer ID 3 is reserved for minigames
         # 1 afterwards is to start timer
-        print("TI", 3, 0, timer * 1000)
         self.send_command("TI", 3, 2)
         self.send_command("TI", 3, 0, timer * 1000)
         self.minigame_schedule = asyncio.get_event_loop().call_later(
@@ -1707,6 +1768,21 @@ class Area:
         self.broadcast_ooc(
             f"❗{self.minigame}❗\n{us} objects to {them}!\n⏲You have {timer} seconds.\n/cs <id> to join the debate against target ID."
         )
+
+        # Play the song if it's not blank
+        if song != "":
+            self.music_player = "The Jukebox"
+            self.music_player_ipid = "has no IPID"
+            self.music = song
+            self.send_command(
+                "MC",
+                song,
+                0,
+                "The Jukebox",
+                1,
+                0,
+                0,
+            )
 
     def play_demo(self, client):
         if self.demo_schedule:

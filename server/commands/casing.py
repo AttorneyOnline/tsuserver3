@@ -31,6 +31,8 @@ __all__ = [
     "ooc_cmd_cs",
     "ooc_cmd_pta",
     "ooc_cmd_concede",
+    "ooc_cmd_minigame_start_song",
+    "ooc_cmd_minigame_end_song",
     "ooc_cmd_subtheme",
 ]
 
@@ -685,6 +687,55 @@ def ooc_cmd_pta(client, arg):
     """
     args = arg.split()
     ooc_cmd_cs(client, f"{args[0]} 1")
+
+
+def set_minigame_song(client, minigame = "", song="", end=False):
+    minigames = ['cs', 'sd', 'pta']
+    start_or_end = 'end' if end else 'start'
+    minigame = minigame.lower()
+    if minigame not in minigames:
+        raise ArgumentError("Must provide minigame!")
+
+    # Songname is provided
+    if song != "":
+        if minigame == 'cs':
+            client.area.cross_swords_song_start = song
+        elif minigame == 'sd':
+            client.area.scrum_debate_song_start = song
+        elif minigame == 'pta':
+            client.area.panic_talk_action_song_start = song
+        client.send_ooc(f'Setting the {minigame} {start_or_end} song to {song}.')
+        return
+
+    # Songname is not provided
+    client.editing_minigame_song = minigame
+    client.editing_minigame_song_end = end
+    client.send_ooc(f'Play a song to set the {minigame} {start_or_end} song to...')
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_minigame_start_song(client, arg):
+    """
+    Edit a starting song for any specific minigame. If songname is blank, it lets you choose a song from the music list to use.
+    Usage: /minigame_start_song <cs/sd/pta> [songname]
+    """
+    args = arg.split()
+    minigame = args[0] if len(args) > 0 else ""
+    song = ' '.join(args[1:]) if len(args) > 1 else ""
+    print(minigame, song)
+    set_minigame_song(client, minigame, song, end=False)
+
+
+@mod_only(area_owners=True)
+def ooc_cmd_minigame_end_song(client, arg):
+    """
+    Edit a ending song for any specific minigame. If songname is blank, it lets you choose a song from the music list to use.
+    Usage: /minigame_end_song <cs/sd/pta> [songname]
+    """
+    args = arg.split()
+    minigame = args[0] if len(args) > 0 else ""
+    song = ' '.join(args[1:]) if len(args) > 1 else ""
+    set_minigame_song(client, minigame, song, end=True)
 
 
 def ooc_cmd_concede(client, arg):
