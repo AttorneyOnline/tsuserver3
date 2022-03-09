@@ -1359,7 +1359,7 @@ class ClientManager:
         @property
         def hidden(self):
             """Return if the character is hidden or not. Always True if char_id is -1 (spectator)"""
-            return self.char_id == -1 or self._hidden
+            return self.char_id is None or self.char_id == -1 or self._hidden
 
         def hide(self, tog=True, target=None, hidden=False):
             msg = "no longer hidden"
