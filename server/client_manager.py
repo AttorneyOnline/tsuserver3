@@ -1234,6 +1234,7 @@ class ClientManager:
             This unconditionally causes the client to show the character
             selection screen, even if the client has already joined.
             """
+            self.char_id = -1
             self.send_command("CharsCheck", *self.get_available_char_list())
             self.send_command("HP", 1, self.area.hp_def)
             self.send_command("HP", 2, self.area.hp_pro)
@@ -1253,7 +1254,6 @@ class ClientManager:
 
         def char_select(self):
             """Force the client to select a different character."""
-            self.char_id = -1
             self.send_done()
 
         def get_available_char_list(self):
