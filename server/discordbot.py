@@ -26,7 +26,6 @@ class Bridgebot(commands.Bot):
             await self.start(token)
         except Exception as e:
             print(e)
-            raise
 
     def queue_message(self, name, message, charname, anim):
         base = None
