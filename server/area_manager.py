@@ -67,6 +67,7 @@ class AreaManager:
             self.server = server
             self.music_looper = None
             self.next_message_time = 0
+            self.next_message_delay = 100
             self.hp_def = 10
             self.hp_pro = 10
             self.doc = 'No document.'
@@ -84,13 +85,6 @@ class AreaManager:
             self.shouts_allowed = shouts_allowed
             self.abbreviation = abbreviation
             self.cards = dict()
-            """
-            #debug
-            self.evidence_list.append(Evidence("WOW", "desc", "1.png"))
-            self.evidence_list.append(Evidence("wewz", "desc2", "2.png"))
-            self.evidence_list.append(Evidence("weeeeeew", "desc3", "3.png"))
-            """
-
             self.is_locked = self.Locked.FREE
             self.blankposting_allowed = True
             self.non_int_pres_only = non_int_pres_only
@@ -174,6 +168,8 @@ class AreaManager:
                 self.afkers.remove(client)
             if len(self.clients) == 0:
                 self.change_status('IDLE')
+                self.unlock()
+                client.area.owners = []
             if client.char_id != -1:
                 database.log_room('area.leave', client, self)
 
@@ -270,8 +266,8 @@ class AreaManager:
                 msg_length (int): estimated length of message (ms)
             """
 
-            delay = min(3000, 100 + 60 * msg_length)
-            self.next_message_time = round(time.time() * 1000.0 + delay)
+            delay = min(2900, 60 * msg_length)
+            self.next_message_time = round(time.time() * 1000.0 + delay + self.next_message_delay)
 
         def is_iniswap(self, client: ClientManager.Client, preanim: str, anim: str, char: str, sfx) -> bool:
             """Determine if a client is performing an INI swap.

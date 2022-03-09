@@ -20,7 +20,8 @@ __all__ = [
     'ooc_cmd_invite',
     'ooc_cmd_uninvite',
     'ooc_cmd_area_kick',
-    'ooc_cmd_getafk'
+    'ooc_cmd_getafk',
+    'ooc_cmd_delay'
 ]
 
 
@@ -219,6 +220,19 @@ def ooc_cmd_area_spectate(client, arg):
         client.area.spectator()
     else:
         raise ClientError('Only CM can make the area spectatable.')
+
+@mod_only()
+def ooc_cmd_delay(client, arg):
+    """
+    Change the minimum delay between messages, default is 100.
+    Usage: /delay [delay]
+    """
+    if len(arg) == 0:
+        client.area.next_message_delay = 100
+    else:        
+        client.area.next_message_delay = int(arg)
+    
+    database.log_room('delay', client, client.area, message=client.area.next_message_delay)
 
 @mod_only(area_owners=True)
 def ooc_cmd_invite(client, arg):

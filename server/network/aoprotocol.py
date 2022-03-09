@@ -20,10 +20,11 @@ import arrow
 import asyncio
 import logging
 import unicodedata
+import json
 
 from enum import Enum
 from typing import List
-from time import localtime, strftime
+from time import localtime, strftime, time
 
 from .. import commands
 from server import database
@@ -118,6 +119,8 @@ class AOProtocol(asyncio.Protocol):
                 try:
                     cmd, *args = msg.split('#')
                     self.net_cmd_dispatcher[cmd](self, args)
+                    if cmd != 'CH':
+                        self.client.last_pkt_time = time()
                 except KeyError:
                     logger_debug.debug(
                         f'Unknown incoming message from {ipid}: {msg}')
@@ -222,22 +225,37 @@ class AOProtocol(asyncio.Protocol):
 
         database.add_hdid(ipid, hdid)
         ban = database.find_ban(ipid, hdid)
+
         if ban is not None:
-            if ban.unban_date is not None:
-                unban_date = arrow.get(ban.unban_date)
+            try:
+                special_ban_data = json.loads(ban.ban_data)
+            except (ValueError, TypeError):
+                special_ban_data = None
+
+            if special_ban_data is not None:
+                try:
+                    if special_ban_data['ban_type'] == 'area_curse':
+                        self.client.area_curse = special_ban_data['target_area']
+                        self.client.area_curse_info = ban
+                        self.client.change_area(self.server.area_manager.get_area_by_id(self.client.area_curse))
+                except (KeyError, ValueError):
+                    pass
             else:
-                unban_date = 'N/A'
+                if ban.unban_date is not None:
+                    unban_date = arrow.get(ban.unban_date)
+                else:
+                    unban_date = 'N/A'
 
-            msg = f'{ban.reason}\r\n'
-            msg += f'ID: {ban.ban_id}\r\n'
-            msg += f'Until: {unban_date.humanize()}'
+                msg = f'{ban.reason}\r\n'
+                msg += f'ID: {ban.ban_id}\r\n'
+                msg += f'Until: {unban_date.humanize()}'
 
-            database.log_connect(self.client, failed=True)
-            self.client.send_command('BD', msg)
-            self.client.disconnect()
-            return
-        else:
-            self.client.is_checked = True
+                database.log_connect(self.client, failed=True)
+                self.client.send_command('BD', msg)
+                self.client.disconnect()
+                return
+
+        self.client.is_checked = True
 
         database.log_connect(self.client, failed=False)
         self.client.send_command('ID', self.client.id, self.server.software,

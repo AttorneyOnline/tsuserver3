@@ -118,6 +118,9 @@ class TsuServer3:
 
         if self.config['zalgo_tolerance']:
             self.zalgo_tolerance = self.config['zalgo_tolerance']
+        
+        if self.config['idle_timeout']['use_idle_timeout']:
+            asyncio.ensure_future(self.idle_loop())
 
         asyncio.ensure_future(self.schedule_unbans())
 
@@ -140,6 +143,11 @@ class TsuServer3:
         while True:
             database.schedule_unbans()
             await asyncio.sleep(3600 * 12)
+         
+    async def idle_loop(self):
+        while True:
+            self.client_manager.check_idlers()
+            await asyncio.sleep(60)
 
     @property
     def version(self):
@@ -220,6 +228,12 @@ class TsuServer3:
                 'times_per_interval': 1,
                 'interval_length': 0,
                 'mute_length': 0
+            }
+        if 'idle_timeout' not in self.config:
+            self.config['idle_timeout'] = {
+                'use_idle_timeout': False,
+                'kick_mods': False,
+                'length': 0
             }
 
         if 'zalgo_tolerance' not in self.config:
