@@ -47,7 +47,7 @@ class ClientManager:
             self.transport = transport
             self.hdid = ""
             self.id = user_id
-            self.char_id = -1
+            self.char_id = None
             self.area = server.hub_manager.default_hub().default_area()
             self.server = server
             self.name = ""
@@ -1304,6 +1304,8 @@ class ClientManager:
         @property
         def char_name(self):
             """Get the name of the character that the client is using."""
+            if self.char_id is None:
+                return "Connection"
             if self.char_id == -1:
                 return "Spectator"
             return self.server.char_list[self.char_id]
