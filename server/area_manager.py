@@ -67,6 +67,7 @@ class AreaManager:
             self.server = server
             self.music_looper = None
             self.next_message_time = 0
+            self.next_message_delay = 100
             self.hp_def = 10
             self.hp_pro = 10
             self.doc = 'No document.'
@@ -265,8 +266,8 @@ class AreaManager:
                 msg_length (int): estimated length of message (ms)
             """
 
-            delay = min(3000, 100 + 60 * msg_length)
-            self.next_message_time = round(time.time() * 1000.0 + delay)
+            delay = min(2900, 60 * msg_length)
+            self.next_message_time = round(time.time() * 1000.0 + delay + self.next_message_delay)
 
         def is_iniswap(self, client: ClientManager.Client, preanim: str, anim: str, char: str, sfx) -> bool:
             """Determine if a client is performing an INI swap.
