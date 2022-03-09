@@ -45,13 +45,11 @@ asset_url:
 
 # Whether or not the server should be advertised on the server list.
 use_masterserver: true
-# Don't change these unless the master server is no more
-masterserver_ip: master.aceattorneyonline.com
-masterserver_port: 27016
-
 # How the server should be listed on the server list.
 masterserver_name: My First Server
 masterserver_description: This is my flashy new server
+# Custom IP address/hostname to use on the server list
+# masterserver_custom_hostname: ao.example.com
 
 # Timeout for dead connections (in seconds).
 # To prevent issues, this value should be greater than 60.
@@ -84,3 +82,9 @@ max_chars: 256
 
 # How long a ban will last when no duration is given
 default_ban_duration: 6 hours
+
+# Kicks idlers
+idle_timeout:
+  use_idle_timeout: false
+  kick_mods: false
+  length: 300
