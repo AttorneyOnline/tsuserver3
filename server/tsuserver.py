@@ -132,7 +132,7 @@ class TsuServer3:
 
     def start(self):
         """Start the server."""
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_event_loop_policy().get_event_loop()
 
         bound_ip = "0.0.0.0"
         if self.config["local"]:
@@ -157,16 +157,19 @@ class TsuServer3:
             self.zalgo_tolerance = self.config["zalgo_tolerance"]
 
         if "bridgebot" in self.config and self.config["bridgebot"]["enabled"]:
-            self.bridgebot = Bridgebot(
-                self,
-                self.config["bridgebot"]["channel"],
-                self.config["bridgebot"]["hub_id"],
-                self.config["bridgebot"]["area_id"],
-            )
-            asyncio.ensure_future(
-                self.bridgebot.init(self.config["bridgebot"]["token"]), loop=loop
-            )
-
+            try:
+                self.bridgebot = Bridgebot(
+                    self,
+                    self.config["bridgebot"]["channel"],
+                    self.config["bridgebot"]["hub_id"],
+                    self.config["bridgebot"]["area_id"],
+                )
+                asyncio.ensure_future(
+                    self.bridgebot.init(self.config["bridgebot"]["token"]), loop=loop
+                )
+            except Exception as ex:
+                # Don't end the whole server if bridgebot destroys itself
+                print(ex)
         asyncio.ensure_future(self.schedule_unbans())
 
         database.log_misc("start")
@@ -175,7 +178,8 @@ class TsuServer3:
         try:
             loop.run_forever()
         except KeyboardInterrupt:
-            pass
+            print("KEYBOARD INTERRUPT")
+            loop.stop()
 
         database.log_misc("stop")
 

@@ -418,7 +418,7 @@ class Database:
                 self.unban(ban_id)
                 self.log_misc("auto_unban", data={"id": ban_id})
 
-            asyncio.get_event_loop().call_later(time_to_unban, auto_unban)
+            asyncio.get_running_loop().call_later(time_to_unban, auto_unban)
 
     def log_area(self, event_subtype, client, area, message=None, target=None):
         """

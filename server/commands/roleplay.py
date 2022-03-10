@@ -655,7 +655,7 @@ def ooc_cmd_timer(client, arg):
         if timer.schedule:
             timer.schedule.cancel()
         if timer.started:
-            timer.schedule = asyncio.get_event_loop().call_later(
+            timer.schedule = asyncio.get_running_loop().call_later(
                 int(timer.static.total_seconds()), timer.timer_expired
             )
 

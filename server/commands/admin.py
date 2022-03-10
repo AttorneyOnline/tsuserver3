@@ -513,7 +513,7 @@ def ooc_cmd_restart(client, arg):
         raise ArgumentError("no")
     print(f"!!!{client.name} called /restart!!!")
     client.server.send_all_cmd_pred("CT", "WARNING", "Restarting the server...")
-    asyncio.get_event_loop().stop()
+    asyncio.get_running_loop().stop()
 
 
 def ooc_cmd_myid(client, arg):

@@ -1287,7 +1287,7 @@ class Area:
         if length <= 0:  # Length not defined
             length = 120.0  # Play each song for at least 2 minutes
 
-        self.music_looper = asyncio.get_event_loop().call_later(
+        self.music_looper = asyncio.get_running_loop().call_later(
             max(5, length), lambda: self.start_jukebox()
         )
 
@@ -1560,7 +1560,7 @@ class Area:
         """Time left on the currently running minigame."""
         if not self.minigame_schedule or self.minigame_schedule.cancelled():
             return 0
-        return self.minigame_schedule.when() - asyncio.get_event_loop().time()
+        return self.minigame_schedule.when() - asyncio.get_running_loop().time()
 
     def end_minigame(self, reason=""):
         if self.minigame_schedule:
@@ -1688,7 +1688,7 @@ class Area:
                 team = "🔴red"
             else:
                 raise AreaError("Target is not part of the minigame!")
-            timeleft = self.minigame_schedule.when() - asyncio.get_event_loop().time()
+            timeleft = self.minigame_schedule.when() - asyncio.get_running_loop().time()
             self.minigame_schedule.cancel()
             self.minigame = "Scrum Debate"
             timer = timeleft + self.scrum_debate_added_time
@@ -1756,7 +1756,7 @@ class Area:
         # 1 afterwards is to start timer
         self.send_command("TI", 3, 2)
         self.send_command("TI", 3, 0, timer * 1000)
-        self.minigame_schedule = asyncio.get_event_loop().call_later(
+        self.minigame_schedule = asyncio.get_running_loop().call_later(
             timer, lambda: self.end_minigame("Timer expired!")
         )
 
@@ -1831,7 +1831,7 @@ class Area:
                 return
         elif header == "wait":
             secs = float(args[0]) / 1000
-            self.demo_schedule = asyncio.get_event_loop().call_later(
+            self.demo_schedule = asyncio.get_running_loop().call_later(
                 secs, lambda: self.play_demo(client)
             )
             return

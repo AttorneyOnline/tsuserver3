@@ -127,11 +127,11 @@ class AOProtocol(asyncio.Protocol):
 
         # Client needs to send CHECK#% within the timeout - otherwise,
         # it will be automatically dropped.
-        self.ping_timeout = asyncio.get_event_loop().call_later(
+        self.ping_timeout = asyncio.get_running_loop().call_later(
             self.server.config["timeout"], self.client.disconnect
         )
 
-        asyncio.get_event_loop().call_later(
+        asyncio.get_running_loop().call_later(
             0.25, self.client.send_command, "decryptor", 34
         )  # just fantacrypt things)
 
@@ -243,7 +243,7 @@ class AOProtocol(asyncio.Protocol):
         """
         self.client.send_command("CHECK")
         self.ping_timeout.cancel()
-        self.ping_timeout = asyncio.get_event_loop().call_later(
+        self.ping_timeout = asyncio.get_running_loop().call_later(
             self.server.config["timeout"], self.client.disconnect
         )
 
@@ -863,7 +863,7 @@ class AOProtocol(asyncio.Protocol):
                 evi.desc = f"(👀Discovered in pos: {evi.pos})\n{evi.desc}"
                 evi.pos = "all"
                 area.broadcast_evidence_list()
-            asyncio.get_event_loop().call_soon(
+            asyncio.get_running_loop().call_soon(
                 evi.trigger, area, "present", self.client
             )
             # target_area.trigger('present')
