@@ -47,6 +47,7 @@ class MasterServerClient:
                 TimeoutError,
                 ConnectionResetError,
                 asyncio.IncompleteReadError,
+                OSError,
             ):
                 logger.debug("Connection error occurred.")
                 self.writer = None
