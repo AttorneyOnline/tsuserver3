@@ -861,6 +861,55 @@ class Area:
                 return
             adding = True
         else:
+            # args[4] = msg
+            # args[15] = showname
+            name = ""
+            if args[8] != -1:
+                name = self.server.char_list[args[8]]
+            if args[15] != "":
+                name = args[15]
+
+            # Shout used
+            shout = str(args[10]).split("<and>")[0]
+            if shout in ["1", "2", "3"]:
+                msg = args[4].lower()
+                target = ""
+                # message contains an "at" sign aka we're referring to someone specific
+                if "@" in msg:
+                    target = msg[msg.find("@") + 1:]
+                try:
+                    opponent = None
+                    target = target.lower()
+                    if target != "":
+                        for t in self.clients:
+                            # Ignore ourselves
+                            if t == client:
+                                continue
+                            # We're @num so we're trying to grab a Client ID, don't do shownames
+                            if target.strip().isnumeric():
+                                if t.id == int(target):
+                                    opponent = t
+                                    break
+                            # Loop through the charnames if it's @text
+                            if target in t.char_name.lower():
+                                opponent = t
+                            # Loop through the shownames next, shownames take priority over charnames
+                            if target in t.showname.lower():
+                                opponent = t
+
+                    # Minigame with an opponent
+                    if opponent != None and shout in ["1", "2"]:
+                        self.start_debate(client, opponent, shout == "1")
+                    # Concede
+                    elif shout == "3" and self.minigame != "":
+                        commands.ooc_cmd_concede(client, "")
+                    # Shouter provided target but no opponent was found
+                    elif target != "":
+                        raise AreaError("Interjection minigame - target not found!")
+                except Exception as ex:
+                    client.send_ooc(ex)
+                    return
+
             if targets == None:
                 targets = self.clients
             for c in targets:
@@ -892,55 +941,6 @@ class Area:
                     lst[3] = ""  # Change anim to '' which should start narrator mode
                     complete = tuple(lst)
                 c.send_command("MS", *complete)
-
-            # args[4] = msg
-            # args[15] = showname
-            name = ""
-            if args[8] != -1:
-                name = self.server.char_list[args[8]]
-            if args[15] != "":
-                name = args[15]
-
-            # Shout used
-            shout = str(args[10]).split("<and>")[0]
-            if shout in ["1", "2", "3"]:
-                msg = args[4].lower()
-                target = ""
-                # message contains an "at" sign aka we're referring to someone specific
-                if "@" in msg:
-                    target = msg[msg.find("@") + 1 :]
-                try:
-                    opponent = None
-                    target = target.lower()
-                    if target != "":
-                        for t in self.clients:
-                            # Ignore ourselves
-                            if t == client:
-                                continue
-                            # We're @num so we're trying to grab a Client ID, don't do shownames
-                            if target.strip().isnumeric():
-                                if t.id == int(target):
-                                    opponent = t
-                                    break
-                            # Loop through the charnames if it's @text
-                            if target in t.char_name.lower():
-                                opponent = t
-                            # Loop through the shownames next, shownames take priority over charnames
-                            if target in t.showname.lower():
-                                opponent = t
-
-                    # Minigame with an opponent
-                    if opponent != None and shout in ["1", "2"]:
-                        self.start_debate(client, opponent, shout == "1")
-                    # Concede
-                    elif shout == "3":
-                        commands.ooc_cmd_concede(client, "")
-                    # Wtf
-                    else:
-                        raise AreaError("Interjection minigame - target not found!")
-                except Exception as ex:
-                    client.send_ooc(ex)
-                    return
 
             if client:
                 if (
