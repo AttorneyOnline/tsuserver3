@@ -279,16 +279,35 @@ def ooc_cmd_area_remove(client, arg):
 @mod_only(area_owners=True)
 def ooc_cmd_area_rename(client, arg):
     """
-    Rename area you are currently in to <name>.
-    Usage: /area_rename <name>
+    Rename the area to <name>. The area is the one you're currently in
+    You can optionally provide an area ID to target by having [aid] as a number.
+    Usage: /area_rename [aid] <name>
     """
-    if arg != "":
-        client.area.name = dezalgo(arg)[:64]
-        # Renaming doesn't change the actual area objects in that list so we have to tell it manually
-        client.area.area_manager.broadcast_area_list(refresh=True)
-        client.send_ooc(f"Renamed area [{client.area.id}] to {client.area.name}.")
-    else:
-        raise ArgumentError("Invalid number of arguments. Use /area_rename <name>.")
+    area = client.area
+    name = arg
+
+    args = arg.split(maxsplit=1)
+    if len(args) <= 0:
+        raise ArgumentError("Invalid number of arguments. Use /area_rename [aid] <name>.")
+
+    # Test if we want to target an area
+    if args[0].isnumeric():
+        if len(args) == 1:
+            # Can't set the area name to just a number only
+            raise ArgumentError("Only Area ID was provided with no name. Use /area_rename [aid] <name>.")
+        try:
+            area = client.area.area_manager.get_area_by_id(int(args[0]))
+            name = args[1]
+        except ValueError:
+            raise ArgumentError("Area ID must be a number.")
+        except (AreaError, ClientError):
+            raise
+
+    # Checks passed, set the name
+    area.name = dezalgo(name)[:64]
+    # Update the area list so the name change is reflected in it
+    area.area_manager.broadcast_area_list(refresh=True)
+    client.send_ooc(f"Renamed area [{area.id}] to {area.name}.")
 
 
 @mod_only(hub_owners=True)
