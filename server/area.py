@@ -901,9 +901,6 @@ class Area:
             if args[15] != "":
                 name = args[15]
 
-            delay = 200 + self.parse_msg_delay(args[4])
-            self.next_message_time = round(time.time() * 1000.0 + delay)
-
             # Shout used
             shout = str(args[10]).split("<and>")[0]
             if shout in ["1", "2", "3"]:

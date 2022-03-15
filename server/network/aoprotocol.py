@@ -29,7 +29,7 @@ logger = logging.getLogger("events")
 from enum import Enum
 
 import arrow
-from time import gmtime, strftime
+import time
 
 from server import database
 from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
@@ -1019,6 +1019,9 @@ class AOProtocol(asyncio.Protocol):
 
         # If we are not whispering...
         if whisper_clients == None:
+            # Enforce the area msg delay
+            delay = 200 + self.parse_msg_delay(msg)
+            self.client.area.next_message_time = round(time.time() * 1000.0 + delay)
             if (
                 text.strip() != ""
                 or self.client.area.last_ic_message == None
@@ -1693,7 +1696,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_ooc("You must wait 30 seconds between mod calls.")
             return
 
-        current_time = strftime("%H:%M", gmtime())
+        current_time = time.strftime("%H:%M", time.gmtime())
         if len(args) < 1:
             self.server.send_all_cmd_pred(
                 "ZZ",
