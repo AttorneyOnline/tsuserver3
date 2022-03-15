@@ -1020,7 +1020,7 @@ class AOProtocol(asyncio.Protocol):
         # If we are not whispering...
         if whisper_clients == None:
             # Enforce the area msg delay
-            delay = 200 + self.parse_msg_delay(msg)
+            delay = 200 + self.client.area.parse_msg_delay(msg)
             self.client.area.next_message_time = round(time.time() * 1000.0 + delay)
             if (
                 text.strip() != ""
