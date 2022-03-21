@@ -1,6 +1,6 @@
 - hub: Main
   info: ''
-  music_ref: legacy
+  music_ref: ''
   single_cm: true
   areas:
   - area: Basement
