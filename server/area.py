@@ -1054,16 +1054,9 @@ class Area:
         """
         if self.iniswap_allowed:
             return False
-        if ".." in preanim or ".." in anim or ".." in char:
-            # Prohibit relative paths
-            return True
-        if (
-            preanim.lower().startswith("base/")
-            or anim.lower().startswith("base/")
-            or char.lower().startswith("base/")
-        ):
-            # Prohibit absolute base/ paths
-            return True
+        # Our client is narrating or blankposting via slash command
+        if client.narrator or client.blankpost:
+            return False
         if char.lower() != client.char_name.lower():
             for char_link in self.server.allowed_iniswaps:
                 # Only allow if both the original character and the
