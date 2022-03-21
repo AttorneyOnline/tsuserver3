@@ -743,7 +743,7 @@ class ClientManager:
                 )
             )
 
-        def try_access_area(self, area):
+        def try_access_area(self, area, peek=False):
             if (
                 self.area.locked
                 and not self in self.area.owners
@@ -764,6 +764,9 @@ class ClientManager:
                     # Our path is locked :(
                     if link["locked"]:
                         raise ClientError("Path is locked!")
+
+                    if peek and not link["can_peek"]:
+                        raise ClientError("Can't peek through this path!")
 
             if area.locked and not self.id in area.invite_list:
                 raise ClientError("Area is locked!")

@@ -528,7 +528,7 @@ def ooc_cmd_peek(client, arg):
             return
 
         try:
-            client.try_access_area(area)
+            client.try_access_area(area, True)
             if not area.can_getarea:
                 raise ClientError("Can't peek in that area!")
             if area.dark:
