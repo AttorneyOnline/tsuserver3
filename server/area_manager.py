@@ -416,20 +416,32 @@ class AreaManager:
             raise AreaError("First area not found.")
         if not (area2 in self.areas):
             raise AreaError("Second area not found.")
-        a, b = self.areas.index(area1), self.areas.index(area2)
+        # Grab the indexes
+        a = self.areas.index(area1)
+        b = self.areas.index(area2)
         # Swap 'em good
-        self.areas[b], self.areas[a] = self.areas[a], self.areas[b]
+        self.areas[b] = self.areas[a]
+        self.areas[a] = self.areas[b]
 
         if fix_links:
             # Update area links
-            a, b = str(a), str(b)
-            for ar in self.areas:
-                for link in ar.links.copy():
-                    # Swap 'em good
+            a = str(a)
+            b = str(b)
+            # Looping through all Hub's areas
+            for area in self.areas:
+                # For every link in that area's links
+                for link in area.links.copy():
+                    # If that link equals to a
                     if link == a:
-                        ar.links[b] = ar.links.pop(a)
-                    elif link == b:
-                        ar.links[a] = ar.links.pop(b)
+                        # Take out the link for 'a'
+                        area.links.pop(a)
+                        # Replace it with a link for 'b'
+                        area.links.push(b)
+                    if link == b:
+                        # Take out the link for 'b'
+                        area.links.pop(b)
+                        # Replace it with a link for 'a'
+                        area.links.push(a)
 
     def add_owner(self, client):
         """
