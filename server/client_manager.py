@@ -172,6 +172,12 @@ class ClientManager:
             """
             if args:
                 if command == "MS":
+                    # Narrator chat, if we're narrating over someone let's use their msg's pos
+                    if args[4] == "" and self.area.last_ic_message is not None:
+                        lst = list(args)
+                        # Set the pos to last message's pos
+                        lst[3] = self.area.last_ic_message[3]
+                        args = tuple(lst)
                     for evi_num in range(len(self.evi_list)):
                         if self.evi_list[evi_num] == args[11]:
                             lst = list(args)

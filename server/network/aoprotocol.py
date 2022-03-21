@@ -937,7 +937,7 @@ class AOProtocol(asyncio.Protocol):
                     if len(a.pos_lock) > 0:
                         tempos = a.pos_lock[0]
                     if a.last_ic_message != None and (
-                        len(a.pos_lock) <= 0 or a.last_ic_message[5] in a.pos_lock
+                        anim == "" or len(a.pos_lock) <= 0 or a.last_ic_message[5] in a.pos_lock
                     ):
                         tempos = a.last_ic_message[5]  # Use the same pos
                     a.send_command(
