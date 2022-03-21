@@ -401,23 +401,27 @@ class ClientManager:
                             self.edit_ambinece = False
                     elif self.editing_minigame_song != "":
                         if self.is_mod or self in area.owners:
-                            start_or_end = 'end' if self.editing_minigame_song_end else 'start'
-                            if self.editing_minigame_song == 'cs':
+                            start_or_end = (
+                                "end" if self.editing_minigame_song_end else "start"
+                            )
+                            if self.editing_minigame_song == "cs":
                                 if self.editing_minigame_song_end:
                                     self.area.cross_swords_song_end = song
                                 else:
                                     self.area.cross_swords_song_start = song
-                            elif self.editing_minigame_song == 'sd':
+                            elif self.editing_minigame_song == "sd":
                                 if self.editing_minigame_song_end:
                                     self.area.scrum_debate_song_end = song
                                 else:
                                     self.area.scrum_debate_song_start = song
-                            elif self.editing_minigame_song == 'pta':
+                            elif self.editing_minigame_song == "pta":
                                 if self.editing_minigame_song_end:
                                     self.area.panic_talk_action_song_end = song
                                 else:
                                     self.area.panic_talk_action_song_start = song
-                            self.send_ooc(f'Setting the {self.editing_minigame_song} {start_or_end} song to {song}.')
+                            self.send_ooc(
+                                f"Setting the {self.editing_minigame_song} {start_or_end} song to {song}."
+                            )
                             self.editing_minigame_song = ""
                             self.editing_minigame_song_end = False
                             continue
@@ -807,8 +811,14 @@ class ClientManager:
             )
             if not allowed:
                 # If they're forced to follow, no escape.
-                if self.forced_to_follow and self.following is not None and self.following.area != area:
-                    raise ClientError("You can't escape when you've been forced to follow someone!")
+                if (
+                    self.forced_to_follow
+                    and self.following is not None
+                    and self.following.area != area
+                ):
+                    raise ClientError(
+                        "You can't escape when you've been forced to follow someone!"
+                    )
                 try:
                     self.try_access_area(area)
                 except ClientError as ex:
@@ -910,8 +920,37 @@ class ClientManager:
                     if old_area.area_manager == self.area.area_manager:
                         if self.area.area_manager.passing_msg == True:
                             old_area.send_ic(
-                                None, '1', 1, "", "", f'~~{"}}}"}[º{self.showname}º leaves to º{area.name}º.]', 
-                                "", "", 1, -1, 0, 0, [0], 0, 0, 0, "", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, ""
+                                None,
+                                "1",
+                                1,
+                                "",
+                                "",
+                                f'~~{"}}}"}[º{self.showname}º leaves to º{area.name}º.]',
+                                "",
+                                "",
+                                1,
+                                -1,
+                                0,
+                                0,
+                                [0],
+                                0,
+                                0,
+                                0,
+                                "",
+                                -1,
+                                "",
+                                "",
+                                0,
+                                0,
+                                0,
+                                0,
+                                "0",
+                                0,
+                                "",
+                                "",
+                                "",
+                                0,
+                                "",
                             )
                         for c in old_area.clients:
                             # Check if the GMs should really see this msg
@@ -956,8 +995,37 @@ class ClientManager:
                     )
                     if self.area.area_manager.passing_msg == True:
                         self.area.send_ic(
-                            None, '1', 1, "", "", f'~~{"}}}"}[º{self.showname}º enters from º{old_area.name}º.]', 
-                            "", "", 1, -1, 0, 0, [0], 0, 0, 0, "", -1, "", "", 0, 0, 0, 0, "0", 0, "", "", "", 0, ""
+                            None,
+                            "1",
+                            1,
+                            "",
+                            "",
+                            f'~~{"}}}"}[º{self.showname}º enters from º{old_area.name}º.]',
+                            "",
+                            "",
+                            1,
+                            -1,
+                            0,
+                            0,
+                            [0],
+                            0,
+                            0,
+                            0,
+                            "",
+                            -1,
+                            "",
+                            "",
+                            0,
+                            0,
+                            0,
+                            0,
+                            "0",
+                            0,
+                            "",
+                            "",
+                            "",
+                            0,
+                            "",
                         )
                 else:
                     self.area.send_command(
