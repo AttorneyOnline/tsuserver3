@@ -38,7 +38,14 @@ class AOProtocolWS(AOProtocol):
             :param key: requested key
 
             """
-            info = {"peername": self.ws.remote_address}
+            remote_address = self.ws.remote_address
+            if (remote_address[0] == "127.0.0.1"):
+                # See if proxy
+                try:
+                    remote_address = (self.ws.request_headers['X-Forwarded-For'], 0)
+                except:
+                    pass
+            info = {"peername": remote_address}
             return info[key]
 
         def write(self, message):
