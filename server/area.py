@@ -264,7 +264,7 @@ class Area:
 
     @name.setter
     def name(self, value):
-        self._name = value
+        self._name = value.strip().replace("<num>", "").replace("<percent>", "")
         self.abbreviation = self.abbreviate()
 
     @property
