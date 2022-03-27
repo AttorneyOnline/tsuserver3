@@ -95,7 +95,6 @@ def contains_URL(sample):
     return re.match(r"http\S+", sample) != None
 
 
-@staticmethod
 def encode_ao_packet(params):
     new_params = [
         (
