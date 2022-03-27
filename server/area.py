@@ -169,7 +169,7 @@ class Area:
         # /prefs end
 
         # DR minigames
-        
+
         ## CROSS SWORDS
         # The name of the song to play when minigame starts
         self.cross_swords_song_start = ""
@@ -177,7 +177,7 @@ class Area:
         self.cross_swords_song_end = ""
         # in seconds, 300s = 5m
         self.cross_swords_timer = 300
-        
+
         ## SCRUM DEBATE
         # The name of the song to play when minigame starts
         self.scrum_debate_song_start = ""
@@ -492,8 +492,8 @@ class Area:
             self.pos_dark = area["pos_dark"]
         if "desc_dark" in area:
             self.desc_dark = area["desc_dark"]
-        if 'passing_msg' in area:
-            self.passing_msg = area['passing_msg']
+        if "passing_msg" in area:
+            self.passing_msg = area["passing_msg"]
 
         if "evidence" in area and len(area["evidence"]) > 0:
             self.evi_list.evidences.clear()
@@ -876,7 +876,7 @@ class Area:
                 target = ""
                 # message contains an "at" sign aka we're referring to someone specific
                 if "@" in msg:
-                    target = msg[msg.find("@") + 1:]
+                    target = msg[msg.find("@") + 1 :]
                 try:
                     opponent = None
                     target = target.lower()
@@ -1782,7 +1782,7 @@ class Area:
         if len(self.demo) <= 0:
             self.stop_demo()
             return
-    
+
         packet = self.demo.pop(0)
         header = packet[0]
         args = packet[1:]
