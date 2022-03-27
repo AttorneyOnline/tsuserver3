@@ -142,7 +142,9 @@ class AreaManager:
 
     @name.setter
     def name(self, value):
-        self._name = value.strip().replace("<num>", "").replace("<percent>", "")
+        self._name = value.strip()
+        while "<num>" in self._name or "<percent>" in self._name:
+            self._name = self._name.replace("<num>", "").replace("<percent>", "")
         self.abbreviation = self.abbreviate()
 
     @property
