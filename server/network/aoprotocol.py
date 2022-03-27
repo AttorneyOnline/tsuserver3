@@ -931,6 +931,7 @@ class AOProtocol(asyncio.Protocol):
                 for a in target_area:
                     add = additive
                     tempos = pos
+                    tempdeskmod = msg_type
                     # Additive only works on same-char messages
                     if additive and (
                         a.last_ic_message == None
@@ -949,9 +950,10 @@ class AOProtocol(asyncio.Protocol):
                         or a.last_ic_message[5] in a.pos_lock
                     ):
                         tempos = a.last_ic_message[5]  # Use the same pos
+                        tempdeskmod = a.last_ic_message[0]  # Use the same desk mod
                     a.send_command(
                         "MS",
-                        msg_type,
+                        tempdeskmod,
                         pre,
                         folder,
                         anim,
@@ -1140,6 +1142,8 @@ class AOProtocol(asyncio.Protocol):
         if anim == "" and self.client.area.last_ic_message is not None:
             # Set the pos to last message's pos
             pos = self.client.area.last_ic_message[5]
+            # Keep the desk mod
+            msg_type = self.client.area.last_ic_message[0]
         self.client.area.send_ic(
             self.client,
             msg_type,
