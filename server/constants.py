@@ -93,3 +93,18 @@ def remove_URL(sample):
 def contains_URL(sample):
     """Determine if string contains a URL in sample string."""
     return re.match(r"http\S+", sample) != None
+
+
+@staticmethod
+def encode_ao_packet(params):
+    new_params = [
+        (
+            str(arg)
+            .replace("#", "<num>")
+            .replace("%", "<percent>")
+            .replace("$", "<dollar>")
+            .replace("&", "<and>")
+        )
+        for arg in params
+    ]
+    return new_params

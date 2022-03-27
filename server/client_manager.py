@@ -24,10 +24,9 @@ import math
 import os
 from heapq import heappop, heappush
 
-from enum import Enum
 
 from server import database
-from server.constants import TargetType
+from server.constants import TargetType, encode_ao_packet
 from server.exceptions import ClientError, AreaError, ServerError
 
 import oyaml as yaml  # ordered yaml
@@ -184,9 +183,11 @@ class ClientManager:
                             lst[11] = evi_num
                             args = tuple(lst)
                             break
-                self.send_raw_message(f'{command}#{"#".join([str(x) for x in args])}#%')
-            else:
-                self.send_raw_message(f"{command}#%")
+            command, *args = encode_ao_packet([command] + list(args))
+            message = f"{command}#"
+            for arg in args:
+                message += f"{arg}#"
+            self.send_raw_message(message + "%")
 
         def send_ooc(self, msg):
             """

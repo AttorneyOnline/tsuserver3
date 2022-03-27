@@ -549,12 +549,6 @@ class TsuServer3:
             .replace("\\s", "")
             .replace("\\f", "")
         )
-        message = (
-            message.replace("#", "<num>")
-            .replace("&", "<and>")
-            .replace("%", "<percent>")
-            .replace("$", "<dollar>")
-        )
         message = self.config["bridgebot"]["prefix"] + message
         if len(name) > 14:
             name = name[:14].rstrip() + "."
