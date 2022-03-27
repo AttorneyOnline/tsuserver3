@@ -171,12 +171,6 @@ class ClientManager:
             """
             if args:
                 if command == "MS":
-                    # Narrator chat, if we're narrating over someone let's use their msg's pos
-                    if args[3] == "" and self.area.last_ic_message is not None:
-                        lst = list(args)
-                        # Set the pos to last message's pos
-                        lst[5] = self.area.last_ic_message[5]
-                        args = tuple(lst)
                     for evi_num in range(len(self.evi_list)):
                         if self.evi_list[evi_num] == args[11]:
                             lst = list(args)
@@ -927,7 +921,7 @@ class ClientManager:
                                 "",
                                 "",
                                 f'~~{"}}}"}[º{self.showname}º leaves to º{area.name}º.]',
-                                "",
+                                old_area.last_ic_message[5] if old_area.last_ic_message is not None else "",
                                 "",
                                 1,
                                 -1,
@@ -1002,7 +996,7 @@ class ClientManager:
                             "",
                             "",
                             f'~~{"}}}"}[º{self.showname}º enters from º{old_area.name}º.]',
-                            "",
+                            self.area.last_ic_message[5] if self.area.last_ic_message is not None else "",
                             "",
                             1,
                             -1,

@@ -1135,6 +1135,11 @@ class AOProtocol(asyncio.Protocol):
             )
         ):
             additive = 0
+
+        # Narrator chat, if we're narrating over someone let's use their msg's pos
+        if anim == "" and self.area.last_ic_message is not None:
+            # Set the pos to last message's pos
+            pos = self.area.last_ic_message[5]
         self.client.area.send_ic(
             self.client,
             msg_type,
