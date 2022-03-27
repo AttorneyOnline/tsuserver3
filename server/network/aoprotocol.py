@@ -337,8 +337,13 @@ class AOProtocol(asyncio.Protocol):
             song_list += [f"[{a.id}] {a.name}" for a in area_list]
         else:
             song_list += [a.name for a in area_list]
-        self.client.local_music_list = self.server.music_list
-        song_list += self.server.music_list_ao2
+
+        self.client.local_music_list = self.client.construct_music_list()
+        if len(self.client.local_music_list) > 0:
+            songs = self.client.local_music_list
+        else:
+            songs = self.server.music_list
+        song_list += self.server.build_music_list_ao2(songs)
 
         self.client.send_command("SM", *song_list)
 
@@ -821,7 +826,9 @@ class AOProtocol(asyncio.Protocol):
                 else:
                     part = part[1:]
                     whisper_clients = [
-                        c for c in self.client.area.clients if c.pos == self.client.pos and not c == self.client
+                        c
+                        for c in self.client.area.clients
+                        if c.pos == self.client.pos and not c == self.client
                     ]
                     clients = ""
                 text = " ".join(part)
@@ -937,7 +944,9 @@ class AOProtocol(asyncio.Protocol):
                     if len(a.pos_lock) > 0:
                         tempos = a.pos_lock[0]
                     if a.last_ic_message != None and (
-                        anim == "" or len(a.pos_lock) <= 0 or a.last_ic_message[5] in a.pos_lock
+                        anim == ""
+                        or len(a.pos_lock) <= 0
+                        or a.last_ic_message[5] in a.pos_lock
                     ):
                         tempos = a.last_ic_message[5]  # Use the same pos
                     a.send_command(
