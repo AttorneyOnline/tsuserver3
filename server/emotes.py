@@ -56,7 +56,8 @@ class Emotes:
 
                     # sfx checking is not performed due to custom sfx being possible, so don't bother for now
                     sfx = ""
-                    self.emotes.add((preanim.lower(), anim.lower(), sfx.lower()))
+                    self.emotes.add(
+                        (preanim.lower(), anim.lower(), sfx.lower()))
                 except KeyError as e:
                     logger.warn(
                         f"Broken key {e.args[0]} in character file {char_path}. "

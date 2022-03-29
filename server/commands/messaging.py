@@ -19,7 +19,7 @@ __all__ = [
 
 def message_areas_cm(client, areas, message):
     for a in areas:
-        if not client in a.owners:
+        if client not in a.owners:
             client.send_ooc(f"You are not a CM in {a.name}!")
             return
         name = f"[CM] {client.name}"
@@ -165,11 +165,12 @@ def ooc_cmd_pm(client, arg):
             msg = " ".join(args[1:])
         else:
             if key == TargetType.CHAR_NAME:
-                msg = arg[len(targets[0].char_name) + 1 :]
+                msg = arg[len(targets[0].char_name) + 1:]
             if key == TargetType.OOC_NAME:
-                msg = arg[len(targets[0].name) + 1 :]
+                msg = arg[len(targets[0].name) + 1:]
     except:
-        raise ArgumentError("Not enough arguments. Use /pm <target> <message>.")
+        raise ArgumentError(
+            "Not enough arguments. Use /pm <target> <message>.")
     c = targets[0]
     if c.pm_mute:
         raise ClientError("This user muted all pm conversation")

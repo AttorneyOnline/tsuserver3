@@ -38,7 +38,7 @@ class HubManager:
         if "area" in hubs[0]:
             # Legacy support triggered! Abort operation
             if len(self.hubs) <= 0:
-                self.hubs.append(AreaManager(self, f"Hub 0"))
+                self.hubs.append(AreaManager(self, "Hub 0"))
             self.hubs[0].load_areas(hubs)
 
             is_dr_hub = False
@@ -65,7 +65,7 @@ class HubManager:
             if is_dr_hub:
                 self.hubs[0].arup_enabled = False
                 print(
-                    f"[tsuDR conversion] Setting hub 0 ARUP to False due to TsuserverDR yaml supplied. Please use /save_hub as a mod to adapt the areas.yaml to KFO style."
+                    "[tsuDR conversion] Setting hub 0 ARUP to False due to TsuserverDR yaml supplied. Please use /save_hub as a mod to adapt the areas.yaml to KFO style."
                 )
             return
 

@@ -134,7 +134,7 @@ class EvidenceList:
             return False
         elif (
             client.area.evidence_mod == "CM"
-            and not client in client.area.owners
+            and client not in client.area.owners
             and not client.is_mod
         ):
             return False
@@ -258,7 +258,8 @@ class EvidenceList:
                     can_hide_in = int(evi.can_hide_in)
                     desc = f"<owner={evi.pos}>\n<can_hide_in={can_hide_in}>\n{evi.desc}"
                 evi_list.append(
-                    self.Evidence(evi.name, desc, evi.image, evi.pos).to_tuple()
+                    self.Evidence(evi.name, desc, evi.image,
+                                  evi.pos).to_tuple()
                 )
             elif not client.area.dark and self.can_see(self.evidences[i], client.pos):
                 nums_list.append(i + 1)
@@ -277,8 +278,9 @@ class EvidenceList:
             if "pos" in evi:
                 pos = evi["pos"]
             if "can_hide_in" in evi:
-                can_hide_in = evi["can_hide_in"] == True
-            self.evidences.append(self.Evidence(name, desc, image, pos, can_hide_in))
+                can_hide_in = evi["can_hide_in"] is True
+            self.evidences.append(self.Evidence(
+                name, desc, image, pos, can_hide_in))
 
     def del_evidence(self, client, id):
         """
@@ -293,7 +295,7 @@ class EvidenceList:
             return
         if id not in range(len(self.evidences)):
             return
-        if not client in client.area.owners and not client.is_mod:
+        if not client.is_mod and client not in client.area.owners:
             id = client.evi_list[id + 1] - 1
             evi = self.evidences[id]
             if client.area.evidence_mod == "HiddenCM":
@@ -325,7 +327,7 @@ class EvidenceList:
                 )
 
         c = evi.hiding_client
-        if c != None:
+        if c is not None:
             c.hide(False)
             c.area.broadcast_area_list(c)
             c.send_ooc(f"You discover {c.showname} in the {evi.name}!")
@@ -356,7 +358,8 @@ class EvidenceList:
                     poses = cmd[7:-1]
                     can_hide_in = lines[1].strip(" ")[13:-1] == "1"
                     self.evidences[id] = self.Evidence(
-                        arg[0], "\n".join(lines[2:]), arg[2], poses, can_hide_in
+                        arg[0], "\n".join(
+                            lines[2:]), arg[2], poses, can_hide_in
                     )
                 else:
                     client.send_ooc(
@@ -364,7 +367,8 @@ class EvidenceList:
                     )
                     return
             else:
-                self.evidences[id] = self.Evidence(arg[0], arg[1], arg[2], arg[3])
+                self.evidences[id] = self.Evidence(
+                    arg[0], arg[1], arg[2], arg[3])
         else:
             # Are you serious? This is absolutely fucking mental.
             # Server sends evidence to client in an indexed list starting from 1.
@@ -375,7 +379,7 @@ class EvidenceList:
                 return
             old_name = self.evidences[id].name
             # c = self.evidences[idx].hiding_client
-            # if c != None:
+            # if c is not None:
             #     c.hide(False)
             #     c.area.broadcast_area_list(c)
             #     client.send_ooc(f'You discover {c.showname} in the {self.evidences[idx].name}!')

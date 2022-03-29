@@ -253,7 +253,7 @@ class ClientManager:
                     raise ClientError("Invalid character ID.")
                 if not self.is_mod and self not in self.area.owners:
                     if len(self.charcurse) > 0:
-                        if not char_id in self.charcurse:
+                        if char_id not in self.charcurse:
                             raise ClientError("Character not available.")
                         force = True
                     if not self.area.is_char_available(char_id):
@@ -384,7 +384,7 @@ class ClientManager:
                             f"You are not on area [{area.id}] {area.name} invite list, and thus, you cannot change music!"
                         )
                         continue
-                    if not self.is_mod and not self in area.owners and not area.can_dj:
+                    if not self.is_mod and self not in area.owners and not area.can_dj:
                         self.send_ooc(
                             f"You cannot change music in area [{area.id}] {area.name}!"
                         )
@@ -434,7 +434,7 @@ class ClientManager:
                             len(showname) > 0
                             and not area.showname_changes_allowed
                             and not self.is_mod
-                            and not self in area.owners
+                            and self not in area.owners
                         ):
                             self.send_ooc(
                                 f"Showname changes are forbidden in area [{area.id}] {area.name}!"
@@ -445,7 +445,7 @@ class ClientManager:
                     effects = int(effects)
 
                     # Jukebox check
-                    if area.jukebox and not self.is_mod and not self in area.owners:
+                    if area.jukebox and not self.is_mod and self not in area.owners:
                         area.add_jukebox_vote(self, name, length, showname)
                         database.log_area("jukebox.vote", self, area, message=name)
                     else:
@@ -522,7 +522,7 @@ class ClientManager:
                 for item in music_list:
                     if (
                         "use_unique_folder" in item
-                        and item["use_unique_folder"] == True
+                        and item["use_unique_folder"] is True
                     ):
                         prepath = os.path.splitext(os.path.basename(path))[0] + "/"
 
@@ -719,7 +719,7 @@ class ClientManager:
             self.send_ooc(msg)
 
             # We failed to enter the same area as whoever we've been following, break the follow
-            if self.following != None and not (self.following in self.area.clients):
+            if self.following is not None and not (self.following in self.area.clients):
                 self.unfollow()
 
             self.area.trigger("join", self)
@@ -740,20 +740,20 @@ class ClientManager:
         def try_access_area(self, area, peek=False):
             if (
                 self.area.locked
-                and not self in self.area.owners
-                and not self.id in self.area.invite_list
+                and self not in self.area.owners
+                and self.id not in self.area.invite_list
             ):
                 raise ClientError("Current area is locked!")
 
             if len(self.area.links) > 0:
-                if not str(area.id) in self.area.links:
+                if str(area.id) not in self.area.links:
                     raise ClientError("Area is inaccessible!")
 
                 if str(area.id) in self.area.links:
                     link = self.area.links[str(area.id)]
                     # Link requires us to be inside a piece of evidence
                     if len(link["evidence"]) > 0:
-                        if not (self.hidden_in in link["evidence"]):
+                        if self.hidden_in not in link["evidence"]:
                             raise ClientError("Area is inaccessible!")
                     # Our path is locked :(
                     if link["locked"]:
@@ -762,7 +762,7 @@ class ClientManager:
                     if peek and not link["can_peek"]:
                         raise ClientError("Can't peek through this path!")
 
-            if area.locked and not self.id in area.invite_list:
+            if area.locked and self.id not in area.invite_list:
                 raise ClientError("Area is locked!")
 
             if area.max_players > 0:
@@ -770,7 +770,7 @@ class ClientManager:
                     [
                         x
                         for x in area.clients
-                        if (not x in area.owners and not x.is_mod and not x.hidden)
+                        if (x not in area.owners and not x.is_mod and not x.hidden)
                     ]
                 )
                 if players >= area.max_players:
@@ -823,7 +823,7 @@ class ClientManager:
                 self.char_id == -1
                 and not (area.area_manager.can_spectate and area.can_spectate)
                 and not self.is_mod
-                and not self in area.owners
+                and self not in area.owners
             ):
                 if not area.area_manager.can_spectate:
                     raise ClientError(
@@ -844,7 +844,7 @@ class ClientManager:
 
                     target_pos = link["target_pos"]
 
-            if self.hidden_in != None:
+            if self.hidden_in is not None:
                 # You gotta unhide first lol
                 self.hide(False)
                 self.area.broadcast_area_list(self)
@@ -902,7 +902,7 @@ class ClientManager:
             ):
                 if not old_area.dark and not old_area.force_sneak:
                     if old_area.area_manager == self.area.area_manager:
-                        if self.area.area_manager.passing_msg == True:
+                        if self.area.area_manager.passing_msg is True:
                             old_area.send_ic(
                                 None,
                                 "1",
@@ -979,7 +979,7 @@ class ClientManager:
                         f"[{self.id}] {self.showname} enters from [{old_area.id}] {old_area.name}{desc}",
                         "1",
                     )
-                    if self.area.area_manager.passing_msg == True:
+                    if self.area.area_manager.passing_msg is True:
                         self.area.send_ic(
                             None,
                             "1",
@@ -1080,14 +1080,14 @@ class ClientManager:
                                 continue
                         if (
                             not hidden
-                            and self.area.links[str(area.id)]["hidden"] == True
+                            and self.area.links[str(area.id)]["hidden"] is True
                         ):
                             continue
                         if (
                             not hidden
                             and len(self.area.links[str(area.id)]["evidence"]) > 0
-                            and not self.hidden_in
-                            in self.area.links[str(area.id)]["evidence"]
+                            and self.hidden_in
+                            not in self.area.links[str(area.id)]["evidence"]
                         ):
                             continue
 
@@ -1160,7 +1160,7 @@ class ClientManager:
             else:
                 player_list = area.clients
 
-            if not self.is_mod and not self in area.owners:
+            if not self.is_mod and self not in area.owners:
                 # We exclude hidden players here because we don't want them to count for the user count
                 player_list = [c for c in player_list if not c.hidden]
             status = ""
@@ -1210,7 +1210,7 @@ class ClientManager:
                     info += "💤"
                 if c.hidden:
                     name = ""
-                    if c.hidden_in != None:
+                    if c.hidden_in is not None:
                         name = f":{c.area.evi_list.evidences[c.hidden_in].name}"
                     info += f"📦{name}"
                 info += f"[{c.id}] "
@@ -1245,7 +1245,7 @@ class ClientManager:
                         client_list = area.afkers
                     else:
                         client_list = area.clients
-                    if not self.is_mod and not self in area.owners:
+                    if not self.is_mod and self not in area.owners:
                         # We exclude hidden players here because we don't want them to count for the user count
                         client_list = [c for c in client_list if not c.hidden]
                     area_info = self.get_area_info(i, mods, afk_check)
@@ -1266,7 +1266,7 @@ class ClientManager:
                         client_list = area.afkers
                     else:
                         client_list = area.clients
-                    if not self.is_mod and not self in area.owners:
+                    if not self.is_mod and self not in area.owners:
                         # We exclude hidden players here because we don't want them to count for the user count
                         client_list = [c for c in client_list if not c.hidden]
                     area_info = self.get_area_info(area_id, mods, afk_check)
@@ -1430,7 +1430,7 @@ class ClientManager:
             msg = "no longer hidden"
             if tog:
                 msg = "now hidden"
-                if target != None:
+                if target is not None:
                     evidence = None
                     for i, evi in enumerate(self.area.evi_list.evidences):
                         if not self.area.evi_list.can_see(evi, self.pos):
@@ -1442,9 +1442,9 @@ class ClientManager:
                                 )
                             evidence = i
                             break
-                    if evidence != None:
+                    if evidence is not None:
                         evi = self.area.evi_list.evidences[evidence]
-                        if evi.hiding_client != None:
+                        if evi.hiding_client is not None:
                             c = evi.hiding_client
                             c.hide(False)
                             c.area.broadcast_area_list(c)
@@ -1457,7 +1457,7 @@ class ClientManager:
                     else:
                         raise ClientError("Targeted evidence does not exist.")
             else:
-                if self.hidden_in != None:
+                if self.hidden_in is not None:
                     evi = self.area.evi_list.evidences[self.hidden_in]
                     evi.hiding_client = None
                     self.hidden_in = None
@@ -1502,7 +1502,7 @@ class ClientManager:
                 raise
 
         def unfollow(self, silent=False):
-            if self.following != None:
+            if self.following is not None:
                 try:
                     if not silent:
                         self.send_ooc(
@@ -1520,7 +1520,7 @@ class ClientManager:
             if len(self.area.pos_lock) > 0 and not (pos in self.area.pos_lock):
                 poslist = ", ".join(str(l) for l in self.area.pos_lock)
                 raise ClientError(f"Invalid pos! Available pos are {poslist}.")
-            if self.hidden_in != None:
+            if self.hidden_in is not None:
                 # YOU DARE MOVE?!
                 self.hide(False)
                 self.area.broadcast_area_list(self)
@@ -1713,7 +1713,7 @@ class ClientManager:
         :param clients: list of clients whose music lists should be regenerated.
 
         """
-        if clients == None:
+        if clients is None:
             clients = self.clients
         for client in clients:
             client.refresh_music()

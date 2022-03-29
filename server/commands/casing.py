@@ -77,7 +77,8 @@ def ooc_cmd_cleardoc(client, arg):
     ):
         raise ClientError("You may not do that while spectating!")
     client.area.change_doc()
-    client.area.broadcast_ooc("{} cleared the doc link.".format(client.showname))
+    client.area.broadcast_ooc(
+        "{} cleared the doc link.".format(client.showname))
     database.log_area("doc.clear", client, client.area)
 
 
@@ -122,7 +123,8 @@ def ooc_cmd_evidence_swap(client, arg):
     if len(args) != 2:
         raise ClientError("you must specify 2 numbers")
     try:
-        client.area.evi_list.evidence_swap(client, int(args[0]) - 1, int(args[1]) - 1)
+        client.area.evi_list.evidence_swap(
+            client, int(args[0]) - 1, int(args[1]) - 1)
         client.area.broadcast_evidence_list()
     except:
         raise ClientError("you must specify 2 numbers")
@@ -154,12 +156,13 @@ def ooc_cmd_cm(client, arg):
                 c = client.server.client_manager.get_targets(
                     client, TargetType.ID, id, False
                 )[0]
-                if not c in client.area.clients:
+                if c not in client.area.clients:
                     raise ArgumentError(
                         "You can only 'nominate' people to be CMs when they are in the area."
                     )
                 elif c in client.area.owners:
-                    client.send_ooc(f"{c.showname} [{c.id}] is already a CM here.")
+                    client.send_ooc(
+                        f"{c.showname} [{c.id}] is already a CM here.")
                 else:
                     client.area.add_owner(c)
                     database.log_area("cm.add", client, client.area, target=c)
@@ -229,7 +232,8 @@ def ooc_cmd_anncase(client, arg):
     # XXX: Merge with aoprotocol.net_cmd_casea
     if client in client.area.owners:
         if not client.can_call_case():
-            raise ClientError("Please wait 60 seconds between case announcements!")
+            raise ClientError(
+                "Please wait 60 seconds between case announcements!")
         args = re.findall(r'(?:[^\s,"]|"(?:\\.|[^"])*")+', arg)
         if len(args) == 0:
             raise ArgumentError("Please do not call this command manually!")
@@ -311,7 +315,8 @@ def ooc_cmd_unblockwtce(client, arg):
     Usage: /unblockwtce <id>
     """
     if len(arg) == 0:
-        raise ArgumentError("You must specify a target. Use /unblockwtce <id>.")
+        raise ArgumentError(
+            "You must specify a target. Use /unblockwtce <id>.")
     try:
         targets = client.server.client_manager.get_targets(
             client, TargetType.ID, int(arg), False
@@ -389,7 +394,7 @@ def ooc_cmd_testimony(client, arg):
     args = arg.split()
     if len(args) > 0:
         try:
-            if client.area.recording == True:
+            if client.area.recording is True:
                 client.send_ooc("It is not cross-examination yet!")
                 return
             idx = int(args[0]) - 1
@@ -403,9 +408,7 @@ def ooc_cmd_testimony(client, arg):
             raise
         return
 
-    msg = (
-        f"Use > IC to progress, < to backtrack, >3 or <3 to go to specific statements."
-    )
+    msg = "Use > IC to progress, < to backtrack, >3 or <3 to go to specific statements."
     msg += f"\n-- {client.area.testimony_title} --"
     for i, statement in enumerate(client.area.testimony):
         # [15] SHOWNAME
@@ -428,7 +431,8 @@ def ooc_cmd_testimony_start(client, arg):
     Usage: /testimony_start <title>
     """
     if arg == "":
-        raise ArgumentError("You must provite a title! /testimony_start <title>.")
+        raise ArgumentError(
+            "You must provite a title! /testimony_start <title>.")
     if len(arg) < 3:
         raise ArgumentError("Title must contain at least 3 characters!")
     client.area.testimony.clear()
@@ -467,7 +471,8 @@ def ooc_cmd_testimony_clear(client, arg):
         raise ArgumentError("This command does not take any arguments.")
     client.area.testimony.clear()
     client.area.testimony_title = ""
-    client.area.broadcast_ooc(f"{client.showname} cleared the current testimony.")
+    client.area.broadcast_ooc(
+        f"{client.showname} cleared the current testimony.")
 
 
 @mod_only(area_owners=True)
@@ -487,7 +492,8 @@ def ooc_cmd_testimony_remove(client, arg):
         client.area.testimony.pop(idx)
         if client.area.testimony_index == idx:
             client.area.testimony_index = -1
-        client.area.broadcast_ooc(f"{client.showname} has removed Statement {idx+1}.")
+        client.area.broadcast_ooc(
+            f"{client.showname} has removed Statement {idx+1}.")
     except ValueError:
         raise ArgumentError("Index must be a number!")
     except IndexError:
@@ -513,7 +519,8 @@ def ooc_cmd_testimony_amend(client, arg):
         lst = list(client.area.testimony[idx])
         lst[4] = "}}}" + " ".join(args[1:])
         client.area.testimony[idx] = tuple(lst)
-        client.area.broadcast_ooc(f"{client.showname} has amended Statement {idx+1}.")
+        client.area.broadcast_ooc(
+            f"{client.showname} has amended Statement {idx+1}.")
     except ValueError:
         raise ArgumentError("Index must be a number!")
     except IndexError:
@@ -706,13 +713,15 @@ def set_minigame_song(client, minigame="", song="", end=False):
             client.area.scrum_debate_song_start = song
         elif minigame == "pta":
             client.area.panic_talk_action_song_start = song
-        client.send_ooc(f"Setting the {minigame} {start_or_end} song to {song}.")
+        client.send_ooc(
+            f"Setting the {minigame} {start_or_end} song to {song}.")
         return
 
     # Songname is not provided
     client.editing_minigame_song = minigame
     client.editing_minigame_song_end = end
-    client.send_ooc(f"Play a song to set the {minigame} {start_or_end} song to...")
+    client.send_ooc(
+        f"Play a song to set the {minigame} {start_or_end} song to...")
 
 
 @mod_only(area_owners=True)
@@ -755,7 +764,8 @@ def ooc_cmd_concede(client, arg):
             # CM's end the minigame automatically using /concede
             if client in client.area.owners:
                 client.area.end_minigame("Forcibly ended.")
-                client.area.broadcast_ooc("The minigame has been forcibly ended.")
+                client.area.broadcast_ooc(
+                    "The minigame has been forcibly ended.")
                 return
             client.area.start_debate(
                 client, client

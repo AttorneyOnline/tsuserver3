@@ -16,22 +16,6 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-import sys
-import importlib
-
-import asyncio
-import websockets
-
-import geoip2.database
-
-import json
-import yaml
-
-import logging
-
-logger = logging.getLogger("debug")
-
 from server import database
 from server.hub_manager import HubManager
 from server.client_manager import ClientManager
@@ -43,7 +27,21 @@ from server.network.aoprotocol_ws import new_websocket_client
 from server.network.masterserverclient import MasterServerClient
 from server.network.webhooks import Webhooks
 from server.constants import remove_URL, dezalgo
+
 import server.logger
+import sys
+import importlib
+
+import asyncio
+import websockets
+
+import geoip2.database
+
+import yaml
+
+import logging
+
+logger = logging.getLogger("debug")
 
 
 class TsuServer3:
@@ -91,7 +89,8 @@ class TsuServer3:
         self.command_aliases = {}
 
         try:
-            self.geoIpReader = geoip2.database.Reader("./storage/GeoLite2-ASN.mmdb")
+            self.geoIpReader = geoip2.database.Reader(
+                "./storage/GeoLite2-ASN.mmdb")
             self.useGeoIp = True
             # on debian systems you can use /usr/share/GeoIP/GeoIPASNum.dat if the geoip-database-extra package is installed
         except FileNotFoundError:
@@ -145,7 +144,8 @@ class TsuServer3:
 
         if self.config["use_websockets"]:
             ao_server_ws = websockets.serve(
-                new_websocket_client(self), bound_ip, self.config["websocket_port"]
+                new_websocket_client(
+                    self), bound_ip, self.config["websocket_port"]
             )
             asyncio.ensure_future(ao_server_ws)
 
@@ -173,7 +173,8 @@ class TsuServer3:
         asyncio.ensure_future(self.schedule_unbans())
 
         database.log_misc("start")
-        print("Server started and is listening on port {}".format(self.config["port"]))
+        print("Server started and is listening on port {}".format(
+            self.config["port"]))
 
         try:
             loop.run_forever()
@@ -247,7 +248,8 @@ class TsuServer3:
                 and not client.sneaking
                 and not client.hidden
             ):
-                area.broadcast_ooc(f"[{client.id}] {client.showname} has disconnected.")
+                area.broadcast_ooc(
+                    f"[{client.id}] {client.showname} has disconnected.")
             area.remove_client(client)
         self.client_manager.remove_client(client)
 
@@ -287,7 +289,8 @@ class TsuServer3:
             self.config["zalgo_tolerance"] = 3
 
         if isinstance(self.config["modpass"], str):
-            self.config["modpass"] = {"default": {"password": self.config["modpass"]}}
+            self.config["modpass"] = {"default": {
+                "password": self.config["modpass"]}}
         if "multiclient_limit" not in self.config:
             self.config["multiclient_limit"] = 16
         if "asset_url" not in self.config:
@@ -352,7 +355,7 @@ class TsuServer3:
         AO1 connection handshake.
         """
         self.char_pages_ao1 = [
-            self.char_list[x : x + 10] for x in range(0, len(self.char_list), 10)
+            self.char_list[x: x + 10] for x in range(0, len(self.char_list), 10)
         ]
         for i in range(len(self.char_list)):
             self.char_pages_ao1[i // 10][i % 10] = "{}#{}&&0&&&0&".format(
@@ -374,7 +377,8 @@ class TsuServer3:
             for song in item["songs"]:
                 song_list.append("{}#{}".format(index, song["name"]))
                 index += 1
-        song_list = [song_list[x : x + 10] for x in range(0, len(song_list), 10)]
+        song_list = [song_list[x: x + 10]
+                     for x in range(0, len(song_list), 10)]
         return song_list
 
     def build_music_list_ao2(self, music_list):
@@ -468,7 +472,8 @@ class TsuServer3:
         ooc_name = (
             f"<dollar>G[{client.area.area_manager.abbreviation}]|{as_mod}{client.name}"
         )
-        self.send_all_cmd_pred("CT", ooc_name, msg, pred=lambda x: not x.muted_global)
+        self.send_all_cmd_pred("CT", ooc_name, msg,
+                               pred=lambda x: not x.muted_global)
 
     def send_modchat(self, client, msg):
         """
@@ -477,7 +482,8 @@ class TsuServer3:
         :param msg: message
 
         """
-        ooc_name = "{}[{}][{}]".format("<dollar>M", client.area.id, client.name)
+        ooc_name = "{}[{}][{}]".format(
+            "<dollar>M", client.area.id, client.name)
         self.send_all_cmd_pred("CT", ooc_name, msg, pred=lambda x: x.is_mod)
 
     def broadcast_need(self, client, msg):
@@ -520,13 +526,13 @@ class TsuServer3:
         if args[0] == 0:
             for part_arg in args[1:]:
                 try:
-                    _sanitised = int(part_arg)
+                    int(part_arg)
                 except:
                     return
         elif args[0] in (1, 2, 3):
             for part_arg in args[1:]:
                 try:
-                    _sanitised = str(part_arg)
+                    str(part_arg)
                 except:
                     return
 
@@ -609,7 +615,8 @@ class TsuServer3:
                     "default": {"password": self.config["modpass"]}
                 }
             if isinstance(cfg_yaml["modpass"], str):
-                cfg_yaml["modpass"] = {"default": {"password": cfg_yaml["modpass"]}}
+                cfg_yaml["modpass"] = {"default": {
+                    "password": cfg_yaml["modpass"]}}
 
             for profile in self.config["modpass"]:
                 if (
@@ -623,7 +630,8 @@ class TsuServer3:
                         client.is_mod = False
                         client.mod_profile_name = None
                         database.log_misc("unmod.modpass", client)
-                        client.send_ooc("Your moderator credentials have been revoked.")
+                        client.send_ooc(
+                            "Your moderator credentials have been revoked.")
             self.config["modpass"] = cfg_yaml["modpass"]
 
         self.load_command_aliases()

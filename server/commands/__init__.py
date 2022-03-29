@@ -17,6 +17,20 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+# Note that only the members of __all__ in each module will be imported.
+# There must be an __all__ in each module in order for reloading
+# to work properly.
+from .admin import *
+from .area_access import *
+from .areas import *
+from .casing import *
+from .character import *
+from .fun import *
+from .hubs import *
+from .messaging import *
+from .music import *
+from .roleplay import *
+
 
 def call(client, cmd, arg):
     import sys
@@ -36,7 +50,8 @@ def call(client, cmd, arg):
 
 def submodules():
     """Get all command-related submodules."""
-    import sys, inspect
+    import sys
+    import inspect
 
     me = sys.modules[__name__]
     for _, v in inspect.getmembers(me):
@@ -46,7 +61,8 @@ def submodules():
 
 def reload():
     """Reload all submodules."""
-    import sys, importlib
+    import sys
+    import importlib
 
     me = sys.modules[__name__]
     for module in submodules():
@@ -56,7 +72,8 @@ def reload():
 
 
 def help(command):
-    import sys, inspect
+    import sys
+    import inspect
 
     try:
         doc = inspect.getdoc(getattr(sys.modules[__name__], command))
@@ -102,7 +119,7 @@ def list_commands(submodule=""):
                 doc = doc[: doc.find(".") + 1]
             prefix = "ooc_cmd_"
             if func.startswith(prefix):
-                func = func[len(prefix) :]
+                func = func[len(prefix):]
             cmds += f"{func} - {doc}\n"
     return cmds
 
@@ -125,18 +142,3 @@ def mod_only(area_owners=False, hub_owners=False):
         return wrapper_mod_only
 
     return decorator
-
-
-# Note that only the members of __all__ in each module will be imported.
-# There must be an __all__ in each module in order for reloading
-# to work properly.
-from .admin import *
-from .area_access import *
-from .areas import *
-from .casing import *
-from .character import *
-from .fun import *
-from .hubs import *
-from .messaging import *
-from .music import *
-from .roleplay import *

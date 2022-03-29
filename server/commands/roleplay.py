@@ -79,7 +79,8 @@ def rtd(arg):
                 "Number of rolls must be between 1 and {}".format(NUMDICE_MAX)
             )
         if not 1 <= chosen_max <= DICE_MAX:
-            raise ArgumentError("Dice value must be between 1 and {}".format(DICE_MAX))
+            raise ArgumentError(
+                "Dice value must be between 1 and {}".format(DICE_MAX))
 
         for char in modifiers:
             if char not in ACCEPTABLE_IN_MODIFIER:
@@ -448,7 +449,8 @@ def ooc_cmd_rolla(client, arg):
     if not hasattr(client.area, "ability_dice"):
         rolla_reload(client.area)
     if not hasattr(client, "ability_dice_set"):
-        raise ClientError("You must set your ability set using /rolla_set <name>.")
+        raise ClientError(
+            "You must set your ability set using /rolla_set <name>.")
     ability_dice = client.area.ability_dice[client.ability_dice_set]
     roll, max_roll, ability = rolla(ability_dice)
     client.area.broadcast_ooc(
@@ -546,7 +548,8 @@ def ooc_cmd_timer(client, arg):
     if len(arg) < 2:
         if timer.set:
             if timer.started:
-                client.send_ooc(f"Timer {timer_id} is at {timer.target - arrow.get()}")
+                client.send_ooc(
+                    f"Timer {timer_id} is at {timer.target - arrow.get()}")
             else:
                 client.send_ooc(f"Timer {timer_id} is at {timer.static}")
         else:
@@ -554,13 +557,15 @@ def ooc_cmd_timer(client, arg):
         return
 
     if not (client in client.area.owners) and not client.is_mod:
-        raise ArgumentError("Only CMs or GMs can modify timers. Usage: /timer <id>")
+        raise ArgumentError(
+            "Only CMs or GMs can modify timers. Usage: /timer <id>")
     if (
         timer_id == 0
         and not (client in client.area.area_manager.owners)
         and not client.is_mod
     ):
-        raise ArgumentError("Only GMs can set hub-wide timer ID 0. Usage: /timer <id>")
+        raise ArgumentError(
+            "Only GMs can set hub-wide timer ID 0. Usage: /timer <id>")
 
     duration = pytimeparse.parse("".join(arg[1:]))
     if duration is not None:
@@ -641,7 +646,8 @@ def ooc_cmd_timer(client, arg):
         s = int(not timer.started)
         static_time = int(timer.static.total_seconds()) * 1000
         if timer_id == 0:
-            client.area.area_manager.send_command("TI", timer_id, s, static_time)
+            client.area.area_manager.send_command(
+                "TI", timer_id, s, static_time)
         else:
             client.area.send_command("TI", timer_id, s, static_time)
         client.send_ooc(f"Timer {timer_id} is at {timer.static}")
@@ -705,7 +711,8 @@ def ooc_cmd_demo(client, arg):
             client.area.demo += [p_args]
     for c in client.area.clients:
         if c in client.area.owners:
-            c.send_ooc(f"Starting demo playback using evidence '{evidence.name}'...")
+            c.send_ooc(
+                f"Starting demo playback using evidence '{evidence.name}'...")
 
     client.area.play_demo(client)
 
@@ -742,7 +749,8 @@ def ooc_cmd_trigger(client, arg):
         if not evidence:
             raise ArgumentError("Target evidence not found!")
         if len(args) <= 2:
-            client.send_ooc(f'Call "{evidence.triggers[trig]}" on trigger "{trig}"')
+            client.send_ooc(
+                f'Call "{evidence.triggers[trig]}" on trigger "{trig}"')
             return
         val = args[2]
         evidence.triggers[trig] = val
@@ -753,7 +761,8 @@ def ooc_cmd_trigger(client, arg):
         if trig not in client.area.triggers:
             raise ArgumentError(f"Invalid trigger: {trig}")
         if len(args) <= 1:
-            client.send_ooc(f'Call "{client.area.triggers[trig]}" on trigger "{trig}"')
+            client.send_ooc(
+                f'Call "{client.area.triggers[trig]}" on trigger "{trig}"')
             return
         val = args[1]
         client.area.triggers[trig] = val

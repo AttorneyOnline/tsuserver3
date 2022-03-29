@@ -36,8 +36,9 @@ class Bridgebot(commands.Bot):
             base = self.server.config["bridgebot"]["base_url"]
         if "embed_emotes" in self.server.config["bridgebot"]:
             embed_emotes = self.server.config["bridgebot"]["embed_emotes"]
-        if base != None:
-            avatar_url = base + parse.quote("characters/" + charname + "/char_icon.png")
+        if base is not None:
+            avatar_url = base + \
+                parse.quote("characters/" + charname + "/char_icon.png")
             if embed_emotes:
                 anim_url = base + parse.quote(
                     "characters/" + charname + "/" + anim + ".png"
@@ -62,7 +63,7 @@ class Bridgebot(commands.Bot):
 
     async def on_message(self, message):
         # Screw these loser bots
-        if message.author.bot or message.webhook_id != None:
+        if message.author.bot or message.webhook_id is not None:
             return
 
         if message.channel != self.channel:
@@ -96,9 +97,9 @@ class Bridgebot(commands.Bot):
                 if hook.user == self.user or hook.name == "AO2_Bridgebot":
                     webhook = hook
                     break
-            if webhook == None:
+            if webhook is None:
                 webhook = await self.channel.create_webhook(name="AO2_Bridgebot")
-            if image != None:
+            if image is not None:
                 embed = discord.Embed()
                 embed.set_image(url=image)
                 print(avatar, image)

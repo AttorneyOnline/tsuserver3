@@ -48,7 +48,8 @@ def ooc_cmd_undisemvowel(client, arg):
             client, TargetType.ID, int(arg), False
         )
     except:
-        raise ArgumentError("You must specify a target. Use /undisemvowel <id>.")
+        raise ArgumentError(
+            "You must specify a target. Use /undisemvowel <id>.")
     if targets:
         for c in targets:
             database.log_area("undisemvowel", client, client.area, target=c)

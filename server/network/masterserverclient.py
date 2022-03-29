@@ -84,7 +84,8 @@ class MasterServerClient:
                     elif cmd == "PONG":
                         ping_timeout = False
                     elif cmd == "NOSERV":
-                        logger.debug("MS does not have our server. Readvertising.")
+                        logger.debug(
+                            "MS does not have our server. Readvertising.")
                         await self.send_server_info()
             if time.time() - last_ping > 10:
                 if ping_timeout:

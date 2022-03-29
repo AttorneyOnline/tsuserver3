@@ -102,7 +102,8 @@ def ooc_cmd_jukebox_skip(client, arg):
     if not client.area.jukebox:
         raise ClientError("This area does not have a jukebox.")
     if len(client.area.jukebox_votes) == 0:
-        raise ClientError("There is no song playing right now, skipping is pointless.")
+        raise ClientError(
+            "There is no song playing right now, skipping is pointless.")
     client.area.start_jukebox()
     if len(client.area.jukebox_votes) == 1:
         client.area.broadcast_ooc(
@@ -165,7 +166,8 @@ def ooc_cmd_jukebox(client, arg):
             if total == 0:
                 message += "-- CHANCE: 100"
             else:
-                message += "-- CHANCE: " + str(round(chance[song] / total * 100))
+                message += "-- CHANCE: " + \
+                    str(round(chance[song] / total * 100))
 
         client.send_ooc(f"The jukebox has the following songs in it:{message}")
 
@@ -178,7 +180,8 @@ def ooc_cmd_play(client, arg):
     """
     if len(arg) == 0:
         raise ArgumentError("You must specify a song.")
-    client.change_music(arg, client.char_id, "", 2, True)  # looped change music
+    client.change_music(arg, client.char_id, "", 2,
+                        True)  # looped change music
     database.log_area("play", client, client.area, message=arg)
 
 
@@ -190,7 +193,8 @@ def ooc_cmd_play_once(client, arg):
     """
     if len(arg) == 0:
         raise ArgumentError("You must specify a song.")
-    client.change_music(arg, client.char_id, "", 2, False)  # non-looped change music
+    client.change_music(arg, client.char_id, "", 2,
+                        False)  # non-looped change music
     database.log_area("play", client, client.area, message=arg)
 
 
@@ -311,10 +315,12 @@ def ooc_cmd_hub_musiclist(client, arg):
             client.area.area_manager.clear_music()
             client.send_ooc("Clearing hub musiclist.")
         else:
-            client.area.area_manager.load_music(f"storage/musiclists/{arg}.yaml")
+            client.area.area_manager.load_music(
+                f"storage/musiclists/{arg}.yaml")
             client.area.area_manager.music_ref = arg
             client.send_ooc(f"Loading hub musiclist {arg}...")
-        client.server.client_manager.refresh_music(client.area.area_manager.clients)
+        client.server.client_manager.refresh_music(
+            client.area.area_manager.clients)
     except AreaError:
         raise
     except:
@@ -334,6 +340,7 @@ def ooc_cmd_random_music(client, arg):
             if "songs" in c:
                 songs = songs + c["songs"]
     if len(songs) <= 0:
-        raise ArgumentError("Could not find a single song that fit the criteria!")
+        raise ArgumentError(
+            "Could not find a single song that fit the criteria!")
     song_name = songs[random.randint(0, len(songs) - 1)]["name"]
     client.change_music(song_name, client.char_id, "", 2)
