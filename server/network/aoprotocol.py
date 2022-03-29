@@ -550,10 +550,15 @@ class AOProtocol(asyncio.Protocol):
                 additive,
                 effect,
             ) = args
-            pair_args = charid_pair.split("^")
-            charid_pair = int(pair_args[0])
-            if len(pair_args) > 1:
-                pair_order = pair_args[1]
+            try:
+                pair_args = charid_pair.split("^")
+                charid_pair = int(pair_args[0])
+                if len(pair_args) > 1:
+                    pair_order = pair_args[1]
+            except ValueError:
+                self.client.send_ooc(
+                    "Something went wrong! Please report the issue to the developers.")
+                return
         else:
             return
 
@@ -726,7 +731,7 @@ class AOProtocol(asyncio.Protocol):
             return
         if ding not in (0, 1):
             return
-        if color >= 12:
+        if color < 0 or color >= 12:
             return
         if len(showname) > 20:
             self.client.send_ooc("Your IC showname is way too long!")
