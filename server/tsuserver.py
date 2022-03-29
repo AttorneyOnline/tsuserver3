@@ -526,13 +526,13 @@ class TsuServer3:
         if args[0] == 0:
             for part_arg in args[1:]:
                 try:
-                    _sanitised = int(part_arg)
+                    int(part_arg)
                 except:
                     return
         elif args[0] in (1, 2, 3):
             for part_arg in args[1:]:
                 try:
-                    _sanitised = str(part_arg)
+                    str(part_arg)
                 except:
                     return
 

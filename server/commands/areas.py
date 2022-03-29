@@ -35,7 +35,7 @@ def ooc_cmd_bg(client, arg):
     if len(arg) == 0:
         pos_lock = ""
         if len(client.area.pos_lock) > 0:
-            pos = ", ".join(str(l) for l in client.area.pos_lock)
+            pos = ", ".join(str(lpos) for lpos in client.area.pos_lock)
             pos_lock = f"\nAvailable positions: {pos}."
         client.send_ooc(
             f"Current background is {client.area.background}.{pos_lock}")

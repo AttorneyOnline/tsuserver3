@@ -290,7 +290,7 @@ def ooc_cmd_link(client, arg):
             # Connect the target area to us
             area.link(client.area.id)
             links.append(target_id)
-        links = ", ".join(str(l) for l in links)
+        links = ", ".join(str(link) for link in links)
         client.send_ooc(
             f"Area {client.area.name} has been linked with {links} (two-way)."
         )
@@ -332,7 +332,7 @@ def ooc_cmd_unlink(client, arg):
                 links.append(target_id)
             except:
                 continue
-        links = ", ".join(str(l) for l in links)
+        links = ", ".join(str(link) for link in links)
         client.send_ooc(
             f"Area {client.area.name} has been unlinked with {links} (two-way)."
         )
@@ -362,7 +362,7 @@ def ooc_cmd_links(client, arg):
             # Can't see hidden links
             if not client.is_mod and client not in client.area.owners:
                 continue
-            evi_list = ", ".join(str(l + 1) for l in value["evidence"])
+            evi_list = ", ".join(str(evi + 1) for evi in value["evidence"])
             hidden = f"📦:{evi_list}"
 
         try:
@@ -410,7 +410,7 @@ def ooc_cmd_onelink(client, arg):
 
             client.area.link(target_id)
             links.append(target_id)
-        links = ", ".join(str(l) for l in links)
+        links = ", ".join(str(link) for link in links)
         client.send_ooc(
             f"Area {client.area.name} has been linked with {links} (one-way)."
         )
@@ -445,7 +445,7 @@ def ooc_cmd_oneunlink(client, arg):
                 links.append(target_id)
             except:
                 continue
-        links = ", ".join(str(l) for l in links)
+        links = ", ".join(str(link) for link in links)
         client.send_ooc(
             f"Area {client.area.name} has been unlinked with {links} (one-way)."
         )
@@ -491,7 +491,7 @@ def ooc_cmd_link_lock(client, arg):
             client.area.links[str(target_id)]["locked"] = True
             links.append(target_id)
         if len(links) > 0:
-            links = ", ".join(str(l) for l in links)
+            links = ", ".join(str(link) for link in links)
             client.send_ooc(f"Area {client.area.name} links {links} locked.")
     except (ValueError, KeyError):
         raise ArgumentError(
@@ -536,7 +536,7 @@ def ooc_cmd_link_unlock(client, arg):
             client.area.links[str(target_id)]["locked"] = False
             links.append(target_id)
         if len(links) > 0:
-            links = ", ".join(str(l) for l in links)
+            links = ", ".join(str(link) for link in links)
             client.send_ooc(f"Area {client.area.name} links {links} unlocked.")
     except (ValueError, KeyError):
         raise ArgumentError(
@@ -568,7 +568,7 @@ def ooc_cmd_link_hide(client, arg):
             client.area.links[str(target_id)]["hidden"] = True
             links.append(target_id)
         if len(links) > 0:
-            links = ", ".join(str(l) for l in links)
+            links = ", ".join(str(link) for link in links)
             client.send_ooc(f"Area {client.area.name} links {links} hidden.")
     except (ValueError, KeyError):
         raise ArgumentError("Area ID must be a number or abbreviation.")
@@ -598,7 +598,7 @@ def ooc_cmd_link_unhide(client, arg):
             client.area.links[str(target_id)]["hidden"] = False
             links.append(target_id)
         if len(links) > 0:
-            links = ", ".join(str(l) for l in links)
+            links = ", ".join(str(link) for link in links)
             client.send_ooc(f"Area {client.area.name} links {links} revealed.")
     except (ValueError, KeyError):
         raise ArgumentError("Area ID must be a number or abbreviation.")
@@ -656,7 +656,7 @@ def ooc_cmd_link_peekable(client, arg):
             client.area.links[str(target_id)]["can_peek"] = True
             links.append(target_id)
         if len(links) > 0:
-            links = ", ".join(str(l) for l in links)
+            links = ", ".join(str(link) for link in links)
             client.send_ooc(
                 f"Area {client.area.name} links {links} are now peekable.")
     except (ValueError, KeyError):
@@ -687,7 +687,7 @@ def ooc_cmd_link_unpeekable(client, arg):
             client.area.links[str(target_id)]["can_peek"] = False
             links.append(target_id)
         if len(links) > 0:
-            links = ", ".join(str(l) for l in links)
+            links = ", ".join(str(link) for link in links)
             client.send_ooc(
                 f"Area {client.area.name} links {links} are no longer peekable."
             )
@@ -731,7 +731,7 @@ def ooc_cmd_link_evidence(client, arg):
             link["evidence"] = evidences
 
         if len(link["evidence"]) > 0:
-            evi_list = ", ".join(str(l + 1) for l in link["evidence"])
+            evi_list = ", ".join(str(evi + 1) for evi in link["evidence"])
             client.send_ooc(
                 f"Area {client.area.name} link {args[0]} associated evidence IDs: {evi_list}."
             )
@@ -768,7 +768,7 @@ def ooc_cmd_unlink_evidence(client, arg):
     else:
         if len(evidences) > 0:
             link["evidence"] = link["evidence"] - evidences
-            evi_list = ", ".join(str(l + 1) for l in evidences)
+            evi_list = ", ".join(str(evi + 1) for evi in evidences)
             client.send_ooc(
                 f"Area {client.area.name} link {args[0]} is now unlinked from evidence IDs: {evi_list}."
             )
