@@ -177,7 +177,7 @@ class ClientManager:
                             lst[11] = evi_num
                             args = tuple(lst)
                             break
-            command, *args = encode_ao_packet([command] + list(args))
+            # command, *args = encode_ao_packet([command] + list(args))
             message = f"{command}#"
             for arg in args:
                 message += f"{arg}#"
@@ -921,7 +921,9 @@ class ClientManager:
                                 "",
                                 "",
                                 f'~~{"}}}"}[º{self.showname}º leaves to º{area.name}º.]',
-                                old_area.last_ic_message[5] if old_area.last_ic_message is not None else "",
+                                old_area.last_ic_message[5]
+                                if old_area.last_ic_message is not None
+                                else "",
                                 "",
                                 1,
                                 -1,
@@ -996,7 +998,9 @@ class ClientManager:
                             "",
                             "",
                             f'~~{"}}}"}[º{self.showname}º enters from º{old_area.name}º.]',
-                            self.area.last_ic_message[5] if self.area.last_ic_message is not None else "",
+                            self.area.last_ic_message[5]
+                            if self.area.last_ic_message is not None
+                            else "",
                             "",
                             1,
                             -1,
