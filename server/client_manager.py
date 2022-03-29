@@ -611,7 +611,7 @@ class ClientManager:
                 song_list = self.server.music_list
 
             self.local_music_list = music
-            song_list = self.server.build_music_list_ao2(song_list)
+            song_list = self.server.build_music_list(song_list)
             # KEEP THE ASTERISK
             self.send_command("FM", *song_list)
 

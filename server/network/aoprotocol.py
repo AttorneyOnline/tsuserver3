@@ -19,7 +19,6 @@
 
 from .. import commands
 from server.constants import dezalgo, censor, contains_URL
-from server.fantacrypt import fanta_decrypt
 from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
 from server import database
 import time
@@ -88,12 +87,6 @@ class AOProtocol(asyncio.Protocol):
         for msg in self.get_messages():
             if len(msg) < 2:
                 continue
-            # general netcode structure is not great
-            if msg[0] in ("#", "3", "4"):
-                if msg[0] == "#":
-                    msg = msg[1:]
-                spl = msg.split("#", 1)
-                msg = "#".join([fanta_decrypt(spl[0])] + spl[1:])
             try:
                 cmd, *args = msg.split("#")
                 self.net_cmd_dispatcher[cmd](self, args)
@@ -129,9 +122,8 @@ class AOProtocol(asyncio.Protocol):
             self.server.config["timeout"], self.client.disconnect
         )
 
-        asyncio.get_running_loop().call_later(
-            0.25, self.client.send_command, "decryptor", 34
-        )  # just fantacrypt things)
+        # Idk why AO2 even expects a decryptor packet but here we are
+        self.client.send_command("decryptor", 34)
 
     def connection_lost(self, exc):
         """User disconnected
@@ -253,57 +245,11 @@ class AOProtocol(asyncio.Protocol):
 
         askchaa#%
         """
+        # this is so dumb lol
         char_cnt = len(self.server.char_list)
         evi_cnt = 0
-        music_cnt = sum([len(x) for x in self.server.music_pages_ao1])
+        music_cnt = 0
         self.client.send_command("SI", char_cnt, evi_cnt, music_cnt)
-
-    def net_cmd_askchar2(self, _):
-        """Asks for the character list. (AO1)
-
-        askchar2#%
-        """
-        self.client.send_command("CI", *self.server.char_pages_ao1[0])
-
-    def net_cmd_an(self, args):
-        """Asks for specific pages of the character list.
-        (AO1 only; part of askchar2 sequence)
-
-        AN#<page:int>#%
-        """
-        if not self.validate_net_cmd(args, self.ArgType.INT, needs_auth=False):
-            return
-        if len(self.server.char_pages_ao1) > args[0] >= 0:
-            self.client.send_command(
-                "CI", *self.server.char_pages_ao1[args[0]])
-        else:
-            self.client.send_command("EM", *self.server.music_pages_ao1[0])
-
-    def net_cmd_ae(self, _):
-        """Asks for specific pages of the evidence list.
-        (AO1 only; part of askchar2 sequence)
-
-        AE#<page:int>#%
-
-        """
-        pass  # todo evidence maybe later
-
-    def net_cmd_am(self, args):
-        """Asks for specific pages of the music list.
-        (AO1 only; part of askchar2 sequence)
-
-        AM#<page:int>#%
-
-        """
-        if not self.validate_net_cmd(args, self.ArgType.INT, needs_auth=False):
-            return
-        if len(self.server.music_pages_ao1) > args[0] >= 0:
-            self.client.send_command(
-                "EM", *self.server.music_pages_ao1[args[0]])
-        else:
-            self.client.send_done()
-            self.client.send_motd()
-            self.client.send_hub_info()
 
     def net_cmd_rc(self, _):
         """Asks for the whole character list (AO2)
@@ -343,7 +289,7 @@ class AOProtocol(asyncio.Protocol):
             songs = self.client.local_music_list
         else:
             songs = self.server.music_list
-        song_list += self.server.build_music_list_ao2(songs)
+        song_list += self.server.build_music_list(songs)
 
         self.client.send_command("SM", *song_list)
 
@@ -1796,13 +1742,9 @@ class AOProtocol(asyncio.Protocol):
         "ID": net_cmd_id,  # client version
         "CH": net_cmd_ch,  # keepalive
         "askchaa": net_cmd_askchaa,  # ask for list lengths
-        "askchar2": net_cmd_askchar2,  # ask for list of characters
-        "AN": net_cmd_an,  # character list
-        "AE": net_cmd_ae,  # evidence list
-        "AM": net_cmd_am,  # music list
-        "RC": net_cmd_rc,  # AO2 character list
-        "RM": net_cmd_rm,  # AO2 music list
-        "RD": net_cmd_rd,  # AO2 done request, charscheck etc.
+        "RC": net_cmd_rc,  # character list
+        "RM": net_cmd_rm,  # music list
+        "RD": net_cmd_rd,  # done request, charscheck etc.
         "CC": net_cmd_cc,  # select character
         "MS": net_cmd_ms,  # IC message
         "CT": net_cmd_ct,  # OOC message

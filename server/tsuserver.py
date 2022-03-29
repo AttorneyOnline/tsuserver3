@@ -58,10 +58,7 @@ class TsuServer3:
         self.allowed_iniswaps = []
         self.char_list = None
         self.char_emotes = None
-        self.char_pages_ao1 = None
         self.music_list = []
-        self.music_list_ao2 = None
-        self.music_pages_ao1 = None
         self.backgrounds = None
         self.zalgo_tolerance = None
         self.ipRange_bans = []
@@ -320,13 +317,10 @@ class TsuServer3:
         """Load the character list from a YAML file."""
         with open("config/characters.yaml", "r", encoding="utf-8") as chars:
             self.char_list = yaml.safe_load(chars)
-        self.build_char_pages_ao1()
         self.char_emotes = {char: Emotes(char) for char in self.char_list}
 
     def load_music(self):
-        self.build_music_list()
-        self.music_pages_ao1 = self.build_music_pages_ao1(self.music_list)
-        self.music_list_ao2 = self.build_music_list_ao2(self.music_list)
+        self.load_music_list()
 
     def load_backgrounds(self):
         """Load the backgrounds list from a YAML file."""
@@ -349,39 +343,11 @@ class TsuServer3:
         except Exception:
             logger.debug("Cannot find iprange_ban.txt")
 
-    def build_char_pages_ao1(self):
-        """
-        Cache a list of characters that can be used for the
-        AO1 connection handshake.
-        """
-        self.char_pages_ao1 = [
-            self.char_list[x: x + 10] for x in range(0, len(self.char_list), 10)
-        ]
-        for i in range(len(self.char_list)):
-            self.char_pages_ao1[i // 10][i % 10] = "{}#{}&&0&&&0&".format(
-                i, self.char_list[i]
-            )
-
-    def build_music_list(self):
+    def load_music_list(self):
         with open("config/music.yaml", "r", encoding="utf-8") as music:
             self.music_list = yaml.safe_load(music)
 
-    def build_music_pages_ao1(self, music_list):
-        song_list = []
-        index = 0
-        for item in music_list:
-            if "category" not in item:
-                continue
-            song_list.append("{}#{}".format(index, item["category"]))
-            index += 1
-            for song in item["songs"]:
-                song_list.append("{}#{}".format(index, song["name"]))
-                index += 1
-        song_list = [song_list[x: x + 10]
-                     for x in range(0, len(song_list), 10)]
-        return song_list
-
-    def build_music_list_ao2(self, music_list):
+    def build_music_list(self, music_list):
         song_list = []
         for item in music_list:
             if "category" not in item:  # skip settings n stuff
