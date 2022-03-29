@@ -17,21 +17,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# Note that only the members of __all__ in each module will be imported.
-# There must be an __all__ in each module in order for reloading
-# to work properly.
-from .admin import *
-from .area_access import *
-from .areas import *
-from .casing import *
-from .character import *
-from .fun import *
-from .hubs import *
-from .messaging import *
-from .music import *
-from .roleplay import *
-
-
 def call(client, cmd, arg):
     import sys
 
@@ -142,3 +127,18 @@ def mod_only(area_owners=False, hub_owners=False):
         return wrapper_mod_only
 
     return decorator
+
+
+# Note that only the members of __all__ in each module will be imported.
+# There must be an __all__ in each module in order for reloading
+# to work properly.
+from .admin import *
+from .area_access import *
+from .areas import *
+from .casing import *
+from .character import *
+from .fun import *
+from .hubs import *
+from .messaging import *
+from .music import *
+from .roleplay import *
