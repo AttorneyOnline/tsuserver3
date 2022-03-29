@@ -126,7 +126,7 @@ def ooc_cmd_evidence_swap(client, arg):
         client.area.evi_list.evidence_swap(
             client, int(args[0]) - 1, int(args[1]) - 1)
         client.area.broadcast_evidence_list()
-    except:
+    except Exception:
         raise ClientError("you must specify 2 numbers")
 
 
@@ -297,7 +297,7 @@ def ooc_cmd_blockwtce(client, arg):
         targets = client.server.client_manager.get_targets(
             client, TargetType.ID, int(arg), False
         )
-    except:
+    except Exception:
         raise ArgumentError("You must enter a number. Use /blockwtce <id>.")
     if not targets:
         raise ArgumentError("Target not found. Use /blockwtce <id>.")
@@ -321,7 +321,7 @@ def ooc_cmd_unblockwtce(client, arg):
         targets = client.server.client_manager.get_targets(
             client, TargetType.ID, int(arg), False
         )
-    except:
+    except Exception:
         raise ArgumentError("You must enter a number. Use /unblockwtce <id>.")
     if not targets:
         raise ArgumentError("Target not found. Use /unblockwtce <id>.")
@@ -629,7 +629,7 @@ def ooc_cmd_cs(client, arg):
         target = client.server.client_manager.get_targets(
             client, TargetType.ID, int(args[0]), True
         )[0]
-    except:
+    except Exception:
         raise ArgumentError("Target not found.")
     else:
         try:

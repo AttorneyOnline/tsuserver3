@@ -305,7 +305,7 @@ class TsuServer3:
                 "config/command_aliases.yaml", "r", encoding="utf-8"
             ) as command_aliases:
                 self.command_aliases = yaml.safe_load(command_aliases)
-        except:
+        except Exception:
             logger.debug("Cannot find command_aliases.yaml")
 
     def load_censors(self):
@@ -313,7 +313,7 @@ class TsuServer3:
         try:
             with open("config/censors.yaml", "r", encoding="utf-8") as censors:
                 self.censors = yaml.safe_load(censors)
-        except:
+        except Exception:
             logger.debug("Cannot find censors.yaml")
 
     def load_characters(self):
@@ -338,7 +338,7 @@ class TsuServer3:
         try:
             with open("config/iniswaps.yaml", "r", encoding="utf-8") as iniswaps:
                 self.allowed_iniswaps = yaml.safe_load(iniswaps)
-        except:
+        except Exception:
             logger.debug("Cannot find iniswaps.yaml")
 
     def load_ipranges(self):
@@ -346,7 +346,7 @@ class TsuServer3:
         try:
             with open("config/iprange_ban.txt", "r", encoding="utf-8") as ipranges:
                 self.ipRange_bans = ipranges.read().splitlines()
-        except:
+        except Exception:
             logger.debug("Cannot find iprange_ban.txt")
 
     def build_char_pages_ao1(self):
@@ -527,13 +527,13 @@ class TsuServer3:
             for part_arg in args[1:]:
                 try:
                     int(part_arg)
-                except:
+                except Exception:
                     return
         elif args[0] in (1, 2, 3):
             for part_arg in args[1:]:
                 try:
                     str(part_arg)
-                except:
+                except Exception:
                     return
 
         client.send_command("ARUP", *args)

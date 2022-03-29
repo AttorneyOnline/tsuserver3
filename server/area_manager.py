@@ -211,7 +211,7 @@ class AreaManager:
         if not ("character_data" in ignore) and "character_data" in hub:
             try:
                 self.load_character_data(hub["character_data"])
-            except:
+            except Exception:
                 print("Character data reference path invalid!")
         if destructive:
             for area in self.areas.copy():
@@ -307,7 +307,7 @@ class AreaManager:
                 raise
             with open(path, "r") as chars:
                 data = yaml.safe_load(chars)
-        except:
+        except Exception:
             raise AreaError(f"File path {path} is invalid!")
 
         try:
@@ -316,7 +316,7 @@ class AreaManager:
                 if isinstance(char, int) and self.server.is_valid_char_id(char):
                     data[self.server.char_list[char]] = data.pop(char)
             self.character_data = data
-        except:
+        except Exception:
             raise AreaError(
                 "Something went wrong while loading the character data!")
 
@@ -330,7 +330,7 @@ class AreaManager:
             with open(path, "w", encoding="utf-8") as stream:
                 yaml.dump(self.character_data, stream,
                           default_flow_style=False)
-        except:
+        except Exception:
             raise AreaError(f"File path {path} is invalid!")
 
     def get_character_data(self, char, key, default_value=None):
@@ -387,7 +387,7 @@ class AreaManager:
         else:
             try:
                 target_area = self.get_area_by_id(1)
-            except:
+            except Exception:
                 raise AreaError("May not remove last existing area!")
         clients = area.clients.copy()
         for client in clients:

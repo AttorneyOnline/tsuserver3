@@ -44,7 +44,7 @@ class AOProtocolWS(AOProtocol):
                 try:
                     remote_address = (
                         self.ws.request_headers['X-Forwarded-For'], 0)
-                except:
+                except Exception:
                     pass
             info = {"peername": remote_address}
             return info[key]

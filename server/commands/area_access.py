@@ -42,7 +42,7 @@ def ooc_cmd_area_lock(client, arg):
             try:
                 target_id = client.area.area_manager.get_area_by_abbreviation(
                     aid).id
-            except:
+            except Exception:
                 target_id = int(aid)
             area = client.area.area_manager.get_area_by_id(target_id)
 
@@ -98,7 +98,7 @@ def ooc_cmd_area_mute(client, arg):
             try:
                 target_id = client.area.area_manager.get_area_by_abbreviation(
                     aid).id
-            except:
+            except Exception:
                 target_id = int(aid)
             area = client.area.area_manager.get_area_by_id(target_id)
             if not client.is_mod and client not in area.owners:
@@ -136,7 +136,7 @@ def ooc_cmd_area_unmute(client, arg):
             try:
                 target_id = client.area.area_manager.get_area_by_abbreviation(
                     aid).id
-            except:
+            except Exception:
                 target_id = int(aid)
             area = client.area.area_manager.get_area_by_id(target_id)
             if not client.is_mod and client not in area.owners:
@@ -173,7 +173,7 @@ def ooc_cmd_area_unlock(client, arg):
             try:
                 target_id = client.area.area_manager.get_area_by_abbreviation(
                     aid).id
-            except:
+            except Exception:
                 target_id = int(aid)
             area = client.area.area_manager.get_area_by_id(target_id)
 
@@ -278,7 +278,7 @@ def ooc_cmd_link(client, arg):
             try:
                 area = client.area.area_manager.get_area_by_abbreviation(aid)
                 target_id = area.id
-            except:
+            except Exception:
                 area = client.area.area_manager.get_area_by_id(int(aid))
                 target_id = area.id
 
@@ -317,7 +317,7 @@ def ooc_cmd_unlink(client, arg):
             try:
                 area = client.area.area_manager.get_area_by_abbreviation(aid)
                 target_id = area.id
-            except:
+            except Exception:
                 area = client.area.area_manager.get_area_by_id(int(aid))
                 target_id = area.id
 
@@ -330,7 +330,7 @@ def ooc_cmd_unlink(client, arg):
                 # Disconnect the target area from us
                 area.unlink(client.area.id)
                 links.append(target_id)
-            except:
+            except Exception:
                 continue
         links = ", ".join(str(link) for link in links)
         client.send_ooc(
@@ -367,7 +367,7 @@ def ooc_cmd_links(client, arg):
 
         try:
             area_name = f' - "{client.area.area_manager.get_area_by_id(int(key)).name}"'
-        except:
+        except Exception:
             area_name = ""
 
         locked = ""
@@ -400,7 +400,7 @@ def ooc_cmd_onelink(client, arg):
             try:
                 area = client.area.area_manager.get_area_by_abbreviation(aid)
                 target_id = area.id
-            except:
+            except Exception:
                 area = client.area.area_manager.get_area_by_id(int(aid))
                 target_id = area.id
 
@@ -437,13 +437,13 @@ def ooc_cmd_oneunlink(client, arg):
             try:
                 target_id = client.area.area_manager.get_area_by_abbreviation(
                     aid).id
-            except:
+            except Exception:
                 target_id = int(aid)
 
             try:
                 client.area.unlink(target_id)
                 links.append(target_id)
-            except:
+            except Exception:
                 continue
         links = ", ".join(str(link) for link in links)
         client.send_ooc(
@@ -471,7 +471,7 @@ def ooc_cmd_link_lock(client, arg):
             try:
                 target_id = client.area.area_manager.get_area_by_abbreviation(
                     aid).id
-            except:
+            except Exception:
                 target_id = int(aid)
             if not client.is_mod and client not in client.area.owners:
                 if f"{client.area.id}-{target_id}" not in client.keys:
@@ -516,7 +516,7 @@ def ooc_cmd_link_unlock(client, arg):
             try:
                 target_id = client.area.area_manager.get_area_by_abbreviation(
                     aid).id
-            except:
+            except Exception:
                 target_id = int(aid)
             if not client.is_mod and client not in client.area.owners:
                 if f"{client.area.id}-{target_id}" not in client.keys:
@@ -562,7 +562,7 @@ def ooc_cmd_link_hide(client, arg):
             try:
                 target_id = client.area.area_manager.get_area_by_abbreviation(
                     aid).id
-            except:
+            except Exception:
                 target_id = int(aid)
 
             client.area.links[str(target_id)]["hidden"] = True
@@ -592,7 +592,7 @@ def ooc_cmd_link_unhide(client, arg):
             try:
                 target_id = client.area.area_manager.get_area_by_abbreviation(
                     aid).id
-            except:
+            except Exception:
                 target_id = int(aid)
 
             client.area.links[str(target_id)]["hidden"] = False
@@ -620,7 +620,7 @@ def ooc_cmd_link_pos(client, arg):
         try:
             target_id = client.area.area_manager.get_area_by_abbreviation(
                 args[0]).id
-        except:
+        except Exception:
             target_id = int(args[0])
 
         pos = args[1:]
@@ -650,7 +650,7 @@ def ooc_cmd_link_peekable(client, arg):
             try:
                 target_id = client.area.area_manager.get_area_by_abbreviation(
                     aid).id
-            except:
+            except Exception:
                 target_id = int(aid)
 
             client.area.links[str(target_id)]["can_peek"] = True
@@ -681,7 +681,7 @@ def ooc_cmd_link_unpeekable(client, arg):
             try:
                 target_id = client.area.area_manager.get_area_by_abbreviation(
                     aid).id
-            except:
+            except Exception:
                 target_id = int(aid)
 
             client.area.links[str(target_id)]["can_peek"] = False

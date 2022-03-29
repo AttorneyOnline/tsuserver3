@@ -17,6 +17,14 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from .. import commands
+from server.constants import dezalgo, censor, contains_URL
+from server.fantacrypt import fanta_decrypt
+from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
+from server import database
+import time
+import arrow
+from enum import Enum
 import asyncio
 import re
 import unicodedata
@@ -25,17 +33,6 @@ import logging
 
 logger_debug = logging.getLogger("debug")
 logger = logging.getLogger("events")
-
-from enum import Enum
-
-import arrow
-import time
-
-from server import database
-from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
-from server.fantacrypt import fanta_decrypt
-from server.constants import dezalgo, censor, contains_URL
-from .. import commands
 
 
 class AOProtocol(asyncio.Protocol):
@@ -101,8 +98,9 @@ class AOProtocol(asyncio.Protocol):
                 cmd, *args = msg.split("#")
                 self.net_cmd_dispatcher[cmd](self, args)
             except KeyError:
-                logger_debug.debug(f"Unknown incoming message from {ipid}: {msg}")
-            except:
+                logger_debug.debug(
+                    f"Unknown incoming message from {ipid}: {msg}")
+            except Exception:
                 self.client.disconnect()
                 raise
 
@@ -276,7 +274,8 @@ class AOProtocol(asyncio.Protocol):
         if not self.validate_net_cmd(args, self.ArgType.INT, needs_auth=False):
             return
         if len(self.server.char_pages_ao1) > args[0] >= 0:
-            self.client.send_command("CI", *self.server.char_pages_ao1[args[0]])
+            self.client.send_command(
+                "CI", *self.server.char_pages_ao1[args[0]])
         else:
             self.client.send_command("EM", *self.server.music_pages_ao1[0])
 
@@ -299,7 +298,8 @@ class AOProtocol(asyncio.Protocol):
         if not self.validate_net_cmd(args, self.ArgType.INT, needs_auth=False):
             return
         if len(self.server.music_pages_ao1) > args[0] >= 0:
-            self.client.send_command("EM", *self.server.music_pages_ao1[args[0]])
+            self.client.send_command(
+                "EM", *self.server.music_pages_ao1[args[0]])
         else:
             self.client.send_done()
             self.client.send_motd()
@@ -578,7 +578,8 @@ class AOProtocol(asyncio.Protocol):
             and not self.client.is_mod
             and not (self.client in self.client.area.owners)
         ):
-            self.client.send_ooc("Showname changes are forbidden in this area!")
+            self.client.send_ooc(
+                "Showname changes are forbidden in this area!")
             return
         if self.client.area.is_iniswap(self.client, pre, anim, folder, sfx):
             self.client.send_ooc(
@@ -586,7 +587,8 @@ class AOProtocol(asyncio.Protocol):
             )
             return
         if len(self.client.charcurse) > 0 and folder != self.client.char_name:
-            self.client.send_ooc("You may not iniswap while you are charcursed!")
+            self.client.send_ooc(
+                "You may not iniswap while you are charcursed!")
             return
         if (
             not self.client.area.blankposting_allowed
@@ -666,7 +668,8 @@ class AOProtocol(asyncio.Protocol):
                     return
                 text = " ".join(part)
             except (ValueError, AreaError):
-                self.client.send_ooc("That does not look like a valid area ID!")
+                self.client.send_ooc(
+                    "That does not look like a valid area ID!")
                 return
         if len(self.client.area.testimony) > 0 and (
             text.lstrip().startswith(">") or text.lstrip().startswith("<")
@@ -695,7 +698,7 @@ class AOProtocol(asyncio.Protocol):
                 self.client.area.broadcast_ooc(
                     f"{self.client.showname} has moved to Statement {idx+1}."
                 )
-            except:
+            except Exception:
                 self.client.send_ooc("Invalid index!")
             return
         if msg_type not in ("chat", "0", "1", "2", "3", "4", "5"):
@@ -761,7 +764,7 @@ class AOProtocol(asyncio.Protocol):
         max_char = 0
         try:
             max_char = int(self.server.config["max_chars_ic"])
-        except:
+        except Exception:
             max_char = 256
 
         if len(text) > max_char:
@@ -864,7 +867,8 @@ class AOProtocol(asyncio.Protocol):
                 c = evi.hiding_client
                 c.hide(False)
                 c.area.broadcast_area_list(c)
-                self.client.send_ooc(f"You discover {c.showname} in the {evi.name}!")
+                self.client.send_ooc(
+                    f"You discover {c.showname} in the {evi.name}!")
 
             if evi.pos != "all":
                 evi.desc = f"(👀Discovered in pos: {evi.pos})\n{evi.desc}"
@@ -950,7 +954,8 @@ class AOProtocol(asyncio.Protocol):
                         or a.last_ic_message[5] in a.pos_lock
                     ):
                         tempos = a.last_ic_message[5]  # Use the same pos
-                        tempdeskmod = a.last_ic_message[0]  # Use the same desk mod
+                        # Use the same desk mod
+                        tempdeskmod = a.last_ic_message[0]
                     a.send_command(
                         "MS",
                         tempdeskmod,
@@ -1032,7 +1037,8 @@ class AOProtocol(asyncio.Protocol):
         if whisper_clients is None:
             # Enforce the area msg delay
             delay = 200 + self.client.area.parse_msg_delay(msg)
-            self.client.area.next_message_time = round(time.time() * 1000.0 + delay)
+            self.client.area.next_message_time = round(
+                time.time() * 1000.0 + delay)
             if (
                 text.strip() != ""
                 or self.client.area.last_ic_message is None
@@ -1232,7 +1238,8 @@ class AOProtocol(asyncio.Protocol):
         ):
             return
         if args[0] == "":
-            self.client.send_ooc("You must insert a name with at least one letter")
+            self.client.send_ooc(
+                "You must insert a name with at least one letter")
             return
         if len(args[0]) > 30:
             self.client.send_ooc(
@@ -1241,7 +1248,8 @@ class AOProtocol(asyncio.Protocol):
             return
         for c in args[0]:
             if unicodedata.category(c) == "Cf":
-                self.client.send_ooc("You cannot use format characters in your name!")
+                self.client.send_ooc(
+                    "You cannot use format characters in your name!")
                 return
         if (
             args[0].startswith(self.server.config["hostname"])
@@ -1318,7 +1326,7 @@ class AOProtocol(asyncio.Protocol):
         max_char = 0
         try:
             max_char = int(self.server.config["max_chars"])
-        except:
+        except Exception:
             max_char = 256
         if len(args[1]) > max_char:
             self.client.send_ooc("Your message is too long!")
@@ -1342,7 +1350,8 @@ class AOProtocol(asyncio.Protocol):
         self.client.area.send_owner_command(
             "CT", f"[{self.client.area.id}]{name}", args[1]
         )
-        database.log_area("chat.ooc", self.client, self.client.area, message=args[1])
+        database.log_area("chat.ooc", self.client,
+                          self.client.area, message=args[1])
 
     def net_cmd_mc(self, args):
         """Play music.
@@ -1395,7 +1404,8 @@ class AOProtocol(asyncio.Protocol):
             if self.client.viewing_hub_list:
                 called_function = "ooc_cmd_hub"
             # We can get cheeky and spoof ARUP info with normal song names
-            getattr(commands, called_function)(self.client, args[0].split("\n")[0])
+            getattr(commands, called_function)(
+                self.client, args[0].split("\n")[0])
         except AreaError:
             if not self.validate_net_cmd(args, self.ArgType.STR, self.ArgType.INT):
                 if not self.validate_net_cmd(
@@ -1463,7 +1473,8 @@ class AOProtocol(asyncio.Protocol):
 
         if len(self.client.broadcast_list) > 0:
             try:
-                a_list = ", ".join([str(a.id) for a in self.client.broadcast_list])
+                a_list = ", ".join([str(a.id)
+                                   for a in self.client.broadcast_list])
                 self.client.send_ooc(f"Broadcasting to areas {a_list}")
                 if len(args) == 1:
                     self.client.area.area_manager.send_remote_command(
@@ -1515,7 +1526,8 @@ class AOProtocol(asyncio.Protocol):
             if sign == "CE":
                 if self.client.area.recording:
                     self.client.area.recording = False
-                    self.client.area.broadcast_ooc("Testimony recording stopped!")
+                    self.client.area.broadcast_ooc(
+                        "Testimony recording stopped!")
                 # Display the testimony title
                 if len(self.client.area.testimony) > 0:
                     statement = self.client.area.testimony[0]
@@ -1523,7 +1535,8 @@ class AOProtocol(asyncio.Protocol):
                     # See if the testimony is supposed to end here.
 
                     # Center it and make it speedy
-                    lst[4] = "~~}}-- " + self.client.area.testimony_title + " --"
+                    lst[4] = "~~}}-- " + \
+                        self.client.area.testimony_title + " --"
 
                     # Make it orange
                     lst[14] = 3
@@ -1605,7 +1618,8 @@ class AOProtocol(asyncio.Protocol):
                 k: v
                 for k, v in zip(("message", "def", "pro", "jud", "jur", "steno"), args)
             }
-            database.log_area("case", self.client, self.client.area, message=log_data)
+            database.log_area("case", self.client,
+                              self.client.area, message=log_data)
         else:
             self.client.send_ooc(
                 "You cannot announce a case in an area where you are not a CM!"
@@ -1631,7 +1645,8 @@ class AOProtocol(asyncio.Protocol):
             return
         try:
             self.client.area.change_hp(args[0], args[1])
-            self.client.area.add_to_judgelog(self.client, "changed the penalties")
+            self.client.area.add_to_judgelog(
+                self.client, "changed the penalties")
             database.log_area("hp", self.client, self.client.area)
         except AreaError:
             return
@@ -1748,7 +1763,8 @@ class AOProtocol(asyncio.Protocol):
                 pred=lambda c: c.is_mod,
             )
             self.client.set_mod_call_delay()
-            database.log_area("modcall", self.client, self.client.area, message=args[0])
+            database.log_area("modcall", self.client,
+                              self.client.area, message=args[0])
             self.server.webhooks.modcall(
                 char=self.client.char_name,
                 ipid=self.client.ip,

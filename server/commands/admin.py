@@ -111,7 +111,7 @@ def ooc_cmd_kick(client, arg):
         raw_ipid = args[0]
         try:
             ipid = int(raw_ipid)
-        except:
+        except Exception:
             raise ClientError(f"{raw_ipid} does not look like a valid IPID.")
         targets = client.server.client_manager.get_targets(
             client, TargetType.IPID, ipid, False

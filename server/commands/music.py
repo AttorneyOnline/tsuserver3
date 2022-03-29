@@ -210,7 +210,7 @@ def ooc_cmd_blockdj(client, arg):
         targets = client.server.client_manager.get_targets(
             client, TargetType.ID, int(arg), False
         )
-    except:
+    except Exception:
         raise ArgumentError("You must enter a number. Use /blockdj <id>.")
     if not targets:
         raise ArgumentError("Target not found. Use /blockdj <id>.")
@@ -234,7 +234,7 @@ def ooc_cmd_unblockdj(client, arg):
         targets = client.server.client_manager.get_targets(
             client, TargetType.ID, int(arg), False
         )
-    except:
+    except Exception:
         raise ArgumentError("You must enter a number. Use /unblockdj <id>.")
     if not targets:
         raise ArgumentError("Target not found. Use /blockdj <id>.")
@@ -277,7 +277,7 @@ def ooc_cmd_musiclist(client, arg):
         client.refresh_music()
     except AreaError:
         raise
-    except:
+    except Exception:
         client.send_ooc("File not found!")
 
 
@@ -299,7 +299,7 @@ def ooc_cmd_area_musiclist(client, arg):
         client.server.client_manager.refresh_music(client.area.clients)
     except AreaError:
         raise
-    except:
+    except Exception:
         client.send_ooc("File not found!")
 
 
@@ -323,7 +323,7 @@ def ooc_cmd_hub_musiclist(client, arg):
             client.area.area_manager.clients)
     except AreaError:
         raise
-    except:
+    except Exception:
         client.send_ooc("File not found!")
 
 

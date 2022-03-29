@@ -23,7 +23,7 @@ class HubManager:
         try:
             with open(path, "r", encoding="utf-8") as stream:
                 hubs = yaml.safe_load(stream)
-        except:
+        except Exception:
             raise AreaError(f"File path {path} is invalid!")
 
         if hub_id != -1:
@@ -93,7 +93,7 @@ class HubManager:
                 for hub in self.hubs:
                     hubs.append(hub.save())
                 yaml.dump(hubs, stream, default_flow_style=False)
-        except:
+        except Exception:
             raise AreaError(f"File path {path} is invalid!")
 
     def default_hub(self):
