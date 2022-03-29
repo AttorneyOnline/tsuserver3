@@ -17,10 +17,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import asyncio
-import random
-import time
-from enum import Enum
+from server import commands
+from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
+from server.area import Area
+from collections import OrderedDict
 
 import oyaml as yaml  # ordered yaml
 import os
@@ -28,14 +28,6 @@ import datetime
 import logging
 
 logger = logging.getLogger("events")
-
-from server import database
-from server import commands
-from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
-
-from server.area import Area
-
-from collections import OrderedDict
 
 
 class AreaManager:
@@ -66,7 +58,7 @@ class AreaManager:
             if self.schedule:
                 self.schedule.cancel()
             # the hub was destroyed at some point
-            if self.hub == None or self == None:
+            if self.hub is None or self is None:
                 return
 
             self.static = datetime.timedelta(0)
@@ -76,9 +68,9 @@ class AreaManager:
             self.call_commands()
 
         def call_commands(self):
-            if self.caller == None:
+            if self.caller is None:
                 return
-            if self.hub == None or self == None:
+            if self.hub is None or self is None:
                 return
             if self.caller not in self.hub.owners:
                 return
@@ -144,7 +136,8 @@ class AreaManager:
     def name(self, value):
         self._name = value.strip()
         while "<num>" in self._name or "<percent>" in self._name:
-            self._name = self._name.replace("<num>", "").replace("<percent>", "")
+            self._name = self._name.replace(
+                "<num>", "").replace("<percent>", "")
         self.abbreviation = self.abbreviate()
 
     @property
@@ -212,7 +205,8 @@ class AreaManager:
                     if hub[entry] == "":
                         self.clear_music()
                     else:
-                        self.load_music(f"storage/musiclists/{self.music_ref}.yaml")
+                        self.load_music(
+                            f"storage/musiclists/{self.music_ref}.yaml")
 
         if not ("character_data" in ignore) and "character_data" in hub:
             try:
@@ -263,7 +257,7 @@ class AreaManager:
         for entry in list(set(save_list) - set(ignore)):
             hub[entry] = getattr(self, entry)
 
-        if not "areas" in ignore:
+        if "areas" not in ignore:
             areas = []
             for area in self.areas:
                 areas.append(area.save())
@@ -286,8 +280,8 @@ class AreaManager:
             for item in music_list:
                 # deprecated, use 'replace_music' hub pref instead
                 # if 'replace' in item:
-                #    self.replace_music = item['replace'] == True
-                if "use_unique_folder" in item and item["use_unique_folder"] == True:
+                #    self.replace_music = item['replace'] is True
+                if "use_unique_folder" in item and item["use_unique_folder"] is True:
                     prepath = os.path.splitext(os.path.basename(path))[0] + "/"
 
                 if "category" not in item:
@@ -323,7 +317,8 @@ class AreaManager:
                     data[self.server.char_list[char]] = data.pop(char)
             self.character_data = data
         except:
-            raise AreaError(f"Something went wrong while loading the character data!")
+            raise AreaError(
+                "Something went wrong while loading the character data!")
 
     def save_character_data(self, path="config/character_data.yaml"):
         """
@@ -333,7 +328,8 @@ class AreaManager:
         """
         try:
             with open(path, "w", encoding="utf-8") as stream:
-                yaml.dump(self.character_data, stream, default_flow_style=False)
+                yaml.dump(self.character_data, stream,
+                          default_flow_style=False)
         except:
             raise AreaError(f"File path {path} is invalid!")
 
@@ -554,13 +550,14 @@ class AreaManager:
         if not self.arup_enabled:
             return
         players_list = [0, -1]
-        if clients == None:
+        if clients is None:
             clients = self.clients
         for client in clients:
             for area in client.local_area_list:
                 playercount = -1
                 if not self.hide_clients and not area.hide_clients:
-                    playercount = len([c for c in area.clients if not c.hidden])
+                    playercount = len(
+                        [c for c in area.clients if not c.hidden])
                 players_list.append(playercount)
                 playerhubcount = 0
                 for area in client.local_area_list:
@@ -579,7 +576,7 @@ class AreaManager:
         if not self.arup_enabled:
             return
         status_list = [1, "GAMING"]
-        if clients == None:
+        if clients is None:
             clients = self.clients
         for client in clients:
             for area in client.local_area_list:
@@ -594,7 +591,7 @@ class AreaManager:
         if not self.arup_enabled:
             return
         cms_list = [2, "Double-Click for Hubs"]
-        if clients == None:
+        if clients is None:
             clients = self.clients
         for client in clients:
             for area in client.local_area_list:
@@ -609,7 +606,7 @@ class AreaManager:
         if not self.arup_enabled:
             return
         lock_list = [3, ""]
-        if clients == None:
+        if clients is None:
             clients = self.clients
         for client in clients:
             for area in client.local_area_list:

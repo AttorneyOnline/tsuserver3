@@ -614,7 +614,7 @@ class AOProtocol(asyncio.Protocol):
         # Scrub text and showname for bad words
         if (
             self.client.area.area_manager.censor_ic
-            and self.server.censors != None
+            and self.server.censors is not None
             and len(self.server.censors) > 0
         ):
             text = censor(
@@ -671,7 +671,7 @@ class AOProtocol(asyncio.Protocol):
         if len(self.client.area.testimony) > 0 and (
             text.lstrip().startswith(">") or text.lstrip().startswith("<")
         ):
-            if self.client.area.recording == True:
+            if self.client.area.recording is True:
                 self.client.send_ooc("It is not cross-examination yet!")
                 return
             cmd = text.strip()
@@ -774,7 +774,7 @@ class AOProtocol(asyncio.Protocol):
             and not self.client.is_mod
             and not (self.client in self.client.area.owners)
             and text.strip() != ""
-            and self.client.area.last_ic_message != None
+            and self.client.area.last_ic_message is not None
             and cid == self.client.area.last_ic_message[8]
             and text == self.client.area.last_ic_message[4]
         ):
@@ -788,7 +788,7 @@ class AOProtocol(asyncio.Protocol):
             pre = "-"
             anim = "misc/blank"
         # We're narrating, or we're hidden in some evidence.
-        if self.client.narrator or self.client.hidden_in != None:
+        if self.client.narrator or self.client.hidden_in is not None:
             anim = ""
 
         if pos != "" and self.client.pos != pos:
@@ -805,7 +805,7 @@ class AOProtocol(asyncio.Protocol):
             if (
                 not self.client.area.can_whisper
                 and not self.client.is_mod
-                and not self.client in self.client.area.owners
+                and self.client in self.client.area.owners
             ):
                 self.client.send_ooc("You can't whisper in this area!")
                 return
@@ -860,7 +860,7 @@ class AOProtocol(asyncio.Protocol):
             area = self.client.area
             evi = area.evi_list.evidences[self.client.evi_list[evidence] - 1]
 
-            if evi.hiding_client != None:
+            if evi.hiding_client is not None:
                 c = evi.hiding_client
                 c.hide(False)
                 c.area.broadcast_area_list(c)
@@ -916,7 +916,7 @@ class AOProtocol(asyncio.Protocol):
         if not confirmed:
             charid_pair = -1
 
-        if whisper_clients != None:
+        if whisper_clients is not None:
             whisper_clients.insert(0, self.client)
             for client in self.client.area.clients:
                 if client in whisper_clients:
@@ -934,7 +934,7 @@ class AOProtocol(asyncio.Protocol):
                     tempdeskmod = msg_type
                     # Additive only works on same-char messages
                     if additive and (
-                        a.last_ic_message == None
+                        a.last_ic_message is None
                         or cid != a.last_ic_message[8]
                         or (
                             a.last_ic_message[4].strip() == ""
@@ -944,7 +944,7 @@ class AOProtocol(asyncio.Protocol):
                         additive = 0
                     if len(a.pos_lock) > 0:
                         tempos = a.pos_lock[0]
-                    if a.last_ic_message != None and (
+                    if a.last_ic_message is not None and (
                         anim == ""
                         or len(a.pos_lock) <= 0
                         or a.last_ic_message[5] in a.pos_lock
@@ -1029,13 +1029,13 @@ class AOProtocol(asyncio.Protocol):
             return
 
         # If we are not whispering...
-        if whisper_clients == None:
+        if whisper_clients is None:
             # Enforce the area msg delay
             delay = 200 + self.client.area.parse_msg_delay(msg)
             self.client.area.next_message_time = round(time.time() * 1000.0 + delay)
             if (
                 text.strip() != ""
-                or self.client.area.last_ic_message == None
+                or self.client.area.last_ic_message is None
                 or self.client.area.last_ic_message[4].strip() != ""
             ):
                 # Discord Bridgebot
@@ -1094,11 +1094,11 @@ class AOProtocol(asyncio.Protocol):
                 opposing_team = self.client.area.red_team
 
             # We're in a minigame w/ team setups
-            if opposing_team != None:
+            if opposing_team is not None:
                 charid_pair = -1
                 # Last speaker is us and our message already paired us with someone, and that someone is on the opposing team
                 if (
-                    self.client.area.last_ic_message != None
+                    self.client.area.last_ic_message is not None
                     and self.client.area.last_ic_message[8] == self.client.char_id
                     and self.client.area.last_ic_message[16] != -1
                     and int(self.client.area.last_ic_message[16].split("^")[0])
@@ -1112,7 +1112,7 @@ class AOProtocol(asyncio.Protocol):
                         charid_pair = other_cid
                         # If last message's charid matches a member of this team, prioritize theirs
                         if (
-                            self.client.area.last_ic_message != None
+                            self.client.area.last_ic_message is not None
                             and other_cid == self.client.area.last_ic_message[8]
                         ):
                             break
@@ -1129,7 +1129,7 @@ class AOProtocol(asyncio.Protocol):
 
         # Additive only works on same-char messages
         if additive and (
-            self.client.area.last_ic_message == None
+            self.client.area.last_ic_message is None
             or cid != self.client.area.last_ic_message[8]
             or (
                 self.client.area.last_ic_message[4].strip() == ""
@@ -1254,7 +1254,7 @@ class AOProtocol(asyncio.Protocol):
         # Scrub text and OOC name for bad words, even if you're trying to pass bad words to a command as args.
         if (
             self.client.area.area_manager.censor_ooc
-            and self.server.censors != None
+            and self.server.censors is not None
             and len(self.server.censors) > 0
         ):
             # Censor the name
@@ -1432,7 +1432,7 @@ class AOProtocol(asyncio.Protocol):
         if (
             not self.client.area.can_wtce
             and not self.client.is_mod
-            and not self in self.client.area.owners
+            and self not in self.client.area.owners
         ):
             self.client.send_ooc(
                 "Only CMs and mods may use judge buttons in this area!"
@@ -1487,7 +1487,7 @@ class AOProtocol(asyncio.Protocol):
         database.log_area("wtce", self.client, self.client.area, message=sign)
 
         if self.client in self.client.area.owners:
-            if self.client.area.last_ic_message != None and sign == "WT":
+            if self.client.area.last_ic_message is not None and sign == "WT":
                 # remove centering chars and strip space chars as well as any coloring
                 msg = (
                     self.client.area.last_ic_message[4]

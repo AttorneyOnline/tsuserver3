@@ -17,19 +17,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import asyncio
-import random
-import time
-import arrow
-from enum import Enum
-
-import oyaml as yaml  # ordered yaml
-import os
-import datetime
-import logging
-
-logger = logging.getLogger("events")
-
 from server import database
 from server import commands
 from server.evidence import EvidenceList
@@ -37,6 +24,18 @@ from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
 from server.constants import MusicEffect
 
 from collections import OrderedDict
+
+import asyncio
+import random
+import time
+import arrow
+
+import oyaml as yaml  # ordered yaml
+import os
+import datetime
+import logging
+
+logger = logging.getLogger("events")
 
 
 class Area:
@@ -67,7 +66,7 @@ class Area:
             if self.schedule:
                 self.schedule.cancel()
             # Either the area or the hub was destroyed at some point
-            if self.area == None or self == None:
+            if self.area is None or self is None:
                 return
 
             self.static = datetime.timedelta(0)
@@ -77,9 +76,9 @@ class Area:
             self.call_commands()
 
         def call_commands(self):
-            if self.caller == None:
+            if self.caller is None:
                 return
-            if self.area == None or self == None:
+            if self.area is None or self is None:
                 return
             if self.caller not in self.area.owners:
                 return
@@ -613,7 +612,7 @@ class Area:
     def new_client(self, client):
         """Add a client to the area."""
         self.clients.add(client)
-        if client.char_id != None:
+        if client.char_id is not None:
             database.log_area("area.join", client, self)
 
         if self.music_autoplay:
@@ -692,7 +691,7 @@ class Area:
 
     def remove_client(self, client):
         """Remove a disconnected client from the area."""
-        if client.hidden_in != None:
+        if client.hidden_in is not None:
             client.hide(False, hidden=True)
         if self.area_manager.single_cm:
             # Remove their owner status due to single_cm pref. remove_owner will unlock the area if they were the last CM.
@@ -714,7 +713,7 @@ class Area:
             self.remove_jukebox_vote(client, True)
         if len(self.clients) == 0:
             self.change_status("IDLE")
-        if client.char_id != None:
+        if client.char_id is not None:
             database.log_area("area.leave", client, self)
         if not client.hidden:
             self.area_manager.send_arup_players()
@@ -871,7 +870,7 @@ class Area:
                     f"Something went wrong, couldn't amend Statement {idx+1}!"
                 )
             return
-        adding = args[4].strip() != "" and self.recording and client != None
+        adding = args[4].strip() != "" and self.recording and client is not None
         if client and args[4].startswith("++") and len(self.testimony) > 0:
             if len(self.testimony) >= 30:
                 client.send_ooc("Maximum testimony statement amount reached! (30)")
@@ -915,7 +914,7 @@ class Area:
                                 opponent = t
 
                     # Minigame with an opponent
-                    if opponent != None and shout in ["1", "2"]:
+                    if opponent is not None and shout in ["1", "2"]:
                         self.start_debate(client, opponent, shout == "1")
                     # Concede
                     elif shout == "3" and self.minigame != "":
@@ -927,14 +926,14 @@ class Area:
                     client.send_ooc(ex)
                     return
 
-            if targets == None:
+            if targets is None:
                 targets = self.clients
             for c in targets:
                 # Blinded clients don't receive IC messages
                 if c.blinded:
                     continue
                 # pos doesn't match listen_pos, we're not listening so make this an OOC message instead
-                if c.listen_pos != None:
+                if c.listen_pos is not None:
                     if (
                         type(c.listen_pos) is list
                         and not (args[5] in c.listen_pos)
@@ -962,7 +961,7 @@ class Area:
             if client:
                 if (
                     args[4].strip() != ""
-                    or self.last_ic_message == None
+                    or self.last_ic_message is None
                     or args[8] != self.last_ic_message[8]
                     or self.last_ic_message[4].strip() != ""
                 ):
@@ -1096,8 +1095,8 @@ class Area:
             for item in music_list:
                 # deprecated, use 'replace_music' area pref instead
                 # if 'replace' in item:
-                #     self.replace_music = item['replace'] == True
-                if "use_unique_folder" in item and item["use_unique_folder"] == True:
+                #     self.replace_music = item['replace'] is True
+                if "use_unique_folder" in item and item["use_unique_folder"] is True:
                     prepath = os.path.splitext(os.path.basename(path))[0] + "/"
 
                 if "category" not in item:
@@ -1242,7 +1241,7 @@ class Area:
         if vote_picked.name == self.music:
             return
 
-        if vote_picked.client != None:
+        if vote_picked.client is not None:
             self.jukebox_prev_char_id = vote_picked.client.char_id
             if vote_picked.showname == "":
                 self.send_command(
@@ -1341,8 +1340,8 @@ class Area:
         return (
             self.muted
             and not client.is_mod
-            and not client in self.owners
-            and not client.id in self.invite_list
+            and client not in self.owners
+            and client.id not in self.invite_list
         )
 
     def change_hp(self, side, val):
@@ -1443,7 +1442,7 @@ class Area:
             self.music_player = client.char_name
         self.music_player_ipid = client.ipid
         self.music = name
-        if autoplay == None:
+        if autoplay is None:
             autoplay = self.music_autoplay
         self.music_autoplay = autoplay
 
@@ -1536,7 +1535,7 @@ class Area:
         Send the accessible and visible areas to the client.
         """
         clients = []
-        if client == None:
+        if client is None:
             clients = list(self.clients)
         else:
             clients.append(client)

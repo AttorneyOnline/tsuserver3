@@ -36,7 +36,7 @@ def fanta_decrypt(data):
     :param data: hex string
 
     """
-    data_bytes = [int(data[x : x + 2], 16) for x in range(0, len(data), 2)]
+    data_bytes = [int(data[x: x + 2], 16) for x in range(0, len(data), 2)]
     key = CRYPT_KEY
     ret = ""
     for byte in data_bytes:
@@ -56,6 +56,7 @@ def fanta_encrypt(data):
     ret = ""
     for char in data:
         val = ord(char) ^ ((key & 0xFFFF) >> 8)
-        ret += binascii.hexlify(val.to_bytes(1, byteorder="big")).decode().upper()
+        ret += binascii.hexlify(val.to_bytes(1,
+                                byteorder="big")).decode().upper()
         key = ((val + key) * CRYPT_CONST_1) + CRYPT_CONST_2
     return ret

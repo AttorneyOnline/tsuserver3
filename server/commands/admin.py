@@ -62,7 +62,7 @@ def ooc_cmd_help(client, arg):
         If you don't understand a specific core feature, check the official
         repository for more information:
 
-        https://github.com/Crystalwarrior/KFO-Server/blob/master/README.md 
+        https://github.com/Crystalwarrior/KFO-Server/blob/master/README.md
 
         Available Categories:
         """
@@ -97,7 +97,8 @@ def ooc_cmd_kick(client, arg):
      - "**" kicks everyone in the server.
     """
     if len(arg) == 0:
-        raise ArgumentError("You must specify a target. Use /kick <ipid> [reason]")
+        raise ArgumentError(
+            "You must specify a target. Use /kick <ipid> [reason]")
     elif arg[0] == "*":
         targets = [c for c in client.area.clients if c != client]
     elif arg[0] == "**":
@@ -119,7 +120,8 @@ def ooc_cmd_kick(client, arg):
     if targets:
         reason = " ".join(args[1:])
         for c in targets:
-            database.log_misc("kick", client, target=c, data={"reason": reason})
+            database.log_misc("kick", client, target=c,
+                              data={"reason": reason})
             client.send_ooc(f"{c.showname} was kicked.")
             c.send_command("KK", reason)
             c.disconnect()
@@ -193,22 +195,25 @@ def kickban(client, arg, ban_hdid):
 
     char = None
     hdid = None
-    if ipid != None:
+    if ipid is not None:
         targets = client.server.client_manager.get_targets(
             client, TargetType.IPID, ipid, False
         )
         if targets:
             for c in targets:
                 if ban_hdid:
-                    database.ban(c.hdid, reason, ban_type="hdid", ban_id=ban_id)
+                    database.ban(c.hdid, reason,
+                                 ban_type="hdid", ban_id=ban_id)
                     hdid = c.hdid
                 c.send_command("KB", reason)
                 c.disconnect()
                 char = c.char_name
-                database.log_misc("ban", client, target=c, data={"reason": reason})
+                database.log_misc("ban", client, target=c,
+                                  data={"reason": reason})
             client.send_ooc(f"{len(targets)} clients were kicked.")
         client.send_ooc(f"{ipid} was banned. Ban ID: {ban_id}")
-    client.server.webhooks.ban(ipid, ban_id, reason, client, hdid, char, unban_date)
+    client.server.webhooks.ban(
+        ipid, ban_id, reason, client, hdid, char, unban_date)
 
 
 @mod_only()
@@ -218,7 +223,8 @@ def ooc_cmd_unban(client, arg):
     Usage: /unban <ban_id...>
     """
     if len(arg) == 0:
-        raise ArgumentError("You must specify a target. Use /unban <ban_id...>")
+        raise ArgumentError(
+            "You must specify a target. Use /unban <ban_id...>")
     args = list(arg.split(" "))
     client.send_ooc(f"Attempting to lift {len(args)} ban(s)...")
     for ban_id in args:
@@ -374,7 +380,8 @@ def ooc_cmd_ooc_mute(client, arg):
     Usage: /ooc_mute <ooc-name>
     """
     if len(arg) == 0:
-        raise ArgumentError("You must specify a target. Use /ooc_mute <OOC-name>.")
+        raise ArgumentError(
+            "You must specify a target. Use /ooc_mute <OOC-name>.")
     targets = client.server.client_manager.get_targets(
         client, TargetType.OOC_NAME, arg, False
     )
@@ -393,7 +400,8 @@ def ooc_cmd_ooc_unmute(client, arg):
     Usage: /ooc_unmute <ooc-name>
     """
     if len(arg) == 0:
-        raise ArgumentError("You must specify a target. Use /ooc_unmute <OOC-name>.")
+        raise ArgumentError(
+            "You must specify a target. Use /ooc_unmute <OOC-name>.")
     targets = client.server.client_manager.get_ooc_muted_clients()
     if not targets:
         raise ArgumentError("Targets not found. Use /ooc_unmute <OOC-name>.")
@@ -442,7 +450,8 @@ def ooc_cmd_baninfo(client, arg):
         client.send_ooc("No ban found for this ID.")
     else:
         msg = f"Ban ID: {ban.ban_id}\n"
-        msg += "Affected IPIDs: " + ", ".join([str(ipid) for ipid in ban.ipids]) + "\n"
+        msg += "Affected IPIDs: " + \
+            ", ".join([str(ipid) for ipid in ban.ipids]) + "\n"
         msg += "Affected HDIDs: " + ", ".join(ban.hdids) + "\n"
         msg += f'Reason: "{ban.reason}"\n'
         msg += f"Banned by: {ban.banned_by_name} ({ban.banned_by})\n"
@@ -512,7 +521,8 @@ def ooc_cmd_restart(client, arg):
     if arg != client.server.config["restartpass"]:
         raise ArgumentError("no")
     print(f"!!!{client.name} called /restart!!!")
-    client.server.send_all_cmd_pred("CT", "WARNING", "Restarting the server...")
+    client.server.send_all_cmd_pred(
+        "CT", "WARNING", "Restarting the server...")
     asyncio.get_running_loop().stop()
 
 

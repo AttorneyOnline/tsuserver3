@@ -1,5 +1,3 @@
-import os
-
 from server import database
 from server.constants import TargetType
 from server.exceptions import ClientError, ArgumentError, AreaError
@@ -39,7 +37,8 @@ def ooc_cmd_bg(client, arg):
         if len(client.area.pos_lock) > 0:
             pos = ", ".join(str(l) for l in client.area.pos_lock)
             pos_lock = f"\nAvailable positions: {pos}."
-        client.send_ooc(f"Current background is {client.area.background}.{pos_lock}")
+        client.send_ooc(
+            f"Current background is {client.area.background}.{pos_lock}")
         return
     if client not in client.area.owners and not client.is_mod and client.area.bg_lock:
         raise AreaError("This area's background is locked!")
@@ -57,7 +56,8 @@ def ooc_cmd_bg(client, arg):
         client.area.change_background(arg)
     except AreaError:
         raise
-    client.area.broadcast_ooc(f"{client.showname} changed the background to {arg}.")
+    client.area.broadcast_ooc(
+        f"{client.showname} changed the background to {arg}.")
     database.log_area("bg", client, client.area, message=arg)
 
 
@@ -100,7 +100,8 @@ def ooc_cmd_status(client, arg):
         try:
             client.area.change_status(arg)
             client.area.broadcast_ooc(
-                "{} changed status to {}.".format(client.showname, client.area.status)
+                "{} changed status to {}.".format(
+                    client.showname, client.area.status)
             )
             database.log_area("status", client, client.area, message=arg)
         except AreaError:
@@ -113,7 +114,8 @@ def ooc_cmd_area(client, arg):
     Usage: /area [id] or /area [name]
     """
     if arg == "":
-        client.send_area_list(full=client.is_mod or client in client.area.owners)
+        client.send_area_list(
+            full=client.is_mod or client in client.area.owners)
         return
 
     try:
@@ -135,7 +137,8 @@ def ooc_cmd_area(client, arg):
                 return
         raise AreaError("Targeted area not found!")
     except ValueError:
-        raise ArgumentError("Area ID must be a name, abbreviation or a number.")
+        raise ArgumentError(
+            "Area ID must be a name, abbreviation or a number.")
     except (AreaError, ClientError):
         raise
 
@@ -236,7 +239,8 @@ def ooc_cmd_invite(client, arg):
         for c in targets:
             client.area.invite_list.add(c.id)
             client.send_ooc(f"{c.showname} is invited to your area.")
-            c.send_ooc(f"You were invited and given access to {client.area.name}.")
+            c.send_ooc(
+                f"You were invited and given access to {client.area.name}.")
             database.log_area("invite", client, client.area, target=c)
     except:
         raise ClientError("You must specify a target. Use /invite <id>")
@@ -270,7 +274,8 @@ def ooc_cmd_uninvite(client, arg):
         try:
             for c in targets:
                 client.send_ooc(
-                    "You have removed {} from the whitelist.".format(c.showname)
+                    "You have removed {} from the whitelist.".format(
+                        c.showname)
                 )
                 c.send_ooc("You were removed from the area whitelist.")
                 database.log_area("uninvite", client, client.area, target=c)
@@ -333,7 +338,8 @@ def ooc_cmd_area_kick(client, arg):
                     output = area.id
                 else:
                     try:
-                        area = client.area.area_manager.get_area_by_id(int(args[1]))
+                        area = client.area.area_manager.get_area_by_id(
+                            int(args[1]))
                         output = args[1]
                     except AreaError:
                         raise
@@ -408,7 +414,8 @@ def ooc_cmd_pos_lock(client, arg):
         args = arg.split(",")
     else:
         args = arg.split()
-    args = sorted(set(args), key=args.index)  # remove duplicates while preserving order
+    # remove duplicates while preserving order
+    args = sorted(set(args), key=args.index)
     for pos in args:
         pos = pos.strip().lower()
         if pos == "none" or pos == "":
@@ -547,7 +554,8 @@ def ooc_cmd_peek(client, arg):
                 area.broadcast_ooc(
                     f"Someone tried to enter from [{client.area.id}] {client.area.name} but {str(ex).lower()}"
                 )
-            client.send_ooc(f"Failed to peek into [{area.id}] {area.name}: {ex}")
+            client.send_ooc(
+                f"Failed to peek into [{area.id}] {area.name}: {ex}")
             return
         else:
             sorted_clients = []
@@ -576,7 +584,8 @@ def ooc_cmd_peek(client, arg):
                     f"[{client.id}] {client.showname} peeks into [{area.id}] {area.name}..."
                 )
             else:
-                client.send_ooc(f"You silently peek into [{area.id}] {area.name}...")
+                client.send_ooc(
+                    f"You silently peek into [{area.id}] {area.name}...")
             client.send_ooc(f"There's {sorted_clients}.")
     except ValueError:
         raise ArgumentError(
@@ -607,7 +616,8 @@ def ooc_cmd_max_players(client, arg):
             f"New max amount of players for the area is now {client.area.max_players}."
         )
     except ValueError:
-        raise ArgumentError("Area ID must be a name, abbreviation or a number.")
+        raise ArgumentError(
+            "Area ID must be a name, abbreviation or a number.")
     except (AreaError, ClientError):
         raise
 

@@ -35,7 +35,8 @@ def setup_logger(debug):
 
     stdoutHandler = logging.StreamHandler(sys.stdout)
     stdoutHandler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter("[%(name)s] %(module)s@%(lineno)d : %(message)s")
+    formatter = logging.Formatter(
+        "[%(name)s] %(module)s@%(lineno)d : %(message)s")
     stdoutHandler.setFormatter(formatter)
     logging.getLogger().addHandler(stdoutHandler)
 
@@ -56,7 +57,8 @@ def setup_logger(debug):
     file_handler = logging.handlers.RotatingFileHandler(
         "logs/server.log", encoding="utf-8", maxBytes=1024 * 512
     )
-    file_handler.setFormatter(logging.Formatter("[%(asctime)s UTC] %(message)s"))
+    file_handler.setFormatter(logging.Formatter(
+        "[%(asctime)s UTC] %(message)s"))
     info_log.addHandler(file_handler)
 
     if not debug:
