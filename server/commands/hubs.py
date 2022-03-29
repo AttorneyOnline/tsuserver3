@@ -134,7 +134,7 @@ def ooc_cmd_save_hub(client, arg):
                     )
             except ArgumentError:
                 raise
-            except:
+            except Exception:
                 raise AreaError(f"File path {arg} is invalid!")
             client.send_ooc(f"Saving as {arg}...")
         else:
@@ -639,7 +639,7 @@ def ooc_cmd_force_follow(client, arg):
         targets = client.server.client_manager.get_targets(
             client, TargetType.ID, int(arg), False
         )
-    except:
+    except Exception:
         raise ArgumentError(
             "You must specify a target. Use /force_follow <id>.")
     if targets:
@@ -669,7 +669,7 @@ def ooc_cmd_follow(client, arg):
             client.send_ooc(
                 f"You are currently following [{client.following.id}] {client.following.showname}."
             )
-        except:
+        except Exception:
             raise ArgumentError("Not following anybody. Use /follow <id>.")
         return
     if (
@@ -685,7 +685,7 @@ def ooc_cmd_follow(client, arg):
         targets = client.server.client_manager.get_targets(
             client, TargetType.ID, int(arg), False
         )
-    except:
+    except Exception:
         raise ArgumentError("You must specify a target. Use /follow <id>.")
     if targets:
         c = targets[0]
@@ -730,7 +730,7 @@ def ooc_cmd_unfollow(client, arg):
                 )
                 client.following = None
                 client.forced_to_follow = False
-            except:
+            except Exception:
                 client.following = None
                 raise ClientError("You're not following anyone!")
     else:
@@ -739,7 +739,7 @@ def ooc_cmd_unfollow(client, arg):
                 targets = client.server.client_manager.get_targets(
                     client, TargetType.ID, int(arg), False
                 )
-            except:
+            except Exception:
                 raise ArgumentError(
                     "You must specify a target. Use /follow_me <id>.")
             if targets:

@@ -90,7 +90,8 @@ class ClientManager:
             self.mus_counter = 0
             self.mus_mute_time = 0
             self.mus_change_time = [
-                x * self.server.config["music_change_floodguard"]["interval_length"]
+                x *
+                self.server.config["music_change_floodguard"]["interval_length"]
                 for x in range(
                     self.server.config["music_change_floodguard"]["times_per_interval"]
                 )
@@ -275,7 +276,8 @@ class ClientManager:
                     raise ClientError("Cannot spectate in this hub!")
                 raise ClientError("Cannot spectate in this area!")
             old_char = self.char_name
-            arup = (self.char_id == -1 or char_id == -1) and self.char_id != char_id
+            arup = (self.char_id == -1 or char_id == -
+                    1) and self.char_id != char_id
             self.char_id = char_id
             self.pos = ""
             self.send_command("PV", self.id, "CID", self.char_id)
@@ -369,7 +371,8 @@ class ClientManager:
                     self.is_mod or self in self.area.owners
                 ):
                     try:
-                        a_list = ", ".join([str(a.id) for a in self.broadcast_list])
+                        a_list = ", ".join([str(a.id)
+                                           for a in self.broadcast_list])
                         self.send_ooc(f"Broadcasting to areas {a_list}")
                         target_areas = self.broadcast_list
                     except (AreaError, ValueError):
@@ -447,14 +450,16 @@ class ClientManager:
                     # Jukebox check
                     if area.jukebox and not self.is_mod and self not in area.owners:
                         area.add_jukebox_vote(self, name, length, showname)
-                        database.log_area("jukebox.vote", self, area, message=name)
+                        database.log_area(
+                            "jukebox.vote", self, area, message=name)
                     else:
                         if self.change_music_cd():
                             self.send_ooc(
                                 f"You changed song too many times. Please try again after {int(self.change_music_cd())} seconds."
                             )
                             return
-                        area.play_music(name, self.char_id, length, showname, effects)
+                        area.play_music(name, self.char_id,
+                                        length, showname, effects)
                         area.add_music_playing(self, name, showname)
                 # We only make one log entry to not CBT the log list. TODO: Broadcast logs
                 database.log_area("music", self, self.area, message=name)
@@ -464,7 +469,8 @@ class ClientManager:
                         f"Error: song {song} was not accepted! View acceptable music by resetting your client's using /musiclist."
                     )
                 else:
-                    self.send_ooc(f"Error: song {song} isn't recognized by server!")
+                    self.send_ooc(
+                        f"Error: song {song} isn't recognized by server!")
 
         def wtce_mute(self):
             """
@@ -524,7 +530,8 @@ class ClientManager:
                         "use_unique_folder" in item
                         and item["use_unique_folder"] is True
                     ):
-                        prepath = os.path.splitext(os.path.basename(path))[0] + "/"
+                        prepath = os.path.splitext(
+                            os.path.basename(path))[0] + "/"
 
                     if "category" not in item:
                         continue
@@ -806,7 +813,8 @@ class ClientManager:
                 try:
                     self.try_access_area(area)
                 except ClientError as ex:
-                    self.send_ooc(f"Failed to enter [{area.id}] {area.name}: {ex}")
+                    self.send_ooc(
+                        f"Failed to enter [{area.id}] {area.name}: {ex}")
                     return
 
                 if (area.password != "" and password != area.password) or (
@@ -875,7 +883,8 @@ class ClientManager:
                     if self.area.area_manager != c.area.area_manager:
                         # The person we're following may be trying to sneak away from us.
                         c.unfollow(
-                            silent=not allowed and (self.hidden or self.sneaking)
+                            silent=not allowed and (
+                                self.hidden or self.sneaking)
                         )
                         continue
                     # If they're still in the same hub, we're not hidden/sneaking or they're a mod, gm or cm
@@ -1304,7 +1313,8 @@ class ClientManager:
             self.send_command("HP", 1, self.area.hp_def)
             self.send_command("HP", 2, self.area.hp_pro)
             if self.area.dark:
-                self.send_command("BN", self.area.background_dark, self.area.pos_dark)
+                self.send_command(
+                    "BN", self.area.background_dark, self.area.pos_dark)
             else:
                 self.send_command("BN", self.area.background, self.pos)
             self.send_command("LE", *self.area.get_evidence_list(self))
@@ -1346,7 +1356,8 @@ class ClientManager:
             """
             modpasses = self.server.config["modpass"]
             if isinstance(modpasses, dict):
-                matches = [k for k in modpasses if modpasses[k]["password"] == password]
+                matches = [k for k in modpasses if modpasses[k]
+                           ["password"] == password]
             elif modpasses == password:
                 matches = ["default"]
             else:
@@ -1399,7 +1410,8 @@ class ClientManager:
         @move_delay.setter
         def move_delay(self, value):
             """Set the character's move delay in the character data."""
-            self.area.area_manager.set_character_data(self.char_id, "move_delay", value)
+            self.area.area_manager.set_character_data(
+                self.char_id, "move_delay", value)
 
         @property
         def keys(self):
@@ -1409,7 +1421,8 @@ class ClientManager:
         @keys.setter
         def keys(self, value):
             """Set the character's keys in the character data."""
-            self.area.area_manager.set_character_data(self.char_id, "keys", value)
+            self.area.area_manager.set_character_data(
+                self.char_id, "keys", value)
 
         @property
         def desc(self):
@@ -1419,7 +1432,8 @@ class ClientManager:
         @desc.setter
         def desc(self, value):
             """Set the character's description character data."""
-            self.area.area_manager.set_character_data(self.char_id, "desc", value)
+            self.area.area_manager.set_character_data(
+                self.char_id, "desc", value)
 
         @property
         def hidden(self):
@@ -1495,7 +1509,8 @@ class ClientManager:
             try:
                 self.change_area(target.area)
                 self.following = target
-                self.send_ooc(f"You are now following [{target.id}] {target.showname}.")
+                self.send_ooc(
+                    f"You are now following [{target.id}] {target.showname}.")
             except ValueError:
                 raise
             except (AreaError, ClientError):
@@ -1509,7 +1524,7 @@ class ClientManager:
                             f"You are no longer following [{self.following.id}] {self.following.showname}."
                         )
                     self.following = None
-                except:
+                except Exception:
                     self.following = None
 
         def change_position(self, pos=""):
@@ -1586,7 +1601,8 @@ class ClientManager:
 
         peername = transport.get_extra_info("peername")[0]
 
-        c = self.Client(self.server, transport, user_id, database.ipid(peername))
+        c = self.Client(self.server, transport, user_id,
+                        database.ipid(peername))
         self.clients.add(c)
         temp_ipid = c.ipid
         for client in self.server.client_manager.clients:
@@ -1697,7 +1713,8 @@ class ClientManager:
 
     def toggle_afk(self, client):
         if client in client.area.afkers:
-            client.area.broadcast_ooc("{} is no longer AFK.".format(client.showname))
+            client.area.broadcast_ooc(
+                "{} is no longer AFK.".format(client.showname))
             client.send_ooc(
                 "You are no longer AFK. Welcome back!"
             )  # Making the server a bit friendly wouldn't hurt, right?

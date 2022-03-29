@@ -168,7 +168,7 @@ def ooc_cmd_pm(client, arg):
                 msg = arg[len(targets[0].char_name) + 1:]
             if key == TargetType.OOC_NAME:
                 msg = arg[len(targets[0].name) + 1:]
-    except:
+    except Exception:
         raise ArgumentError(
             "Not enough arguments. Use /pm <target> <message>.")
     c = targets[0]

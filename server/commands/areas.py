@@ -242,7 +242,7 @@ def ooc_cmd_invite(client, arg):
             c.send_ooc(
                 f"You were invited and given access to {client.area.name}.")
             database.log_area("invite", client, client.area, target=c)
-    except:
+    except Exception:
         raise ClientError("You must specify a target. Use /invite <id>")
 
 

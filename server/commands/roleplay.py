@@ -408,7 +408,7 @@ def rolla_reload(area):
 
         with open("config/dice.yaml", "r") as dice:
             area.ability_dice = yaml.safe_load(dice)
-    except:
+    except Exception:
         raise ServerError(
             "There was an error parsing the ability dice configuration. Check your syntax."
         )

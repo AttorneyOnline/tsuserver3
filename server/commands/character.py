@@ -220,7 +220,7 @@ def ooc_cmd_charcurse(client, arg):
         targets = client.server.client_manager.get_targets(
             client, TargetType.ID, int(args[0]), False
         )
-    except:
+    except Exception:
         raise ArgumentError(
             "You must specify a valid target! Make sure it is a valid ID."
         )
@@ -234,7 +234,7 @@ def ooc_cmd_charcurse(client, arg):
                     c.charcurse.append(cid)
                     part_msg += " " + str(client.server.char_list[cid]) + ","
                     log_msg += " " + str(client.server.char_list[cid]) + ","
-                except:
+                except Exception:
                     ArgumentError(
                         "" + str(raw_cid) +
                         " does not look like a valid character ID."
@@ -264,7 +264,7 @@ def ooc_cmd_uncharcurse(client, arg):
         targets = client.server.client_manager.get_targets(
             client, TargetType.ID, int(args[0]), False
         )
-    except:
+    except Exception:
         raise ArgumentError(
             "You must specify a valid target! Make sure it is a valid ID."
         )
@@ -326,7 +326,7 @@ def ooc_cmd_blind(client, arg):
             )
             if c:
                 targets = targets + c
-    except:
+    except Exception:
         raise ArgumentError("You must specify a target. Use /blind <id>.")
 
     if targets:
@@ -359,7 +359,7 @@ def ooc_cmd_unblind(client, arg):
             )
             if c:
                 targets = targets + c
-    except:
+    except Exception:
         raise ArgumentError("You must specify a target. Use /unblind <id>.")
 
     if targets:
@@ -433,7 +433,7 @@ def ooc_cmd_player_hide(client, arg):
                 )
                 if c:
                     targets = targets + c
-        except:
+        except Exception:
             raise ArgumentError(
                 "You must specify a target. Use /player_unhide <id> [id(s)]."
             )
@@ -474,7 +474,7 @@ def ooc_cmd_player_unhide(client, arg):
                 )
                 if c:
                     targets = targets + c
-        except:
+        except Exception:
             raise ArgumentError(
                 "You must specify a target. Use /player_unhide <id> [id(s)]."
             )
@@ -741,7 +741,7 @@ def ooc_cmd_keys(client, arg):
             client.send_ooc(
                 f"{client.server.char_list[target]} current keys are {keys}"
             )
-        except:
+        except Exception:
             raise ArgumentError("Target not found.")
     else:
         raise ArgumentError("Usage: /keys [target_id].")
@@ -795,7 +795,7 @@ def ooc_cmd_chardesc(client, arg):
             client.send_ooc(f"{target} Description: {desc}")
             database.log_area("chardesc.request", client,
                               client.area, message=target)
-        except:
+        except Exception:
             raise ArgumentError("Target not found.")
     else:
         client.desc = arg
@@ -843,7 +843,7 @@ def ooc_cmd_chardesc_set(client, arg):
         database.log_area(
             "chardesc.set", client, client.area, message=f"{target}: {desc}"
         )
-    except:
+    except Exception:
         raise ArgumentError("Target not found.")
 
 
@@ -874,7 +874,7 @@ def ooc_cmd_chardesc_get(client, arg):
         database.log_area(
             "chardesc.get", client, client.area, message=f"{target}: {desc}"
         )
-    except:
+    except Exception:
         raise ArgumentError("Target not found.")
 
 
