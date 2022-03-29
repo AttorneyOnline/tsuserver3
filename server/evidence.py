@@ -48,10 +48,9 @@ class EvidenceList:
         def set_image(self, image):
             self.image = image
 
-        def to_string(self):
+        def to_tuple(self):
             """Serialize data to the AO protocol."""
-            sequence = (self.name, self.desc, self.image)
-            return "&".join(sequence)
+            return (self.name, self.desc, self.image)
 
         def to_dict(self):
             return {
@@ -259,11 +258,11 @@ class EvidenceList:
                     can_hide_in = int(evi.can_hide_in)
                     desc = f"<owner={evi.pos}>\n<can_hide_in={can_hide_in}>\n{evi.desc}"
                 evi_list.append(
-                    self.Evidence(evi.name, desc, evi.image, evi.pos).to_string()
+                    self.Evidence(evi.name, desc, evi.image, evi.pos).to_tuple()
                 )
             elif not client.area.dark and self.can_see(self.evidences[i], client.pos):
                 nums_list.append(i + 1)
-                evi_list.append(self.evidences[i].to_string())
+                evi_list.append(self.evidences[i].to_tuple())
         return nums_list, evi_list
 
     def import_evidence(self, data):
