@@ -635,6 +635,21 @@ class Area:
             int(MusicEffect.FADE_OUT | MusicEffect.FADE_IN | MusicEffect.SYNC_POS),
         )
 
+    def update_judge_buttons(self, client):
+        # Judge buttons are client-sided by default.
+        jd = -1
+        # This area won't let us use judge buttons unless we have privileges.
+        if not self.can_wtce:
+            # We can't use judge buttons, unless...
+            jd = 0
+        if client in self.owners or client in self.area_manager.owners or client.is_mod:
+            # We are a CM, Mod or a GM! Give us judge buttons at all times!
+            jd = 1
+        if not client.can_wtce:
+            # aw man we were muted by a mod we can't use wtce period :(
+            jd = 0
+        client.send_command("JD", jd)
+
     def update_timers(self, client, running_only=False):
         """Update the timers for the target client"""
         # Hub timers
@@ -1470,8 +1485,12 @@ class Area:
 
         # Make sure the client's available areas are updated
         self.broadcast_area_list(client)
+        # Update CM information on ARUP
         self.area_manager.send_arup_cms()
+        # Update the evidence list
         self.broadcast_evidence_list()
+        # Update their judge buttons
+        self.update_judge_buttons(client)
 
         self.broadcast_ooc(f"{client.showname} [{client.id}] is CM in this area now.")
 
@@ -1501,8 +1520,12 @@ class Area:
         if not dc:
             # Make sure the client's available areas are updated
             self.broadcast_area_list(client)
+            # Update CM information on ARUP
             self.area_manager.send_arup_cms()
+            # Update the evidence list
             self.broadcast_evidence_list()
+            # Update their judge buttons
+            self.update_judge_buttons(client)
 
         self.broadcast_ooc(
             f"{client.showname} [{client.id}] is no longer CM in this area."

@@ -707,23 +707,8 @@ class ClientManager:
                 self.send_command("SD", "*".join(self.area.pos_lock))
             # Send the evidence information
             self.send_command("LE", *self.area.get_evidence_list(self))
-
-            # Judge buttons are client-sided by default.
-            jd = -1
-            # This area won't let us use judge buttons unless we have privileges.
-            if not self.area.can_wtce:
-                # We can't use judge buttons, unless...
-                jd = 0
-                if self in self.area.owners or self.is_mod:
-                    # We are a CM or Mod!
-                    jd = 1
-            if self in self.area.area_manager.owners:
-                # We are a GM - we have supreme control over the hub. Give us judge buttons at all times!
-                jd = 1
-            if not self.can_wtce:
-                # aw man we were muted by a mod we can't use wtce period :(
-                jd = 0
-            self.send_command("JD", jd)
+            # Update our judge buttons
+            self.area.update_judge_buttons(self)
             self.refresh_music()
             msg = f"Changed to area: [{self.area.id}] {self.area.name}."
             if self.area.desc != "" and not self.blinded:
