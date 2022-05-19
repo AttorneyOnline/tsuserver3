@@ -525,6 +525,47 @@ class AOProtocol(asyncio.Protocol):
                     "While that is not a blankpost, it is still pretty spammy. Try forming sentences."
                 )
                 return
+
+        # Here, we check the pair stuff, and save info about it to the client.
+        # Notably, while we only get a charid_pair and an offset, we send back a chair_pair, an emote, a talker offset
+        # and an other offset.
+
+        self.client.charid_pair = charid_pair
+        self.client.offset_pair = offset_pair
+        if anim_type not in (5, 6):
+            self.client.last_sprite = anim
+        self.client.flip = flip
+        self.client.claimed_folder = folder
+        other_offset = '0'
+        other_emote = ''
+        other_flip = 0
+        other_folder = ''
+
+        confirmed = False
+        if charid_pair > -1:
+            for target in self.client.area.clients:
+                if not confirmed and target.char_id == self.client.charid_pair and target.charid_pair == self.client.char_id and target != self.client and target.pos == self.client.pos:
+                    confirmed = True
+                    other_offset = target.offset_pair
+                    other_emote = target.last_sprite
+                    other_flip = target.flip
+                    other_folder = target.claimed_folder
+                    if (pair_order != ""):
+                        charid_pair = "{}^{}".format(charid_pair, pair_order)
+                    break
+
+        if not confirmed:
+            charid_pair = -1
+        send_args = [msg_type, pre, folder, anim, text,
+                     pos, sfx, anim_type, cid, sfx_delay,
+                     button, self.client.evi_list[evidence],
+                     flip, ding, color, showname, charid_pair,
+                     other_folder, other_emote, offset_pair,
+                     other_offset, other_flip, nonint_pre,
+                     sfx_looping, screenshake, frames_shake,
+                     frames_realization, frames_sfx,
+                     additive, effect]
+
         if text.startswith('/a '): # Send a message to a specific area the client is CM in
             part = text.split(' ')
             try:
@@ -536,6 +577,7 @@ class AOProtocol(asyncio.Protocol):
                     self.client.send_ooc(f'You don\'t own {area.name}!')
                     return
                 text = ' '.join(part[2:])
+                send_args[4] = text
             except ValueError:
                 self.client.send_ooc(
                     "That does not look like a valid area ID!")
@@ -549,31 +591,36 @@ class AOProtocol(asyncio.Protocol):
                 self.client.send_ooc('You don\'t any areas!')
                 return
             text = ' '.join(part[1:])
+            send_args[4] = text
         elif text.startswith('/testify '): # Start a new testimony in this area.
             part = text.split(' ')
             text = ' '.join(part[1:]) # remove command
+            send_args[4] = text
             if not self.client.area.start_testimony(self.client, text):
                 return
             text = '~~-- ' + text + ' --'
+            send_args[4] = text
             color = 3 # orange
         elif text.startswith('/examine'): # Start an examination of this area's testimony.
             if not self.client.area.start_examination(self.client):
                 return
             text = '~~-- ' + self.client.area.testimony.title + ' --'
+            send_args[4] = text
             color = 3
         if self.client.area.is_testifying or self.client.area.is_examining:
             if text.startswith('/end'): # End the current testimony or examination.
                 if not self.client.area.end_testimony(self.client):
                     return
                 text = ''
+                send_args[4] = text
             elif text.startswith('/amend '):
                 part = text.split(' ')
                 text = ' '.join(part[2:])
-                args[4] = text
+                send_args[4] = text
                 color = 1
                 try:
                     index = int(part[1])
-                    if not self.client.area.amend_testimony(self.client, index, args):
+                    if not self.client.area.amend_testimony(self.client, index, send_args):
                         return
                     if self.client.area.is_testifying:
                         return # don't send it again or it'll be rerecorded
@@ -586,11 +633,11 @@ class AOProtocol(asyncio.Protocol):
             elif text.startswith('/insert '):
                 part = text.split(' ')
                 text = ' '.join(part[2:])
-                args[4] = text
+                send_args[4] = text
                 color = 1
                 try:
                     index = int(part[1])
-                    if not self.client.area.insert_testimony(self.client, index, args):
+                    if not self.client.area.insert_testimony(self.client, index, send_args):
                         return
                     if self.client.area.is_testifying:
                         return # don't send it again or it'll be rerecorded
@@ -603,8 +650,8 @@ class AOProtocol(asyncio.Protocol):
             elif text.startswith('/add ') and self.client.area.is_examining:
                 part = text.split(' ')
                 text = ' '.join(part[1:])
-                args[4] = text
-                self.client.area.testimony.add_statement(tuple(args))
+                send_args[4] = text
+                self.client.area.testimony.add_statement(tuple(send_args))
                 color = 1 # green
                 self.client.area.examine_index = len(self.client.area.testimony.statements) - 1 # jump to the new statement
             elif text.startswith('/remove '):
@@ -698,38 +745,6 @@ class AOProtocol(asyncio.Protocol):
         elif evidence and self.client.area.evi_list.evidences[self.client.evi_list[evidence] - 1].pos != 'all':
             self.client.area.evi_list.evidences[self.client.evi_list[evidence] - 1].pos = 'all'
             self.client.area.broadcast_evidence_list()
-
-
-        # Here, we check the pair stuff, and save info about it to the client.
-        # Notably, while we only get a charid_pair and an offset, we send back a chair_pair, an emote, a talker offset
-        # and an other offset.
-
-        self.client.charid_pair = charid_pair
-        self.client.offset_pair = offset_pair
-        if anim_type not in (5, 6):
-            self.client.last_sprite = anim
-        self.client.flip = flip
-        self.client.claimed_folder = folder
-        other_offset = '0'
-        other_emote = ''
-        other_flip = 0
-        other_folder = ''
-
-        confirmed = False
-        if charid_pair > -1:
-            for target in self.client.area.clients:
-                if not confirmed and target.char_id == self.client.charid_pair and target.charid_pair == self.client.char_id and target != self.client and target.pos == self.client.pos:
-                    confirmed = True
-                    other_offset = target.offset_pair
-                    other_emote = target.last_sprite
-                    other_flip = target.flip
-                    other_folder = target.claimed_folder
-                    if (pair_order != ""):
-                        charid_pair = "{}^{}".format(charid_pair, pair_order)
-                    break
-
-        if not confirmed:
-            charid_pair = -1
 
         if self.client in self.client.area.afkers:
             self.client.server.client_manager.toggle_afk(self.client)
