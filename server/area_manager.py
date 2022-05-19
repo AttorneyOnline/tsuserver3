@@ -790,8 +790,15 @@ class AreaManager:
                 except ValueError:
                     client.send_ooc("That does not look like a valid statement number!")
                     return False
-            self.send_command('MS', *self.testimony.statements[self.examine_index])
-            return True
+            if self.examine_index >= len(self.testimony.statements):
+                client.send_ooc("There aren't that many statements in the testimony!")
+                return False
+            elif self.examine_index <= 0:
+                client.send_ooc("This statement doesn't exist!")
+                return False
+            else:
+                self.send_command('MS', *self.testimony.statements[self.examine_index])
+                return True
                 
         class JukeboxVote:
             """Represents a single vote cast for the jukebox."""
