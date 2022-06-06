@@ -243,8 +243,12 @@ class Database:
         ban_data: str # JSON
 
         def __post_init__(self):
-            self.ban_date = arrow.get(self.ban_date).datetime
-            self.unban_date = arrow.get(self.unban_date).datetime
+            try:
+                self.ban_date = arrow.get(self.ban_date).datetime
+                self.unban_date = arrow.get(self.unban_date).datetime
+            except (ValueError, TypeError):
+                self.ban_date = None
+                self.unban_date = None
 
         @property
         def ipids(self):
