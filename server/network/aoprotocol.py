@@ -284,7 +284,7 @@ class AOProtocol(asyncio.Protocol):
                                  'deskmod', 'evidence', 'modcall_reason',
                                  'cccc_ic_support', 'arup', 'casing_alerts',
                                  'prezoom', 'looping_sfx', 'additive', 'effects',
-                                 'y_offset', 'expanded_desk_mods', 'auth_packet')
+                                 'y_offset', 'expanded_desk_mods', 'auth_packet', 'custom_blips')
 
         # Send Asset packet if asset_url is defined
         if self.server.config['asset_url'] != None:
@@ -445,6 +445,7 @@ class AOProtocol(asyncio.Protocol):
         additive = 0
         effect = ""
         pair_order = 0
+        blipname = ""
         if self.validate_net_cmd(args, self.ArgType.STR,  # msg_type
                                  self.ArgType.STR_OR_EMPTY, self.ArgType.STR,   # pre, folder
                                  self.ArgType.STR, self.ArgType.STR_OR_EMPTY,   # anim, text
@@ -486,6 +487,29 @@ class AOProtocol(asyncio.Protocol):
         ):
             # 2.8 validation monstrosity. (rip 2.7)
             msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive, effect = args
+            pair_args = charid_pair.split("^")
+            charid_pair = int(pair_args[0])
+            if (len(pair_args) > 1):
+                pair_order = pair_args[1]
+        elif self.validate_net_cmd(
+            args, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,              # msg_type, pre
+            self.ArgType.STR, self.ArgType.STR, self.ArgType.STR_OR_EMPTY,  # folder, anim, text
+            self.ArgType.STR, self.ArgType.STR, self.ArgType.INT,           # pos, sfx, anim_type
+            self.ArgType.INT, self.ArgType.INT, self.ArgType.INT_OR_STR,    # cid, sfx_delay, button
+            self.ArgType.INT, self.ArgType.INT, self.ArgType.INT,           # evidence, flip, ding
+            # color, showname, charid_pair
+            self.ArgType.INT, self.ArgType.STR_OR_EMPTY, self.ArgType.STR,
+            # offset_pair, nonint_pre, sfx_looping
+            self.ArgType.STR, self.ArgType.INT, self.ArgType.STR,
+            # screenshake, frames_shake, frames_realization
+            self.ArgType.INT, self.ArgType.STR, self.ArgType.STR,
+            # frames_sfx, additive, effect
+            self.ArgType.STR, self.ArgType.INT, self.ArgType.STR,
+            # blipname
+            self.ArgType.STR,
+        ):
+            # 2.10 validation monstrosity.
+            msg_type, pre, folder, anim, text, pos, sfx, anim_type, cid, sfx_delay, button, evidence, flip, ding, color, showname, charid_pair, offset_pair, nonint_pre, sfx_looping, screenshake, frames_shake, frames_realization, frames_sfx, additive, effect, blipname = args
             pair_args = charid_pair.split("^")
             charid_pair = int(pair_args[0])
             if (len(pair_args) > 1):
@@ -742,7 +766,7 @@ class AOProtocol(asyncio.Protocol):
                      other_offset, other_flip, nonint_pre,
                      sfx_looping, screenshake, frames_shake,
                      frames_realization, frames_sfx,
-                     additive, effect)
+                     additive, effect, blipname)
 
         self.client.area.last_ic_message = send_args
         self.client.area.send_command('MS', *send_args)
