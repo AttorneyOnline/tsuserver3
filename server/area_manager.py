@@ -47,8 +47,9 @@ class AreaManager:
                      area_id,
                      server,
                      name,
-                     background,
-                     bg_lock,
+                     background='gs4',
+                     bg_lock=False,
+                     custom_bg=True,
                      evidence_mod='FFA',
                      locking_allowed=False,
                      iniswap_allowed=True,
@@ -64,6 +65,7 @@ class AreaManager:
             self.name = name
             self.background = background
             self.bg_lock = bg_lock
+            self.custom_bg = custom_bg
             self.server = server
             self.music_looper = None
             self.next_message_time = 0
@@ -456,8 +458,7 @@ class AreaManager:
             Raises:
                 AreaError: if `bg` is not in background list
             """
-
-            if bg.lower() not in (name.lower()
+            if self.custom_bg == False or bg.lower() not in (name.lower()
                                   for name in self.server.backgrounds):
                 raise AreaError('Invalid background name.')
             self.background = bg
@@ -820,6 +821,12 @@ class AreaManager:
                 item['locking_allowed'] = False
             if 'iniswap_allowed' not in item:
                 item['iniswap_allowed'] = True
+            if 'background' not in item:
+                item['background'] = 'gs4'
+            if 'bglock' not in item:
+                item['bglock'] = False
+            if 'custom_bg_allowed' not in item:
+                item['custom_bg_allowed'] = True
             if 'showname_changes_allowed' not in item:
                 item['showname_changes_allowed'] = True
             if 'shouts_allowed' not in item:
@@ -833,7 +840,7 @@ class AreaManager:
                     item['area'])
             self.areas.append(
                 self.Area(self.cur_id, self.server, item['area'],
-                          item['background'], item['bglock'],
+                          item['background'], item['bglock'], item['custom_bg_allowed'],
                           item['evidence_mod'], item['locking_allowed'],
                           item['iniswap_allowed'],
                           item['showname_changes_allowed'],
